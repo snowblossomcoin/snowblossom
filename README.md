@@ -34,6 +34,10 @@ it very difficult for someone to save the state of the PRNG to be able to build 
 
 So thus we get a rather long process that makes a snow field of a specified size.  Anyone can run SnowFall to make the files and compare them to be published versions.  However, those not wishing to run the program (which is a bit slow) can also download them via bittorrent.
 
+Snow fields and their hashes are here:
+[snowfields](https://snowblossom.org/snowfields/index.html)
+
+
 ### Snow field use
 
 So the PoW needs the following properties to be effective:
