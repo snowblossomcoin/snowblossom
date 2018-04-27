@@ -1,0 +1,30 @@
+package snowblossom.trie;
+
+import snowblossom.proto.TrieNode;
+
+import com.google.protobuf.ByteString;
+import java.util.HashMap;
+
+
+public class TrieDBMem extends TrieDB
+{
+  private HashMap<ByteString, TrieNode> map;
+
+  public TrieDBMem()
+  {
+    map = new HashMap<>(16,0.5f);
+  }
+
+  public void save(TrieNode node)
+  {
+    map.put(node.getHash(), node);
+  }
+  public TrieNode load(ByteString key)
+  {
+    return map.get(key);
+  }
+  public void remove(ByteString key)
+  {
+    map.remove(key);
+  }
+}
