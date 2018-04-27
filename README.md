@@ -2,6 +2,21 @@
 
 Snowblossom is a simple cryptocurrency with a few novel ideas.
 
+## Status
+
+Snowblossom is very much a work in progress.  Don't rely on it for anything (yet) and everything is subject to change.
+
+## Building
+
+To build, install [bazel](https://docs.bazel.build/versions/master/install.html).
+Then do:
+ 
+    bazel build :all
+    or 
+    bazel test :all
+
+
+
 ## Naming
 
 The name was selected based on a random name generator because I needed something to call this while in development and it kinda stuck.
