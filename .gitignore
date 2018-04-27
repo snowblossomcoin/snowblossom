@@ -1,6 +1,1 @@
-bazel-bin
-bazel-genfiles
-bazel-node
-bazel-out
-bazel-testlogs
-bazel-snowblossom.git
+bazel-*
