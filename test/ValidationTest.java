@@ -2,12 +2,29 @@ package snowblossom;
 
 import org.junit.Test;
 import org.junit.Assert;
+import org.junit.BeforeClass;
 
 import com.google.protobuf.ByteString;
+import java.security.MessageDigest;
+
+import snowblossom.proto.Transaction;
+import snowblossom.proto.TransactionInner;
+import snowblossom.proto.TransactionInput;
+import snowblossom.proto.TransactionOutput;
+import snowblossom.proto.CoinbaseExtras;
+import snowblossom.proto.SignatureEntry;
+import snowblossom.proto.SigSpec;
+import snowblossom.proto.AddressSpec;
+import java.util.Random;
 
 public class ValidationTest
 {
 
+  @BeforeClass
+  public static void loadProvider()
+  {
+    Globals.addCryptoProvider();
+  }
 
   @Test(expected = ValidationException.class)
   public void testAddrSpecEmptyString()
@@ -53,6 +70,103 @@ public class ValidationTest
     ByteString bs = ByteString.copyFrom(b);
 
     Validation.validateChainHash(bs, "correct");
+  }
+
+  private Random rnd = new Random();
+
+  @Test
+  public void testCoinbaseTx()
+    throws Exception
+  {
+    MessageDigest md_bc = DigestUtil.getMD();
+    Transaction.Builder tx = Transaction.newBuilder();
+    
+    TransactionInner.Builder inner = TransactionInner.newBuilder();
+    inner.setVersion(1);
+    inner.setIsCoinbase(true);
+
+    String remark = "I live in a tree";
+
+    inner.setCoinbaseExtras( CoinbaseExtras.newBuilder()
+      .setRemarks(ByteString.copyFrom(remark.getBytes()))
+      .addMotionsApproved(7)
+      .addMotionsRejected(91)
+      .build() );
+
+    byte[] addr = new byte[Globals.ADDRESS_SPEC_HASH_LEN];
+    rnd.nextBytes(addr);
+
+    inner.addOutputs( TransactionOutput.newBuilder()
+      .setValue(50000L)
+      .setRecipientSpecHash(ByteString.copyFrom(addr))
+      .build());
+
+    ByteString inner_data= inner.build().toByteString();
+    tx.setInnerData(inner_data);
+    tx.setTxHash(ByteString.copyFrom(md_bc.digest(inner_data.toByteArray())));
+
+    Validation.checkTransactionBasics(tx.build(), true);
+
+  }
+
+  @Test
+  public void testBasicTx()
+    throws Exception
+  {
+    MessageDigest md_bc = DigestUtil.getMD();
+    Transaction.Builder tx = Transaction.newBuilder();
+    
+    TransactionInner.Builder inner = TransactionInner.newBuilder();
+    inner.setVersion(1);
+
+    byte[] to_addr = new byte[Globals.ADDRESS_SPEC_HASH_LEN];
+    rnd.nextBytes(to_addr);
+
+    byte[] public_key = new byte[200];
+    rnd.nextBytes(public_key);
+
+    byte[] src_tx = new byte[Globals.BLOCKCHAIN_HASH_LEN];
+    rnd.nextBytes(src_tx);
+
+    AddressSpec claim = AddressSpec.newBuilder()
+      .setRequiredSigners(1)
+      .addSigSpecs( SigSpec.newBuilder()
+        .setSignatureType( SignatureUtil.SIG_TYPE_ECDSA)
+        .setPublicKey(ByteString.copyFrom(public_key))
+        .build())
+      .build();
+
+    AddressSpecHash addr_spec = AddressUtil.getHashForSpec(claim, DigestUtil.getMDAddressSpec());
+
+
+    inner.addInputs( TransactionInput.newBuilder()
+      .setSpecHash(addr_spec.getBytes())
+      .setSrcTxId( ByteString.copyFrom(src_tx) )
+      .setSrcTxOutIdx (1)
+      .build() );
+      
+
+    inner.addOutputs( TransactionOutput.newBuilder()
+      .setValue(50000L)
+      .setRecipientSpecHash(ByteString.copyFrom(to_addr))
+      .build());
+    inner.addClaims(claim);
+
+    inner.setFee(50L);
+
+    ByteString inner_data= inner.build().toByteString();
+    tx.setInnerData(inner_data);
+    tx.setTxHash(ByteString.copyFrom(md_bc.digest(inner_data.toByteArray())));
+
+    tx.addSignatures( SignatureEntry.newBuilder()
+      .setClaimIdx(0)
+      .setKeyIdx(0)
+      .setSignature( ByteString.copyFrom(public_key) )
+      .build());
+
+
+    Validation.checkTransactionBasics(tx.build(), false);
+
   }
  
 }

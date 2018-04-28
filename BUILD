@@ -198,6 +198,7 @@ java_test(
       ":snowblossomlib",
       "@commons_codec//jar",
       "@org_pubref_rules_protobuf//java:grpc_compiletime_deps",
+      "//:snowblossomprotolib",
   ],
 )
 

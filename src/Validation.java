@@ -226,6 +226,10 @@ public class Validation
       {
         throw new ValidationException("coinbase shouldn't have signatures");
       }
+      if (inner.getFee() != 0)
+      {
+        throw new ValidationException("coinbase shouldn't have fee");
+      }
     }
     else
     {
