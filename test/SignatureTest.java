@@ -95,7 +95,6 @@ public class SignatureTest
   }
 
 
-
   // Who the hell knows what this is?
   @Test
   public void testDSTU4145()

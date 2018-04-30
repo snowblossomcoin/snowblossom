@@ -4,6 +4,10 @@ import snowblossom.proto.SigSpec;
 
 import com.google.protobuf.ByteString;
 
+import com.google.common.collect.ImmutableSet;
+
+import java.util.Set;
+
 public class SignatureUtil
 {
   /**
@@ -27,5 +31,23 @@ public class SignatureUtil
     //TODO - OMG IMPLEMENT 
     return true;
   }
+
+  public static ImmutableSet<String> ALLOWED_ECDSA_CURVES = getAllowedECDSACurves();
+
+  private static ImmutableSet<String> getAllowedECDSACurves()
+  {
+    return ImmutableSet.of(
+      "1.3.132.0.10", //secp256k1
+      "1.3.132.0.34", //secp384r1
+      "1.3.132.0.35", //secp521r1
+      "1.3.132.0.38", //sect571k1
+      "1.3.132.0.39"  //sect571r1
+      );
+    
+  }
+
+
+
+  
 
 }
