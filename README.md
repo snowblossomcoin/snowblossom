@@ -76,7 +76,7 @@ any node or client that has the merkle root of that file to quickly verify the b
 The world is full of surprises so snowblossom starts with a smallish snow field (1gb) and when difficulty running averages are hit, will switch to the next larger snow field.  Then any subsequent blocks will have to do the PoW using the larger snow field.  This switch-over will
 be called a snow storm.  They should happen infrequently and with enough notice for people to download or generate the new files.
 
-## UTXO Merkle in block header
+## Unspent Transaction Output (UTXO) Merkle in block header
 
 A somewhat minor but significant improvement is that the snowblossom block header will contain a merkle root of the current utxo state
 that is in effect with that block.  This way, nodes serving lite clients can give complete merkle proofs for unspent outputs for addresses.

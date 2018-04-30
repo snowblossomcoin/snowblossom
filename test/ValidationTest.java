@@ -122,8 +122,10 @@ public class ValidationTest
     byte[] to_addr = new byte[Globals.ADDRESS_SPEC_HASH_LEN];
     rnd.nextBytes(to_addr);
 
-    byte[] public_key = new byte[200];
+    byte[] public_key = new byte[33];
     rnd.nextBytes(public_key);
+    byte[] sig = new byte[60];
+    rnd.nextBytes(sig);
 
     byte[] src_tx = new byte[Globals.BLOCKCHAIN_HASH_LEN];
     rnd.nextBytes(src_tx);
@@ -150,6 +152,11 @@ public class ValidationTest
       .setValue(50000L)
       .setRecipientSpecHash(ByteString.copyFrom(to_addr))
       .build());
+
+    inner.addOutputs( TransactionOutput.newBuilder()
+      .setValue(50000L)
+      .setRecipientSpecHash(ByteString.copyFrom(to_addr))
+      .build());
     inner.addClaims(claim);
 
     inner.setFee(50L);
@@ -161,11 +168,13 @@ public class ValidationTest
     tx.addSignatures( SignatureEntry.newBuilder()
       .setClaimIdx(0)
       .setKeyIdx(0)
-      .setSignature( ByteString.copyFrom(public_key) )
+      .setSignature( ByteString.copyFrom(sig) )
       .build());
 
 
     Validation.checkTransactionBasics(tx.build(), false);
+
+    System.out.println("Basic transaction size: " + tx.build().toByteString().size());
 
   }
  

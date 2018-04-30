@@ -16,6 +16,9 @@ import java.security.KeyFactory;
 import java.security.spec.X509EncodedKeySpec;
 
 import java.util.Random;
+import org.apache.commons.codec.binary.Hex;
+
+import org.bouncycastle.asn1.ASN1Encodable;
 
 /** Might not be testing any actual snowblossom code, just making sure I understand 
  * how signatures work.
@@ -68,12 +71,29 @@ public class SignatureTest
   {
     java.security.spec.ECGenParameterSpec spec = new java.security.spec.ECGenParameterSpec("secp256k1");
 
-    // Using secp256k1 as the key gen but not for the signing is probably wrong
-    // this is probably using the wrong curve
+    testAlgo("ECDSA", spec, "SHA256withECDSA", null, 10240);
+    testAlgo("ECDSA", spec, "ECDSA", null, 24);
+  }
+
+  @Test
+  public void testEC384()
+    throws Exception
+  {
+    java.security.spec.ECGenParameterSpec spec = new java.security.spec.ECGenParameterSpec("secp384r1");
 
     testAlgo("ECDSA", spec, "SHA256withECDSA", null, 10240);
     testAlgo("ECDSA", spec, "ECDSA", null, 24);
   }
+  @Test
+  public void testEC521()
+    throws Exception
+  {
+    java.security.spec.ECGenParameterSpec spec = new java.security.spec.ECGenParameterSpec("secp521r1");
+
+    testAlgo("ECDSA", spec, "SHA256withECDSA", null, 10240);
+    testAlgo("ECDSA", spec, "ECDSA", null, 24);
+  }
+
 
 
   // Who the hell knows what this is?
@@ -90,6 +110,59 @@ public class SignatureTest
     testAlgo("DSTU4145", spec, "DSTU4145", null, 24);
   }
 
+  @Test
+  public void testCompressedEcGames() throws Exception
+  {
+    java.security.spec.ECGenParameterSpec spec = new java.security.spec.ECGenParameterSpec("secp256k1");
+    KeyPairGenerator key_gen = KeyPairGenerator.getInstance("ECDSA");
+    key_gen.initialize(spec);
+
+    KeyPair pair = key_gen.genKeyPair();
+    PublicKey pub = pair.getPublic();
+    PrivateKey priv = pair.getPrivate();
+
+    org.bouncycastle.jcajce.provider.asymmetric.ec.BCECPublicKey pk = (org.bouncycastle.jcajce.provider.asymmetric.ec.BCECPublicKey) pub;
+
+    pk.setPointFormat("COMPRESSED");
+
+    System.out.println("Class: " + pub.getClass());
+
+    byte[] encoded = pub.getEncoded();
+
+    System.out.println("Compressed size: " + encoded.length);
+
+    X509EncodedKeySpec spec_dec = new X509EncodedKeySpec(encoded);
+
+    KeyFactory fact = KeyFactory.getInstance("ECDSA","BC");
+    PublicKey decoded = fact.generatePublic(spec_dec);
+    System.out.println("Keyclass: " + decoded.getClass());
+    System.out.println("Keyalgo: " + pk.getAlgorithm());
+    System.out.println("Keyformat: " + pk.getFormat());
+
+    Assert.assertEquals(pub, decoded);
+
+    byte[] recoded = decoded.getEncoded();
+
+
+    org.bouncycastle.asn1.ASN1StreamParser parser = new org.bouncycastle.asn1.ASN1StreamParser(encoded);
+
+    org.bouncycastle.asn1.DERSequenceParser der_p = (org.bouncycastle.asn1.DERSequenceParser) parser.readObject();
+    org.bouncycastle.asn1.DERSequenceParser der_p2 = (org.bouncycastle.asn1.DERSequenceParser) der_p.readObject();
+
+    ASN1Encodable encodable = der_p2.readObject();
+    System.out.println(encodable.getClass());
+    System.out.println(encodable);
+
+    encodable = der_p2.readObject();
+    System.out.println(encodable.getClass());
+    System.out.println(encodable);
+
+    //encodable = der_p2.readObject();
+    //System.out.println(encodable.getClass());
+    //System.out.println(encodable);
+
+  }
+
   private void testAlgo(
       String gen_algo, AlgorithmParameterSpec gen_spec,
       String sign_algo, AlgorithmParameterSpec sign_spec,
@@ -97,6 +170,7 @@ public class SignatureTest
       )
     throws Exception
   {
+    System.out.println("------------------------" + gen_algo + "/" + sign_algo);
     KeyPairGenerator key_gen = KeyPairGenerator.getInstance(gen_algo);
 
     if (gen_spec != null) key_gen.initialize(gen_spec);
@@ -136,6 +210,8 @@ public class SignatureTest
     byte[] encoded = pub.getEncoded();
     System.out.println(String.format("%s encode %s size: %d", algo, pub.getFormat(), encoded.length));
 
+    System.out.println("" + algo + " public key: " + Hex.encodeHexString(encoded));
+
     X509EncodedKeySpec spec = new X509EncodedKeySpec(encoded);
 
     KeyFactory fact = KeyFactory.getInstance(algo);
@@ -144,6 +220,8 @@ public class SignatureTest
     byte[] recoded = decoded.getEncoded();
 
     Assert.assertArrayEquals(encoded, recoded);
+
+    System.out.println(KeyUtil.decomposeASN1Encoded(recoded));
 
   }
 

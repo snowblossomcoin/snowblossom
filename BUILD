@@ -185,6 +185,7 @@ java_test(
       "@junit_junit//jar",
       ":snowblossomlib",
       "@commons_codec//jar",
+      "@bcprov//jar",
   ],
 )
 
