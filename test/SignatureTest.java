@@ -127,7 +127,7 @@ public class SignatureTest
 
     byte[] encoded = pk.getEncoded();
 
-    byte[] prefix = new byte[encoded.length -32];
+    byte[] prefix = new byte[encoded.length -33];
     for(int i=0; i<prefix.length; i++)
     {
       prefix[i] = encoded[i];
