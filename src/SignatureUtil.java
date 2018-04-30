@@ -7,6 +7,7 @@ import com.google.protobuf.ByteString;
 import com.google.common.collect.ImmutableSet;
 
 import java.util.Set;
+import java.util.TreeSet;
 
 public class SignatureUtil
 {
@@ -33,6 +34,7 @@ public class SignatureUtil
   }
 
   public static ImmutableSet<String> ALLOWED_ECDSA_CURVES = getAllowedECDSACurves();
+  public static ImmutableSet<String> ALLOWED_DSTU4145_CURVES = getAllowedDSTU4145Curves();
 
   private static ImmutableSet<String> getAllowedECDSACurves()
   {
@@ -46,7 +48,20 @@ public class SignatureUtil
     
   }
 
+  public static ImmutableSet<String> getAllowedDSTU4145Curves()
+  {
+    Set<String> s= new TreeSet<String>();
+    // 0 to 9 maps to DSTU 4145-163 to DSTU 4145-431.
+    for(int i=0; i<=9; i++)
+    {
+      s.add("1.2.804.2.1.1.1.1.3.1.1.2." + i);   
+    }
 
+    return ImmutableSet.copyOf(s);
+
+
+
+  }
 
   
 

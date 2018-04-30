@@ -19,6 +19,7 @@ import java.util.Random;
 import org.apache.commons.codec.binary.Hex;
 
 import org.bouncycastle.asn1.ASN1Encodable;
+import org.bouncycastle.jcajce.provider.asymmetric.ec.BCECPublicKey;
 
 /** Might not be testing any actual snowblossom code, just making sure I understand 
  * how signatures work.
@@ -102,13 +103,42 @@ public class SignatureTest
   {
     // There are oids ending with 0 through 9 which seem to map to 
     // DSTU 4145-163 to DSTU 4145-431 which is not very helpful
-    java.security.spec.ECGenParameterSpec spec = new java.security.spec.ECGenParameterSpec("1.2.804.2.1.1.1.1.3.1.1.2.7");
+    java.security.spec.ECGenParameterSpec spec = new java.security.spec.ECGenParameterSpec("1.2.804.2.1.1.1.1.3.1.1.2.0");
 
     testAlgo("DSTU4145", spec, "GOST3411WITHDSTU4145", null, 10240);
     testAlgo("DSTU4145", spec, "DSTU4145", null, 24000); //whatever the hell this is, seems to handle large data size
     testAlgo("DSTU4145", spec, "DSTU4145", null, 24);
   }
 
+  @Test
+  public void testCompressedEcPrefix() throws Exception
+  {
+    java.security.spec.ECGenParameterSpec spec = new java.security.spec.ECGenParameterSpec("secp256k1");
+    KeyPairGenerator key_gen = KeyPairGenerator.getInstance("ECDSA");
+    key_gen.initialize(spec);
+
+    KeyPair pair = key_gen.genKeyPair();
+    PublicKey pub = pair.getPublic();
+    PrivateKey priv = pair.getPrivate();
+
+    BCECPublicKey pk = (BCECPublicKey) pub;
+
+    pk.setPointFormat("COMPRESSED");
+
+    byte[] encoded = pk.getEncoded();
+
+    byte[] prefix = new byte[encoded.length -32];
+    for(int i=0; i<prefix.length; i++)
+    {
+      prefix[i] = encoded[i];
+    }
+    System.out.println("secp256k1 prefix: " + Hex.encodeHexString(prefix));
+
+    Assert.assertEquals(Hex.encodeHexString(KeyUtil.EC_SECP256K1_PREFIX.toByteArray()),  Hex.encodeHexString(prefix));
+
+
+
+  }
   @Test
   public void testCompressedEcGames() throws Exception
   {

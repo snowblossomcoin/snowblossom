@@ -13,8 +13,93 @@ import org.bouncycastle.asn1.ASN1Integer;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 
+import org.apache.commons.codec.binary.Hex;
+import java.security.PublicKey;
+import java.security.KeyFactory;
+
+import java.security.spec.X509EncodedKeySpec;
+import java.util.ArrayList;
+
+
 public class KeyUtil
 {
+  public static ByteString EC_SECP256K1_PREFIX= HexUtil.stringToHex("3036301006072a8648ce3d020106052b8104000a032200");
+
+  public static PublicKey convertCompressedECDSA(ByteString encoded)
+    throws ValidationException
+  {
+    if (encoded.size()!=33)
+    {
+      throw new ValidationException("Compressed key must be exactly 33 bytes");
+    }
+
+    ByteString fullkey = EC_SECP256K1_PREFIX.concat(encoded);
+
+    return decodeKey(fullkey, "ECDSA");
+
+
+  }
+
+  public static PublicKey decodeKey(ByteString encoded, String algo)
+    throws ValidationException
+  {
+    try
+    {
+      X509EncodedKeySpec spec = new X509EncodedKeySpec(encoded.toByteArray());
+      KeyFactory fact = KeyFactory.getInstance(algo);
+      return fact.generatePublic(spec);
+    }
+    catch(java.security.GeneralSecurityException e)
+    {
+      throw new ValidationException("Error decoding key", e);
+    }
+  }
+
+  public static ArrayList<String> extractObjectIdentifiers(ByteString encoded)
+    throws ValidationException
+  {
+    try
+    {
+    ArrayList<String> answers = new ArrayList<>();
+    ASN1StreamParser parser = new ASN1StreamParser(encoded.toByteArray());
+
+    while(true)
+    {
+      ASN1Encodable encodable = parser.readObject();
+      if (encodable == null) break;
+
+      extractOID(encodable, answers);
+    }
+    return answers;
+    }
+    catch(java.io.IOException e)
+    {
+      throw new ValidationException("OID extraction failed for key", e);
+    }
+  }
+
+  private static void extractOID(ASN1Encodable input, ArrayList<String> answers)
+    throws java.io.IOException
+  {
+    if (input instanceof DERSequenceParser)
+    {
+      DERSequenceParser parser = (DERSequenceParser) input;
+      while(true)
+      {
+        ASN1Encodable encodable = parser.readObject();
+        if (encodable == null) break;
+        extractOID(encodable, answers);
+      }
+
+    }
+    else if (input instanceof ASN1ObjectIdentifier)
+    {
+      ASN1ObjectIdentifier id = (ASN1ObjectIdentifier) input;
+      answers.add(id.getId());
+    }
+
+  }
+
   public static String decomposeASN1Encoded(byte[] input)
     throws Exception
   {
@@ -39,8 +124,6 @@ public class KeyUtil
       if (encodable == null) break;
 
       decomposeEncodable(encodable, 2, out);
-      
-
     }
 
 
