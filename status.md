@@ -7,12 +7,16 @@
 * UTXO hashed Trie db
 * Making snow fields for PoW
 * PoW in general with proofs and verification
+* blocks forming a chain
+* transactions
+* merkle root of transactions
+* utxo root hash updates and validation
+
 
 
 # Does not work
 
-* Transactions
-* blocks forming a chain
+* Having a mempool and putting transactions into blocks
 * switching to best chain
 * p2p networking
 * lite client api
