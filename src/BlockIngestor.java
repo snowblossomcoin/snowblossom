@@ -75,6 +75,8 @@ public class BlockIngestor
     {
       chainhead = summary;
       db.getBlockSummaryMap().put("head", summary);
+      System.out.println("UTXO at new root: " + HexUtil.getHexString(summary.getHeader().getUtxoRootHash()));
+      node.getUtxoHashedTrie().printTree(summary.getHeader().getUtxoRootHash());
     }
     return true;
 

@@ -14,6 +14,7 @@ import org.rocksdb.FlushOptions;
 import java.util.logging.Logger;
 import java.util.logging.Level;
 
+import java.io.File;
 
 
 
@@ -34,6 +35,8 @@ public class JRocksDB extends DB
     config.require("db_path");
 
     String path = config.get("db_path");
+
+    new File(path).mkdirs();
 
     logger.info(String.format("Loadng RocksDB with path %s", path));
 

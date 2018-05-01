@@ -32,10 +32,10 @@ public class TrieDBRocks extends TrieDB
     options.setIncreaseParallelism(16);
     options.setCreateIfMissing(true);
     options.setAllowMmapReads(true);
-    //options.setAllowMmapWrites(true);
+    options.setAllowMmapWrites(true);
 
     sharedWriteOptions = new WriteOptions();
-    sharedWriteOptions.setDisableWAL(true);
+    sharedWriteOptions.setDisableWAL(false);
     sharedWriteOptions.setSync(false);
 
     db = RocksDB.open(options, path.getAbsolutePath());

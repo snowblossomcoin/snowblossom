@@ -133,7 +133,6 @@ public class TrieTest
 
     ByteString expected_hash = HashUtils.hashConcat(ImmutableList.of(base, sub_base_hash));
 
-    trie.printTree();
     Assert.assertEquals(expected_hash, r2);
 
     update_map.clear();
@@ -142,7 +141,6 @@ public class TrieTest
     ByteString expected_hash_after_delete = HashUtils.hashConcat(ImmutableList.of(key2, subkey2_hash));
 
     ByteString r3 = trie.mergeBatch(r2, update_map);
-    trie.printTree();
     Assert.assertEquals(expected_hash_after_delete, r3);
 
   }

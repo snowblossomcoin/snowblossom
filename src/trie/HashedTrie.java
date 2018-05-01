@@ -73,6 +73,7 @@ public class HashedTrie
     ByteString answer = mergeNode(db, root, updates).getHash();
     if (answer.equals(expected_new_root))
     {
+      System.out.println("Commiting new UTXO root: " + HashUtils.getHexString(answer));
       db.commit();
       return true;
     }
@@ -88,6 +89,7 @@ public class HashedTrie
   {
     TrieDBBuffered db = new TrieDBBuffered(basedb);
     TrieNode root = db.load(root_hash);
+    Assert.assertNotNull("Simluating merge from " + HashUtils.getHexString(root_hash), root);
     ByteString answer = mergeNode(db, root, updates).getHash();
     return answer;
   }
@@ -306,24 +308,24 @@ public class HashedTrie
 
   }
 
-  public void printTree()
+  public void printTree(ByteString root)
   {
-    printNode(basedb, ByteString.EMPTY);
+    printNode(basedb, root, 0);
   }
 
-  private void printNode(TrieDB db, ByteString prefix)
+  private void printNode(TrieDB db, ByteString hash, int indent)
   {
     String spaces = "";
-    while(spaces.length() < prefix.size()) spaces += " ";
+    while(spaces.length() < indent) spaces += " ";
 
-    TrieNode node = db.load(prefix);
-    Assert.assertNotNull("Loading node: " + HashUtils.getHexString(prefix), node);
+    TrieNode node = db.load(hash);
+    Assert.assertNotNull("Loading node: " + HashUtils.getHexString(hash), node);
 
-    System.out.println(spaces + "node:" + HashUtils.getHexString(prefix) + " - " +node.getChildrenCount());
+    System.out.println(spaces + "node:" + HashUtils.getHexString(node.getPrefix()) + " - " +node.getChildrenCount());
 
     for(ChildEntry ce : node.getChildrenList())
     {
-      printNode(db, prefix.concat(ce.getKey()));
+      printNode(db, ce.getHash(), indent+2);
     }
     if (node.getIsLeaf())
     {
