@@ -6,6 +6,8 @@ import org.junit.BeforeClass;
 
 import com.google.protobuf.ByteString;
 import java.security.MessageDigest;
+import java.security.KeyPair;
+import java.security.Signature;
 
 import snowblossom.proto.Transaction;
 import snowblossom.proto.TransactionInner;
@@ -122,10 +124,12 @@ public class ValidationTest
     byte[] to_addr = new byte[Globals.ADDRESS_SPEC_HASH_LEN];
     rnd.nextBytes(to_addr);
 
-    byte[] public_key = new byte[33];
-    rnd.nextBytes(public_key);
-    byte[] sig = new byte[60];
-    rnd.nextBytes(sig);
+    KeyPair key_pair = KeyUtil.generateECCompressedKey();
+
+
+    byte[] public_key = key_pair.getPublic().getEncoded();
+
+
 
     byte[] src_tx = new byte[Globals.BLOCKCHAIN_HASH_LEN];
     rnd.nextBytes(src_tx);
@@ -164,6 +168,12 @@ public class ValidationTest
     ByteString inner_data= inner.build().toByteString();
     tx.setInnerData(inner_data);
     tx.setTxHash(ByteString.copyFrom(md_bc.digest(inner_data.toByteArray())));
+
+    Signature sig_engine = Signature.getInstance("ECDSA");
+    sig_engine.initSign(key_pair.getPrivate());
+    sig_engine.update(tx.getTxHash().toByteArray());
+
+    byte[] sig = sig_engine.sign();
 
     tx.addSignatures( SignatureEntry.newBuilder()
       .setClaimIdx(0)

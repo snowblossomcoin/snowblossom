@@ -8,6 +8,10 @@ import com.google.common.collect.ImmutableSet;
 
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.ArrayList;
+
+import java.security.PublicKey;
+import java.security.Signature;
 
 public class SignatureUtil
 {
@@ -28,9 +32,65 @@ public class SignatureUtil
   public static final int SIG_TYPE_DSTU4145=5;
 
   public static boolean checkSignature(SigSpec sig_spec, ByteString signed_data, ByteString signature)
+    throws ValidationException
   {
-    //TODO - OMG IMPLEMENT 
-    return true;
+    int sig_type = sig_spec.getSignatureType();
+    ByteString encoded = sig_spec.getPublicKey();
+
+    PublicKey pub_key = null;
+    String algo="";
+
+    if (sig_type == SIG_TYPE_ECDSA_COMPRESSED)
+    {
+      pub_key = KeyUtil.convertCompressedECDSA(encoded);
+      algo="ECDSA";
+    }
+    else
+    {
+      ArrayList<String> oidList = KeyUtil.extractObjectIdentifiers(encoded);
+
+      if (sig_type == SIG_TYPE_ECDSA)
+      {
+        algo="ECDSA";
+        if (oidList.size() != 2) throw new ValidationException("Unexpected number of OIDs in public key");
+        if (!ALLOWED_ECDSA_CURVES.contains(oidList.get(1))) throw new ValidationException(
+          String.format("OID %s not on allowed list for %s", oidList.get(1), algo)); 
+      }
+      if (sig_type == SIG_TYPE_DSA)
+      {
+        algo="DSA";
+      }
+      if (sig_type == SIG_TYPE_RSA)
+      {
+        algo="RSA";
+      }
+      if (sig_type == SIG_TYPE_DSTU4145)
+      {
+        algo="DSTU4145";
+        if (oidList.size() != 2) throw new ValidationException("Unexpected number of OIDs in public key");
+        if (!ALLOWED_DSTU4145_CURVES.contains(oidList.get(1))) throw new ValidationException(
+          String.format("OID %s not on allowed list for %s", oidList.get(1), algo)); 
+      }
+      if (algo == null)
+      {
+        throw new ValidationException(String.format("Unknown sig type %d", sig_type));
+      }
+      pub_key = KeyUtil.decodeKey(encoded, algo);
+    }
+
+    try
+    {
+
+      Signature sig_engine = Signature.getInstance(algo);
+      sig_engine.initVerify(pub_key);
+      sig_engine.update(signed_data.toByteArray());
+
+      return sig_engine.verify(signature.toByteArray());
+    }
+    catch(Exception e)
+    {
+      throw new ValidationException(e);
+    }
   }
 
   public static ImmutableSet<String> ALLOWED_ECDSA_CURVES = getAllowedECDSACurves();

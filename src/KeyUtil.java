@@ -16,9 +16,14 @@ import java.io.PrintStream;
 import org.apache.commons.codec.binary.Hex;
 import java.security.PublicKey;
 import java.security.KeyFactory;
+import java.security.KeyPair;
+import java.security.KeyPairGenerator;
 
 import java.security.spec.X509EncodedKeySpec;
+import java.security.spec.ECGenParameterSpec;
 import java.util.ArrayList;
+
+import org.bouncycastle.jcajce.provider.asymmetric.ec.BCECPublicKey;
 
 
 public class KeyUtil
@@ -37,7 +42,6 @@ public class KeyUtil
 
     return decodeKey(fullkey, "ECDSA");
 
-
   }
 
   public static PublicKey decodeKey(ByteString encoded, String algo)
@@ -55,22 +59,44 @@ public class KeyUtil
     }
   }
 
+  public static KeyPair generateECCompressedKey()
+  {
+    try
+    {
+      ECGenParameterSpec spec = new ECGenParameterSpec("secp256k1");
+      KeyPairGenerator key_gen = KeyPairGenerator.getInstance("ECDSA", "BC");
+      key_gen.initialize(spec);
+
+      KeyPair pair = key_gen.genKeyPair();
+
+      BCECPublicKey pub = (BCECPublicKey) pair.getPublic();
+
+      pub.setPointFormat("COMPRESSED");
+
+      return pair;
+    }
+    catch(Exception e)
+    {
+      throw new RuntimeException(e);
+    }
+  }
+
   public static ArrayList<String> extractObjectIdentifiers(ByteString encoded)
     throws ValidationException
   {
     try
     {
-    ArrayList<String> answers = new ArrayList<>();
-    ASN1StreamParser parser = new ASN1StreamParser(encoded.toByteArray());
+      ArrayList<String> answers = new ArrayList<>();
+      ASN1StreamParser parser = new ASN1StreamParser(encoded.toByteArray());
 
-    while(true)
-    {
-      ASN1Encodable encodable = parser.readObject();
-      if (encodable == null) break;
+      while(true)
+      {
+        ASN1Encodable encodable = parser.readObject();
+        if (encodable == null) break;
 
-      extractOID(encodable, answers);
-    }
-    return answers;
+        extractOID(encodable, answers);
+      }
+      return answers;
     }
     catch(java.io.IOException e)
     {
@@ -125,7 +151,6 @@ public class KeyUtil
 
       decomposeEncodable(encodable, 2, out);
     }
-
 
     out.flush();
     return new String(byte_out.toByteArray());
