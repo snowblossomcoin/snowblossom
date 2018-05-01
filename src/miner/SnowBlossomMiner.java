@@ -55,7 +55,16 @@ public class SnowBlossomMiner
     asyncStub = UserServiceGrpc.newStub(channel);
     blockingStub = UserServiceGrpc.newBlockingStub(channel);
 
-    asyncStub.subscribeBlockTemplate(SubscribeBlockTemplateRequest.newBuilder().build(), new BlockTemplateEater());
+    Random rnd = new Random();
+
+    byte[] addr = new byte[Globals.ADDRESS_SPEC_HASH_LEN];
+    rnd.nextBytes(addr);
+    ByteString to_addr = ByteString.copyFrom(addr);
+
+
+    asyncStub.subscribeBlockTemplate(SubscribeBlockTemplateRequest.newBuilder()
+      .setPayRewardToSpecHash(to_addr).build(), new BlockTemplateEater());
+    logger.info("Subscribed to blocks");  
 
     for(int i=0; i<4; i++)
     {

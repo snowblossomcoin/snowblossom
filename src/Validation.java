@@ -11,6 +11,7 @@ import snowblossom.proto.TransactionOutput;
 import snowblossom.proto.AddressSpec;
 import snowblossom.proto.SigSpec;
 import snowblossom.proto.SignatureEntry;
+import snowblossom.proto.BlockSummary;
 
 import com.google.protobuf.ByteString;
 import com.google.protobuf.CodedInputStream;
@@ -41,6 +42,10 @@ public class Validation
     {
       throw new ValidationException(String.format("Unknown block version: %d", header.getVersion()));
     }
+    if (header.getTimestamp() > System.currentTimeMillis() + params.getMaxClockSkewMs())
+    {
+      throw new ValidationException("Block too far into future");
+    }
 
     validateChainHash(header.getPrevBlockHash(), "prev_block_hash");
     validateChainHash(header.getMerkleRootHash(), "merkle_root_hash");
@@ -49,6 +54,8 @@ public class Validation
 
     validateByteString(header.getNonce(), "nonce", Globals.NONCE_LENGTH);
     validateByteString(header.getTarget(), "target", 8);
+
+    // TODO - make sure target is correct 
 
     SnowFieldInfo field_info = params.getSnowFieldInfo(header.getSnowField());
     if (field_info == null)
@@ -131,8 +138,153 @@ public class Validation
 
     }
 
+  }
+
+  public static void deepBlockValidation(SnowBlossomNode node, Block blk, BlockSummary prev_summary)
+    throws ValidationException
+  {
+    //Check expected target
+    long expected_target = PowUtil.calcNextTarget(prev_summary, node.getParams(), blk.getHeader().getTimestamp());
+    ByteString expected_target_bytes = BlockchainUtil.targetLongToBytes(expected_target);
 
 
+    if (!blk.getHeader().getTarget().equals(expected_target_bytes))
+    {
+      throw new ValidationException("Block target does not match expected target");
+    }
+
+
+    // Check timestamps and block height
+		ChainHash prevblock = new ChainHash(blk.getHeader().getPrevBlockHash());
+
+    if (prevblock.equals(ChainHash.ZERO_HASH))
+    {
+      if (blk.getHeader().getBlockHeight() != 0)
+      {
+        throw new ValidationException("Block height must be zero for first block");
+      }
+    }
+    else
+    {
+      if (prev_summary.getHeader().getBlockHeight() + 1 != blk.getHeader().getBlockHeight())
+      {
+        throw new ValidationException("Block height must not be prev block plus one");
+      }
+      if (prev_summary.getHeader().getTimestamp() >= blk.getHeader().getTimestamp())
+      {
+        throw new ValidationException("Block time must be greater than last one");
+      }
+    }
+
+
+    // At this point, we have a block with a reasonable header that matches everything
+    // (pow, target, merkle root, etc).
+    // now have to check the following
+    // - coinbase tx height correct
+    // - coinbase tx remark correct if first block
+    // - For each transaction
+    //   - transaction inputs exist in utxo
+    //   - sum of inputs = sum of outputs + fee
+    // - sum of coinbase output = block reward plus fee sum
+    // - new UTXO root is what is expected
+
+    Transaction coinbase_tx = blk.getTransactions(0);
+    TransactionInner coinbase_inner = null;
+
+    try
+    {
+      coinbase_inner = TransactionInner.parseFrom(coinbase_tx.getInnerData());
+    }
+    catch(java.io.IOException e)
+    {
+      throw new ValidationException("error parsing coinbase on second pass somehow", e);
+    }
+    
+    if (coinbase_inner.getCoinbaseExtras().getBlockHeight() != blk.getHeader().getBlockHeight())
+    {
+      throw new ValidationException("Block height in block header does not match block height in coinbase");
+    }
+    if (blk.getHeader().getBlockHeight() == 0)
+    {
+      if (!coinbase_inner.getCoinbaseExtras().getRemarks().startsWith( node.getParams().getBlockZeroRemark()))
+      {
+        throw new ValidationException("Block zero remark must start with defined remark");
+      }
+    }
+
+    UtxoUpdateBuffer utxo_buffer = new UtxoUpdateBuffer(node.getUtxoHashedTrie(), 
+      prev_summary.getHeader().getUtxoRootHash());
+    long fee_sum = 0L;
+
+    for(Transaction tx : blk.getTransactionsList())
+    {
+      fee_sum += deepTransactionCheck(tx, utxo_buffer);
+    }
+
+    long reward = PowUtil.getBlockReward(node.getParams(), blk.getHeader().getBlockHeight());
+    long coinbase_sum = fee_sum + reward;
+
+    long coinbase_spent = 0L;
+    for(TransactionOutput out : coinbase_inner.getOutputsList())
+    {
+      coinbase_spent += out.getValue();
+    }
+    if (coinbase_sum != coinbase_spent)
+    {
+      throw new ValidationException(String.format("Coinbase could have spent %d but spent %d", coinbase_sum, coinbase_spent));
+    }
+
+    utxo_buffer.commitIfEqual(blk.getHeader().getUtxoRootHash());
+  
+  }
+
+  public static long deepTransactionCheck(Transaction tx, UtxoUpdateBuffer utxo_buffer)
+    throws ValidationException
+  {
+    TransactionInner inner = null;
+
+    try
+    {
+      inner = TransactionInner.parseFrom(tx.getInnerData());
+    }
+    catch(java.io.IOException e)
+    {
+      throw new ValidationException("error parsing tx on second pass somehow", e);
+    }
+
+    long sum_of_inputs = 0L;
+    // Make sure all inputs exist
+    for(TransactionInput in : inner.getInputsList())
+    {
+      TransactionOutput matching_out = utxo_buffer.getOutputMatching(in);
+      if (matching_out == null)
+      {
+        throw new ValidationException("Not matching output for input");
+      }
+      sum_of_inputs += matching_out.getValue();
+      utxo_buffer.useOutput(matching_out, new ChainHash(in.getSrcTxId()), in.getSrcTxOutIdx());
+    }
+
+    long spent = 0L;
+    // Sum up all outputs
+    int out_idx =0;
+    for(TransactionOutput out : inner.getOutputsList())
+    {
+      spent+=out.getValue();
+      utxo_buffer.addOutput(out, new ChainHash(tx.getTxHash()), out_idx);
+      out_idx++;
+    }
+    spent+=inner.getFee();
+
+    if (!inner.getIsCoinbase())
+    {
+      if (sum_of_inputs != spent)
+      {
+        throw new ValidationException(String.format("Transaction took in %d and spent %d", sum_of_inputs, spent));
+      }
+    }
+ 
+    return inner.getFee();
   }
 
   public static void validateAddressSpecHash(ByteString hash, String name)
@@ -253,6 +405,10 @@ public class Validation
     {
       throw new ValidationException("Transaction with no outputs makes no sense");
     }
+    if (inner.getOutputsCount() >= Globals.MAX_OUTPUTS)
+    {
+      throw new ValidationException("Too many outputs");
+    }
 
     validateNonNegValue(inner.getFee(), "fee");
 
@@ -260,6 +416,10 @@ public class Validation
     for(TransactionInput in : inner.getInputsList())
     {
       validateNonNegValue(in.getSrcTxOutIdx(), "input outpoint idx");
+      if (in.getSrcTxOutIdx() >= Globals.MAX_OUTPUTS)
+      {
+        throw new ValidationException("referencing impossible output idx");
+      }
       validateAddressSpecHash(in.getSpecHash(), "input spec hash");
       validateChainHash(in.getSrcTxId(), "input transaction id");
 
@@ -330,6 +490,7 @@ public class Validation
             claim_idx, found, claim.getRequiredSigners()));
       }
     }
+
 
     //Sanity check outputs
     for(TransactionOutput out : inner.getOutputsList())

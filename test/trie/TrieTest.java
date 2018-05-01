@@ -6,6 +6,7 @@ import org.junit.Assert;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
+import java.util.ArrayList;
 
 import com.google.protobuf.ByteString;
 import com.google.common.collect.ImmutableList;
@@ -255,5 +256,52 @@ public class TrieTest
     
   }
 
+  @Test
+  public void testGet() throws Exception {
+ 
+    Map<ByteString, ByteString> update_map = new HashMap<>();
+
+    Random rnd = new Random(87L);
+
+    ArrayList<ByteString> existing_keys = new ArrayList<ByteString>();
+
+    for(int i=0; i<10000; i++)
+    {
+      byte[] key_data = new byte[8];
+      rnd.nextBytes(key_data);
+      ByteString key = ByteString.copyFrom(key_data);
+
+      byte[] data_data = new byte[8];
+      rnd.nextBytes(data_data);
+      ByteString data = ByteString.copyFrom(data_data);
+
+      update_map.put(key, data);
+
+      existing_keys.add(key);
+    }
+    ByteString hash = trie.mergeBatch(emptyRoot, update_map);
+    String hash_str= HashUtils.getHexString(hash);
+
+    Assert.assertEquals("c2a8b068d8613232723c54d611faf9bc894adbd5b36c089fb3ab0379415978f3",hash_str);
+
+    for(int i=0; i<100; i++)
+    {
+      int idx = rnd.nextInt(existing_keys.size());
+      ByteString key = existing_keys.get(i);
+
+      ByteString found_data = trie.get(hash, key);
+      Assert.assertEquals(update_map.get(key), found_data);
+      Assert.assertNull(trie.get(emptyRoot, key));
+    }
+    for(int i=0; i<100; i++)
+    {
+      
+      byte[] key_data = new byte[8];
+      rnd.nextBytes(key_data);
+      ByteString key = ByteString.copyFrom(key_data);
+      Assert.assertNull(trie.get(hash, key));
+    }
+  }
+ 
 }
 

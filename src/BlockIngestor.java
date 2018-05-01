@@ -6,6 +6,8 @@ import snowblossom.proto.Block;
 import snowblossom.proto.BlockSummary;
 import snowblossom.proto.BlockHeader;
 
+import snowblossom.trie.HashUtils;
+
 import snowblossom.db.DB;
 import org.junit.Assert;
 
@@ -47,7 +49,9 @@ public class BlockIngestor
     BlockSummary prev_summary;
     if (prevblock.equals(ChainHash.ZERO_HASH))
     {
-      prev_summary = BlockSummary.newBuilder().build();
+      prev_summary = BlockSummary.newBuilder()
+          .setHeader(BlockHeader.newBuilder().setUtxoRootHash( HashUtils.hashOfEmpty() ).build())
+        .build();
     }
     else
     {
@@ -60,8 +64,9 @@ public class BlockIngestor
     }
 
     // TODO - deeper validation here
-
     BlockSummary summary = getNewSummary(blk.getHeader(), prev_summary, node.getParams());
+
+    Validation.deepBlockValidation(node, blk, prev_summary);
 
     db.getBlockMap().put( blockhash.toString(), blk);
     db.getBlockSummaryMap().put( blockhash.toString(), summary);

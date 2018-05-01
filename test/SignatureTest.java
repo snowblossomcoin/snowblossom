@@ -114,7 +114,7 @@ public class SignatureTest
   public void testCompressedEcPrefix() throws Exception
   {
     java.security.spec.ECGenParameterSpec spec = new java.security.spec.ECGenParameterSpec("secp256k1");
-    KeyPairGenerator key_gen = KeyPairGenerator.getInstance("ECDSA");
+    KeyPairGenerator key_gen = KeyPairGenerator.getInstance("ECDSA", "BC");
     key_gen.initialize(spec);
 
     KeyPair pair = key_gen.genKeyPair();
@@ -135,8 +135,6 @@ public class SignatureTest
     System.out.println("secp256k1 prefix: " + Hex.encodeHexString(prefix));
 
     Assert.assertEquals(Hex.encodeHexString(KeyUtil.EC_SECP256K1_PREFIX.toByteArray()),  Hex.encodeHexString(prefix));
-
-
 
   }
   @Test

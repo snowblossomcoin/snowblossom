@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableMap;
 import java.util.Map;
 import java.util.TreeMap;
 
+import com.google.protobuf.ByteString;
 
 public abstract class NetworkParams
 {
@@ -32,6 +33,13 @@ public abstract class NetworkParams
   public long getAvgWeight() { return 10L; }
 
   public long getBlockTimeTarget() { return 600L * 1000L; } //10 minutes
+
+  public ByteString getBlockZeroRemark() { return ByteString.copyFrom(new String("it begins").getBytes()); }
+
+  /**
+   * Use NTP
+   */
+  public long getMaxClockSkewMs() { return 50; }
 
   /**
    * Returns a mapping of field seeds, which also

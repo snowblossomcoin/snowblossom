@@ -4,13 +4,15 @@ import io.grpc.ServerBuilder;
 import io.grpc.Server;
 
 import snowblossom.db.DB;
+import snowblossom.trie.HashedTrie;
+import snowblossom.trie.TrieDBRocks;
 
 import java.security.Security;
 
 
 import java.util.logging.Logger;
 import java.util.logging.Level;
-
+import java.io.File;
 
 
 public class SnowBlossomNode
@@ -37,6 +39,7 @@ public class SnowBlossomNode
   private NetworkParams params;
   private BlockIngestor ingestor;
   private BlockForge forge;
+  private HashedTrie utxo_hashed_trie;
 
   public SnowBlossomNode(Config config)
     throws Exception
@@ -47,6 +50,7 @@ public class SnowBlossomNode
 
     setupParams();
     loadDB();
+    loadUtxoDB();
     loadWidgets();
     startServices();
 
@@ -132,6 +136,16 @@ public class SnowBlossomNode
     db.open();
 
   }
+  private void loadUtxoDB()
+    throws Exception
+  {
+    config.require("utxo_db_path");
+    String utxo_db_path = config.get("utxo_db_path");
+    File utxo_db_file = new File(utxo_db_path);
+    utxo_db_file.mkdirs();
+
+    utxo_hashed_trie = new HashedTrie(new TrieDBRocks(utxo_db_file),Globals.UTXO_KEY_LEN ,true);
+  }
 
 
   public Config getConfig(){return config;}
@@ -139,4 +153,5 @@ public class SnowBlossomNode
   public NetworkParams getParams(){return params;}
   public BlockIngestor getBlockIngestor(){ return ingestor; }
   public BlockForge getBlockForge() {return forge;}
+  public HashedTrie getUtxoHashedTrie(){return utxo_hashed_trie;}
 }

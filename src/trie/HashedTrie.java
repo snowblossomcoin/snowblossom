@@ -65,6 +65,62 @@ public class HashedTrie
     return answer;
   }
 
+  public boolean mergeIfNewRoot(ByteString old_root, Map<ByteString, ByteString> updates, ByteString expected_new_root)
+  {
+    TrieDBBuffered db = new TrieDBBuffered(basedb);
+    TrieNode root = db.load(old_root);
+    
+    ByteString answer = mergeNode(db, root, updates).getHash();
+    if (answer.equals(expected_new_root))
+    {
+      db.commit();
+      return true;
+    }
+    return false;
+
+  }
+
+  /**
+   * See what the new UTXO hash would be with these changes
+   * without commiting them
+   */
+  public ByteString simulateMerge(ByteString root_hash, Map<ByteString, ByteString> updates)
+  {
+    TrieDBBuffered db = new TrieDBBuffered(basedb);
+    TrieNode root = db.load(root_hash);
+    ByteString answer = mergeNode(db, root, updates).getHash();
+    return answer;
+  }
+
+  /**
+   * get entry from the given root hash or null of it does not exist
+   */
+  public ByteString get(ByteString root_hash, ByteString key)
+  {
+    TrieNode node = basedb.load(root_hash);
+    if (node == null)
+    {
+      throw new RuntimeException(String.format("Referenced node %s not in database", HashUtils.getHexString(root_hash)));
+    }
+    if (node.getPrefix().equals(key))
+    {
+      Assert.assertTrue(node.getIsLeaf());
+      return node.getLeafData();
+    }
+    Assert.assertTrue(key.startsWith(node.getPrefix()));
+
+    for(ChildEntry ce : node.getChildrenList())
+    {
+      ByteString p = node.getPrefix().concat(ce.getKey());
+      if (key.startsWith(p))
+      {
+        return get(ce.getHash(), key);
+      }
+    }
+
+    return null;
+  }
+
   private TrieNode mergeNode(TrieDB db, TrieNode node, Map<ByteString, ByteString> updates)
   {
     Assert.assertNotNull(node);

@@ -28,6 +28,7 @@ public class SnowUserService extends UserServiceGrpc.UserServiceImplBase
   private static final Logger logger = Logger.getLogger("SnowUserService");
 
   private volatile Block last_sent_block;
+  private AddressSpecHash pay_to;
   private LinkedList<StreamObserver<Block> > block_subscribers = new LinkedList<>();
 
   private SnowBlossomNode node;
@@ -46,6 +47,7 @@ public class SnowUserService extends UserServiceGrpc.UserServiceImplBase
   public synchronized void subscribeBlockTemplate(SubscribeBlockTemplateRequest req, StreamObserver<Block> responseObserver)
   {
     logger.info("Subscribe block template called");
+    pay_to = new AddressSpecHash(req.getPayRewardToSpecHash());
 
     synchronized(block_subscribers)
     {
@@ -61,7 +63,9 @@ public class SnowUserService extends UserServiceGrpc.UserServiceImplBase
 
   protected synchronized void tickleBlocks()
   {
-    last_sent_block = node.getBlockForge().getBlockTemplate();
+
+    if (pay_to == null) return;
+    last_sent_block = node.getBlockForge().getBlockTemplate(pay_to);
 
     synchronized(block_subscribers)
     {

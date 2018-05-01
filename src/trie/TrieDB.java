@@ -13,6 +13,7 @@ public abstract class TrieDB
   public abstract TrieNode load(ByteString key);
   public abstract void remove(ByteString key);
 
+
   public void bulkSave(TreeMap<ByteString, TrieNode> updates)
   {
     for(Map.Entry<ByteString, TrieNode> me : updates.entrySet())

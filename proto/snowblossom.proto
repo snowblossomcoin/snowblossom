@@ -70,9 +70,12 @@ message TransactionInner {
 }
 
 message CoinbaseExtras {
-  bytes remarks = 1; //remarks from the miner for the good of the blockchain
-  repeated int32 motions_approved = 2;
-  repeated int32 motions_rejected = 3;
+  int32 block_height = 1; // this of course in the block header as well, but this makes sure that each
+                          // coinbase is unique otherwise you can have multiple that hash to the same to great
+                          // sadness (the bitcoin block chain has many lessons)
+  bytes remarks = 2; //remarks from the miner for the good of the blockchain
+  repeated int32 motions_approved = 3;
+  repeated int32 motions_rejected = 4;
 }
 
 // If any of these are defined then
