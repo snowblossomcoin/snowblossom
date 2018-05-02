@@ -23,8 +23,4 @@ public class TrieDBMem extends TrieDB
   {
     return map.get(key);
   }
-  public void remove(ByteString key)
-  {
-    map.remove(key);
-  }
 }

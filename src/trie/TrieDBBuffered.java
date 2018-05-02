@@ -28,10 +28,6 @@ public class TrieDBBuffered extends TrieDB
 
     return db.load(key);
   }
-  public void remove(ByteString key)
-  {
-    changes.put(key, null);
-  }
 
   public void commit()
   {

@@ -8,4 +8,6 @@ public interface DBFace
   public ProtoDBMap<Block> getBlockMap();
   public ProtoDBMap<BlockSummary> getBlockSummaryMap();
 
+  public DBMap getUtxoNodeMap();
+
 }

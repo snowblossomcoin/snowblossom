@@ -23,13 +23,15 @@ public class BlockIngestor
   
   private volatile BlockSummary chainhead;
 
+  private static final ByteString HEAD = ByteString.copyFrom(new String("head").getBytes());
+
   public BlockIngestor(SnowBlossomNode node)
   {
     this.node = node;
     this.db = node.getDB();
     this.params = node.getParams();
 
-    chainhead = db.getBlockSummaryMap().get("head");
+    chainhead = db.getBlockSummaryMap().get(HEAD);
   }
 
   public boolean ingestBlock(Block blk)
@@ -39,7 +41,7 @@ public class BlockIngestor
 
     ChainHash blockhash = new ChainHash(blk.getHeader().getSnowHash());
 
-    if (db.getBlockSummaryMap().containsKey(blockhash.toString() ))
+    if (db.getBlockSummaryMap().containsKey(blockhash.getBytes() ))
     {
       return false;
     }
@@ -55,7 +57,7 @@ public class BlockIngestor
     }
     else
     {
-      prev_summary = db.getBlockSummaryMap().get( prevblock.toString() );
+      prev_summary = db.getBlockSummaryMap().get( prevblock.getBytes() );
     }
 
     if (prev_summary == null)
@@ -68,13 +70,13 @@ public class BlockIngestor
 
     Validation.deepBlockValidation(node, blk, prev_summary);
 
-    db.getBlockMap().put( blockhash.toString(), blk);
-    db.getBlockSummaryMap().put( blockhash.toString(), summary);
+    db.getBlockMap().put( blockhash.getBytes(), blk);
+    db.getBlockSummaryMap().put( blockhash.getBytes(), summary);
 
     if ((chainhead == null) || (summary.getWorkSum() > chainhead.getWorkSum()))
     {
       chainhead = summary;
-      db.getBlockSummaryMap().put("head", summary);
+      db.getBlockSummaryMap().put(HEAD, summary);
       System.out.println("UTXO at new root: " + HexUtil.getHexString(summary.getHeader().getUtxoRootHash()));
       node.getUtxoHashedTrie().printTree(summary.getHeader().getUtxoRootHash());
     }

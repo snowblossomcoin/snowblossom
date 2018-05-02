@@ -73,17 +73,6 @@ public class TrieDBRocks extends TrieDB
     }
 
 	}
-  public void remove(ByteString key)
-	{
-    try
-    {
-		  db.remove(sharedWriteOptions, key.toByteArray());
-    }
-    catch(RocksDBException e)
-    {
-      throw new RuntimeException(e);
-    }
-	}
 
   public void bulkSave(TreeMap<ByteString, TrieNode> updates)
   {

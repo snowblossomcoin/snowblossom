@@ -18,24 +18,26 @@ import com.google.protobuf.ByteString;
 public class RocksDBMap extends DBMap
 {
   RocksDB db;
-  String name;
+  ByteString prefix;
   JRocksDB jdb;
 
   public RocksDBMap(JRocksDB jdb, RocksDB db, String name)
   {
     this.db = db;
-    this.name = name;
     this.jdb = jdb;
+    String prefix_str = name + "/";
+
+    this.prefix = ByteString.copyFrom(prefix_str.getBytes());
   }
 
-  public ByteString get(String key)
+  public ByteString get(ByteString key)
   {
-    String key_str = name + "/" + key;
+    ByteString key_str = prefix.concat(key);
 
     try
     {
 
-      byte[] r = db.get(key_str.getBytes());
+      byte[] r = db.get(key_str.toByteArray());
       if (r == null) return null;
 
       return ByteString.copyFrom(r);
@@ -48,13 +50,14 @@ public class RocksDBMap extends DBMap
 
   }
 
-  public void put(String key, ByteString value)
+  public void put(ByteString key, ByteString value)
   {
     try
     {
-      String key_str = name + "/" + key;
 
-      db.put(jdb.getWriteOption(), key_str.getBytes(), value.toByteArray());
+      ByteString key_str = prefix.concat(key);
+
+      db.put(jdb.getWriteOption(), key_str.toByteArray(), value.toByteArray());
 
     }
     catch(RocksDBException e)
@@ -64,27 +67,16 @@ public class RocksDBMap extends DBMap
   }
 
   @Override
-  public void putAll(SortedMap<String, ByteString> m)
+  public void putAll(SortedMap<ByteString, ByteString> m)
   {
     try
     {
       WriteBatch batch = new WriteBatch();
 
-      /*SortedMap<String, ByteString> sorted_map = null;
-      if (m instanceof SortedMap)
+      for(Map.Entry<ByteString, ByteString> e : m.entrySet())
       {
-        sorted_map = (SortedMap) m;
-      }
-      else
-      {
-        sorted_map = new TreeMap<>();
-        sorted_map.putAll(m);
-      }*/
-
-      for(Map.Entry<String, ByteString> e : m.entrySet())
-      {
-        String key_str = name + "/" + e.getKey();
-        batch.put(key_str.getBytes(), e.getValue().toByteArray());
+        ByteString key_str = prefix.concat(e.getKey());
+        batch.put(key_str.toByteArray(), e.getValue().toByteArray());
 
       }
 

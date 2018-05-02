@@ -40,27 +40,15 @@ java_binary(
 
 java_library(
   name = "snowblossomlib",
-  srcs = glob(["src/*.java", "src/db/*.java", "src/db/**/*.java"]),
+  srcs = glob(["src/*.java", "src/db/*.java", "src/db/**/*.java", "src/trie/*.java" ]),
   deps = [
     ":snowblossomprotolib",
-    ":trielib",
     "@commons_codec//jar",
     "@commons_math3//jar",
     "@bcprov//jar",
     "@junit_junit//jar",
     "@org_rocksdb_rocksdbjni//jar",
     ],
-)
-
-java_library(
-  name = "trielib",
-  srcs = glob(["src/trie/*.java"]),
-  deps = [
-    ":snowblossomprotolib",
-    "@org_rocksdb_rocksdbjni//jar",
-    "@junit_junit//jar",
-    "@commons_codec//jar",
-  ],
 )
 
 java_library(
@@ -71,7 +59,6 @@ java_library(
     ":snowblossomlib",
     "@junit_junit//jar",
     "@commons_codec//jar",
-    ":trielib",
     "@bcprov//jar",
   ],
 )
@@ -93,7 +80,6 @@ java_test(
     deps = [
       "@junit_junit//jar",
       ":snowblossomlib",
-      ":trielib",
       "@org_pubref_rules_protobuf//java:grpc_compiletime_deps",
     ],
 )
@@ -105,7 +91,6 @@ java_test(
     deps = [
       "@junit_junit//jar",
       ":snowblossomlib",
-      ":trielib",
       "@org_pubref_rules_protobuf//java:grpc_compiletime_deps",
       "@commons_io//jar",
     ],

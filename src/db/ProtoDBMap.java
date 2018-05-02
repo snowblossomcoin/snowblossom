@@ -20,12 +20,12 @@ public class ProtoDBMap<M extends Message>
     this.inner = inner;
   }
   
-  public void put(String key, Message m)
+  public void put(ByteString key, Message m)
   {
     inner.put(key, m.toByteString());
   }
 
-  public M get(String key)
+  public M get(ByteString key)
   {
     ByteString bs = inner.get(key);
     if (bs == null) return null;
@@ -40,14 +40,14 @@ public class ProtoDBMap<M extends Message>
     }
   }
 
-  public boolean containsKey(String key)
+  public boolean containsKey(ByteString key)
   {
     return inner.containsKey(key);
   }
 
-  public void putAll(Map<String, M> map)
+  /*public void putAll(Map<ByteString, M> map)
   {
-    TreeMap<String, ByteString> put_map = new TreeMap<>();
+    TreeMap<ByteString, ByteString> put_map = new TreeMap<>();
 
     for(Map.Entry<String, M> me : map.entrySet())
     {
@@ -56,7 +56,7 @@ public class ProtoDBMap<M extends Message>
 
     inner.putAll(put_map);
 
-  }
+  }*/
 
 
 }

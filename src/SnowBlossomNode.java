@@ -5,7 +5,7 @@ import io.grpc.Server;
 
 import snowblossom.db.DB;
 import snowblossom.trie.HashedTrie;
-import snowblossom.trie.TrieDBRocks;
+import snowblossom.trie.TrieDBMap;
 
 import java.security.Security;
 
@@ -139,12 +139,12 @@ public class SnowBlossomNode
   private void loadUtxoDB()
     throws Exception
   {
-    config.require("utxo_db_path");
-    String utxo_db_path = config.get("utxo_db_path");
-    File utxo_db_file = new File(utxo_db_path);
-    utxo_db_file.mkdirs();
+    //config.require("utxo_db_path");
+    //String utxo_db_path = config.get("utxo_db_path");
+    //File utxo_db_file = new File(utxo_db_path);
+    //utxo_db_file.mkdirs();
 
-    utxo_hashed_trie = new HashedTrie(new TrieDBRocks(utxo_db_file),Globals.UTXO_KEY_LEN ,true);
+    utxo_hashed_trie = new HashedTrie(new TrieDBMap(db.getUtxoNodeMap()),Globals.UTXO_KEY_LEN ,true);
   }
 
 

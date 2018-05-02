@@ -11,8 +11,6 @@ public abstract class TrieDB
 {
   public abstract void save(TrieNode node);
   public abstract TrieNode load(ByteString key);
-  public abstract void remove(ByteString key);
-
 
   public void bulkSave(TreeMap<ByteString, TrieNode> updates)
   {
@@ -20,15 +18,8 @@ public abstract class TrieDB
     {
       ByteString key = me.getKey();
       TrieNode node = me.getValue();
-      if (node == null)
-      {
-        remove(key);
-      }
-      else
-      {
-        Assert.assertEquals(key, node.getHash());
-        save(node);
-      }
+      Assert.assertEquals(key, node.getHash());
+      save(node);
     }
 
   }

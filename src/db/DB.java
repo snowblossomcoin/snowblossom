@@ -34,6 +34,7 @@ public abstract class DB implements DBFace
   protected Executor exec;
   protected ProtoDBMap<Block> block_map; 
   protected ProtoDBMap<BlockSummary> block_summary_map; 
+  protected DBMap utxo_node_map;
 
   public DB(Config config)
   {
@@ -58,6 +59,8 @@ public abstract class DB implements DBFace
   {
     block_map = new ProtoDBMap(Block.newBuilder().build().getParserForType(), openMap("block"));
     block_summary_map = new ProtoDBMap(BlockSummary.newBuilder().build().getParserForType(), openMap("blocksummary"));
+
+    utxo_node_map = openMap("u");
   }
 
   @Override
@@ -65,6 +68,9 @@ public abstract class DB implements DBFace
 
   @Override 
   public ProtoDBMap<BlockSummary> getBlockSummaryMap(){return block_summary_map; }
+
+  @Override
+  public DBMap getUtxoNodeMap() { return utxo_node_map; }
 
   protected abstract DBMap openMap(String name) throws Exception;
   protected abstract DBMapMutationSet openMutationMapSet(String name) throws Exception;
