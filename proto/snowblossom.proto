@@ -65,7 +65,7 @@ message TransactionInner {
   // If multiple inputs need the same recipient_spec_hash, a single
   // claim shall suffice for them
   repeated AddressSpec claims = 6;
-  TransactionRequirements requirements = 7;
+  //TransactionRequirements requirements = 7;
   int64 fee = 8;
 }
 
@@ -108,7 +108,7 @@ message TransactionOutput {
 
   // This could easily make an unspendable output if it refernces a block or tx
   // that will never be in.  Use with care.
-  TransactionRequirements requirements = 3;
+  //TransactionRequirements requirements = 3;
 }
 
 // The hash of this will simply be the hash of:

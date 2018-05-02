@@ -89,5 +89,14 @@ Snowblossom is written completely from scratch using modern tools and protocols 
 
 It does not support contracts, op codes.  It only supports simple address and multisig outputs.
 
+## Release Plan
+
+The replease plan is simple, once I think the code is stable enough I'll announce a Bitcoin block number in the future.  That future block hash will be the 'getBlockZeroRemark' for block zero, so anyone can quickly put that in and start mining blocks as soon as bitcoin hits that block number.  That way, there is no pre-mining, no ICO.  No one will know the bitcoin block hash ahead of time so no one can get a head start on anyone else.
+
+## Multi-signing algorith and multi-sig
+
+Snowblossom supports multiple signing algorithms that users may select to use or not.  The normal ECDSA on the secp256k1 curve as well as other curves plus RSA and DSA.  Users can also make multi-sig addresses that use multiple types of signatures.  For example, if you think that EC might be broken, you can make a 2 of 2 multisig using EC and RSA.
+
+None of that is super compelling right now, but since the framework to include different signature types is included, if a new signing algoritm that is truely compelling comes along it will be easy to add in.
 
 
