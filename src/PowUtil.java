@@ -15,7 +15,7 @@ import snowblossom.trie.HashUtils;
 
 import java.util.logging.Logger;
 
-
+import java.text.DecimalFormat;
 
 public class PowUtil
 {
@@ -119,7 +119,9 @@ public class PowUtil
     new_target = Math.min(new_target, params.getMaxTarget());
 
     bb.putLong(new_target);
-    logger.info(String.format("New target: %s", HashUtils.getHexString(bb.array())));
+    double diff = 64.0 - Math.log(new_target) / Math.log(2);
+    DecimalFormat df = new DecimalFormat("0.000");
+    logger.info(String.format("New target: %s, %s", HashUtils.getHexString(bb.array()), df.format(diff)));
 
     return new_target;
 

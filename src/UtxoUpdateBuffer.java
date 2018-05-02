@@ -24,6 +24,14 @@ public class UtxoUpdateBuffer
     this.updates = new HashMap<>(512, 0.5f);
   }
 
+  public UtxoUpdateBuffer deepCopy()
+  {
+    UtxoUpdateBuffer n = new UtxoUpdateBuffer(trie, utxo_root);
+    n.updates.putAll(this.updates);
+
+    return n;
+  }
+
   public void commitIfEqual(ByteString expected_hash)
     throws ValidationException
   {
@@ -72,7 +80,6 @@ public class UtxoUpdateBuffer
       tx_id,
       out_idx);
     updates.put(key, null);
-
   }
 
   public void addOutput(TransactionOutput out, ChainHash tx_id, int out_idx)

@@ -68,29 +68,7 @@ public class SnowBlossomNode
 
   private void setupParams()
   {
-    if (config.isSet("network"))
-    {
-      String network = config.get("network");
-
-      if (network.equals("snowblossom"))
-      {
-        params = new NetworkParamsProd();
-      }
-      else if (network.equals("teapot"))
-      {
-        logger.info("Using network teapot - testnet");
-        params = new NetworkParamsTestnet();
-      }
-      else
-      {
-        logger.log(Level.SEVERE, String.format("Unknown network: %s", network));
-      }
-
-    }
-    else
-    {
-      params = new NetworkParamsProd();
-    }
+    params = NetworkParams.loadFromConfig(config);
   }
 
   private void loadWidgets()

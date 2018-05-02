@@ -9,6 +9,12 @@ public class NetworkParamsTestnet extends NetworkParams
 {
 
   @Override
+  public long getMaxTarget()
+  {
+    return 1L << (64 - 12); //should probably be 24 to start
+  }
+
+  @Override
   protected Map<Integer, SnowFieldInfo> genSnowFields()
   {
     TreeMap<Integer, SnowFieldInfo> map = new TreeMap<>();

@@ -12,18 +12,21 @@ import snowblossom.proto.SubscribeBlockTemplateRequest;
 import snowblossom.proto.Block;
 import snowblossom.proto.BlockHeader;
 import snowblossom.proto.SnowPowProof;
-import snowblossom.proto.SubmitBlockReply;
+import snowblossom.proto.SubmitReply;
 import snowblossom.NetworkParams;
 import snowblossom.NetworkParamsProd;
 import snowblossom.NetworkParamsTestnet;
 
 
 import java.util.logging.Logger;
+import java.util.logging.Level;
 import java.util.Random;
 import snowblossom.PowUtil;
 import snowblossom.Globals;
 import snowblossom.SnowMerkleProof;
 import snowblossom.trie.HashUtils;
+import snowblossom.Config;
+import snowblossom.ConfigFile;
 import com.google.protobuf.ByteString;
 import java.security.Security;
 import java.io.File;
@@ -35,8 +38,16 @@ public class SnowBlossomMiner
   public static void main(String args[]) throws Exception
   {
     Globals.addCryptoProvider();
+    if (args.length != 1)
+    {
+      logger.log(Level.SEVERE, "Incorrect syntax. Syntax: SnowBlossomMiner <config_file>");
+      System.exit(-1);
+    }
 
-    new SnowBlossomMiner(args[0], Integer.parseInt(args[1]), new File(args[2])); 
+    ConfigFile config = new ConfigFile(args[0]);
+
+
+    new SnowBlossomMiner(config); 
   }
 
   private volatile Block last_block_template;
@@ -45,10 +56,20 @@ public class SnowBlossomMiner
   private final UserServiceBlockingStub blockingStub;
 
   private final FieldScan field_scan;
+	private final NetworkParams params;
 
-  public SnowBlossomMiner(String host, int port, File path) throws Exception
+  public SnowBlossomMiner(Config config) throws Exception
   {
-    field_scan = new FieldScan(path, new NetworkParamsProd());
+    config.require("snow_path");
+    config.require("node_host");
+
+    File path = new File(config.get("snow_path"));
+    String host = config.get("node_host");
+    int port = config.getIntWithDefault("node_port", 2338);
+    
+    params = NetworkParams.loadFromConfig(config);
+		
+    field_scan = new FieldScan(path, params);
 
     ManagedChannel channel = ManagedChannelBuilder.forAddress(host, port).usePlaintext(true).build();
 
@@ -151,8 +172,8 @@ public class SnowBlossomMiner
 
       Block new_block = bb.build();
       //logger.info("New block: " + new_block);
-      SubmitBlockReply submit = blockingStub.submitBlock(new_block);
-      logger.info("Block submit: " + submit);
+      SubmitReply reply = blockingStub.submitBlock(new_block);
+      logger.info("Block submit: " + reply);
 
     }
 
@@ -196,7 +217,7 @@ public class SnowBlossomMiner
     public void onError(Throwable t){}
     public void onNext(Block b)
     {
-      logger.info("Got block: " + b);
+      logger.info("Got block template: " + b);
 
       int min_field = b.getHeader().getSnowField();
       

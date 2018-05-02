@@ -18,6 +18,16 @@ public abstract class Config
         return Integer.parseInt(get(key));
     }
 
+    public int getIntWithDefault(String key, int def)
+    {
+      if (isSet(key))
+      {
+        return getInt(key);
+      }
+      return def;
+    }
+
+
     public double getDouble(String key)
     {
         return Double.parseDouble(get(key));

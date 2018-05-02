@@ -141,12 +141,13 @@ service PeerService {
 
 service UserService {
   rpc SubscribeBlockTemplate( SubscribeBlockTemplateRequest ) returns (stream Block) {}
-  rpc SubmitBlock ( Block ) returns ( SubmitBlockReply ) {}
+  rpc SubmitBlock ( Block ) returns ( SubmitReply ) {}
+  rpc SubmitTranssaction ( Transaction ) returns ( SubmitReply ) {}
 }
 
-
-message SubmitBlockReply {
-  bool result = 1;
+message SubmitReply {
+  bool success = 1;
+  string error_message = 2;
 }
 
 message SubscribeBlockTemplateRequest {

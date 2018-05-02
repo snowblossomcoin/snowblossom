@@ -4,7 +4,7 @@ import snowblossom.proto.UserServiceGrpc;
 import snowblossom.proto.SubscribeBlockTemplateRequest;
 import snowblossom.proto.Block;
 import snowblossom.proto.BlockHeader;
-import snowblossom.proto.SubmitBlockReply;
+import snowblossom.proto.SubmitReply;
 import io.grpc.stub.StreamObserver;
 
 import java.util.Random;
@@ -90,23 +90,28 @@ public class SnowUserService extends UserServiceGrpc.UserServiceImplBase
   }
 
   @Override
-  public synchronized void submitBlock(Block block, StreamObserver<SubmitBlockReply> responseObserver)
+  public synchronized void submitBlock(Block block, StreamObserver<SubmitReply> responseObserver)
   {
 
-      try
-      {
-        node.getBlockIngestor().ingestBlock(block);
-      }
-      catch(ValidationException e)
-      {
-        logger.info("Rejecting block: " + e);
-        responseObserver.onError(e);
-        return;
-      }
+    try
+    {
+      node.getBlockIngestor().ingestBlock(block);
+    }
+    catch(ValidationException e)
+    {
+      logger.info("Rejecting block: " + e);
 
-      responseObserver.onNext(SubmitBlockReply.newBuilder().setResult(true).build());
+      responseObserver.onNext(SubmitReply.newBuilder()
+          .setSuccess(false)
+          .setErrorMessage(e.toString())
+        .build());
       responseObserver.onCompleted();
-    
+      return;
+    }
+
+    responseObserver.onNext(SubmitReply.newBuilder().setSuccess(true).build());
+    responseObserver.onCompleted();
+  
     tickleBlocks();
   }
 
