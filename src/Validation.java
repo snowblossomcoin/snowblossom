@@ -213,7 +213,7 @@ public class Validation
     }
 
     UtxoUpdateBuffer utxo_buffer = new UtxoUpdateBuffer(node.getUtxoHashedTrie(), 
-      prev_summary.getHeader().getUtxoRootHash());
+      new ChainHash(prev_summary.getHeader().getUtxoRootHash()));
     long fee_sum = 0L;
 
     for(Transaction tx : blk.getTransactionsList())
@@ -259,7 +259,7 @@ public class Validation
       TransactionOutput matching_out = utxo_buffer.getOutputMatching(in);
       if (matching_out == null)
       {
-        throw new ValidationException("Not matching output for input");
+        throw new ValidationException("No matching output for input");
       }
       sum_of_inputs += matching_out.getValue();
       utxo_buffer.useOutput(matching_out, new ChainHash(in.getSrcTxId()), in.getSrcTxOutIdx());
@@ -274,6 +274,7 @@ public class Validation
       utxo_buffer.addOutput(out, new ChainHash(tx.getTxHash()), out_idx);
       out_idx++;
     }
+
     spent+=inner.getFee();
 
     if (!inner.getIsCoinbase())

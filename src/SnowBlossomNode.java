@@ -35,6 +35,7 @@ public class SnowBlossomNode
 
   private Config config;
   private SnowUserService user_service;
+  private SnowPeerService peer_service;
   private DB db;
   private NetworkParams params;
   private BlockIngestor ingestor;
@@ -86,11 +87,13 @@ public class SnowBlossomNode
       int port = config.getInt("service_port");
 
       user_service = new SnowUserService(this);
+      peer_service = new SnowPeerService(this);
+
       Server s = ServerBuilder
         .forPort(port)
         .addService(user_service)
+        .addService(peer_service)
         .build();
-
       s.start();
     }
   }

@@ -129,7 +129,6 @@ message SigSpec {
   bytes public_key = 2;
 }
 
-
 // -------------------------------------------------
 // SERVICES AND MESSAGES (TO AND FROM CLIENTS/PEERS)
 // -------------------------------------------------
@@ -167,7 +166,14 @@ message BlockSummary {
   BlockHeader header = 4;
 }
 
+message MemPoolList {
+  repeated TransactionMempoolInfo tx_info = 1;
+}
 
+message TransactionMempoolInfo {
+  Transaction tx = 1;
+  int64 seen = 2;
+}
 
 
 

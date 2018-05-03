@@ -71,7 +71,8 @@ public class BlockForge
     try
     {
 
-      UtxoUpdateBuffer utxo_buffer = new UtxoUpdateBuffer( node.getUtxoHashedTrie(), head.getHeader().getUtxoRootHash());
+      UtxoUpdateBuffer utxo_buffer = new UtxoUpdateBuffer( node.getUtxoHashedTrie(), 
+        new ChainHash(head.getHeader().getUtxoRootHash()));
       List<Transaction> regular_transactions = getTransactions();
       long fee_sum = 0L;
       for(Transaction tx : regular_transactions)
