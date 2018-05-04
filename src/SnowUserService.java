@@ -92,7 +92,6 @@ public class SnowUserService extends UserServiceGrpc.UserServiceImplBase
   @Override
   public synchronized void submitBlock(Block block, StreamObserver<SubmitReply> responseObserver)
   {
-
     try
     {
       node.getBlockIngestor().ingestBlock(block);

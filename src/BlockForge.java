@@ -56,8 +56,6 @@ public class BlockForge
       header_builder.setPrevBlockHash(head.getHeader().getSnowHash());
     }
 
-    byte[] hashbuff = new byte[32];
-
 
     long time = System.currentTimeMillis();
     long target = PowUtil.calcNextTarget(head, params, time);
@@ -73,7 +71,7 @@ public class BlockForge
 
       UtxoUpdateBuffer utxo_buffer = new UtxoUpdateBuffer( node.getUtxoHashedTrie(), 
         new ChainHash(head.getHeader().getUtxoRootHash()));
-      List<Transaction> regular_transactions = getTransactions();
+      List<Transaction> regular_transactions = getTransactions(new ChainHash(head.getHeader().getUtxoRootHash()));
       long fee_sum = 0L;
       for(Transaction tx : regular_transactions)
       {
@@ -94,7 +92,7 @@ public class BlockForge
       }
 
       header_builder.setMerkleRootHash( DigestUtil.getMerkleRootForTxList(tx_list).getBytes());
-      header_builder.setUtxoRootHash( utxo_buffer.simulateUpdates());
+      header_builder.setUtxoRootHash( utxo_buffer.simulateUpdates().getBytes());
 
       block_builder.setHeader(header_builder.build());
       return block_builder.build();
@@ -142,9 +140,9 @@ public class BlockForge
     return tx.build();
   }
 
-  private List<Transaction> getTransactions()
+  private List<Transaction> getTransactions(ChainHash prev_utxo_root)
   {
-    return new LinkedList<Transaction>();
+    return node.getMemPool().getTransactionsForBlock(prev_utxo_root, 65000);
   }
 
 

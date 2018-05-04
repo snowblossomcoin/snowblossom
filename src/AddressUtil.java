@@ -1,6 +1,5 @@
 package snowblossom;
 
-
 import java.security.MessageDigest;
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
@@ -8,9 +7,12 @@ import java.io.DataOutputStream;
 import snowblossom.proto.AddressSpec;
 import snowblossom.proto.SigSpec;
 
-
 public class AddressUtil
 {
+  public static AddressSpecHash getHashForSpec(AddressSpec spec)
+  {
+    return getHashForSpec(spec, DigestUtil.getMDAddressSpec());
+  }
 
   public static AddressSpecHash getHashForSpec(AddressSpec spec, MessageDigest md)
   {

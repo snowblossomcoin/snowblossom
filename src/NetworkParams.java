@@ -41,6 +41,8 @@ public abstract class NetworkParams
 
   public ByteString getBlockZeroRemark() { return ByteString.copyFrom(new String("it begins").getBytes()); }
 
+  public int getMaxBlockSize() { return 1024 * 1024 * 8; }
+
   /**
    * Use NTP
    */

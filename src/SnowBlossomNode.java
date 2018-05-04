@@ -40,6 +40,7 @@ public class SnowBlossomNode
   private NetworkParams params;
   private BlockIngestor ingestor;
   private BlockForge forge;
+  private MemPool mem_pool;
   private HashedTrie utxo_hashed_trie;
 
   public SnowBlossomNode(Config config)
@@ -53,6 +54,7 @@ public class SnowBlossomNode
     loadDB();
     loadUtxoDB();
     loadWidgets();
+
     startServices();
 
     while(true)
@@ -76,7 +78,7 @@ public class SnowBlossomNode
   {
     ingestor = new BlockIngestor(this);
     forge = new BlockForge(this);
-
+    mem_pool = new MemPool(utxo_hashed_trie);
   }
 
   private void startServices()
@@ -135,4 +137,5 @@ public class SnowBlossomNode
   public BlockIngestor getBlockIngestor(){ return ingestor; }
   public BlockForge getBlockForge() {return forge;}
   public HashedTrie getUtxoHashedTrie(){return utxo_hashed_trie;}
+  public MemPool getMemPool(){return mem_pool;}
 }

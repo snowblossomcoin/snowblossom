@@ -17,6 +17,8 @@ public class UtxoUpdateBuffer
 
   private HashMap<ByteString, ByteString> updates;
 
+  public static final ChainHash EMPTY = new ChainHash(snowblossom.trie.HashUtils.hashOfEmpty());
+
   public UtxoUpdateBuffer(HashedTrie trie, ChainHash utxo_root)
   {
     this.trie = trie;
@@ -40,9 +42,15 @@ public class UtxoUpdateBuffer
       throw new ValidationException("New utxo root does not match");
     }
   }
-  public ByteString simulateUpdates()
+  public ChainHash simulateUpdates()
   {
-    return trie.simulateMerge(utxo_root.getBytes(), updates);
+    return new ChainHash(trie.simulateMerge(utxo_root.getBytes(), updates));
+  }
+
+  /** Generally don't want to do this, used only in test */
+  protected ChainHash commit()
+  {
+    return new ChainHash(trie.mergeBatch(utxo_root.getBytes(), updates));
   }
 
   public TransactionOutput getOutputMatching(TransactionInput in)
