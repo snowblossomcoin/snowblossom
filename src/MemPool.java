@@ -6,12 +6,15 @@ import snowblossom.proto.TransactionMempoolInfo;
 import snowblossom.proto.Transaction;
 import snowblossom.proto.TransactionInput;
 import snowblossom.proto.TransactionInner;
+import snowblossom.trie.HashedTrie;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Set;
+import java.util.Collection;
 import java.util.TreeSet;
 import com.google.common.collect.ImmutableList;
 import com.google.protobuf.ByteString;
@@ -52,16 +55,52 @@ public class MemPool
   private ChainHash utxo_for_pri_map = null;
   private TreeMultimap<Double, TXCluster> priority_map = TreeMultimap.<Double, TXCluster>create();
 
-  private SnowBlossomNode node;
+  private HashedTrie utxo_hashed_trie;
 
-  public MemPool(SnowBlossomNode node)
+  public MemPool(HashedTrie utxo_hashed_trie)
   {
-    this.node = node;
+    this.utxo_hashed_trie = utxo_hashed_trie;
   }
 
   public synchronized List<Transaction> getTransactionsForBlock(ChainHash last_utxo, int max_size)
   {
-    return new ArrayList<Transaction>();
+    List<Transaction> block_list = new ArrayList<Transaction>();
+    Set<ChainHash> included_txs = new HashSet<>();
+
+
+    if (last_utxo != utxo_for_pri_map)
+    {
+      rebuildPriorityMap(last_utxo);
+    }
+
+    int size = 0;
+
+    TreeMultimap<Double, TXCluster> priority_map_copy = TreeMultimap.<Double, TXCluster>create();
+    priority_map_copy.putAll(priority_map);
+
+    while(priority_map_copy.size() > 0)
+    {
+      Collection<TXCluster> list = priority_map_copy.asMap().pollLastEntry().getValue();
+      for(TXCluster cluster : list)
+      {
+        if (size + cluster.total_size <= max_size)
+        {
+          for(Transaction tx : cluster.tx_list)
+          {
+            ChainHash tx_hash = new ChainHash(tx.getTxHash());
+            if (!included_txs.contains(tx_hash))
+            {
+              block_list.add(tx);
+              included_txs.add(tx_hash);
+              size += tx.toByteString().size();
+            }
+          }
+          
+        }
+      }
+    }
+    return block_list;
+
   }
 
   public synchronized void addTransaction(Transaction tx)
@@ -111,7 +150,50 @@ public class MemPool
     {
       claimed_outputs.put(key, tx_hash);
     }
+  }
 
+  public synchronized void rebuildPriorityMap(ChainHash new_utxo_root)
+  {
+    utxo_for_pri_map = new_utxo_root;
+    priority_map.clear();
+
+    LinkedList<ChainHash> remove_list = new LinkedList<>();
+
+    for(TransactionMempoolInfo info : known_transactions.values())
+    {
+      Transaction tx = info.getTx();
+      TXCluster cluster;
+      try
+      {
+        cluster = buildTXCluster(tx);
+      }
+      catch(ValidationException e)
+      {
+        cluster = null;
+      }
+
+      if (cluster == null)
+      {
+        remove_list.add(new ChainHash(tx.getTxHash()));
+        TransactionInner inner = TransactionUtil.getInner(tx);
+        for(TransactionInput in : inner.getInputsList())
+        {
+          String key = HexUtil.getHexString( in.getSrcTxId() ) + ":" + in.getSrcTxOutIdx();
+          claimed_outputs.remove(key);
+        }
+      }
+      else
+      {
+        double ratio = (double)cluster.total_fee / (double)cluster.total_size;
+        priority_map.put(ratio, cluster);
+      }
+    }
+
+    for(ChainHash h : remove_list)
+    {
+      known_transactions.remove(h);
+
+    }
 
   }
 
@@ -141,7 +223,7 @@ public class MemPool
       added=0;
       try
       {
-        UtxoUpdateBuffer test_buffer = new UtxoUpdateBuffer(node.getUtxoHashedTrie(), utxo_for_pri_map);
+        UtxoUpdateBuffer test_buffer = new UtxoUpdateBuffer(utxo_hashed_trie, utxo_for_pri_map);
         for(Transaction t : working_list)
         {
           Validation.deepTransactionCheck(t, test_buffer);
@@ -161,7 +243,7 @@ public class MemPool
           {
             ByteString key = UtxoUpdateBuffer.getKey(in);
 
-            ByteString matching_output = node.getUtxoHashedTrie().get(utxo_for_pri_map.getBytes(), key);
+            ByteString matching_output = utxo_hashed_trie.get(utxo_for_pri_map.getBytes(), key);
             if (matching_output == null)
             {
               if (known_transactions.containsKey(needed_tx))
