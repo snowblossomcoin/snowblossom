@@ -208,7 +208,6 @@ public class MemPool
   private TXCluster buildTXCluster(Transaction target_tx)
     throws ValidationException
   {
-    System.out.println("--------------------------------------------------------------");
     HashSet<ChainHash> working_set = new HashSet<>();
     
     LinkedList<Transaction> working_list = new LinkedList<>();
@@ -226,8 +225,6 @@ public class MemPool
     // or number of times spending each output (lol) don't match up and never will.
     while(added > 0)
     {
-      System.out.println("Working list: " + working_list);
-      System.out.println("Working set: " + working_set);
       added=0;
       try
       {
@@ -239,7 +236,6 @@ public class MemPool
         return new TXCluster(working_list);
       }
       catch(ValidationException ve){
-        System.out.println(ve);
       }
 
       LinkedList<Transaction> add_list = new LinkedList<>();
@@ -250,7 +246,6 @@ public class MemPool
         for(TransactionInput in : inner.getInputsList())
         {
           ChainHash needed_tx = new ChainHash(in.getSrcTxId());
-          System.out.println("Trying to find tx: " + needed_tx);
           int needed_level = level_map.get(new ChainHash(t.getTxHash())) - 1;
 
           if ((!level_map.containsKey(needed_tx)) || (level_map.get(needed_tx) > needed_level))
@@ -266,13 +261,10 @@ public class MemPool
             ByteString matching_output = utxo_hashed_trie.get(utxo_for_pri_map.getBytes(), key);
             if (matching_output == null)
             {
-              System.out.println("not in utxo");
               if (known_transactions.containsKey(needed_tx))
               {
-                System.out.println("Adding " + needed_tx);
                 add_list.add(known_transactions.get(needed_tx).getTx());
                 working_set.add(needed_tx);
-                System.out.println("Added from known");
                 added++;
               }
               else
@@ -282,13 +274,8 @@ public class MemPool
             }
             else
             {
-              System.out.println("It as in utxo already");
               working_set.add(needed_tx); //it is in utxo, no need to keep looking
             }
-          }
-          else
-          {
-            System.out.println("Already in working set");
           }
         }
       }
