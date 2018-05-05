@@ -11,12 +11,12 @@
 * transactions
 * merkle root of transactions
 * utxo root hash updates and validation
+* Having a mempool and putting transactions into blocks
 
 
 
 # Does not work
 
-* Having a mempool and putting transactions into blocks
 * switching to best chain
 * p2p networking
 * lite client api

@@ -4,6 +4,8 @@ option java_multiple_files = true;
 option java_package = "snowblossom.proto";
 option java_outer_classname = "SnowBlossomProto";
 
+import "proto/trie.proto";
+
 package snowblossom;
 
 // ---------------------------------------
@@ -141,7 +143,8 @@ service PeerService {
 service UserService {
   rpc SubscribeBlockTemplate( SubscribeBlockTemplateRequest ) returns (stream Block) {}
   rpc SubmitBlock ( Block ) returns ( SubmitReply ) {}
-  rpc SubmitTranssaction ( Transaction ) returns ( SubmitReply ) {}
+  rpc SubmitTransaction ( Transaction ) returns ( SubmitReply ) {}
+  rpc GetUTXONode( GetUTXONodeRequest ) returns ( GetUTXONodeReply) {}
 }
 
 message SubmitReply {
@@ -152,6 +155,36 @@ message SubmitReply {
 message SubscribeBlockTemplateRequest {
   bytes pay_reward_to_spec_hash = 1;
   int64 refresh_delay = 2; // time in ms to get updated block templates of the same block number
+}
+
+message GetUTXONodeRequest {
+  bytes prefix = 1;
+  bool include_proof = 2;
+  int32 descend_limit = 3;
+
+  // If specified, answer will use this specific utxo root as basis rather than current.
+  // Can be used to ask about about previous block or get a consistent view regardless of new
+  // blocks for a series of queries. Also, Series of Queries will be my new anti-folk acapella band.
+  bytes utxo_root_hash = 4;
+}
+
+message GetUTXONodeReply {
+  int32 version = 1;
+
+  bytes utxo_root_hash = 2;  // Which root hash was used to create this answer
+
+  // if empty, then there is no node at or below the given prefix
+  // If there is not a node exactly at prefix, may start with a node under that prefix
+  // if 'descend_limit' is set, then there could be other noder under the prefix in the answer list as well.
+  // In no particular order.  If the limit isn't high enough and the caller wants a full view of the subtree under the node
+  // the caller will have to explore the returned nodes and ask about whichever ones have children that are not in this answer set.
+  //
+  // If the caller doesn't really give a crap, the caller can simply request with a high 'descend_limit'
+  repeated TrieNode answer = 3;
+
+  // The nodes that go from the top utxo root to the
+  // requested prefix or would if they prefix node existed
+  repeated TrieNode proof = 4;
 }
 
 // -------------------------------------------------------------------

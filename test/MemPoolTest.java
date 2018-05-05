@@ -29,7 +29,6 @@ public class MemPoolTest
     Globals.addCryptoProvider();
   }
 
-  /*
   @Test
   public void testBasicTxYes()
     throws Exception
@@ -278,7 +277,7 @@ public class MemPoolTest
     mem_pool.addTransaction(tx_c);
     
     Assert.assertEquals(3, mem_pool.getTransactionsForBlock(utxo_root, 1048576).size());
-  }*/
+  }
 
   @Test
   public void testStormChain() throws Exception

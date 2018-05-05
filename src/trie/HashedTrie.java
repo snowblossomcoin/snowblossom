@@ -1,8 +1,8 @@
 package snowblossom.trie;
 
 import com.google.protobuf.ByteString;
-import snowblossom.proto.TrieNode;
-import snowblossom.proto.ChildEntry;
+import snowblossom.trie.proto.TrieNode;
+import snowblossom.trie.proto.ChildEntry;
 
 import java.util.Map;
 import java.util.Set;

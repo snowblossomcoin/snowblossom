@@ -3,6 +3,7 @@ package snowblossom;
 import snowblossom.proto.UserServiceGrpc;
 import snowblossom.proto.SubscribeBlockTemplateRequest;
 import snowblossom.proto.Block;
+import snowblossom.proto.Transaction;
 import snowblossom.proto.BlockHeader;
 import snowblossom.proto.SubmitReply;
 import io.grpc.stub.StreamObserver;
@@ -114,7 +115,29 @@ public class SnowUserService extends UserServiceGrpc.UserServiceImplBase
     tickleBlocks();
   }
 
+  @Override
+  public void submitTransaction(Transaction tx, StreamObserver<SubmitReply> responseObserver)
+  {
+    try
+    {
+      node.getMemPool().addTransaction(tx);
+    }
+    catch(ValidationException e)
+    {
+      logger.info("Rejecting transaction: " + e);
+
+      responseObserver.onNext(SubmitReply.newBuilder()
+          .setSuccess(false)
+          .setErrorMessage(e.toString())
+        .build());
+      responseObserver.onCompleted();
+      return;
+    }
+
+    responseObserver.onNext(SubmitReply.newBuilder().setSuccess(true).build());
+    responseObserver.onCompleted();
   
+  }
 
 }
 

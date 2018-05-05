@@ -1,6 +1,6 @@
 package snowblossom.trie;
 
-import snowblossom.proto.TrieNode;
+import snowblossom.trie.proto.TrieNode;
 
 import com.google.protobuf.ByteString;
 import org.junit.Assert;
