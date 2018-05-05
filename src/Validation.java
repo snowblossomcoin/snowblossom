@@ -259,7 +259,7 @@ public class Validation
       TransactionOutput matching_out = utxo_buffer.getOutputMatching(in);
       if (matching_out == null)
       {
-        throw new ValidationException("No matching output for input");
+        throw new ValidationException(String.format("No matching output for input %s", new ChainHash(in.getSrcTxId())));
       }
       sum_of_inputs += matching_out.getValue();
       utxo_buffer.useOutput(matching_out, new ChainHash(in.getSrcTxId()), in.getSrcTxOutIdx());

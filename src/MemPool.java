@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.Map;
+import java.util.TreeMap;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
@@ -207,10 +208,15 @@ public class MemPool
   private TXCluster buildTXCluster(Transaction target_tx)
     throws ValidationException
   {
+    System.out.println("--------------------------------------------------------------");
     HashSet<ChainHash> working_set = new HashSet<>();
+    
     LinkedList<Transaction> working_list = new LinkedList<>();
     working_list.add(target_tx);
     working_set.add(new ChainHash(target_tx.getTxHash()));
+
+    TreeMap<ChainHash, Integer> level_map = new TreeMap<>();
+    level_map.put(new ChainHash(target_tx.getTxHash()), 0);
 
     int added = 1;
 
@@ -220,6 +226,8 @@ public class MemPool
     // or number of times spending each output (lol) don't match up and never will.
     while(added > 0)
     {
+      System.out.println("Working list: " + working_list);
+      System.out.println("Working set: " + working_set);
       added=0;
       try
       {
@@ -230,8 +238,11 @@ public class MemPool
         }
         return new TXCluster(working_list);
       }
-      catch(ValidationException ve){}
+      catch(ValidationException ve){
+        System.out.println(ve);
+      }
 
+      LinkedList<Transaction> add_list = new LinkedList<>();
      
       for(Transaction t : working_list)
       {
@@ -239,6 +250,15 @@ public class MemPool
         for(TransactionInput in : inner.getInputsList())
         {
           ChainHash needed_tx = new ChainHash(in.getSrcTxId());
+          System.out.println("Trying to find tx: " + needed_tx);
+          int needed_level = level_map.get(new ChainHash(t.getTxHash())) - 1;
+
+          if ((!level_map.containsKey(needed_tx)) || (level_map.get(needed_tx) > needed_level))
+          {
+            level_map.put(needed_tx, needed_level);
+            added++;
+          }
+
           if (!working_set.contains(needed_tx))
           {
             ByteString key = UtxoUpdateBuffer.getKey(in);
@@ -246,10 +266,13 @@ public class MemPool
             ByteString matching_output = utxo_hashed_trie.get(utxo_for_pri_map.getBytes(), key);
             if (matching_output == null)
             {
+              System.out.println("not in utxo");
               if (known_transactions.containsKey(needed_tx))
               {
-                working_list.push(known_transactions.get(needed_tx).getTx());
+                System.out.println("Adding " + needed_tx);
+                add_list.add(known_transactions.get(needed_tx).getTx());
                 working_set.add(needed_tx);
+                System.out.println("Added from known");
                 added++;
               }
               else
@@ -259,11 +282,50 @@ public class MemPool
             }
             else
             {
+              System.out.println("It as in utxo already");
               working_set.add(needed_tx); //it is in utxo, no need to keep looking
             }
           }
+          else
+          {
+            System.out.println("Already in working set");
+          }
         }
       }
+
+      for(Transaction tx : add_list)
+      {
+        working_list.push(tx);
+      }
+      //Reorder working list
+
+      //System.out.println("Level map: " + level_map);
+
+      TreeMap<ChainHash, Transaction> tx_map = new TreeMap<>();
+      for(Transaction tx : working_list)
+      {
+        tx_map.put(new ChainHash(tx.getTxHash()), tx);
+      }
+      TreeMultimap<Integer, ChainHash> order_map = TreeMultimap.<Integer, ChainHash>create();
+
+      for(Map.Entry<ChainHash, Integer> me : level_map.entrySet())
+      {
+        if (tx_map.containsKey(me.getKey()))
+        {
+          order_map.put(me.getValue(), me.getKey());
+        }
+      }
+      working_list.clear();
+      //System.out.println("Order map: " + order_map);
+      while(order_map.size() > 0)
+      {
+        for(ChainHash hash : order_map.asMap().pollFirstEntry().getValue())
+        {
+          working_list.add( tx_map.get( hash ) );
+        }
+      }
+
+      //
     }
 
     return null;

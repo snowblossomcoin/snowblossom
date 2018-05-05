@@ -9,6 +9,7 @@ import snowblossom.trie.TrieDBMem;
 
 import java.security.KeyPair;
 import java.util.Random;
+import java.util.TreeMap;
 
 import snowblossom.proto.Transaction;
 import snowblossom.proto.TransactionInput;
@@ -28,6 +29,7 @@ public class MemPoolTest
     Globals.addCryptoProvider();
   }
 
+  /*
   @Test
   public void testBasicTxYes()
     throws Exception
@@ -242,11 +244,122 @@ public class MemPoolTest
     mem_pool.addTransaction(tx_a);
 
     Assert.assertEquals(1, mem_pool.getTransactionsForBlock(utxo_root, 1048576).size());
+
+    TransactionInput in_b = TransactionInput.newBuilder()
+      .setSpecHash(in_a.getSpecHash())
+      .setSrcTxId(tx_a.getTxHash())
+      .setSrcTxOutIdx(0)
+      .build();
  
+    TransactionOutput out_b = TransactionOutput.newBuilder()
+      .setRecipientSpecHash(in_a.getSpecHash())
+      .setValue(100000L)
+      .build();
+
+    Transaction tx_b = TransactionUtil.createTransaction(ImmutableList.of(in_b), ImmutableList.of(out_b), keys);
+
+    mem_pool.addTransaction(tx_b);
+    
+    Assert.assertEquals(2, mem_pool.getTransactionsForBlock(utxo_root, 1048576).size());
+    
+    TransactionInput in_c = TransactionInput.newBuilder()
+      .setSpecHash(in_a.getSpecHash())
+      .setSrcTxId(tx_b.getTxHash())
+      .setSrcTxOutIdx(0)
+      .build();
+ 
+    TransactionOutput out_c = TransactionOutput.newBuilder()
+      .setRecipientSpecHash(in_a.getSpecHash())
+      .setValue(100000L)
+      .build();
+
+    Transaction tx_c = TransactionUtil.createTransaction(ImmutableList.of(in_c), ImmutableList.of(out_c), keys);
+
+    mem_pool.addTransaction(tx_c);
+    
+    Assert.assertEquals(3, mem_pool.getTransactionsForBlock(utxo_root, 1048576).size());
+  }*/
+
+  @Test
+  public void testStormChain() throws Exception
+  {
+
+    HashedTrie utxo_trie = newMemoryTrie();
+    KeyPair keys = KeyUtil.generateECCompressedKey();
+
+    UtxoUpdateBuffer utxo_buffer = new UtxoUpdateBuffer(utxo_trie, UtxoUpdateBuffer.EMPTY);
+
+    Random rnd = new Random();
+
+    TreeMap<Double, InputInfo> ready_inputs = new TreeMap<>();
+    AddressSpecHash address = null;
+
+    for(int i=0; i<100; i++)
+    {
+      TransactionInput in = addUtxoToUseAtInput(utxo_buffer, keys, 100000L);
+
+      System.out.println("Source tx: " + new ChainHash(in.getSrcTxId()));
+      InputInfo ii = new InputInfo();
+      ii.in = in;
+      ii.value = 100000L;
+      ready_inputs.put(rnd.nextDouble(), ii);
+
+      address = new AddressSpecHash(in.getSpecHash());
+    }
+    
+    ChainHash utxo_root = utxo_buffer.commit();
+
+    MemPool mem_pool = new MemPool(utxo_trie);
+
+    for(int i=0; i<90; i++)
+    {
+      InputInfo ia = ready_inputs.pollFirstEntry().getValue();
+      InputInfo ib = ready_inputs.pollFirstEntry().getValue();
+      InputInfo ic = ready_inputs.pollFirstEntry().getValue();
+
+      TransactionOutput out = TransactionOutput.newBuilder()
+        .setRecipientSpecHash(address.getBytes())
+        .setValue(100000L)
+        .build();
+
+      System.out.println("Selected inputs: " + ia + " " + ib + " " + ic);
+
+      Transaction tx = TransactionUtil.createTransaction(ImmutableList.of(ia.in, ib.in, ic.in), ImmutableList.of(out,out,out), keys);
+      System.out.println("Intermediate transaction: " + new ChainHash(tx.getTxHash()));
+
+      mem_pool.addTransaction(tx);
+    
+      Assert.assertEquals(i+1, mem_pool.getTransactionsForBlock(utxo_root, 1048576).size());
+
+      for(int j=0; j<3; j++)
+      {
+        TransactionInput in = TransactionInput.newBuilder()
+          .setSpecHash(address.getBytes())
+          .setSrcTxId(tx.getTxHash())
+          .setSrcTxOutIdx(j)
+          .build();
+        System.out.println(String.format("Adding output %s:%d", new ChainHash(tx.getTxHash()).toString(), j));
+
+        InputInfo ii = new InputInfo();
+        ii.in = in;
+        ii.value = 100000L;
+        ready_inputs.put(rnd.nextDouble(), ii);
+      }
+
+    }
 
   }
 
+  public class InputInfo
+  {
+    TransactionInput in;
+    long value;
 
+    public String toString()
+    {
+      return String.format("%s:%d - %d", new ChainHash(in.getSrcTxId()).toString(), in.getSrcTxOutIdx(), value);
+    }
+  }
 
   public static TransactionInput addUtxoToUseAtInput(UtxoUpdateBuffer utxo_buffer, KeyPair keys, long value)
   {
