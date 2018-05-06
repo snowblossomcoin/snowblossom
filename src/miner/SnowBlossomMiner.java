@@ -16,6 +16,8 @@ import snowblossom.proto.SubmitReply;
 import snowblossom.NetworkParams;
 import snowblossom.NetworkParamsProd;
 import snowblossom.NetworkParamsTestnet;
+import snowblossom.AddressSpecHash;
+import snowblossom.HexUtil;
 
 
 import java.util.logging.Logger;
@@ -66,6 +68,8 @@ public class SnowBlossomMiner
     File path = new File(config.get("snow_path"));
     String host = config.get("node_host");
     int port = config.getIntWithDefault("node_port", 2338);
+
+    config.require("mine_to_address");
     
     params = NetworkParams.loadFromConfig(config);
 		
@@ -78,13 +82,11 @@ public class SnowBlossomMiner
 
     Random rnd = new Random();
 
-    byte[] addr = new byte[Globals.ADDRESS_SPEC_HASH_LEN];
-    rnd.nextBytes(addr);
-    ByteString to_addr = ByteString.copyFrom(addr);
+    AddressSpecHash to_addr = new AddressSpecHash(HexUtil.stringToHex(config.get("mine_to_address")));
 
 
     asyncStub.subscribeBlockTemplate(SubscribeBlockTemplateRequest.newBuilder()
-      .setPayRewardToSpecHash(to_addr).build(), new BlockTemplateEater());
+      .setPayRewardToSpecHash(to_addr.getBytes()).build(), new BlockTemplateEater());
     logger.info("Subscribed to blocks");  
 
     for(int i=0; i<4; i++)

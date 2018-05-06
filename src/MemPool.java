@@ -258,7 +258,7 @@ public class MemPool
           {
             ByteString key = UtxoUpdateBuffer.getKey(in);
 
-            ByteString matching_output = utxo_hashed_trie.get(utxo_for_pri_map.getBytes(), key);
+            ByteString matching_output = utxo_hashed_trie.getLeafData(utxo_for_pri_map.getBytes(), key);
             if (matching_output == null)
             {
               if (known_transactions.containsKey(needed_tx))

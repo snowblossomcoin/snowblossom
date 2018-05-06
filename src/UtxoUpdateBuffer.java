@@ -64,7 +64,7 @@ public class UtxoUpdateBuffer
     }
     else
     {
-      data = trie.get(utxo_root.getBytes(), key);
+      data = trie.getLeafData(utxo_root.getBytes(), key);
     }
 
     if (data == null) return null;

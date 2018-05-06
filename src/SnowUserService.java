@@ -6,6 +6,9 @@ import snowblossom.proto.Block;
 import snowblossom.proto.Transaction;
 import snowblossom.proto.BlockHeader;
 import snowblossom.proto.SubmitReply;
+import snowblossom.proto.GetUTXONodeRequest;
+import snowblossom.proto.GetUTXONodeReply;
+import snowblossom.trie.proto.TrieNode;
 import io.grpc.stub.StreamObserver;
 
 import java.util.Random;
@@ -137,6 +140,42 @@ public class SnowUserService extends UserServiceGrpc.UserServiceImplBase
     responseObserver.onNext(SubmitReply.newBuilder().setSuccess(true).build());
     responseObserver.onCompleted();
   
+  }
+
+  @Override
+  public void getUTXONode(GetUTXONodeRequest request, StreamObserver<GetUTXONodeReply> responseObserver)
+  {
+    ChainHash utxo_root = null;
+    if (request.getUtxoRootHash().size() > 0)
+    {
+      utxo_root = new ChainHash(request.getUtxoRootHash());
+    }
+    else
+    {
+      utxo_root = new ChainHash(node.getBlockIngestor().getHead().getHeader().getUtxoRootHash());
+    }
+
+    ByteString target=request.getPrefix();
+
+    LinkedList<TrieNode> proof = new LinkedList<>();
+    LinkedList<TrieNode> results = new LinkedList<>();
+    int max_results = 1000;
+    if (request.getMaxResults() > 0) max_results = request.getMaxResults();
+
+
+    node.getUtxoHashedTrie().getNodeDetails(utxo_root.getBytes(), target, proof, results, max_results);
+
+    GetUTXONodeReply.Builder reply = GetUTXONodeReply.newBuilder();
+
+    reply.setUtxoRootHash(utxo_root.getBytes());
+    reply.addAllAnswer(results);
+    if (request.getIncludeProof())
+    {
+      reply.addAllProof(proof);
+    }
+
+    responseObserver.onNext(reply.build());
+    responseObserver.onCompleted();
   }
 
 }

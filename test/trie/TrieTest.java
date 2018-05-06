@@ -287,9 +287,9 @@ public class TrieTest
       int idx = rnd.nextInt(existing_keys.size());
       ByteString key = existing_keys.get(i);
 
-      ByteString found_data = trie.get(hash, key);
+      ByteString found_data = trie.getLeafData(hash, key);
       Assert.assertEquals(update_map.get(key), found_data);
-      Assert.assertNull(trie.get(emptyRoot, key));
+      Assert.assertNull(trie.getLeafData(emptyRoot, key));
     }
     for(int i=0; i<100; i++)
     {
@@ -297,7 +297,7 @@ public class TrieTest
       byte[] key_data = new byte[8];
       rnd.nextBytes(key_data);
       ByteString key = ByteString.copyFrom(key_data);
-      Assert.assertNull(trie.get(hash, key));
+      Assert.assertNull(trie.getLeafData(hash, key));
     }
   }
  

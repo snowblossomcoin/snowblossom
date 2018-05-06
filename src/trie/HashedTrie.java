@@ -9,6 +9,7 @@ import java.util.Set;
 import java.util.HashMap;
 import java.util.TreeMap;
 import java.util.ArrayList;
+import java.util.LinkedList;
 
 import org.junit.Assert;
 
@@ -78,7 +79,6 @@ public class HashedTrie
       return true;
     }
     return false;
-
   }
 
   /**
@@ -97,7 +97,7 @@ public class HashedTrie
   /**
    * get entry from the given root hash or null of it does not exist
    */
-  public ByteString get(ByteString root_hash, ByteString key)
+  public ByteString getLeafData(ByteString root_hash, ByteString key)
   {
     TrieNode node = basedb.load(root_hash);
     if (node == null)
@@ -116,11 +116,52 @@ public class HashedTrie
       ByteString p = node.getPrefix().concat(ce.getKey());
       if (key.startsWith(p))
       {
-        return get(ce.getHash(), key);
+        return getLeafData(ce.getHash(), key);
       }
     }
 
     return null;
+  }
+
+  public void getNodeDetails(ByteString hash, ByteString target_key, LinkedList<TrieNode> proof, LinkedList<TrieNode> results, int max_results)
+  {
+    TrieNode node = basedb.load(hash);
+    if (node == null)
+    {
+      throw new RuntimeException(String.format("Referenced node %s not in database", HashUtils.getHexString(hash)));
+    }
+
+    if (target_key.size() > node.getPrefix().size())
+    {
+      proof.add(node);
+    }
+    else
+    {
+      results.add(node);
+    }
+    if (results.size() >= max_results) return;
+
+
+    for(ChildEntry ce : node.getChildrenList())
+    {
+      ByteString p = node.getPrefix().concat(ce.getKey());
+      if (p.size() <= target_key.size())
+      {
+        if (target_key.startsWith(p))
+        {
+          getNodeDetails(ce.getHash(), target_key, proof, results, max_results);
+        }
+      }
+      else
+      {
+        if(p.startsWith(target_key))
+        {
+          getNodeDetails(ce.getHash(), target_key, proof, results, max_results);
+        }
+      }
+    }
+
+ 
   }
 
   private TrieNode mergeNode(TrieDB db, TrieNode node, Map<ByteString, ByteString> updates)
