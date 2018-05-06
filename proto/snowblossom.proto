@@ -144,7 +144,7 @@ service UserService {
   rpc SubscribeBlockTemplate( SubscribeBlockTemplateRequest ) returns (stream Block) {}
   rpc SubmitBlock ( Block ) returns ( SubmitReply ) {}
   rpc SubmitTransaction ( Transaction ) returns ( SubmitReply ) {}
-  rpc GetUTXONode( GetUTXONodeRequest ) returns ( GetUTXONodeReply) {}
+  rpc GetUTXONode( GetUTXONodeRequest ) returns ( GetUTXONodeReply ) {}
 }
 
 message SubmitReply {

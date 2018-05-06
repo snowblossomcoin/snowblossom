@@ -14,6 +14,14 @@ java_binary(
     ":minerlib",
   ]
 )
+java_binary(
+  name = "SnowBlossomClient",
+  main_class = "snowblossom.client.SnowBlossomClient",
+  runtime_deps = [
+    ":clientlib",
+  ]
+)
+
 
 java_binary(
   name = "SnowFall",
@@ -54,6 +62,18 @@ java_library(
 java_library(
   name = "minerlib",
   srcs = glob(["src/miner/*.java"]),
+  deps = [
+    ":snowblossomprotolib",
+    ":snowblossomlib",
+    "@junit_junit//jar",
+    "@commons_codec//jar",
+    "@bcprov//jar",
+  ],
+)
+
+java_library(
+  name = "clientlib",
+  srcs = glob(["src/client/*.java"]),
   deps = [
     ":snowblossomprotolib",
     ":snowblossomlib",
