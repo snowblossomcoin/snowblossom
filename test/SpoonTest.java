@@ -24,6 +24,7 @@ import snowblossom.proto.SigSpec;
 import snowblossom.proto.TransactionInput;
 import snowblossom.proto.TransactionOutput;
 import snowblossom.proto.Transaction;
+import snowblossom.proto.BlockSummary;
 import com.google.common.collect.ImmutableList;
 
 public class SpoonTest
@@ -60,12 +61,10 @@ public class SpoonTest
 
     SnowBlossomMiner miner = startMiner(port, to_addr, snow_path);
 
-		Thread.sleep(2000);
-
     testMinedBlocks(node);
 
     SnowBlossomClient client = startClient(port);
-    testConsolidateFunds(client, key_pair, to_addr);
+    testConsolidateFunds(node, client, key_pair, to_addr);
 
 
 		miner.stop();
@@ -74,12 +73,41 @@ public class SpoonTest
   }
 
   private void testMinedBlocks(SnowBlossomNode node)
+    throws Exception
   {
-    Assert.assertTrue(node.getBlockIngestor().getHead().getHeader().getBlockHeight() > 3);
-    System.out.println("Mined block: " + node.getBlockIngestor().getHead().getHeader().getBlockHeight());
+    for(int i=0; i<15; i++)
+    {
+      Thread.sleep(1000);
+
+      BlockSummary summary = node.getBlockIngestor().getHead();
+      if (summary != null)
+      {
+
+        int height = summary.getHeader().getBlockHeight();
+        if (height > 2) return;
+      }
+    }
+    Assert.fail("Does not seem to be making blocks");
   }
 
-  private void testConsolidateFunds(SnowBlossomClient client, KeyPair key_pair, AddressSpecHash from_addr)
+  private void waitForMoreBlocks(SnowBlossomNode node, int wait_for)
+    throws Exception
+  {
+    int start = node.getBlockIngestor().getHead().getHeader().getBlockHeight();
+    int target = start + wait_for;
+
+    int height=start;
+    for(int i=0; i<15; i++)
+    {
+      Thread.sleep(1000);
+      height = node.getBlockIngestor().getHead().getHeader().getBlockHeight();
+      if (height >= target) return;
+    }
+    Assert.fail(String.format("Waiting for %d blocks, only got %d", wait_for, height - start));
+
+  }
+
+  private void testConsolidateFunds(SnowBlossomNode node, SnowBlossomClient client, KeyPair key_pair, AddressSpecHash from_addr)
     throws Exception
   {
     List<TransactionBridge> funds = client.getSpendable(from_addr);
@@ -114,8 +142,7 @@ public class SpoonTest
 
     Assert.assertTrue(client.submitTransaction(tx));
 
-    // Wait for that to be mined
-    Thread.sleep(2000);
+    waitForMoreBlocks(node, 2);
 
     List<TransactionBridge> new_funds = client.getSpendable(to_addr);
     Assert.assertEquals(1, new_funds.size());
