@@ -25,6 +25,8 @@ import snowblossom.proto.BlockSummary;
 
 import java.util.logging.Logger;
 import java.util.logging.Level;
+import snowblossom.ChainHash;
+import java.nio.ByteBuffer;
 
 public abstract class DB implements DBFace
 {
@@ -35,6 +37,7 @@ public abstract class DB implements DBFace
   protected ProtoDBMap<Block> block_map; 
   protected ProtoDBMap<BlockSummary> block_summary_map; 
   protected DBMap utxo_node_map;
+  protected DBMap block_height_map;
 
   public DB(Config config)
   {
@@ -53,6 +56,7 @@ public abstract class DB implements DBFace
     block_summary_map = new ProtoDBMap(BlockSummary.newBuilder().build().getParserForType(), openMap("blocksummary"));
 
     utxo_node_map = openMap("u");
+    block_height_map = openMap("height");
   }
 
   @Override
@@ -63,6 +67,27 @@ public abstract class DB implements DBFace
 
   @Override
   public DBMap getUtxoNodeMap() { return utxo_node_map; }
+
+  @Override
+  public ChainHash getBlockHashAtHeight(int height)
+  {
+    ByteBuffer bb = ByteBuffer.allocate(4);
+    bb.putInt(height);
+    ByteString hash = block_height_map.get(ByteString.copyFrom(bb.array()));
+    if (hash == null) return null;
+
+    return new ChainHash(hash);
+  }
+
+  @Override
+  public void setBlockHashAtHeight(int height, ChainHash hash)
+  {
+    ByteBuffer bb = ByteBuffer.allocate(4);
+    bb.putInt(height);
+
+    block_height_map.put(ByteString.copyFrom(bb.array()), hash.getBytes());
+  }
+
 
   protected abstract DBMap openMap(String name) throws Exception;
   protected abstract DBMapMutationSet openMutationMapSet(String name) throws Exception;

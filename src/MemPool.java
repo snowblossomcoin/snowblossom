@@ -104,12 +104,15 @@ public class MemPool
 
   }
 
-  public synchronized void addTransaction(Transaction tx)
+  /**
+   * @return true iff this seems to be a new and valid tx
+   */
+  public synchronized boolean addTransaction(Transaction tx)
     throws ValidationException
   {
     Validation.checkTransactionBasics(tx, false);
     ChainHash tx_hash = new ChainHash(tx.getTxHash());
-    if (known_transactions.containsKey(tx_hash)) return;
+    if (known_transactions.containsKey(tx_hash)) return false;
 
     TransactionMempoolInfo info = TransactionMempoolInfo.newBuilder()
       .setTx(tx)
@@ -151,6 +154,8 @@ public class MemPool
     {
       claimed_outputs.put(key, tx_hash);
     }
+
+    return true;
   }
 
   public synchronized void rebuildPriorityMap(ChainHash new_utxo_root)

@@ -125,6 +125,7 @@ public class SnowUserService extends UserServiceGrpc.UserServiceImplBase
     try
     {
       node.getMemPool().addTransaction(tx);
+      node.getPeerage().broadcastTransaction(tx);
     }
     catch(ValidationException e)
     {

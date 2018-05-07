@@ -79,9 +79,36 @@ public class BlockIngestor
       db.getBlockSummaryMap().put(HEAD, summary);
       System.out.println("UTXO at new root: " + HexUtil.getHexString(summary.getHeader().getUtxoRootHash()));
       node.getUtxoHashedTrie().printTree(summary.getHeader().getUtxoRootHash());
+
+      updateHeights(summary);
+
     }
+
+
+    node.getPeerage().sendAllTips();
     return true;
 
+  }
+
+  private void updateHeights(BlockSummary summary)
+  {
+    while(true)
+    {
+      int height = summary.getHeader().getBlockHeight();
+      ChainHash found = db.getBlockHashAtHeight(height);
+      ChainHash hash = new ChainHash(summary.getHeader().getSnowHash());
+      if ((found == null) || (!found.equals(hash)))
+      {
+        db.setBlockHashAtHeight(height, hash);
+        if (height == 0) return;
+        summary = db.getBlockSummaryMap().get(summary.getHeader().getPrevBlockHash());
+      }
+      else
+      {
+        return;
+      }
+    }
+    
   }
 
   public BlockSummary getHead()

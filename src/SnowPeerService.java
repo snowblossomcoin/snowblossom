@@ -34,7 +34,7 @@ public class SnowPeerService extends PeerServiceGrpc.PeerServiceImplBase
   @Override
   public StreamObserver<PeerMessage> subscribePeering(StreamObserver<PeerMessage> sink)
   {
-    PeerLink link = new PeerLink(sink);
+    PeerLink link = new PeerLink(node, sink);
     node.getPeerage().register(link);
     return link;
   }
