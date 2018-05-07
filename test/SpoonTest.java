@@ -71,9 +71,11 @@ public class SpoonTest
     node2.getPeerage().connectPeer("localhost", port);
     testMinedBlocks(node2);
 
+
 		miner.stop();
     Thread.sleep(500);
     node.stop();
+    node2.stop();
   }
 
   private void testMinedBlocks(SnowBlossomNode node)
