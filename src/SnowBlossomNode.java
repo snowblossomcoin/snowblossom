@@ -43,6 +43,8 @@ public class SnowBlossomNode
   private MemPool mem_pool;
   private HashedTrie utxo_hashed_trie;
 
+  private boolean terminate;
+
   public SnowBlossomNode(Config config)
     throws Exception
   {
@@ -57,7 +59,7 @@ public class SnowBlossomNode
 
     startServices();
 
-    while(true)
+    while(!terminate)
     {
       Thread.sleep(10000);
       if (user_service!=null)
@@ -65,8 +67,11 @@ public class SnowBlossomNode
         user_service.tickleBlocks();
       }
     }
-    //s.awaitTermination();
+  }
 
+  public void stop()
+  {
+    terminate=true;
   }
 
   private void setupParams()

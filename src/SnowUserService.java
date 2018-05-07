@@ -5,6 +5,7 @@ import snowblossom.proto.SubscribeBlockTemplateRequest;
 import snowblossom.proto.Block;
 import snowblossom.proto.Transaction;
 import snowblossom.proto.BlockHeader;
+import snowblossom.proto.BlockSummary;
 import snowblossom.proto.SubmitReply;
 import snowblossom.proto.GetUTXONodeRequest;
 import snowblossom.proto.GetUTXONodeReply;
@@ -152,7 +153,12 @@ public class SnowUserService extends UserServiceGrpc.UserServiceImplBase
     }
     else
     {
-      utxo_root = new ChainHash(node.getBlockIngestor().getHead().getHeader().getUtxoRootHash());
+      utxo_root = UtxoUpdateBuffer.EMPTY;
+      BlockSummary summary = node.getBlockIngestor().getHead();
+      if (summary != null)
+      {
+      utxo_root = new ChainHash(summary.getHeader().getUtxoRootHash());
+      }
     }
 
     ByteString target=request.getPrefix();
