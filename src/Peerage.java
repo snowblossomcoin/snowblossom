@@ -91,4 +91,9 @@ public class Peerage
     }
   }
 
+  public void connectPeer(String host, int port)
+  {
+    new PeerClient(node, host, port);
+  }
+
 }

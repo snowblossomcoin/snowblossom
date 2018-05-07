@@ -66,6 +66,11 @@ public class SpoonTest
     SnowBlossomClient client = startClient(port);
     testConsolidateFunds(node, client, key_pair, to_addr);
 
+
+    SnowBlossomNode node2 = startNode(port+1);
+    node2.getPeerage().connectPeer("localhost", port);
+    testMinedBlocks(node2);
+
 		miner.stop();
     Thread.sleep(500);
     node.stop();

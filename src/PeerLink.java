@@ -14,6 +14,8 @@ import snowblossom.proto.Block;
 import snowblossom.proto.BlockHeader;
 import snowblossom.proto.PeerChainTip;
 import snowblossom.proto.BlockSummary;
+import snowblossom.proto.RequestBlock;
+import snowblossom.proto.RequestBlockHeader;
 
 
 import java.util.TreeMap;
@@ -38,6 +40,10 @@ public class PeerLink implements StreamObserver<PeerMessage>
 
   private PeerChainTip last_seen_tip;
   private TreeMap<Integer, ChainHash> peer_block_map = new TreeMap<Integer, ChainHash>();
+
+  int bin_search_low=-1;
+  int bin_search_high=-1;
+  int bin_search_last=-1;
 
   public PeerLink(SnowBlossomNode node, StreamObserver<PeerMessage> sink)
   {
@@ -105,7 +111,12 @@ public class PeerLink implements StreamObserver<PeerMessage>
           close();
         }
         last_seen_tip = tip;
-        // TODO Think about doing some sort of update
+
+        BlockHeader header = tip.getHeader();
+        if (header.getSnowHash().size() > 0)
+        {
+          considerBlockHeader(header);
+        }
       }
       else if (msg.hasReqBlock())
       {
@@ -120,7 +131,15 @@ public class PeerLink implements StreamObserver<PeerMessage>
       {
         Block blk = msg.getBlock();
         if (node.getBlockIngestor().ingestBlock(blk))
-        { // thing about getting more blocks
+        { // think about getting more blocks
+          int next = blk.getHeader().getBlockHeight()+1;
+          if (peer_block_map.containsKey(next))
+          {
+            writeMessage( PeerMessage.newBuilder()
+              .setReqBlock(
+                RequestBlock.newBuilder().setBlockHash(peer_block_map.get(next).getBytes()).build())
+              .build());
+          }
 
         }
       }
@@ -137,9 +156,8 @@ public class PeerLink implements StreamObserver<PeerMessage>
       else if (msg.hasHeader())
       {
         BlockHeader header = msg.getHeader();
-        peer_block_map.put(header.getBlockHeight(), new ChainHash(header.getSnowHash()));
+        considerBlockHeader(header);
 
-        // Think about learning more or requesting blocks
       }
 
     }
@@ -152,6 +170,42 @@ public class PeerLink implements StreamObserver<PeerMessage>
       logger.log(Level.INFO, "Some bs from " + getLinkId(), e);
       close();
     }
+  }
+
+  /**
+   * The basic plan is, keep asking about previous blocks
+   * until we get to one we have heard of.  Then we start requesting the blocks.
+   */
+  private void considerBlockHeader(BlockHeader header)
+  {
+    peer_block_map.put(header.getBlockHeight(), new ChainHash(header.getSnowHash()));
+
+    // if we don't have this block
+    if (node.getDB().getBlockSummaryMap().get(header.getSnowHash())==null)
+    {
+      int height = header.getBlockHeight();
+      if ((height == 0) || (node.getDB().getBlockSummaryMap().get(header.getPrevBlockHash())!=null))
+      { //get this block 
+        
+        writeMessage( PeerMessage.newBuilder()
+          .setReqBlock(
+            RequestBlock.newBuilder().setBlockHash(header.getSnowHash()).build())
+          .build());
+      }
+      else
+      { //get more headers
+        int next = header.getBlockHeight() - 1;
+        if (next >= 0)
+        {
+          writeMessage( PeerMessage.newBuilder()
+            .setReqHeader(
+              RequestBlockHeader.newBuilder().setBlockHeight(next).build())
+            .build());
+        }
+      }
+
+    }
+
   }
 
   public void close()
