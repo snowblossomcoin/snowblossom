@@ -5,6 +5,7 @@ import snowblossom.proto.SubscribeBlockTemplateRequest;
 import snowblossom.proto.Block;
 import snowblossom.proto.BlockHeader;
 import snowblossom.proto.SubmitReply;
+import snowblossom.proto.PeerMessage;
 import io.grpc.stub.StreamObserver;
 
 import java.util.Random;
@@ -25,12 +26,18 @@ public class SnowPeerService extends PeerServiceGrpc.PeerServiceImplBase
   public SnowPeerService(SnowBlossomNode node)
   {
     super();
-
     this.node = node;
 
-
   }
-  
+
+
+  @Override
+  public StreamObserver<PeerMessage> subscribePeering(StreamObserver<PeerMessage> sink)
+  {
+    PeerLink link = new PeerLink(sink);
+    node.getPeerage().register(link);
+    return link;
+  }
 
 }
 

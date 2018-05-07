@@ -46,6 +46,7 @@ public class SnowBlossomNode
   private BlockForge forge;
   private MemPool mem_pool;
   private HashedTrie utxo_hashed_trie;
+  private Peerage peerage;
 
   private volatile boolean terminate;
 
@@ -65,7 +66,6 @@ public class SnowBlossomNode
 
   }
 
-
   public void stop()
   {
     terminate=true;
@@ -82,6 +82,8 @@ public class SnowBlossomNode
     ingestor = new BlockIngestor(this);
     forge = new BlockForge(this);
     mem_pool = new MemPool(utxo_hashed_trie);
+
+    peerage = new Peerage(this);
   }
 
   private void startServices()
@@ -141,4 +143,5 @@ public class SnowBlossomNode
   public BlockForge getBlockForge() {return forge;}
   public HashedTrie getUtxoHashedTrie(){return utxo_hashed_trie;}
   public MemPool getMemPool(){return mem_pool;}
+  public Peerage getPeerage(){return peerage;}
 }

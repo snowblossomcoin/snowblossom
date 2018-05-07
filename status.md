@@ -12,14 +12,13 @@
 * merkle root of transactions
 * utxo root hash updates and validation
 * Having a mempool and putting transactions into blocks
-
+* lite client api (absolutely bare minimum works)
 
 
 # Does not work
 
 * switching to best chain
 * p2p networking
-* lite client api
 * any sort of wallet (via lite client)
 * UPNP ports
 * onion/proxy support

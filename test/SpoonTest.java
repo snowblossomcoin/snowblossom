@@ -66,7 +66,6 @@ public class SpoonTest
     SnowBlossomClient client = startClient(port);
     testConsolidateFunds(node, client, key_pair, to_addr);
 
-
 		miner.stop();
     Thread.sleep(500);
     node.stop();
@@ -149,10 +148,6 @@ public class SpoonTest
 
     TransactionBridge b = new_funds.get(0);
     Assert.assertEquals(value, b.value);
-
-
-
-
 
     System.out.println(tx);
  

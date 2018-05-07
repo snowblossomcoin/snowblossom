@@ -136,8 +136,7 @@ message SigSpec {
 // -------------------------------------------------
 
 service PeerService {
-  rpc SubscribeBlockHeaders ( stream BlockHeader ) returns ( stream BlockHeader ) {}
-  rpc SubscribeTransactions ( stream Transaction ) returns ( stream Transaction ) {}
+  rpc SubscribePeering ( stream PeerMessage ) returns ( stream PeerMessage ) {}
 }
 
 service UserService {
@@ -145,6 +144,32 @@ service UserService {
   rpc SubmitBlock ( Block ) returns ( SubmitReply ) {}
   rpc SubmitTransaction ( Transaction ) returns ( SubmitReply ) {}
   rpc GetUTXONode( GetUTXONodeRequest ) returns ( GetUTXONodeReply ) {}
+}
+
+message PeerMessage {
+  oneof z {
+    Transaction tx = 1;
+    PeerChainTip tip = 2;
+
+    RequestBlock req_block = 3;
+    Block block = 4;
+
+    RequestBlockHeader req_header = 5;
+    BlockHeader header = 6;
+  }
+}
+
+message PeerChainTip {
+  BlockHeader header = 1;
+}
+message RequestBlock {
+  oneof z {
+    int32 block_height = 1;
+    bytes block_hash = 2;
+  }
+}
+message RequestBlockHeader {
+  int32 block_height = 1;
 }
 
 message SubmitReply {
