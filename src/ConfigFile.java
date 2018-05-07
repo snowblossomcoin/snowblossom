@@ -20,15 +20,6 @@ public class ConfigFile extends Config
     }
 
     @Override
-    public void require(String key)
-    {
-        if (!props.containsKey(key))
-        {
-            throw new RuntimeException("Missing required key: " + key);
-        }
-    }
-
-    @Override
     public String get(String key)
     {
         return props.getProperty(key);

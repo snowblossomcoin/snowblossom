@@ -220,6 +220,23 @@ java_test(
       "//:snowblossomprotolib",
   ],
 )
+java_test(
+  name = "spoon_test",
+  srcs = ["test/SpoonTest.java"],
+  test_class = "snowblossom.SpoonTest",
+  size="small",
+  deps = [
+      "@junit_junit//jar",
+      ":snowblossomlib",
+      "@commons_codec//jar",
+      "@org_pubref_rules_protobuf//java:grpc_compiletime_deps",
+      "//:snowblossomprotolib",
+      ":minerlib",
+      ":clientlib",
+  ],
+)
+
+
 
 
 

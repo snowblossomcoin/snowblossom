@@ -41,15 +41,7 @@ public abstract class DB implements DBFace
     Runtime.getRuntime().addShutdownHook(new DBShutdownThread());
   }
 
-  public void compact()
-  {
-  }
 
-  public void commit()
-  {
-  }
-
-  
   public void close()
   {
   }
@@ -75,10 +67,9 @@ public abstract class DB implements DBFace
   protected abstract DBMap openMap(String name) throws Exception;
   protected abstract DBMapMutationSet openMutationMapSet(String name) throws Exception;
 
-  /** Override if the database needs to do soemthing on shutdown */
-  protected void dbShutdownHandler() throws Exception
+  protected void dbShutdownHandler()
   {
-
+    close();
   }
 
   protected synchronized Executor getExec()

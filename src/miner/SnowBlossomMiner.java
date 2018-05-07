@@ -50,6 +50,11 @@ public class SnowBlossomMiner
 
 
     new SnowBlossomMiner(config); 
+    
+    while(true)
+    {
+      Thread.sleep(5000);
+    }
   }
 
   private volatile Block last_block_template;
@@ -70,6 +75,7 @@ public class SnowBlossomMiner
     int port = config.getIntWithDefault("node_port", 2338);
 
     config.require("mine_to_address");
+    int threads = config.getIntWithDefault("threads", 8);
     
     params = NetworkParams.loadFromConfig(config);
 		
@@ -89,17 +95,19 @@ public class SnowBlossomMiner
       .setPayRewardToSpecHash(to_addr.getBytes()).build(), new BlockTemplateEater());
     logger.info("Subscribed to blocks");  
 
-    for(int i=0; i<4; i++)
+    for(int i=0; i<threads; i++)
     {
       new MinerThread().start();
     }
 
-    while(true)
-    {
-      Thread.sleep(5000);
-    }
 
   }
+
+  public void stop()
+  {
+    terminate=true;
+  }
+  private volatile boolean terminate=false;
 
   public class MinerThread extends Thread
   {
@@ -183,7 +191,7 @@ public class SnowBlossomMiner
 
     public void run()
     {
-      while(true)
+      while(!terminate)
       {
         boolean err=false;
         try

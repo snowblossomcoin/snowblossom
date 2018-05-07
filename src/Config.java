@@ -10,8 +10,16 @@ import java.util.List;
 public abstract class Config
 {
 
-    public abstract void require(String key);
     public abstract String get(String key);
+
+    public void require(String key)
+    {
+      if(get(key) == null)
+      {
+        throw new RuntimeException("Missing required key: " + key);
+      }
+    }
+
 
     public int getInt(String key)
     {

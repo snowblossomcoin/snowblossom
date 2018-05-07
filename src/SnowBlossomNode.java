@@ -31,6 +31,10 @@ public class SnowBlossomNode
     ConfigFile config = new ConfigFile(args[0]);
 
     new SnowBlossomNode(config);
+    while(true)
+    {
+      Thread.sleep(2500);
+    }
   }
 
   private Config config;
@@ -43,7 +47,7 @@ public class SnowBlossomNode
   private MemPool mem_pool;
   private HashedTrie utxo_hashed_trie;
 
-  private boolean terminate;
+  private volatile boolean terminate;
 
   public SnowBlossomNode(Config config)
     throws Exception
@@ -59,19 +63,13 @@ public class SnowBlossomNode
 
     startServices();
 
-    while(!terminate)
-    {
-      Thread.sleep(10000);
-      if (user_service!=null)
-      {
-        user_service.tickleBlocks();
-      }
-    }
   }
+
 
   public void stop()
   {
     terminate=true;
+
   }
 
   private void setupParams()

@@ -74,22 +74,25 @@ public class JRocksDB extends DB
     return new RocksDBMap(this, db, name);
   }
 
-
-  
   @Override
-  protected void dbShutdownHandler()
-    throws Exception
+  public void close()
   {
+    super.close();
+
     logger.info("RocksDB flush started");
-    FlushOptions fl = new FlushOptions();
-    fl.setWaitForFlush(true);
-    db.flush(fl);
+    try
+    {
+      FlushOptions fl = new FlushOptions();
+      fl.setWaitForFlush(true);
+      db.flush(fl);
+    }
+    catch(Exception e)
+    {
+      logger.log(Level.WARNING, "rocks flush", e);
+    }
 
     logger.info("RocksDB flush completed");
+
   }
-
-
-
-
 
 }

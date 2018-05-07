@@ -22,6 +22,7 @@ import snowblossom.SignatureUtil;
 import snowblossom.AddressUtil;
 import snowblossom.proto.AddressSpec;
 import snowblossom.proto.SigSpec;
+import snowblossom.proto.Transaction;
 import java.security.KeyPair;
 
 
@@ -38,6 +39,8 @@ import java.security.Security;
 import java.io.File;
 
 import java.util.LinkedList;
+import java.util.List;
+import snowblossom.TransactionBridge;
 
 public class SnowBlossomClient
 {
@@ -66,7 +69,6 @@ public class SnowBlossomClient
 
   public SnowBlossomClient(Config config) throws Exception
   {
-    config.require("snow_path");
     config.require("node_host");
 
     String host = config.get("node_host");
@@ -78,55 +80,35 @@ public class SnowBlossomClient
 
     asyncStub = UserServiceGrpc.newStub(channel);
     blockingStub = UserServiceGrpc.newBlockingStub(channel);
+  }
 
-    Random rnd = new Random();
+  public List<TransactionBridge> getSpendable(AddressSpecHash addr)
+  {
 
-    KeyPair key_pair = KeyUtil.generateECCompressedKey();
-		
-
-
-      AddressSpec claim = AddressSpec.newBuilder()
-        .setRequiredSigners(1)
-        .addSigSpecs( SigSpec.newBuilder()
-          .setSignatureType( SignatureUtil.SIG_TYPE_ECDSA)
-          .setPublicKey(ByteString.copyFrom(key_pair.getPublic().getEncoded()))
-          .build())
-        .build();
-
-		AddressSpecHash to_addr = AddressUtil.getHashForSpec(claim);
-
-
-    System.out.println("Address: " + to_addr);
-
-
-    while(true)
+    GetUTXONodeReply reply = blockingStub.getUTXONode( GetUTXONodeRequest.newBuilder()
+      .setPrefix(addr.getBytes())
+      .setIncludeProof(true)
+      .build());
+    LinkedList<TransactionBridge> out_list = new LinkedList<>();
+    for(TrieNode node : reply.getAnswerList())
     {
-			LinkedList<TransactionOutput> out_list = new LinkedList<>();
-
-      GetUTXONodeReply reply = blockingStub.getUTXONode( GetUTXONodeRequest.newBuilder()
-        .setPrefix(to_addr.getBytes())
-        .setIncludeProof(true)
-        .build());
-
-      long total = 0;
-      int outputs = 0;
-      for(TrieNode node : reply.getAnswerList())
+      if (node.getIsLeaf())
       {
-        if (node.getIsLeaf())
-        {
-          TransactionOutput out = TransactionOutput.parseFrom(node.getLeafData());
-          total += out.getValue();
-          outputs++;
-					out_list.add(out);
-        }
+        TransactionBridge b = new TransactionBridge(node);
+
+        out_list.add(b);
       }
-
-      System.out.println("Total value: " + total + " in " + outputs + " outputs");
-
-      Thread.sleep(15000);
     }
 
-
+    return out_list;
   }
+
+  public boolean submitTransaction(Transaction tx)
+  {
+    SubmitReply reply = blockingStub.submitTransaction(tx);
+
+    return reply.getSuccess();
+  }
+
 
 }

@@ -82,6 +82,11 @@ public abstract class NetworkParams
         logger.info("Using network teapot - testnet");
         return new NetworkParamsTestnet();
       }
+      else if (network.equals("spoon"))
+      {
+        logger.info("Using network spoon - regtest");
+        return new NetworkParamsRegtest();
+      }
       else
       {
         logger.log(Level.SEVERE, String.format("Unknown network: %s", network));
