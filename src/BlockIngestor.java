@@ -77,8 +77,8 @@ public class BlockIngestor
     {
       chainhead = summary;
       db.getBlockSummaryMap().put(HEAD, summary);
-      System.out.println("UTXO at new root: " + HexUtil.getHexString(summary.getHeader().getUtxoRootHash()));
-      node.getUtxoHashedTrie().printTree(summary.getHeader().getUtxoRootHash());
+      //System.out.println("UTXO at new root: " + HexUtil.getHexString(summary.getHeader().getUtxoRootHash()));
+      //node.getUtxoHashedTrie().printTree(summary.getHeader().getUtxoRootHash());
 
       updateHeights(summary);
 
@@ -146,6 +146,22 @@ public class BlockIngestor
       block_time = header.getTimestamp() - prev_summary.getHeader().getTimestamp();
       prev_block_time = prev_summary.getBlocktimeAverageMs();
       prev_target_avg = prev_summary.getTargetAverage();
+    }
+    int field = prev_summary.getActivatedField();
+    bs.setActivatedField( field );
+
+    SnowFieldInfo next_field = params.getSnowFieldInfo(field + 1);
+    if (next_field != null)
+    {
+
+      
+      /*System.out.println(String.format("Field %d Target %f, activation %f", field+1,
+        PowUtil.getDiffForTarget(prev_target_avg), 
+        PowUtil.getDiffForTarget(next_field.getActivationTarget())));*/
+      if (prev_target_avg < next_field.getActivationTarget())
+      {
+        bs.setActivatedField( field + 1);
+      }
     }
 
     bs.setBlocktimeAverageMs(  (prev_block_time * decay + block_time * weight) / 1000L );

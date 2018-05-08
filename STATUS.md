@@ -14,15 +14,15 @@
 * Having a mempool and putting transactions into blocks
 * lite client api (absolutely bare minimum works)
 * p2p networking
+* switching to best chain
+* snow storms
 
 
 # Does not work
 
-* switching to best chain
 * any sort of wallet (via lite client)
 * UPNP ports
 * onion/proxy support
-* snow storms
 
 
 

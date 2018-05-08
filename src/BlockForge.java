@@ -63,8 +63,7 @@ public class BlockForge
 
     header_builder.setTimestamp(time);
     header_builder.setTarget(BlockchainUtil.targetLongToBytes(target));
-    header_builder.setSnowField(0);
-
+    header_builder.setSnowField(head.getActivatedField());
 
     try
     {

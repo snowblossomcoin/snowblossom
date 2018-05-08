@@ -153,6 +153,13 @@ public class Validation
       throw new ValidationException("Block target does not match expected target");
     }
 
+    if (blk.getHeader().getSnowField() < prev_summary.getActivatedField())
+    {
+      throw new ValidationException(String.format("Snow field %d when at least %d is required", 
+        blk.getHeader().getSnowField(), 
+        prev_summary.getActivatedField()));
+    }
+
 
     // Check timestamps and block height
 		ChainHash prevblock = new ChainHash(blk.getHeader().getPrevBlockHash());

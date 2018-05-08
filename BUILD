@@ -224,7 +224,7 @@ java_test(
   name = "spoon_test",
   srcs = ["test/SpoonTest.java"],
   test_class = "snowblossom.SpoonTest",
-  size="small",
+  size="medium",
   deps = [
       "@junit_junit//jar",
       ":snowblossomlib",

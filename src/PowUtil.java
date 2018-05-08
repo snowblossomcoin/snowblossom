@@ -24,6 +24,11 @@ public class PowUtil
   public static byte[] hashHeaderBits(BlockHeader header, byte[] nonce)
   {
     MessageDigest md = DigestUtil.getMD();
+    return hashHeaderBits(header, nonce, md);
+
+  }
+  public static byte[] hashHeaderBits(BlockHeader header, byte[] nonce, MessageDigest md)
+  {
 
     byte[] int_data = new byte[3*4 + 1*8];
     ByteBuffer bb = ByteBuffer.wrap(int_data);
@@ -48,6 +53,11 @@ public class PowUtil
   public static long getNextSnowFieldIndex(byte[] context, long word_count)
   {
     MessageDigest md = DigestUtil.getMD();
+    return getNextSnowFieldIndex(context, word_count, md);
+
+  }
+  public static long getNextSnowFieldIndex(byte[] context, long word_count, MessageDigest md)
+  {
     md.update(context);
     byte[] hash = md.digest();
 
@@ -66,6 +76,11 @@ public class PowUtil
   public static byte[] getNextContext(byte[] prev_context, byte[] found_data)
   {
     MessageDigest md = DigestUtil.getMD();
+    return getNextContext(prev_context, found_data, md);
+
+  }
+  public static byte[] getNextContext(byte[] prev_context, byte[] found_data, MessageDigest md)
+  {
     md.update(prev_context);
     md.update(found_data);
     return md.digest();
@@ -119,12 +134,20 @@ public class PowUtil
     new_target = Math.min(new_target, params.getMaxTarget());
 
     bb.putLong(new_target);
-    double diff = 64.0 - Math.log(new_target) / Math.log(2);
+    double diff = getDiffForTarget(new_target);
+    double avg_diff = getDiffForTarget( prev_summary.getTargetAverage() );
     DecimalFormat df = new DecimalFormat("0.000");
-    logger.info(String.format("New target: %s, %s", HashUtils.getHexString(bb.array()), df.format(diff)));
+    logger.info(String.format("New target: %s, %s, (avg %s)", 
+      HashUtils.getHexString(bb.array()), 
+      df.format(diff),
+      df.format(avg_diff)));
 
     return new_target;
 
+  }
+  public static double getDiffForTarget(long target)
+  {
+    return 64.0 - Math.log(target) / Math.log(2);
   }
 
   public static long getBlockReward(NetworkParams params, int block_height)

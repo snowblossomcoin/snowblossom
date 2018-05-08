@@ -225,8 +225,9 @@ message BlockSummary {
   int64 work_sum = 1;
   int64 blocktime_average_ms = 2;
   int64 target_average = 3;
+  int32 activated_field = 4;
   
-  BlockHeader header = 4;
+  BlockHeader header = 5;
 }
 
 message MemPoolList {

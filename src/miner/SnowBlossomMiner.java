@@ -29,9 +29,13 @@ import snowblossom.SnowMerkleProof;
 import snowblossom.trie.HashUtils;
 import snowblossom.Config;
 import snowblossom.ConfigFile;
+import snowblossom.DigestUtil;
 import com.google.protobuf.ByteString;
 import java.security.Security;
+import java.security.MessageDigest;
 import java.io.File;
+import java.util.concurrent.atomic.AtomicLong;
+import java.text.DecimalFormat;
 
 public class SnowBlossomMiner
 {
@@ -49,11 +53,12 @@ public class SnowBlossomMiner
     ConfigFile config = new ConfigFile(args[0]);
 
 
-    new SnowBlossomMiner(config); 
+    SnowBlossomMiner miner = new SnowBlossomMiner(config); 
     
     while(true)
     {
-      Thread.sleep(5000);
+      Thread.sleep(15000);
+      miner.printStats();
     }
   }
 
@@ -65,19 +70,23 @@ public class SnowBlossomMiner
   private final FieldScan field_scan;
 	private final NetworkParams params;
 
+  private AtomicLong op_count = new AtomicLong(0L);
+  private long last_stats_time = System.currentTimeMillis();
+
   public SnowBlossomMiner(Config config) throws Exception
   {
     config.require("snow_path");
     config.require("node_host");
+    
+    params = NetworkParams.loadFromConfig(config);
 
     File path = new File(config.get("snow_path"));
     String host = config.get("node_host");
-    int port = config.getIntWithDefault("node_port", 2338);
+    int port = config.getIntWithDefault("node_port", params.getDefaultPort());
 
     config.require("mine_to_address");
     int threads = config.getIntWithDefault("threads", 8);
     
-    params = NetworkParams.loadFromConfig(config);
 		
     field_scan = new FieldScan(path, params);
 
@@ -109,9 +118,28 @@ public class SnowBlossomMiner
   }
   private volatile boolean terminate=false;
 
+  public void printStats()
+  {
+    long now = System.currentTimeMillis();
+    double count = op_count.getAndSet(0L);
+
+    double time_ms = now - last_stats_time;
+    double time_sec = time_ms / 1000.0;
+    double rate = count / time_sec;
+
+    DecimalFormat df=new DecimalFormat("0.0");
+
+    logger.info(String.format("Mining rate: %s/sec", df.format(rate)));
+
+    last_stats_time = now;
+
+
+  }
+
   public class MinerThread extends Thread
   {
     Random rnd;
+    MessageDigest md = DigestUtil.getMD();
     public MinerThread()
     {
       setName("MinerThread");
@@ -132,16 +160,16 @@ public class SnowBlossomMiner
       rnd.nextBytes(nonce);
 
       // TODO, modify headers to put snow field in
-      byte[] first_hash = PowUtil.hashHeaderBits(b.getHeader(), nonce);
+      byte[] first_hash = PowUtil.hashHeaderBits(b.getHeader(), nonce, md);
 
       SnowMerkleProof merkle_proof = field_scan.getFieldProof(b.getHeader().getSnowField());
 
       byte[] context = first_hash;
       for(int pass=0; pass<Globals.POW_LOOK_PASSES; pass++)
       {
-        long word_idx = PowUtil.getNextSnowFieldIndex(context, merkle_proof.getTotalWords());
+        long word_idx = PowUtil.getNextSnowFieldIndex(context, merkle_proof.getTotalWords(), md);
         byte[] word = merkle_proof.readWord(word_idx);
-        context = PowUtil.getNextContext(context, word);
+        context = PowUtil.getNextContext(context, word, md);
       }
 
 
@@ -154,6 +182,7 @@ public class SnowBlossomMiner
         buildBlock(b, nonce, merkle_proof);
 
       }
+      op_count.getAndIncrement();
     }
 
     private void buildBlock(Block b, byte[] nonce, SnowMerkleProof merkle_proof)
