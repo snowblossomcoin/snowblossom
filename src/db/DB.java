@@ -38,6 +38,7 @@ public abstract class DB implements DBFace
   protected ProtoDBMap<BlockSummary> block_summary_map; 
   protected DBMap utxo_node_map;
   protected DBMap block_height_map;
+  protected DBMap special_map;
 
   public DB(Config config)
   {
@@ -57,6 +58,7 @@ public abstract class DB implements DBFace
 
     utxo_node_map = openMap("u");
     block_height_map = openMap("height");
+    special_map = openMap("special");
   }
 
   @Override
@@ -64,6 +66,9 @@ public abstract class DB implements DBFace
 
   @Override 
   public ProtoDBMap<BlockSummary> getBlockSummaryMap(){return block_summary_map; }
+
+  @Override
+  public DBMap getSpecialMap() { return special_map; }
 
   @Override
   public DBMap getUtxoNodeMap() { return utxo_node_map; }

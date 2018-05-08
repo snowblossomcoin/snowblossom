@@ -10,6 +10,17 @@ import snowblossom.proto.Transaction;
 
 import com.google.common.collect.ImmutableList;
 
+
+import java.util.logging.Logger;
+import java.util.logging.Level;
+
+import java.util.ArrayList;
+import snowblossom.proto.PeerInfo;
+import snowblossom.proto.PeerList;
+
+import com.google.protobuf.ByteString;
+
+
 /**
  * Joe: Should I class that handles communicating with a bunch of peers be called the Peerage?
  * Tyler: Gossiper
@@ -18,15 +29,40 @@ import com.google.common.collect.ImmutableList;
  */
 public class Peerage
 {
+  private static final Logger logger = Logger.getLogger("Peerage");
+
   private SnowBlossomNode node;
 
   private Map<String, PeerLink> links;
+
+  private ArrayList<PeerInfo> peer_rumor_list;
   
   public Peerage(SnowBlossomNode node)
   {
     this.node = node;
 
     links = new HashMap<>();
+    peer_rumor_list = new ArrayList<PeerInfo>();
+
+    ByteString peer_data = node.getDB().getSpecialMap().get("peerlist");
+    if (peer_data != null)
+    {
+      try
+      {
+      PeerList db_peer_list = PeerList.parseFrom(peer_data);
+      peer_rumor_list.addAll(db_peer_list.getPeersList());
+      logger.info(String.format("Loaded %d peers from database", peer_rumor_list.size()));
+      }
+      catch(Exception e)
+      {
+        logger.log(Level.INFO, "Exception loading peer list", e);
+      }
+    }
+  }
+
+  public void start()
+  {
+    new PeerageMaintThread().start();
   }
 
   public void register(PeerLink link)
@@ -36,7 +72,7 @@ public class Peerage
       links.put(link.getLinkId(), link);
     }
 
-    sendTip(link, getTip());
+    link.writeMessage(PeerMessage.newBuilder().setTip(getTip()).build());
   }
 
   private PeerChainTip getTip()
@@ -58,12 +94,6 @@ public class Peerage
         .build();
     }
     return tip;
-
-  }
-
-  private static void sendTip(PeerLink link, PeerChainTip tip)
-  {
-    link.writeMessage(PeerMessage.newBuilder().setTip(tip).build());
   }
 
   private ImmutableList<PeerLink> getLinkList()
@@ -79,7 +109,7 @@ public class Peerage
     PeerChainTip tip = getTip();
     for(PeerLink link : getLinkList())
     {
-      sendTip(link, tip);
+      link.writeMessage(PeerMessage.newBuilder().setTip(tip).build());
     }
   }
 
@@ -94,6 +124,49 @@ public class Peerage
   public void connectPeer(String host, int port)
   {
     new PeerClient(node, host, port);
+  }
+
+  public class PeerageMaintThread extends Thread
+  {
+    public PeerageMaintThread()
+    {
+      setName("PeerageMaintThread");
+      setDaemon(true);
+    }
+
+    public void run()
+    {
+      while(true)
+      {   
+        try
+        {
+          Thread.sleep(10000);
+          runPrune();
+          sendAllTips();
+
+
+        }
+        catch(Throwable t)
+        {
+          logger.log(Level.WARNING, "PeerageMaintThread", t);
+        }
+      }
+    }
+
+    private void runPrune()
+    {
+      for(PeerLink link : getLinkList())
+      {
+        if (!link.isOpen())
+        {
+          synchronized(links)
+          {
+            links.remove(link.getLinkId());
+          }
+        }
+      }
+    }
+
   }
 
 }

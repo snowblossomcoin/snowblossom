@@ -129,12 +129,15 @@ public class PeerLink implements StreamObserver<PeerMessage>
         if (node.getBlockIngestor().ingestBlock(blk))
         { // think about getting more blocks
           int next = blk.getHeader().getBlockHeight()+1;
-          if (peer_block_map.containsKey(next))
+          synchronized(peer_block_map)
           {
-            writeMessage( PeerMessage.newBuilder()
-              .setReqBlock(
-                RequestBlock.newBuilder().setBlockHash(peer_block_map.get(next).getBytes()).build())
-              .build());
+            if (peer_block_map.containsKey(next))
+            {
+              writeMessage( PeerMessage.newBuilder()
+                .setReqBlock(
+                  RequestBlock.newBuilder().setBlockHash(peer_block_map.get(next).getBytes()).build())
+                .build());
+            }
           }
 
         }
@@ -153,9 +156,7 @@ public class PeerLink implements StreamObserver<PeerMessage>
       {
         BlockHeader header = msg.getHeader();
         considerBlockHeader(header);
-
       }
-
     }
     catch(ValidationException e)
     {
@@ -174,7 +175,11 @@ public class PeerLink implements StreamObserver<PeerMessage>
    */
   private void considerBlockHeader(BlockHeader header)
   {
-    peer_block_map.put(header.getBlockHeight(), new ChainHash(header.getSnowHash()));
+
+    synchronized(peer_block_map)
+    {
+      peer_block_map.put(header.getBlockHeight(), new ChainHash(header.getSnowHash()));
+    }
 
     // if we don't have this block
     if (node.getDB().getBlockSummaryMap().get(header.getSnowHash())==null)
@@ -195,9 +200,12 @@ public class PeerLink implements StreamObserver<PeerMessage>
         if (next >= 0)
         {
           ChainHash prev = new ChainHash(header.getPrevBlockHash());
-          if (peer_block_map.containsKey(next))
+          synchronized(peer_block_map)
           {
-            if (peer_block_map.get(next).equals(prev)) return;
+            if (peer_block_map.containsKey(next))
+            {
+              if (peer_block_map.get(next).equals(prev)) return;
+            }
           }
 
           writeMessage( PeerMessage.newBuilder()

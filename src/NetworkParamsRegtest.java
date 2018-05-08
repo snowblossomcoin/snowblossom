@@ -4,6 +4,10 @@ package snowblossom;
 import java.util.Map;
 import java.util.TreeMap;
 
+import java.util.List;
+
+import com.google.common.collect.ImmutableList;
+
 
 public class NetworkParamsRegtest extends NetworkParams
 {
@@ -42,4 +46,10 @@ public class NetworkParamsRegtest extends NetworkParams
   @Override
   public long getBlockTimeTarget() { return 1000L; } //1 second
 
+  @Override
+  public List<String> getSeedNodes()
+  {
+    return ImmutableList.of("seed-regtest.snowblossom.org");
+  }
+  public int getDefaultPort() { return 2340; }
 }

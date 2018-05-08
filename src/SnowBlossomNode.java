@@ -62,6 +62,8 @@ public class SnowBlossomNode
     loadUtxoDB();
     loadWidgets();
 
+    startWidgets();
+
     startServices();
 
   }
@@ -84,6 +86,11 @@ public class SnowBlossomNode
     mem_pool = new MemPool(utxo_hashed_trie);
 
     peerage = new Peerage(this);
+  }
+
+  private void startWidgets()
+  {
+    peerage.start();
   }
 
   private void startServices()

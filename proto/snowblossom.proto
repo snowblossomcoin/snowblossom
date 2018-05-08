@@ -229,5 +229,16 @@ message TransactionMempoolInfo {
   int64 seen = 2;
 }
 
+message PeerInfo {
+  string host = 1;
+  int32 port = 2;
+  int64 last_checked = 3;
+  int64 last_passed = 4;
+  int64 learned = 5;
+}
+
+message PeerList {
+  repeated PeerInfo peers = 1;
+}
 
 

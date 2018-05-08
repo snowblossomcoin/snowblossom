@@ -45,18 +45,4 @@ public class ProtoDBMap<M extends Message>
     return inner.containsKey(key);
   }
 
-  /*public void putAll(Map<ByteString, M> map)
-  {
-    TreeMap<ByteString, ByteString> put_map = new TreeMap<>();
-
-    for(Map.Entry<String, M> me : map.entrySet())
-    {
-      put_map.put(me.getKey(), me.getValue().toByteString());
-    }
-
-    inner.putAll(put_map);
-
-  }*/
-
-
 }

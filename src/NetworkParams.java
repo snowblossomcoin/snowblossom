@@ -3,6 +3,7 @@ package snowblossom;
 import com.google.common.collect.ImmutableMap;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.List;
 
 import com.google.protobuf.ByteString;
 
@@ -41,12 +42,15 @@ public abstract class NetworkParams
 
   public ByteString getBlockZeroRemark() { return ByteString.copyFrom(new String("it begins").getBytes()); }
 
-  public int getMaxBlockSize() { return 1024 * 1024 * 8; }
+  public int getMaxBlockSize() { return 1024 * 1024 * 2; }
 
   /**
    * Use NTP
    */
   public long getMaxClockSkewMs() { return 50; }
+
+  public abstract List<String> getSeedNodes();
+  public int getDefaultPort() { return 2338; }
 
   /**
    * Returns a mapping of field seeds, which also
@@ -65,7 +69,6 @@ public abstract class NetworkParams
     }
     return field_seed_map;
   }
-
 
   public static NetworkParams loadFromConfig(Config config)
   {
@@ -92,7 +95,6 @@ public abstract class NetworkParams
         logger.log(Level.SEVERE, String.format("Unknown network: %s", network));
 				return null;
       }
-
     }
     else
     {

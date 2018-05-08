@@ -4,6 +4,9 @@ package snowblossom;
 import java.util.Map;
 import java.util.TreeMap;
 
+import java.util.List;
+import com.google.common.collect.ImmutableList;
+
 
 public class NetworkParamsProd extends NetworkParams
 {
@@ -33,4 +36,11 @@ public class NetworkParamsProd extends NetworkParams
   @Override
   public String getNetworkName() { return "snowblossom"; }
 
+  @Override
+  public List<String> getSeedNodes()
+  {
+    return ImmutableList.of("seed.snowblossom.org");
+  }
+  @Override
+  public int getDefaultPort() { return 2338; }
 }
