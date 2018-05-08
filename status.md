@@ -13,12 +13,12 @@
 * utxo root hash updates and validation
 * Having a mempool and putting transactions into blocks
 * lite client api (absolutely bare minimum works)
+* p2p networking
 
 
 # Does not work
 
 * switching to best chain
-* p2p networking
 * any sort of wallet (via lite client)
 * UPNP ports
 * onion/proxy support

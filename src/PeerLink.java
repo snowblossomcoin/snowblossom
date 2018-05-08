@@ -41,10 +41,6 @@ public class PeerLink implements StreamObserver<PeerMessage>
   private PeerChainTip last_seen_tip;
   private TreeMap<Integer, ChainHash> peer_block_map = new TreeMap<Integer, ChainHash>();
 
-  int bin_search_low=-1;
-  int bin_search_high=-1;
-  int bin_search_last=-1;
-
   public PeerLink(SnowBlossomNode node, StreamObserver<PeerMessage> sink)
   {
     this.node = node;
@@ -195,8 +191,15 @@ public class PeerLink implements StreamObserver<PeerMessage>
       else
       { //get more headers
         int next = header.getBlockHeight() - 1;
+        
         if (next >= 0)
         {
+          ChainHash prev = new ChainHash(header.getPrevBlockHash());
+          if (peer_block_map.containsKey(next))
+          {
+            if (peer_block_map.get(next).equals(prev)) return;
+          }
+
           writeMessage( PeerMessage.newBuilder()
             .setReqHeader(
               RequestBlockHeader.newBuilder().setBlockHeight(next).build())

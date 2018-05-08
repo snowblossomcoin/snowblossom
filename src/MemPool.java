@@ -209,6 +209,9 @@ public class MemPool
    * a single transaction that has all outputs already in utxo.
    * In the more complex case, a chain of transactions needs to go
    * in for the transaction in question to be confirmed.
+   * TODO - make faster, this thing sucks out loud.
+   * Probably need to actually build the graph and do graph
+   * theory things.
    */
   private TXCluster buildTXCluster(Transaction target_tx)
     throws ValidationException
