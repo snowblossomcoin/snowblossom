@@ -13,6 +13,7 @@ import snowblossom.proto.Transaction;
 import snowblossom.proto.Block;
 import snowblossom.proto.BlockHeader;
 import snowblossom.proto.PeerChainTip;
+import snowblossom.proto.PeerInfo;
 import snowblossom.proto.BlockSummary;
 import snowblossom.proto.RequestBlock;
 import snowblossom.proto.RequestBlockHeader;
@@ -116,6 +117,10 @@ public class PeerLink implements StreamObserver<PeerMessage>
         if (header.getSnowHash().size() > 0)
         {
           considerBlockHeader(header);
+        }
+        for(PeerInfo pi : tip.getPeersList())
+        {
+          node.getPeerage().learnPeer(pi);
         }
       }
       else if (msg.hasReqBlock())

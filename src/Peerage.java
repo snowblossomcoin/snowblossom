@@ -3,6 +3,7 @@ package snowblossom;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.TreeMap;
 import java.util.HashMap;
 import snowblossom.proto.BlockSummary;
 import snowblossom.proto.PeerMessage;
@@ -68,6 +69,7 @@ public class Peerage
           learnPeer(info);
         }
         logger.info(String.format("Loaded %d peers from database", peer_rumor_list.size()));
+        logger.info("Peers: " + peer_rumor_list.keySet());
       }
       catch(Exception e)
       {
@@ -96,22 +98,35 @@ public class Peerage
 
   private PeerChainTip getTip()
   {
-    PeerChainTip tip;
+    PeerChainTip.Builder tip = PeerChainTip.newBuilder();
     BlockSummary summary = node.getBlockIngestor().getHead();
+
+    tip.setNetworkName(node.getParams().getNetworkName());
+
     if (summary != null)
     {
-      tip = PeerChainTip.newBuilder()
-        .setHeader(summary.getHeader())
-        .setNetworkName(node.getParams().getNetworkName())
-        .build();
+      tip.setHeader(summary.getHeader());
     }
-    else
+    TreeMap<Double, PeerInfo> peer_map = new TreeMap<>();
+    Random rnd = new Random();
+    synchronized(peer_rumor_list)
     {
-      tip = PeerChainTip.newBuilder()
-        .setNetworkName(node.getParams().getNetworkName())
-        .build();
+      for(PeerInfo pi : peer_rumor_list.values())
+      {
+        peer_map.put(rnd.nextDouble(), pi);
+      }
     }
-    return tip;
+
+    for(int i=0; i<8; i++)
+    {
+      if (peer_map.size() > 0)
+      {
+        tip.addPeers(peer_map.pollFirstEntry().getValue());
+      }
+    }
+    
+   
+    return tip.build();
   }
 
   private ImmutableList<PeerLink> getLinkList()
