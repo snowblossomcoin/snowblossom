@@ -17,7 +17,7 @@ public class PowUtilTest
   {
     BlockSummary bs = BlockSummary.newBuilder().build();
 
-    NetworkParams params = new NetworkParamsTestnet();
+    NetworkParams params = new NetworkParamsRegtest();
 
     long target = PowUtil.calcNextTarget(bs, params, System.currentTimeMillis());
 
@@ -29,7 +29,7 @@ public class PowUtilTest
   @Test
   public void testCalcNextTargetDecreasing()
   {
-    NetworkParams params = new NetworkParamsTestnet();
+    NetworkParams params = new NetworkParamsRegtest();
     long time = System.currentTimeMillis();
 
     BlockHeader prev_header = BlockHeader.newBuilder()
@@ -52,7 +52,7 @@ public class PowUtilTest
   @Test
   public void testCalcNextTargetDecreasingFromAvg()
   {
-    NetworkParams params = new NetworkParamsTestnet();
+    NetworkParams params = new NetworkParamsRegtest();
     long time = System.currentTimeMillis();
 
     // block solved fast
@@ -76,7 +76,7 @@ public class PowUtilTest
   @Test
   public void testCalcNextTargetIncreasingFromAvg()
   {
-    NetworkParams params = new NetworkParamsTestnet();
+    NetworkParams params = new NetworkParamsRegtest();
     long time = System.currentTimeMillis();
   
     //block solved slow
@@ -103,10 +103,10 @@ public class PowUtilTest
   @Test
   public void testStability()
   {
-    NetworkParams params = new NetworkParamsTestnet();
+    NetworkParams params = new NetworkParamsRegtest();
     long time = 1000000000L;
     long target = params.getMaxTarget();
-    double simulated_solve_rate = 1; //per ms
+    double simulated_solve_rate = 100; //per ms
 
     BlockSummary bs = BlockSummary.newBuilder().build();
 
@@ -139,7 +139,7 @@ public class PowUtilTest
     double diff = Math.abs(bs.getBlocktimeAverageMs() - params.getBlockTimeTarget());
     diff = diff / params.getBlockTimeTarget();
 
-    Assert.assertTrue(diff < 0.01);
+    Assert.assertTrue(String.format("Diff: %f", diff), diff < 0.02);
 
     // increase speed
 
@@ -174,7 +174,7 @@ public class PowUtilTest
     diff = Math.abs(bs.getBlocktimeAverageMs() - params.getBlockTimeTarget());
     diff = diff / params.getBlockTimeTarget();
 
-    Assert.assertTrue(diff < 0.01);
+    Assert.assertTrue(diff < 0.02);
 
 
 

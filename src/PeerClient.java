@@ -7,16 +7,21 @@ import snowblossom.proto.PeerServiceGrpc.PeerServiceStub;
 import snowblossom.proto.PeerServiceGrpc;
 
 import snowblossom.proto.PeerMessage;
+import snowblossom.proto.PeerInfo;
 
 
 public class PeerClient
 {
-  public PeerClient(SnowBlossomNode node, String host, int port)
+  public PeerClient(SnowBlossomNode node, PeerInfo info)
   {
-    ManagedChannel channel = ManagedChannelBuilder.forAddress(host, port).usePlaintext(true).build();
+    ManagedChannel channel = ManagedChannelBuilder
+      .forAddress(info.getHost(), info.getPort())
+      .usePlaintext(true)
+      .build();
+
     PeerServiceStub asyncStub = PeerServiceGrpc.newStub(channel);
 
-    PeerLink link = new PeerLink(node);
+    PeerLink link = new PeerLink(node, PeerUtil.getString(info));
     StreamObserver<PeerMessage> sink = asyncStub.subscribePeering(link);
     link.setSink(sink);
     link.setChannel(channel);

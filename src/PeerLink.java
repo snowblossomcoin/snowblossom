@@ -46,12 +46,16 @@ public class PeerLink implements StreamObserver<PeerMessage>
     this.node = node;
     this.sink = sink;
     server_side=true;
+    setLinkId();
+
   }
 
-  public PeerLink(SnowBlossomNode node)
+  public PeerLink(SnowBlossomNode node, String link_id)
   {
     this.node = node;
     server_side=false;
+
+    this.link_id = link_id;
   }
 
   private void setLinkId()
@@ -81,7 +85,7 @@ public class PeerLink implements StreamObserver<PeerMessage>
   @Override
   public void onError(Throwable t)
   {
-    logger.log(Level.INFO,"link error", t);
+    logger.log(Level.INFO,"link error: " + t);
     close();
   }
 
