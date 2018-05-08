@@ -50,5 +50,7 @@ public class NetworkParamsTestnet extends NetworkParams
   @Override
   public int getDefaultPort() { return 2339; }
 
+  @Override
+  public ByteString getBlockZeroRemark() { return ByteString.copyFrom(new String("testnet-20180508-0000000000000000000a5a1c520be6c3e4685eeaf7ddba3e5b6423042c72d42f").getBytes()); }
 
 }
