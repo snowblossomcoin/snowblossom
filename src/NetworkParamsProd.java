@@ -10,10 +10,14 @@ import com.google.common.collect.ImmutableList;
 
 public class NetworkParamsProd extends NetworkParams
 {
+  @Override
   public long getMaxTarget()
   {
     return 1L << (64 - 25); //should probably be 24 to start
   }
+
+  @Override
+  public String getAddressPrefix() { return "snow"; }
 
   @Override
   protected Map<Integer, SnowFieldInfo> genSnowFields()

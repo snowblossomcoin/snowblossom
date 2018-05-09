@@ -28,6 +28,8 @@ public abstract class NetworkParams
 
   public abstract String getNetworkName();
 
+  public abstract String getAddressPrefix();
+
   // If this times 1000 is more than Long.MAX_VALUE, there will be trouble
   // in the running average calculation so probably always want to shift by at least 10.
   public long getMaxTarget()

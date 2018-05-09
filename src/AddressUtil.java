@@ -7,6 +7,7 @@ import java.io.DataOutputStream;
 import snowblossom.proto.AddressSpec;
 import snowblossom.proto.SigSpec;
 
+
 public class AddressUtil
 {
   public static AddressSpecHash getHashForSpec(AddressSpec spec)
@@ -39,6 +40,17 @@ public class AddressUtil
       throw new RuntimeException(e);
     }
 
+  }
+
+  public static String getAddressString(String human, AddressSpecHash hash)
+  {
+    return Duck32.encode(human, hash.getBytes());
+  }
+
+  public static AddressSpecHash getHashForAddress(String human, String address)
+    throws ValidationException
+  {
+    return new AddressSpecHash( Duck32.decode(human, address) );
   }
 
 }

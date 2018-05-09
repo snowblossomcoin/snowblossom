@@ -40,6 +40,7 @@ import java.io.File;
 
 import java.util.LinkedList;
 import java.util.List;
+import java.util.TreeMap;
 import snowblossom.TransactionBridge;
 
 public class SnowBlossomClient
@@ -80,6 +81,30 @@ public class SnowBlossomClient
 
     asyncStub = UserServiceGrpc.newStub(channel);
     blockingStub = UserServiceGrpc.newBlockingStub(channel);
+
+    /*Random rnd = new Random();
+
+    byte[] buff=new byte[20];
+    rnd.nextBytes(buff);
+    for(int i=0; i<256;i++)
+    {
+      TreeMap<String, Integer> m=new TreeMap<>();
+      for(int j=0; j<100000; j++)
+      {
+        rnd.nextBytes(buff);
+
+        String start =  org.bitcoinj.core.AddrBridge.encode(i, buff).substring(0,1);
+
+        if (!m.containsKey(start))
+        {
+          m.put(start,0);
+        }
+        m.put(start, m.get(start) + 1);
+
+  
+      }
+      System.out.println("" + i + ": " + m);
+    }*/
   }
 
   public List<TransactionBridge> getSpendable(AddressSpecHash addr)

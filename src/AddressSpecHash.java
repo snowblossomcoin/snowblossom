@@ -24,6 +24,18 @@ public class AddressSpecHash implements Comparable<AddressSpecHash>
     this(ByteString.copyFrom(b));
   }
 
+  public AddressSpecHash(String address, NetworkParams params)
+    throws ValidationException
+  {
+    AddressSpecHash o = AddressUtil.getHashForAddress( params.getAddressPrefix(), address);
+    bytes = o.getBytes();
+
+    if (bytes.size() != Globals.ADDRESS_SPEC_HASH_LEN)
+    {
+      throw new ValidationException("Address length wrong");
+    }
+  }
+
   @Override
   public String toString()
   {
@@ -62,6 +74,11 @@ public class AddressSpecHash implements Comparable<AddressSpecHash>
     }
     return super.equals(o);
 
+  }
+
+  public String toAddressString(NetworkParams params)
+  {
+    return AddressUtil.getAddressString(params.getAddressPrefix(), this);
   }
 
 }

@@ -19,6 +19,9 @@ public class NetworkParamsRegtest extends NetworkParams
   }
 
   @Override
+  public String getAddressPrefix() { return "snowreg"; }
+
+  @Override
   protected Map<Integer, SnowFieldInfo> genSnowFields()
   {
     TreeMap<Integer, SnowFieldInfo> map = new TreeMap<>();
