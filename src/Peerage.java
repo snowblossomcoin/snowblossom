@@ -249,6 +249,10 @@ public class Peerage
       {
         logger.info("Looking for more peers to connect to");
       }
+      else
+      {
+        return;
+      }
       TreeSet<String> exclude_set = new TreeSet<>();
       exclude_set.addAll(self_peer_names);
       synchronized(links)
