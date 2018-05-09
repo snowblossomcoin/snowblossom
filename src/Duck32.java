@@ -9,6 +9,23 @@ import org.junit.Assert;
 import com.google.common.collect.ImmutableMap;
 
 
+/**
+ * Kinda like bech32, but with code I can actually understand.
+ *
+ * To keep the code simple, uses base32 encoding on java.math.BigInteger
+ * and then converts that to the bech32 charset.
+ *
+ * Does the checksum via a cryptographic hash function of both
+ * the human readable label and the data.  So that an address on coin x
+ * will never checksum validate on coin y.
+ *
+ * Example, this is the same address encoded with different labels.
+ * The data is identical but the checksum differs.
+ *
+ * Address:     snow:62xxv0j0wjwuw5satv5nq89pw7eawpmyu6wyalgd
+ * Address: snowtest:62xxv0j0wjwuw5satv5nq89pw7eawpmyekfaxa08
+ * Address:  snowreg:62xxv0j0wjwuw5satv5nq89pw7eawpmy2ttsuvcp
+ */
 public class Duck32
 {
 
@@ -22,26 +39,10 @@ public class Duck32
   public static final ImmutableMap<Character, Character> TO_BASE32_MAP = makeToBase32Map();
 
 
-  private static ImmutableMap<Character, Character> makeToBech32Map()
-  {
-    TreeMap<Character, Character> m = new TreeMap<>();
-    for(int i=0; i<32; i++)
-    {
-      m.put( BIG_INT_SET.charAt(i), CHARSET.charAt(i) );
-    }
-    return ImmutableMap.copyOf(m);
-  }
-  private static ImmutableMap<Character, Character> makeToBase32Map()
-  {
-    TreeMap<Character, Character> m = new TreeMap<>();
-    for(int i=0; i<32; i++)
-    {
-      m.put( CHARSET.charAt(i), BIG_INT_SET.charAt(i));
-    }
-    return ImmutableMap.copyOf(m);
-  }
-
-
+  /**
+   * Returns a string that looks like:
+   * label:[bech32 encoded data]
+   */
   public static String encode(String label, ByteString data)
   {
     Assert.assertEquals(Globals.ADDRESS_SPEC_HASH_LEN, data.size());
@@ -57,10 +58,14 @@ public class Duck32
 
   }
 
+  /**
+   * Takes a string from encode above and turns it back into
+   * bytes.  The string can be with or without the "label:" on it.
+   * Either way, expected_label is used to validate the checksum.
+   */
   public static ByteString decode(String expected_label, String encoding)
     throws ValidationException
   {
-    
     int colon = encoding.indexOf(':');
     String data_str;
     if (colon > 0)
@@ -143,6 +148,7 @@ public class Duck32
 
 
     // Helpful biginteger might throw an extra zero byte on the front to show positive sign
+    // or it might start with a lot of zeros and be short so add them back in
     int start = data.length - data_size;
     if (start >= 0)
     {
@@ -155,5 +161,25 @@ public class Duck32
       return ByteString.copyFrom(zeros, 0, needed_zeros).concat(ByteString.copyFrom(data));
     }
   }
+
+  private static ImmutableMap<Character, Character> makeToBech32Map()
+  {
+    TreeMap<Character, Character> m = new TreeMap<>();
+    for(int i=0; i<32; i++)
+    {
+      m.put( BIG_INT_SET.charAt(i), CHARSET.charAt(i) );
+    }
+    return ImmutableMap.copyOf(m);
+  }
+  private static ImmutableMap<Character, Character> makeToBase32Map()
+  {
+    TreeMap<Character, Character> m = new TreeMap<>();
+    for(int i=0; i<32; i++)
+    {
+      m.put( CHARSET.charAt(i), BIG_INT_SET.charAt(i));
+    }
+    return ImmutableMap.copyOf(m);
+  }
+
 
 }
