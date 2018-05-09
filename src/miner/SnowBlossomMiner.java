@@ -97,7 +97,9 @@ public class SnowBlossomMiner
 
     Random rnd = new Random();
 
-    AddressSpecHash to_addr = new AddressSpecHash(HexUtil.stringToHex(config.get("mine_to_address")));
+    String address = config.get("mine_to_address");
+
+    AddressSpecHash to_addr = new AddressSpecHash(address, params);
 
 
     asyncStub.subscribeBlockTemplate(SubscribeBlockTemplateRequest.newBuilder()
