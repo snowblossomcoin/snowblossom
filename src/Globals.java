@@ -28,7 +28,8 @@ public class Globals
   public static final int UTXO_KEY_LEN = ADDRESS_SPEC_HASH_LEN + BLOCKCHAIN_HASH_LEN + 2;
 
   public static final int MAX_OUTPUTS = 32768; // Using two bytes in utxo key len
-    
+
+  public static final int MAX_TX_EXTRA = 100;
 
   public static void addCryptoProvider()
   {

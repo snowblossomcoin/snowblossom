@@ -69,6 +69,7 @@ message TransactionInner {
   repeated AddressSpec claims = 6;
   //TransactionRequirements requirements = 7;
   int64 fee = 8;
+  string extra = 9; //Limited to 100 bytes, so short letters to grandma
 }
 
 message CoinbaseExtras {

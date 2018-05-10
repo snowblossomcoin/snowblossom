@@ -507,6 +507,11 @@ public class Validation
        validateAddressSpecHash(out.getRecipientSpecHash(), "output spec hash");
     }
 
+    if (inner.getExtra().getBytes().length > Globals.MAX_TX_EXTRA)
+    {
+      throw new ValidationException("Extra string too long");
+    }
+
   }
 
   public static void validateNonNegValue(long val, String field)
