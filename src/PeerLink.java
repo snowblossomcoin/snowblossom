@@ -86,7 +86,7 @@ public class PeerLink implements StreamObserver<PeerMessage>
   @Override
   public void onError(Throwable t)
   {
-    logger.log(Level.INFO,"link error: " + t);
+    logger.log(Level.FINEST,"link error: " + t);
     close();
   }
 

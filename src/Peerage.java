@@ -246,13 +246,13 @@ public class Peerage
     {
       int connected = getLinkList().size();
       int desired = node.getConfig().getIntWithDefault("peer_count", 8);
-      logger.info(String.format("Connected to %d, desired %d", connected, desired));
+      logger.log(Level.FINEST, String.format("Connected to %d, desired %d", connected, desired));
       if (desired <= connected)
       {
         return;
       }
 
-      logger.info("Looking for more peers to connect to");
+      logger.log(Level.FINEST, "Looking for more peers to connect to");
       TreeSet<String> exclude_set = new TreeSet<>();
       exclude_set.addAll(self_peer_names);
       synchronized(links)
@@ -271,13 +271,13 @@ public class Peerage
           }
         } 
       }
-      logger.info(String.format("There are %d peer options", options.size()));
+      logger.log(Level.FINEST, String.format("There are %d peer options", options.size()));
       Random rnd = new Random();
       if (options.size() > 0)
       {
         int idx = rnd.nextInt(options.size());
         PeerInfo pi = options.get(idx);
-        logger.info(String.format("Selected peer: " + PeerUtil.getString(pi)));
+        logger.log(Level.FINEST, String.format("Selected peer: " + PeerUtil.getString(pi)));
         new PeerClient(node, pi);
       }
 
