@@ -148,7 +148,6 @@ public class PeerLink implements StreamObserver<PeerMessage>
                 .build());
             }
           }
-
         }
       }
       else if (msg.hasReqHeader())

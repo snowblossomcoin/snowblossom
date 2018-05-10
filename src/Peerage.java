@@ -143,7 +143,14 @@ public class Peerage
     PeerChainTip tip = getTip();
     for(PeerLink link : getLinkList())
     {
-      link.writeMessage(PeerMessage.newBuilder().setTip(tip).build());
+      try
+      {
+        link.writeMessage(PeerMessage.newBuilder().setTip(tip).build());
+      }
+      catch(Throwable e)
+      {
+        link.close();
+      }
     }
   }
 
@@ -151,7 +158,14 @@ public class Peerage
   {
     for(PeerLink link : getLinkList())
     {
-      link.writeMessage(PeerMessage.newBuilder().setTx(tx).build());
+      try
+      {
+        link.writeMessage(PeerMessage.newBuilder().setTx(tx).build());
+      }
+      catch(Throwable e)
+      {
+        link.close();
+      }
     }
   }
 
