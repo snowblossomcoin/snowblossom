@@ -60,16 +60,8 @@ public class TransactionUtil
       inner.addAllOutputs(dests);
       inner.addAllInputs(sources);
 
-      byte[] public_key = key_pair.getPublic().getEncoded();
-
-      AddressSpec claim = AddressSpec.newBuilder()
-        .setRequiredSigners(1)
-        .addSigSpecs( SigSpec.newBuilder()
-          .setSignatureType( SignatureUtil.SIG_TYPE_ECDSA)
-          .setPublicKey(ByteString.copyFrom(public_key))
-          .build())
-        .build();
-
+      AddressSpec claim = AddressUtil.getSimpleSpecForKey(key_pair.getPublic(), SignatureUtil.SIG_TYPE_ECDSA_COMPRESSED);
+      
       AddressSpecHash addr_spec = AddressUtil.getHashForSpec(claim, DigestUtil.getMDAddressSpec());
 
 

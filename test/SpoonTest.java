@@ -49,13 +49,7 @@ public class SpoonTest
 
     KeyPair key_pair = KeyUtil.generateECCompressedKey();
 
-      AddressSpec claim = AddressSpec.newBuilder()
-        .setRequiredSigners(1)
-        .addSigSpecs( SigSpec.newBuilder()
-          .setSignatureType( SignatureUtil.SIG_TYPE_ECDSA)
-          .setPublicKey(ByteString.copyFrom(key_pair.getPublic().getEncoded()))
-          .build())
-        .build();
+    AddressSpec claim = AddressUtil.getSimpleSpecForKey(key_pair.getPublic(), SignatureUtil.SIG_TYPE_ECDSA_COMPRESSED);
 
     AddressSpecHash to_addr = AddressUtil.getHashForSpec(claim);
 
@@ -92,13 +86,7 @@ public class SpoonTest
 
     KeyPair key_pair = KeyUtil.generateECCompressedKey();
 
-      AddressSpec claim = AddressSpec.newBuilder()
-        .setRequiredSigners(1)
-        .addSigSpecs( SigSpec.newBuilder()
-          .setSignatureType( SignatureUtil.SIG_TYPE_ECDSA)
-          .setPublicKey(ByteString.copyFrom(key_pair.getPublic().getEncoded()))
-          .build())
-        .build();
+    AddressSpec claim = AddressUtil.getSimpleSpecForKey(key_pair.getPublic(), SignatureUtil.SIG_TYPE_ECDSA_COMPRESSED);
 
     AddressSpecHash to_addr = AddressUtil.getHashForSpec(claim);
 
@@ -168,13 +156,8 @@ public class SpoonTest
     Assert.assertTrue(funds.size() > 3);
 
     KeyPair key_pair_to = KeyUtil.generateECCompressedKey();
-      AddressSpec claim = AddressSpec.newBuilder()
-        .setRequiredSigners(1)
-        .addSigSpecs( SigSpec.newBuilder()
-          .setSignatureType( SignatureUtil.SIG_TYPE_ECDSA)
-          .setPublicKey(ByteString.copyFrom(key_pair_to.getPublic().getEncoded()))
-          .build())
-        .build();
+
+    AddressSpec claim = AddressUtil.getSimpleSpecForKey(key_pair_to.getPublic(), SignatureUtil.SIG_TYPE_ECDSA_COMPRESSED);
 
     AddressSpecHash to_addr = AddressUtil.getHashForSpec(claim);
 

@@ -25,6 +25,8 @@ import java.util.ArrayList;
 
 import org.bouncycastle.jcajce.provider.asymmetric.ec.BCECPublicKey;
 
+import org.junit.Assert;
+
 
 public class KeyUtil
 {
@@ -42,6 +44,15 @@ public class KeyUtil
 
     return decodeKey(fullkey, "ECDSA");
 
+  }
+
+  public static ByteString getCompressedPublicKeyEncoding(PublicKey key)
+  {
+    ByteString full = ByteString.copyFrom(key.getEncoded());
+    Assert.assertTrue(full.startsWith(EC_SECP256K1_PREFIX));
+    Assert.assertEquals( full.size(), EC_SECP256K1_PREFIX.size() + 33);
+
+    return full.substring(EC_SECP256K1_PREFIX.size());
   }
 
   public static PublicKey decodeKey(ByteString encoded, String algo)

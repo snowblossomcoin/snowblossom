@@ -244,4 +244,15 @@ message PeerList {
   repeated PeerInfo peers = 1;
 }
 
+message WalletDatabase {
+  repeated WalletKeyPair keys = 1;
+  repeated AddressSpec addresses = 2;
+  repeated Transaction transactions = 3;
+}
 
+message WalletKeyPair
+{
+  int32 signature_type = 1;
+  bytes public_key = 2;
+  bytes private_key = 3;
+}

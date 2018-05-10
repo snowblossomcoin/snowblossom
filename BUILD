@@ -221,6 +221,21 @@ java_test(
   ],
 )
 java_test(
+  name = "keyutil_test",
+  srcs = ["test/KeyUtilTest.java"],
+  test_class = "snowblossom.KeyUtilTest",
+  size="medium",
+  deps = [
+      "@junit_junit//jar",
+      ":snowblossomlib",
+      "@commons_codec//jar",
+      "@org_pubref_rules_protobuf//java:grpc_compiletime_deps",
+      "//:snowblossomprotolib",
+  ],
+)
+
+
+java_test(
   name = "spoon_test",
   srcs = ["test/SpoonTest.java"],
   test_class = "snowblossom.SpoonTest",

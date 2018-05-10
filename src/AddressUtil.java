@@ -6,6 +6,9 @@ import java.io.DataOutputStream;
 
 import snowblossom.proto.AddressSpec;
 import snowblossom.proto.SigSpec;
+import com.google.protobuf.ByteString;
+
+import java.security.PublicKey;
 
 
 public class AddressUtil
@@ -39,8 +42,28 @@ public class AddressUtil
     {
       throw new RuntimeException(e);
     }
-
   }
+
+  public static AddressSpec getSimpleSpecForKey(PublicKey key, int sig_type)
+  {
+    ByteString key_data;
+    if (sig_type == SignatureUtil.SIG_TYPE_ECDSA_COMPRESSED)
+    {
+      key_data = KeyUtil.getCompressedPublicKeyEncoding(key);
+    }
+    else
+    {
+      key_data = ByteString.copyFrom(key.getEncoded());
+    }
+
+    return AddressSpec.newBuilder()
+    	.setRequiredSigners(1)
+      .addSigSpecs( SigSpec.newBuilder()
+        .setSignatureType( sig_type )
+        .setPublicKey(key_data)
+        .build())
+      .build();
+}
 
   public static String getAddressString(String human, AddressSpecHash hash)
   {

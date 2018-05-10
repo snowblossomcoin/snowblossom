@@ -368,15 +368,7 @@ public class MemPoolTest
 
     ChainHash tx_id = new ChainHash(tx_id_buff);
 
-    byte[] public_key = keys.getPublic().getEncoded();
-
-    AddressSpec claim = AddressSpec.newBuilder()
-      .setRequiredSigners(1)
-      .addSigSpecs( SigSpec.newBuilder()
-        .setSignatureType( SignatureUtil.SIG_TYPE_ECDSA)
-        .setPublicKey(ByteString.copyFrom(public_key))
-        .build())
-      .build();
+    AddressSpec claim = AddressUtil.getSimpleSpecForKey(keys.getPublic(), SignatureUtil.SIG_TYPE_ECDSA_COMPRESSED);
 
     AddressSpecHash addr = AddressUtil.getHashForSpec(claim);
 

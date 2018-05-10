@@ -8,12 +8,9 @@ import snowblossom.trie.HashedTrie;
 import snowblossom.trie.TrieDBMap;
 
 import java.security.Security;
-
-
 import java.util.logging.Logger;
 import java.util.logging.Level;
 import java.io.File;
-
 
 public class SnowBlossomNode
 {
