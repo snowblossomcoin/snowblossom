@@ -231,7 +231,11 @@ public class PeerLink implements StreamObserver<PeerMessage>
   public void close()
   {
     closed=true;
-    sink.onCompleted();
+
+    if (sink != null)
+    {
+      sink.onCompleted();
+    }
 
     if (channel != null)
     {

@@ -39,6 +39,12 @@ public class BlockIngestor
     this.params = node.getParams();
 
     chainhead = db.getBlockSummaryMap().get(HEAD);
+    if (chainhead != null)
+    {
+      logger.info(String.format("Loaded chain tip: %d %s", 
+        chainhead.getHeader().getBlockHeight(), 
+        new ChainHash(chainhead.getHeader().getSnowHash())));
+    }
   }
 
   public boolean ingestBlock(Block blk)
