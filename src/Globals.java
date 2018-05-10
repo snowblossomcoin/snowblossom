@@ -34,7 +34,6 @@ public class Globals
   public static final long FLAKE_VALUE = 1L;
   public static final long SNOW_VALUE = 1000000L;
 
-
   public static void addCryptoProvider()
   {
     Security.addProvider(new org.bouncycastle.jce.provider.BouncyCastleProvider());

@@ -97,6 +97,11 @@ public class BlockIngestor
 
       logger.info(String.format("New chain tip: %d %s (%d)", blk.getHeader().getBlockHeight(), blockhash, blk.getTransactionsCount()));
 
+      SnowUserService u = node.getUserService();
+      if (u != null)
+      {
+        u.tickleBlocks();
+      }
     }
 
 

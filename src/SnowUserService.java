@@ -14,29 +14,23 @@ import io.grpc.stub.StreamObserver;
 
 import java.util.Random;
 import java.util.logging.Logger;
+import java.util.logging.Level;
 import com.google.protobuf.ByteString;
 import java.nio.ByteBuffer;
 
 import java.util.LinkedList;
 import java.util.TreeMap;
+import java.util.List;
 
 
-/**
- * Everything in this class is a disaster.  The syncornization is all wrong.
- * We have no rational control of anything.  A bunch of this block logic needs to be moved
- * out and this should share a block subscriber list with the module doing the p2p networking.
- *
- * basically, kill it with fire
- */
 public class SnowUserService extends UserServiceGrpc.UserServiceImplBase
 {
   private static final Logger logger = Logger.getLogger("SnowUserService");
 
-  private volatile Block last_sent_block;
-  private AddressSpecHash pay_to;
-  private LinkedList<StreamObserver<Block> > block_subscribers = new LinkedList<>();
+  private LinkedList<BlockSubscriberInfo> block_subscribers = new LinkedList<>();
 
   private SnowBlossomNode node;
+  private Object tickle_trigger = new Object();
 
   public SnowUserService(SnowBlossomNode node)
   {
@@ -47,41 +41,59 @@ public class SnowUserService extends UserServiceGrpc.UserServiceImplBase
 
   }
 
+  public void start()
+  {
+    new Tickler().start();
+  }
+
 
   @Override
-  public synchronized void subscribeBlockTemplate(SubscribeBlockTemplateRequest req, StreamObserver<Block> responseObserver)
+  public void subscribeBlockTemplate(SubscribeBlockTemplateRequest req, StreamObserver<Block> responseObserver)
   {
     logger.info("Subscribe block template called");
-    pay_to = new AddressSpecHash(req.getPayRewardToSpecHash());
+    AddressSpecHash pay_to = new AddressSpecHash(req.getPayRewardToSpecHash());
+
+
+    BlockSubscriberInfo info = new BlockSubscriberInfo(pay_to, responseObserver);
 
     synchronized(block_subscribers)
     {
-      block_subscribers.add(responseObserver);
+      block_subscribers.add(info);
     }
-    if (last_sent_block == null) tickleBlocks();
-    else
-    {
-      responseObserver.onNext(last_sent_block);
-    }
+
+    sendBlock(info);
+  }
+
+  protected void sendBlock(BlockSubscriberInfo info)
+  {
+    Block block = node.getBlockForge().getBlockTemplate(info.mine_to);
+    info.sink.onNext(block);
 
   }
 
-  protected synchronized void tickleBlocks()
+  /**
+   * Trigger new blocks being send to block subscribers
+   */
+  public void tickleBlocks()
   {
+    synchronized(tickle_trigger)
+    {
+      tickle_trigger.notifyAll(); 
+    }
+  }
 
-    if (pay_to == null) return;
-    last_sent_block = node.getBlockForge().getBlockTemplate(pay_to);
-
+  private void sendNewBlocks()
+  {
     synchronized(block_subscribers)
     {
-      LinkedList<StreamObserver<Block>> continue_list = new LinkedList<>();
+      LinkedList<BlockSubscriberInfo> continue_list = new LinkedList<>();
 
-      for(StreamObserver<Block> responseObserver : block_subscribers)
+      for(BlockSubscriberInfo info : block_subscribers)
       {
         try
         {
-          responseObserver.onNext(last_sent_block);
-          continue_list.add(responseObserver);
+          sendBlock(info);
+          continue_list.add(info);
         }
         catch(Throwable t)
         {
@@ -90,12 +102,11 @@ public class SnowUserService extends UserServiceGrpc.UserServiceImplBase
       }
       block_subscribers.clear();
       block_subscribers.addAll(continue_list);
-      
     }
   }
 
   @Override
-  public synchronized void submitBlock(Block block, StreamObserver<SubmitReply> responseObserver)
+  public void submitBlock(Block block, StreamObserver<SubmitReply> responseObserver)
   {
     try
     {
@@ -116,7 +127,6 @@ public class SnowUserService extends UserServiceGrpc.UserServiceImplBase
     responseObserver.onNext(SubmitReply.newBuilder().setSuccess(true).build());
     responseObserver.onCompleted();
   
-    tickleBlocks();
   }
 
   @Override
@@ -185,5 +195,48 @@ public class SnowUserService extends UserServiceGrpc.UserServiceImplBase
     responseObserver.onCompleted();
   }
 
+  class BlockSubscriberInfo
+  {
+    final AddressSpecHash mine_to;
+    final StreamObserver<Block> sink;
+
+    public BlockSubscriberInfo(AddressSpecHash mine_to, StreamObserver<Block> sink)
+    {
+      this.mine_to = mine_to;
+      this.sink = sink;
+    }
+  }
+
+  public class Tickler extends Thread
+  {
+    public Tickler()
+    {
+      setName("SnowUserService/Tickler");
+      setDaemon(true);
+    }
+
+    public void run()
+    {
+      while(true)
+      {
+        try
+        {
+          synchronized(tickle_trigger)
+          {
+            tickle_trigger.wait(60000);
+          }
+          sendNewBlocks();
+        }
+        catch(Throwable t)
+        {
+          logger.log(Level.INFO, "Tickle error: " + t);
+        }
+
+
+
+      }
+    }
+
+  }
 }
 

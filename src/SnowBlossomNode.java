@@ -106,6 +106,8 @@ public class SnowBlossomNode
         .addService(peer_service)
         .build();
       s.start();
+
+      user_service.start();
     }
   }
 
@@ -148,4 +150,5 @@ public class SnowBlossomNode
   public HashedTrie getUtxoHashedTrie(){return utxo_hashed_trie;}
   public MemPool getMemPool(){return mem_pool;}
   public Peerage getPeerage(){return peerage;}
+  public SnowUserService getUserService() {return user_service;}
 }

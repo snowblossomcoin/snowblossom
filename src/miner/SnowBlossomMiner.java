@@ -64,53 +64,58 @@ public class SnowBlossomMiner
 
   private volatile Block last_block_template;
 
-  private final UserServiceStub asyncStub;
-  private final UserServiceBlockingStub blockingStub;
+  private UserServiceStub asyncStub;
+  private UserServiceBlockingStub blockingStub;
 
   private final FieldScan field_scan;
 	private final NetworkParams params;
 
   private AtomicLong op_count = new AtomicLong(0L);
   private long last_stats_time = System.currentTimeMillis();
+  private Config config;
+
 
   public SnowBlossomMiner(Config config) throws Exception
   {
+    this.config = config;
+
     config.require("snow_path");
     config.require("node_host");
     
     params = NetworkParams.loadFromConfig(config);
 
     File path = new File(config.get("snow_path"));
-    String host = config.get("node_host");
-    int port = config.getIntWithDefault("node_port", params.getDefaultPort());
 
     config.require("mine_to_address");
     int threads = config.getIntWithDefault("threads", 8);
     
 		
     field_scan = new FieldScan(path, params);
-
-    ManagedChannel channel = ManagedChannelBuilder.forAddress(host, port).usePlaintext(true).build();
-
-    asyncStub = UserServiceGrpc.newStub(channel);
-    blockingStub = UserServiceGrpc.newBlockingStub(channel);
-
-    Random rnd = new Random();
-
-    String address = config.get("mine_to_address");
-
-    AddressSpecHash to_addr = new AddressSpecHash(address, params);
-
-
-    asyncStub.subscribeBlockTemplate(SubscribeBlockTemplateRequest.newBuilder()
-      .setPayRewardToSpecHash(to_addr.getBytes()).build(), new BlockTemplateEater());
-    logger.info("Subscribed to blocks");  
+    subscribe();
 
     for(int i=0; i<threads; i++)
     {
       new MinerThread().start();
     }
+  }
 
+  private void subscribe()
+    throws Exception
+  {
+    String host = config.get("node_host");
+    int port = config.getIntWithDefault("node_port", params.getDefaultPort());
+    ManagedChannel channel = ManagedChannelBuilder.forAddress(host, port).usePlaintext(true).build();
+
+    asyncStub = UserServiceGrpc.newStub(channel);
+    blockingStub = UserServiceGrpc.newBlockingStub(channel);
+
+    String address = config.get("mine_to_address");
+
+    AddressSpecHash to_addr = new AddressSpecHash(address, params);
+
+    asyncStub.subscribeBlockTemplate(SubscribeBlockTemplateRequest.newBuilder()
+      .setPayRewardToSpecHash(to_addr.getBytes()).build(), new BlockTemplateEater());
+    logger.info("Subscribed to blocks");  
 
   }
 
@@ -135,6 +140,19 @@ public class SnowBlossomMiner
 
     last_stats_time = now;
 
+    if (count == 0)
+    {
+      logger.info("we seem to be stalled, reconnecting to node");
+      try
+      {
+        subscribe();
+      }
+      catch(Throwable t)
+      {
+        logger.info("Exception in subscribe: " + t);
+      }
+    }
+
 
   }
 
@@ -157,6 +175,11 @@ public class SnowBlossomMiner
       {
         Thread.sleep(100);
         return;
+      }
+      if (b.getHeader().getTimestamp() + 75000 < System.currentTimeMillis())
+      {
+        logger.log(Level.WARNING, "Last block is old, not mining it");
+        last_block_template = null;
       }
       byte[] nonce = new byte[Globals.NONCE_LEN];
       rnd.nextBytes(nonce);
