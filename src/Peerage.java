@@ -83,6 +83,7 @@ public class Peerage
 
   public void start()
   {
+    logger.info("Starting peerage");
     new PeerageMaintThread().start();
   }
 
@@ -245,14 +246,13 @@ public class Peerage
     {
       int connected = getLinkList().size();
       int desired = node.getConfig().getIntWithDefault("peer_count", 8);
-      if (desired < connected)
-      {
-        logger.info("Looking for more peers to connect to");
-      }
-      else
+      logger.info(String.format("Connected to %d, desired %d", connected, desired));
+      if (desired <= connected)
       {
         return;
       }
+
+      logger.info("Looking for more peers to connect to");
       TreeSet<String> exclude_set = new TreeSet<>();
       exclude_set.addAll(self_peer_names);
       synchronized(links)

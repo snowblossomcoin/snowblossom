@@ -11,12 +11,19 @@ import snowblossom.trie.HashUtils;
 import snowblossom.db.DB;
 import org.junit.Assert;
 
+
+import java.util.logging.Logger;
+import java.util.logging.Level;
+
+
 /**
  * This class takes in new blocks, validates them and stores them in the db.
  * In appropritate, updates the tip of the chain.
  */
 public class BlockIngestor
 {
+
+  private static final Logger logger = Logger.getLogger("BlockIngestor");
   private SnowBlossomNode node;
   private DB db;
   private NetworkParams params;
@@ -81,6 +88,8 @@ public class BlockIngestor
       //node.getUtxoHashedTrie().printTree(summary.getHeader().getUtxoRootHash());
 
       updateHeights(summary);
+
+      logger.info(String.format("New chain tip: %d %s (%d)", blk.getHeader().getBlockHeight(), blockhash, blk.getTransactionsCount()));
 
     }
 
