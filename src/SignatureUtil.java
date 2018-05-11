@@ -1,6 +1,7 @@
 package snowblossom;
 
 import snowblossom.proto.SigSpec;
+import snowblossom.proto.WalletKeyPair;
 
 import com.google.protobuf.ByteString;
 
@@ -11,6 +12,7 @@ import java.util.TreeSet;
 import java.util.ArrayList;
 
 import java.security.PublicKey;
+import java.security.PrivateKey;
 import java.security.Signature;
 
 public class SignatureUtil
@@ -91,6 +93,59 @@ public class SignatureUtil
     {
       throw new ValidationException(e);
     }
+  }
+
+  public static ByteString sign(WalletKeyPair key_pair, ChainHash data)
+    throws ValidationException
+  {
+
+    int sig_type = key_pair.getSignatureType();
+    String algo="";
+
+    if (sig_type == SIG_TYPE_ECDSA_COMPRESSED)
+    {
+      algo="ECDSA";
+    }
+		if (sig_type == SIG_TYPE_ECDSA)
+		{
+			algo="ECDSA";
+		}
+		if (sig_type == SIG_TYPE_DSA)
+		{
+			algo="DSA";
+		}
+		if (sig_type == SIG_TYPE_RSA)
+		{
+			algo="RSA";
+		}
+		if (sig_type == SIG_TYPE_DSTU4145)
+		{
+			algo="DSTU4145";
+		}
+		if (algo == null)
+		{
+			throw new ValidationException(String.format("Unknown sig type %d", sig_type));
+		}
+
+		PrivateKey priv_key = KeyUtil.decodePrivateKey(key_pair.getPrivateKey(), algo);
+	  
+    try
+    {
+      Signature sig_engine = Signature.getInstance(algo);
+      sig_engine.initSign(priv_key);
+      sig_engine.update(data.toByteArray());
+
+      return ByteString.copyFrom(sig_engine.sign());
+    }
+    catch(java.security.NoSuchAlgorithmException e)
+    {
+      throw new RuntimeException(e);
+    }
+    catch(java.security.GeneralSecurityException e)
+    {
+      throw new ValidationException(e);
+    }
+
   }
 
   public static ImmutableSet<String> ALLOWED_ECDSA_CURVES = getAllowedECDSACurves();

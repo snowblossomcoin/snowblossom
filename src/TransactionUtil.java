@@ -8,14 +8,22 @@ import snowblossom.proto.TransactionOutput;
 import snowblossom.proto.SigSpec;
 import snowblossom.proto.SignatureEntry;
 import snowblossom.proto.AddressSpec;
+import snowblossom.proto.WalletDatabase;
+import snowblossom.proto.WalletKeyPair;
 
 import java.security.MessageDigest;
 import java.security.Signature;
 import java.security.KeyPair;
 
 import com.google.protobuf.ByteString;
+import com.google.common.collect.ImmutableList;
 
 import java.util.List;
+import java.util.LinkedList;
+import java.util.Collections;
+import java.util.Collection;
+import java.util.ArrayList;
+import java.util.HashSet;
 
 
 public class TransactionUtil
@@ -94,6 +102,134 @@ public class TransactionUtil
       throw new RuntimeException(e);
     }
 
+  }
+
+  public static Transaction makeTransaction(WalletDatabase wallet,
+    Collection<TransactionBridge> spendable,
+    AddressSpecHash to,
+    long value)
+    throws ValidationException
+  {
+    TransactionOutput out = TransactionOutput.newBuilder()
+      .setValue(value)
+      .setRecipientSpecHash(to.getBytes())
+      .build();
+
+    return makeTransaction(wallet, spendable, ImmutableList.of(out));
+
+  }
+  
+  public static Transaction makeTransaction(WalletDatabase wallet, 
+    Collection<TransactionBridge> spendable, 
+    List<TransactionOutput> output_list)
+    throws ValidationException
+  {
+    TransactionInner.Builder tx_inner = TransactionInner.newBuilder();
+
+    LinkedList<TransactionOutput> tx_outputs = new LinkedList<>();
+    tx_outputs.addAll(output_list);
+
+
+    long needed_input = 0;
+    
+    for(TransactionOutput tx_out : output_list)
+    {
+      needed_input += tx_out.getValue();
+    }
+    
+    LinkedList<TransactionBridge> spendable_shuffle = new LinkedList<>();
+    spendable_shuffle.addAll(spendable);
+
+    Collections.shuffle(spendable_shuffle);
+
+    HashSet<AddressSpecHash> needed_claims=new HashSet<>();
+
+    while((needed_input > 0) && (spendable_shuffle.size() > 0))
+    {
+      TransactionBridge br = spendable_shuffle.pop();
+      needed_input -= br.value;
+
+      tx_inner.addInputs(br.in);
+      needed_claims.add( new AddressSpecHash(br.out.getRecipientSpecHash()) );
+    }
+    if (needed_input > 0) return null;
+
+    if (needed_input < 0)
+    {
+      AddressSpecHash change = getRandomChangeAddress(wallet);
+      TransactionOutput o = TransactionOutput.newBuilder()
+        .setValue(-needed_input)
+        .setRecipientSpecHash(change.getBytes())
+        .build();
+
+      tx_outputs.add(o);
+    }
+
+    Collections.shuffle(tx_outputs);
+
+    tx_inner.addAllOutputs(tx_outputs);
+
+    ArrayList<AddressSpec> claims = new ArrayList<>();
+
+    for(AddressSpec spec : wallet.getAddressesList())
+    {
+      AddressSpecHash hash = AddressUtil.getHashForSpec(spec);
+      if (needed_claims.contains(hash))
+      {
+        claims.add(spec);
+      }
+    }
+    tx_inner.addAllClaims(claims);
+    tx_inner.setVersion(1);
+
+    ByteString tx_inner_data = tx_inner.build().toByteString();
+
+    Transaction.Builder tx = Transaction.newBuilder();
+    tx.setInnerData(tx_inner_data);
+    ChainHash tx_hash = new ChainHash(DigestUtil.getMD().digest(tx_inner_data.toByteArray()));
+
+    tx.setTxHash(tx_hash.getBytes());
+
+
+    //Sign
+
+    for(WalletKeyPair key_pair : wallet.getKeysList())
+    {
+      ByteString public_key = key_pair.getPublicKey();
+
+      for(int i=0; i<claims.size(); i++)
+      {
+        AddressSpec spec = claims.get(i);
+        for(int j=0; j<spec.getSigSpecsCount(); j++)
+        {
+          SigSpec sig_spec = spec.getSigSpecs(j);
+          if (sig_spec.getSignatureType() == key_pair.getSignatureType())
+          if (sig_spec.getPublicKey().equals(public_key))
+          {
+            tx.addSignatures( SignatureEntry.newBuilder()
+              .setClaimIdx(i)
+              .setKeyIdx(j)
+              .setSignature( SignatureUtil.sign(key_pair, tx_hash) )
+              .build());
+          }
+
+        }
+
+      }
+    }
+
+
+    return tx.build();
+    
+  }
+
+  public static AddressSpecHash getRandomChangeAddress(WalletDatabase wallet)
+  {
+    LinkedList<AddressSpec> lst = new LinkedList<>();
+    lst.addAll(wallet.getAddressesList());
+    Collections.shuffle(lst);
+
+    return AddressUtil.getHashForSpec(lst.pop());
   }
 
 }

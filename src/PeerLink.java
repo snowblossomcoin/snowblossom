@@ -142,10 +142,15 @@ public class PeerLink implements StreamObserver<PeerMessage>
           {
             if (peer_block_map.containsKey(next))
             {
-              writeMessage( PeerMessage.newBuilder()
-                .setReqBlock(
-                  RequestBlock.newBuilder().setBlockHash(peer_block_map.get(next).getBytes()).build())
-                .build());
+              ChainHash target = peer_block_map.get(next);
+
+              if (node.getBlockIngestor().reserveBlock(target))
+              {
+                writeMessage( PeerMessage.newBuilder()
+                  .setReqBlock(
+                    RequestBlock.newBuilder().setBlockHash(target.getBytes()).build())
+                  .build());
+              }
             }
           }
         }
@@ -195,11 +200,13 @@ public class PeerLink implements StreamObserver<PeerMessage>
       int height = header.getBlockHeight();
       if ((height == 0) || (node.getDB().getBlockSummaryMap().get(header.getPrevBlockHash())!=null))
       { //get this block 
-        
-        writeMessage( PeerMessage.newBuilder()
-          .setReqBlock(
-            RequestBlock.newBuilder().setBlockHash(header.getSnowHash()).build())
-          .build());
+        if (node.getBlockIngestor().reserveBlock(new ChainHash(header.getSnowHash())))
+        {
+          writeMessage( PeerMessage.newBuilder()
+            .setReqBlock(
+              RequestBlock.newBuilder().setBlockHash(header.getSnowHash()).build())
+            .build());
+        }
       }
       else
       { //get more headers

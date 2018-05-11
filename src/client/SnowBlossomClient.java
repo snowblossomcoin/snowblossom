@@ -48,6 +48,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.TreeMap;
 import snowblossom.TransactionBridge;
+import snowblossom.TransactionUtil;
 
 public class SnowBlossomClient
 {
@@ -56,16 +57,27 @@ public class SnowBlossomClient
   public static void main(String args[]) throws Exception
   {
     Globals.addCryptoProvider();
-    if (args.length != 1)
+    if (args.length < 1)
     {
-      logger.log(Level.SEVERE, "Incorrect syntax. Syntax: SnowBlossomClient <config_file>");
+      logger.log(Level.SEVERE, "Incorrect syntax. Syntax: SnowBlossomClient <config_file> [commands]");
       System.exit(-1);
     }
 
     ConfigFile config = new ConfigFile(args[0]);
 
+    SnowBlossomClient client = new SnowBlossomClient(config);
 
-    new SnowBlossomClient(config);
+    if (args.length > 1)
+    {
+      if (args[1].equals("send"))
+      {
+        long value = (long) (Double.parseDouble(args[2]) * Globals.SNOW_VALUE);
+        String to = args[3];
+
+        client.send(value, to);
+
+      }
+    }
   }
 
 
@@ -97,6 +109,16 @@ public class SnowBlossomClient
       loadWallet();
       showBalances();
     }
+
+  }
+
+  public void send(long value, String to)
+    throws Exception
+  {
+    AddressSpecHash to_hash = AddressUtil.getHashForAddress(params.getAddressPrefix(), to);
+    Transaction tx = TransactionUtil.makeTransaction(wallet_database, getAllSpendable(), to_hash, value);
+
+    System.out.println(blockingStub.submitTransaction(tx));
 
   }
 
@@ -185,6 +207,9 @@ public class SnowBlossomClient
 
   public void showBalances()
   {
+    long total_value = 0;
+    DecimalFormat df = new DecimalFormat("0.000000");
+
     for(AddressSpec claim : wallet_database.getAddressesList())
     {
       AddressSpecHash hash = AddressUtil.getHashForSpec(claim);
@@ -198,10 +223,24 @@ public class SnowBlossomClient
         value += b.value;
       }
       double val_d = (double) value / (double) Globals.SNOW_VALUE;
-      DecimalFormat df = new DecimalFormat("0.000000");
       System.out.println(String.format(" %s in %d outputs", df.format(val_d), bridges.size()));
+
+      total_value += value;
       
     }
+    double total_d = (double) total_value / (double) Globals.SNOW_VALUE;
+    System.out.println(String.format("Total: %s", df.format(total_d)));
+  }
+
+  public List<TransactionBridge> getAllSpendable()
+  {
+    LinkedList<TransactionBridge> all = new LinkedList<>();
+    for(AddressSpec claim : wallet_database.getAddressesList())
+    {
+      AddressSpecHash hash = AddressUtil.getHashForSpec(claim);
+      all.addAll(getSpendable(hash));
+    }
+    return all;
   }
 
   public List<TransactionBridge> getSpendable(AddressSpecHash addr)

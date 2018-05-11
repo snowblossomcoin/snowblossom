@@ -32,6 +32,9 @@ public class BlockIngestor
 
   private static final ByteString HEAD = ByteString.copyFrom(new String("head").getBytes());
 
+  private LRUCache<ChainHash, Long> block_pull_map = new LRUCache<>(1000);
+
+
   public BlockIngestor(SnowBlossomNode node)
   {
     this.node = node;
@@ -192,6 +195,20 @@ public class BlockIngestor
     
     return bs.build();
 
+  }
+
+  public boolean reserveBlock(ChainHash hash)
+  {
+    synchronized(block_pull_map)
+    {
+      long tm = System.currentTimeMillis();
+      if (block_pull_map.containsKey(hash) && (block_pull_map.get(hash) + 15000L > tm))
+      {
+        return false;
+      }
+      block_pull_map.put(hash, tm);
+      return true;
+    }
   }
 
 }

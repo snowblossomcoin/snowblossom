@@ -7,6 +7,7 @@ import org.junit.BeforeClass;
 import java.security.KeyPair;
 import com.google.protobuf.ByteString;
 import java.security.PublicKey;
+import java.security.PrivateKey;
 
 public class KeyUtilTest
 {
@@ -31,5 +32,20 @@ public class KeyUtilTest
 
 		Assert.assertEquals(k, pair.getPublic());
   }
+
+  @Test
+  public void testCompressPrivateKeyEncoding()
+		throws Exception
+  {
+    KeyPair pair = KeyUtil.generateECCompressedKey();
+
+		ByteString encoded = ByteString.copyFrom(pair.getPrivate().getEncoded());
+    System.out.println("Format: " + pair.getPrivate().getFormat());
+
+    PrivateKey k = KeyUtil.decodePrivateKey(encoded, "ECDSA");
+
+		Assert.assertEquals(k, pair.getPrivate());
+  }
+
 
 }

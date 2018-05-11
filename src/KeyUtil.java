@@ -15,11 +15,13 @@ import java.io.PrintStream;
 
 import org.apache.commons.codec.binary.Hex;
 import java.security.PublicKey;
+import java.security.PrivateKey;
 import java.security.KeyFactory;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 
 import java.security.spec.X509EncodedKeySpec;
+import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.ECGenParameterSpec;
 import java.util.ArrayList;
 
@@ -68,6 +70,22 @@ public class KeyUtil
     {
       throw new ValidationException("Error decoding key", e);
     }
+  }
+
+  public static PrivateKey decodePrivateKey(ByteString encoded, String algo)
+    throws ValidationException
+  {
+    try
+    {
+      PKCS8EncodedKeySpec spec = new PKCS8EncodedKeySpec(encoded.toByteArray());
+      KeyFactory fact = KeyFactory.getInstance(algo);
+      return fact.generatePrivate(spec);
+    }
+    catch(java.security.GeneralSecurityException e)
+    {
+      throw new ValidationException("Error decoding key", e);
+    }
+
   }
 
   public static KeyPair generateECCompressedKey()
