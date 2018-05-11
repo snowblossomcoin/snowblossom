@@ -18,6 +18,7 @@ import snowblossom.NetworkParamsProd;
 import snowblossom.NetworkParamsTestnet;
 import snowblossom.AddressSpecHash;
 import snowblossom.HexUtil;
+import snowblossom.ChainHash;
 
 
 import java.util.logging.Logger;
@@ -281,7 +282,7 @@ public class SnowBlossomMiner
     public void onError(Throwable t){}
     public void onNext(Block b)
     {
-      logger.info("Got block template: " + b);
+      logger.info("Got block template: height:" + b.getHeader().getBlockHeight() + " transactions:"  + b.getTransactionsCount() );
 
       int min_field = b.getHeader().getSnowField();
       

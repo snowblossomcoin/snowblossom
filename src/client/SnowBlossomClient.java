@@ -74,7 +74,10 @@ public class SnowBlossomClient
         long value = (long) (Double.parseDouble(args[2]) * Globals.SNOW_VALUE);
         String to = args[3];
 
-        client.send(value, to);
+        for(int i=0; i<100; i++)
+        {
+          client.send(value, to);
+        }
 
       }
     }
