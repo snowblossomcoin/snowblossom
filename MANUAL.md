@@ -21,8 +21,17 @@ This is the Snowblossom basic wallet.  It needs a SnowBlossomNode to connect to,
 
 ## SnowBlossomMiner
 
+This is the mining agent, it conencts to a node (doesn't have to be your node) to get block templates and then submits them back when it solves them.  Requires a local copy of snow fields to work.
+
 ## SnowFall
 
+Program that generates snow fields.  It is recommended to use tools/snowfall... scripts rather than running directly.
+
 ## SnowMerkle
+
+Program that generates the snow field decks and verifies the overall hash of the field.  The decks are required in conjunction with the snow fields themselves to mine.  The decks are files of intermediate hash values used to greatly speed up block pow proof generation.
+It is recommended to use tools/snowfall... scripts rather than running directly.
+
+
 
 
