@@ -144,14 +144,20 @@ public class TransactionUtil
 
     HashSet<AddressSpecHash> needed_claims=new HashSet<>();
 
+    LinkedList<TransactionInput> input_list = new LinkedList<>();
+
     while((needed_input > 0) && (spendable_shuffle.size() > 0))
     {
       TransactionBridge br = spendable_shuffle.pop();
       needed_input -= br.value;
 
-      tx_inner.addInputs(br.in);
+      input_list.add(br.in);
       needed_claims.add( new AddressSpecHash(br.out.getRecipientSpecHash()) );
     }
+
+    Collections.shuffle(input_list);
+    tx_inner.addAllInputs(input_list);
+
     if (needed_input > 0) return null;
 
     if (needed_input < 0)
@@ -179,6 +185,7 @@ public class TransactionUtil
         claims.add(spec);
       }
     }
+    Collections.shuffle(claims);
     tx_inner.addAllClaims(claims);
     tx_inner.setVersion(1);
 

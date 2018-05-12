@@ -176,7 +176,7 @@ public class SnowUserService extends UserServiceGrpc.UserServiceImplBase
 
     LinkedList<TrieNode> proof = new LinkedList<>();
     LinkedList<TrieNode> results = new LinkedList<>();
-    int max_results = 1000;
+    int max_results = 10000;
     if (request.getMaxResults() > 0) max_results = request.getMaxResults();
 
 
