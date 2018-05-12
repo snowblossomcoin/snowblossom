@@ -11,6 +11,7 @@ import snowblossom.proto.UserServiceGrpc;
 import snowblossom.proto.GetUTXONodeReply;
 import snowblossom.proto.GetUTXONodeRequest;
 import org.junit.Assert;
+import snowblossom.ChainHash;
 import java.text.DecimalFormat;
 
 import snowblossom.proto.SubmitReply;
@@ -69,16 +70,29 @@ public class SnowBlossomClient
 
     if (args.length > 1)
     {
-      if (args[1].equals("send"))
+      String command = args[1];
+
+      if (command.equals("send"))
       {
-        long value = (long) (Double.parseDouble(args[2]) * Globals.SNOW_VALUE);
+        if (args.length < 4)
+        {
+          logger.log(Level.SEVERE, "Incorrect syntax. Syntax: SnowBlossomClient <config_file> send <amount> <dest_address>");
+          System.exit(-1);
+        }
+        double val_snow = Double.parseDouble(args[2]);
+
+        long value = (long) (val_snow * Globals.SNOW_VALUE);
         String to = args[3];
 
-        for(int i=0; i<100; i++)
-        {
-          client.send(value, to);
-        }
+        DecimalFormat df = new DecimalFormat("0.000000");
+        logger.info(String.format("Building send of %s to %s", df.format(val_snow), to));
+        client.send(value, to);
 
+      }
+      else 
+      {
+        logger.log(Level.SEVERE, String.format("Unknown command %s.  Try 'send'", command));
+        System.exit(-1);
       }
     }
   }
@@ -120,6 +134,9 @@ public class SnowBlossomClient
   {
     AddressSpecHash to_hash = AddressUtil.getHashForAddress(params.getAddressPrefix(), to);
     Transaction tx = TransactionUtil.makeTransaction(wallet_database, getAllSpendable(), to_hash, value);
+
+    logger.info("Transaction: " + new ChainHash(tx.getTxHash()) + " - " + tx.toByteString().size());
+    //logger.info(tx.toString());
 
     System.out.println(blockingStub.submitTransaction(tx));
 
