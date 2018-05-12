@@ -284,13 +284,27 @@ public class SnowBlossomMiner
     {
       logger.info("Got block template: height:" + b.getHeader().getBlockHeight() + " transactions:"  + b.getTransactionsCount() );
 
+
       int min_field = b.getHeader().getSnowField();
+
+      
+      logger.info("Required field: " + min_field + " - " + params.getSnowFieldInfo(min_field).getName() );
       
       int selected_field = -1;
 
       try
       {
         selected_field = field_scan.selectField(min_field);
+        logger.info("Using field: " + selected_field + " - " + params.getSnowFieldInfo(selected_field).getName());
+
+        try
+        {
+          field_scan.selectField(min_field+1);
+        }
+        catch(Throwable t)
+        {
+          logger.log(Level.WARNING, "When the next snow storm occurs, we will be unable to mine.  No higher fields working.");
+        }
 
         // write selected field into block template 
         Block.Builder bb = Block.newBuilder();
