@@ -6,6 +6,7 @@ import java.io.DataOutputStream;
 
 import snowblossom.proto.AddressSpec;
 import snowblossom.proto.SigSpec;
+import snowblossom.proto.WalletKeyPair;
 import com.google.protobuf.ByteString;
 
 import java.security.PublicKey;
@@ -44,6 +45,23 @@ public class AddressUtil
     }
   }
 
+  public static AddressSpec getSimpleSpecForKey(ByteString key_data, int sig_type)
+  {
+   return AddressSpec.newBuilder()
+    	.setRequiredSigners(1)
+      .addSigSpecs( SigSpec.newBuilder()
+        .setSignatureType( sig_type )
+        .setPublicKey(key_data)
+        .build())
+      .build();
+  }
+  
+  public static AddressSpec getSimpleSpecForKey(WalletKeyPair wkp)
+  {
+    return getSimpleSpecForKey(wkp.getPublicKey(), wkp.getSignatureType());
+  }
+
+
   public static AddressSpec getSimpleSpecForKey(PublicKey key, int sig_type)
   {
     ByteString key_data;
@@ -55,15 +73,8 @@ public class AddressUtil
     {
       key_data = ByteString.copyFrom(key.getEncoded());
     }
-
-    return AddressSpec.newBuilder()
-    	.setRequiredSigners(1)
-      .addSigSpecs( SigSpec.newBuilder()
-        .setSignatureType( sig_type )
-        .setPublicKey(key_data)
-        .build())
-      .build();
-}
+    return getSimpleSpecForKey(key_data, sig_type);
+  }
 
   public static String getAddressString(String human, AddressSpecHash hash)
   {

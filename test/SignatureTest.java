@@ -44,7 +44,7 @@ public class SignatureTest
     throws Exception
   {
     java.security.spec.RSAKeyGenParameterSpec spec = new java.security.spec.RSAKeyGenParameterSpec(2048, 
-      java.security.spec.RSAKeyGenParameterSpec.F4);
+      java.security.spec.RSAKeyGenParameterSpec.F0);
     
     // RSA should just work with any key size someone feels like making so whatever
 

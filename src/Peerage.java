@@ -227,10 +227,10 @@ public class Peerage
       {   
         try
         {
+          connectToPeers();
           Thread.sleep(10000);
           runPrune();
           sendAllTips();
-          connectToPeers();
 
           if (last_learn_time + REFRESH_LEARN_TIME < System.currentTimeMillis())
           {

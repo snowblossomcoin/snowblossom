@@ -8,6 +8,7 @@ import org.bouncycastle.asn1.DERBitString;
 import org.bouncycastle.asn1.ASN1ObjectIdentifier;
 import org.bouncycastle.asn1.ASN1Encodable;
 import org.bouncycastle.asn1.ASN1Integer;
+import java.security.spec.ECGenParameterSpec;
 
 
 import java.io.ByteArrayOutputStream;
@@ -19,7 +20,8 @@ import java.security.PrivateKey;
 import java.security.KeyFactory;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
-
+import snowblossom.proto.WalletKeyPair;
+import java.security.spec.RSAKeyGenParameterSpec;
 import java.security.spec.X509EncodedKeySpec;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.ECGenParameterSpec;
@@ -224,5 +226,93 @@ public class KeyUtil
   {
     for(int i=0; i<indent; i++) out.print(' ');
   }
+
+
+  public static WalletKeyPair generateWalletCompressedECKey()
+  {
+    KeyPair key_pair = KeyUtil.generateECCompressedKey();
+    ByteString public_encoded = KeyUtil.getCompressedPublicKeyEncoding(key_pair.getPublic());
+
+    WalletKeyPair wkp = WalletKeyPair.newBuilder()
+      .setPublicKey(KeyUtil.getCompressedPublicKeyEncoding(key_pair.getPublic()))
+      .setPrivateKey(ByteString.copyFrom(key_pair.getPrivate().getEncoded()))
+      .setSignatureType(SignatureUtil.SIG_TYPE_ECDSA_COMPRESSED)
+      .build();
+    return wkp;
+  }
+
+  public static WalletKeyPair generateWalletECKey(String curve_name)
+  {
+    try
+    {
+      Assert.assertTrue(SignatureUtil.ALLOWED_ECDSA_CURVES.contains(curve_name));
+      
+      ECGenParameterSpec spec = new ECGenParameterSpec(curve_name);
+
+      KeyPairGenerator key_gen = KeyPairGenerator.getInstance("ECDSA","BC");
+      key_gen.initialize(spec);
+      KeyPair key_pair = key_gen.genKeyPair();
+
+      BCECPublicKey pub = (BCECPublicKey) key_pair.getPublic();
+      pub.setPointFormat("COMPRESSED");
+
+      WalletKeyPair wkp = WalletKeyPair.newBuilder()
+        .setPublicKey(ByteString.copyFrom(key_pair.getPublic().getEncoded()))
+        .setPrivateKey(ByteString.copyFrom(key_pair.getPrivate().getEncoded()))
+        .setSignatureType(SignatureUtil.SIG_TYPE_ECDSA)
+        .build();
+      return wkp;
+    }
+    catch(Exception e)
+    {
+      throw new RuntimeException(e);
+    }
+  }
+
+  public static WalletKeyPair generateWalletRSAKey(int key_len)
+  {
+    try
+    {
+      RSAKeyGenParameterSpec spec = new RSAKeyGenParameterSpec(key_len, RSAKeyGenParameterSpec.F4);
+
+      KeyPairGenerator key_gen = KeyPairGenerator.getInstance("RSA","BC");
+
+      key_gen.initialize(spec);
+      KeyPair key_pair = key_gen.genKeyPair();
+
+      WalletKeyPair wkp = WalletKeyPair.newBuilder()
+        .setPublicKey(ByteString.copyFrom(key_pair.getPublic().getEncoded()))
+        .setPrivateKey(ByteString.copyFrom(key_pair.getPrivate().getEncoded()))
+        .setSignatureType(SignatureUtil.SIG_TYPE_RSA)
+        .build();
+      return wkp;
+    }
+    catch(Exception e)
+    {
+      throw new RuntimeException(e);
+    }
+  }
+  public static WalletKeyPair generateWalletDSAKey()
+  {
+    try
+    {
+      KeyPairGenerator key_gen = KeyPairGenerator.getInstance("DSA","BC");
+
+      KeyPair key_pair = key_gen.genKeyPair();
+
+      WalletKeyPair wkp = WalletKeyPair.newBuilder()
+        .setPublicKey(ByteString.copyFrom(key_pair.getPublic().getEncoded()))
+        .setPrivateKey(ByteString.copyFrom(key_pair.getPrivate().getEncoded()))
+        .setSignatureType(SignatureUtil.SIG_TYPE_DSA)
+        .build();
+      return wkp;
+    }
+    catch(Exception e)
+    {
+      throw new RuntimeException(e);
+    }
+  }
+
+
 
 }

@@ -206,20 +206,12 @@ public class SnowBlossomClient
 
   public void genNewKey(WalletDatabase.Builder wallet_builder)
   {
-    KeyPair key_pair = KeyUtil.generateECCompressedKey();
 
-    ByteString public_encoded = KeyUtil.getCompressedPublicKeyEncoding(key_pair.getPublic());
-
-    WalletKeyPair wkp = WalletKeyPair.newBuilder()
-       .setPublicKey(KeyUtil.getCompressedPublicKeyEncoding(key_pair.getPublic()))
-       .setPrivateKey(ByteString.copyFrom(key_pair.getPrivate().getEncoded()))
-       .setSignatureType(SignatureUtil.SIG_TYPE_ECDSA_COMPRESSED)
-       .build();
-  
+    WalletKeyPair wkp = KeyUtil.generateWalletCompressedECKey();
 
     wallet_builder.addKeys(wkp);
 
-    AddressSpec claim = AddressUtil.getSimpleSpecForKey(key_pair.getPublic(), SignatureUtil.SIG_TYPE_ECDSA_COMPRESSED);
+    AddressSpec claim = AddressUtil.getSimpleSpecForKey(wkp);
 
     wallet_builder.addAddresses(claim);
 
