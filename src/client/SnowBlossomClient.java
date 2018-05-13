@@ -207,7 +207,7 @@ public class SnowBlossomClient
   public void genNewKey(WalletDatabase.Builder wallet_builder)
   {
 
-    WalletKeyPair wkp = KeyUtil.generateWalletCompressedECKey();
+    WalletKeyPair wkp = KeyUtil.generateWalletStandardECKey();
 
     wallet_builder.addKeys(wkp);
 

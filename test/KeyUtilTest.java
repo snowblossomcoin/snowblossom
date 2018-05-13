@@ -59,10 +59,10 @@ public class KeyUtilTest
   }
 
   @Test
-  public void testCompressedWallet()
+  public void testStandardWallet()
     throws Exception
   {
-    WalletKeyPair wkp = KeyUtil.generateWalletCompressedECKey();
+    WalletKeyPair wkp = KeyUtil.generateWalletStandardECKey();
 
     testKeyPair(wkp);
   }

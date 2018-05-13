@@ -228,7 +228,7 @@ public class KeyUtil
   }
 
 
-  public static WalletKeyPair generateWalletCompressedECKey()
+  public static WalletKeyPair generateWalletStandardECKey()
   {
     KeyPair key_pair = KeyUtil.generateECCompressedKey();
     ByteString public_encoded = KeyUtil.getCompressedPublicKeyEncoding(key_pair.getPublic());
