@@ -30,6 +30,10 @@ import java.security.KeyPair;
 import snowblossom.proto.WalletKeyPair;
 import snowblossom.proto.WalletDatabase;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
+import java.nio.file.FileSystems;
 import java.util.logging.Logger;
 import java.util.logging.Level;
 import java.util.Random;
@@ -172,22 +176,32 @@ public class SnowBlossomClient
     wallet_database.writeTo(out);
     out.flush();
     out.close();
-    WalletDatabase read = WalletDatabase.parseFrom(new FileInputStream(db_file_tmp));
+
+    FileInputStream re_read_in = new FileInputStream(db_file_tmp);
+    WalletDatabase read = WalletDatabase.parseFrom(re_read_in);
+    re_read_in.close();
+
 
     Assert.assertEquals(wallet_database, read);
     File db_file = new File(wallet_path, "wallet.db");
 
-    if (db_file_tmp.renameTo(db_file))
-    {
+    Path db_file_path = FileSystems.getDefault().getPath(db_file.getPath());
+    Path tmp_file_path = FileSystems.getDefault().getPath(db_file_tmp.getPath());
+
+    Files.move(tmp_file_path, db_file_path, StandardCopyOption.REPLACE_EXISTING);
+
+
+    //if (db_file_tmp.renameTo(db_file))
+    //{
       logger.log(Level.INFO, String.format("Save to file %s completed", db_file.getPath()));
-    } 
-    else
+    //} 
+    /*else
     {
       String msg = String.format("Unable to rename tmp file %s to %s", db_file_tmp.getPath(), db_file.getPath());
 
       logger.log(Level.WARNING, msg);
       throw new IOException(msg);
-    }
+    }*/
 
 
   }
