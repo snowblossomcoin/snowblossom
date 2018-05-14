@@ -107,6 +107,7 @@ public class SnowBlossomMiner
     }
 
     int threads = config.getIntWithDefault("threads", 8);
+    logger.info("Starting " + threads + " threads");
     
     field_scan = new FieldScan(snow_path, params, config);
     subscribe();
