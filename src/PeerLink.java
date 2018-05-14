@@ -38,8 +38,8 @@ public class PeerLink implements StreamObserver<PeerMessage>
 
   private boolean server_side;
   private String link_id;
+  private long last_received_message_time;
 
-  private PeerChainTip last_seen_tip;
   private TreeMap<Integer, ChainHash> peer_block_map = new TreeMap<Integer, ChainHash>();
 
   public PeerLink(SnowBlossomNode node, StreamObserver<PeerMessage> sink)
@@ -48,6 +48,7 @@ public class PeerLink implements StreamObserver<PeerMessage>
     this.sink = sink;
     server_side=true;
     setLinkId();
+    last_received_message_time = System.currentTimeMillis();
 
   }
 
@@ -57,6 +58,7 @@ public class PeerLink implements StreamObserver<PeerMessage>
     server_side=false;
 
     this.link_id = link_id;
+    last_received_message_time = System.currentTimeMillis();
   }
 
   private void setLinkId()
@@ -93,6 +95,7 @@ public class PeerLink implements StreamObserver<PeerMessage>
   @Override
   public void onNext(PeerMessage msg)
   {
+    last_received_message_time = System.currentTimeMillis();
     try
     {
       if (msg.hasTx())
@@ -111,7 +114,6 @@ public class PeerLink implements StreamObserver<PeerMessage>
           logger.log(Level.INFO, String.format("Peer has wrong name: %s", tip.getNetworkName()));
           close();
         }
-        last_seen_tip = tip;
 
         BlockHeader header = tip.getHeader();
         if (header.getSnowHash().size() > 0)
@@ -256,6 +258,11 @@ public class PeerLink implements StreamObserver<PeerMessage>
 
   public boolean isOpen()
   {
+    if (last_received_message_time + 120000L < System.currentTimeMillis())
+    {
+      logger.info("No message in a long time, assuming dead link");
+      close();
+    }
     return !closed;
   }
   
