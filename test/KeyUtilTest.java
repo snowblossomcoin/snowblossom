@@ -16,6 +16,7 @@ import java.util.Random;
 
 import java.util.logging.Logger;
 import java.util.logging.Level;
+import java.util.ArrayList;
 
 
 public class KeyUtilTest
@@ -27,7 +28,6 @@ public class KeyUtilTest
   {
     Globals.addCryptoProvider();
   }
-
 
   @Test
   public void testCompressKeyEncoding()
@@ -78,12 +78,30 @@ public class KeyUtilTest
       testKeyPair(wkp);
     }
   }
+  @Test
+  public void testAllowedCurvesByName()
+    throws Exception
+  {
+    ArrayList<String> curves = new ArrayList<>();
+    curves.add("secp256k1");
+    curves.add("secp384r1");
+    curves.add("secp521r1");
+    curves.add("sect571k1");
+    curves.add("sect571r1");
+    for(String curve : curves)
+    {
+      WalletKeyPair wkp = KeyUtil.generateWalletECKey(curve);
+
+      testKeyPair(wkp);
+    }
+  }
  
   @Test
   public void testRSA()
     throws Exception
   {
-    for(int i=512; i<=4*1024; i*=2)
+
+    for(int i=512; i<=2*1024; i*=2)
     {
       logger.info("Generating key size: " + i);
 
@@ -95,7 +113,7 @@ public class KeyUtilTest
       testKeyPair(wkp);
     }
   }
- 
+
   @Test
   public void testDSA()
     throws Exception
@@ -109,7 +127,20 @@ public class KeyUtilTest
       testKeyPair(wkp);
   }
 
+  @Test
+  public void testDSTU4145()
+    throws Exception
+  {
+    for(int i=0; i<=9; i++)
+    {
+      logger.info("Testing DSTU key size: " + i);
+      WalletKeyPair wkp = KeyUtil.generateWalletDSTU4145Key(i);
 
+      logger.info(KeyUtil.decomposeASN1Encoded(wkp.getPublicKey()));
+
+      testKeyPair(wkp);
+    }
+  } 
 
   private void testKeyPair(WalletKeyPair wkp)
     throws Exception
@@ -126,6 +157,7 @@ public class KeyUtilTest
       .setPublicKey(wkp.getPublicKey())
       .build();
 
+    logger.info(String.format("Pub size: %d, sig %d", wkp.getPublicKey().size(), sig.size()));
 
     Assert.assertTrue(SignatureUtil.checkSignature(sig_spec, hash.getBytes(), sig));
 

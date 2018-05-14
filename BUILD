@@ -195,6 +195,21 @@ java_test(
 )
 
 java_test(
+  name = "wallet_test",
+  srcs = ["test/WalletTest.java"],
+  test_class = "snowblossom.WalletTest",
+  size="medium",
+  deps = [
+      "@junit_junit//jar",
+      ":snowblossomlib",
+      ":snowblossomprotolib",
+      "@commons_codec//jar",
+      "@bcprov//jar",
+  ],
+)
+
+
+java_test(
   name = "validation_test",
   srcs = ["test/ValidationTest.java"],
   test_class = "snowblossom.ValidationTest",

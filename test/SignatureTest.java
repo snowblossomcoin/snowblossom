@@ -198,7 +198,7 @@ public class SignatureTest
     throws Exception
   {
     System.out.println("------------------------" + gen_algo + "/" + sign_algo);
-    KeyPairGenerator key_gen = KeyPairGenerator.getInstance(gen_algo);
+    KeyPairGenerator key_gen = KeyPairGenerator.getInstance(gen_algo, "BC");
 
     if (gen_spec != null) key_gen.initialize(gen_spec);
 

@@ -10,6 +10,8 @@ import com.google.protobuf.InvalidProtocolBufferException;
 
 import snowblossom.trie.proto.TrieNode;
 
+import java.util.Random;
+
 /**
  * Simple class that acts as an easy way to make a transaction input
  * from an output or trie node or whatever */
@@ -50,8 +52,32 @@ public class TransactionBridge
     {
       throw new RuntimeException(e);
     }
+  }
 
+  /**
+   * create fake bridge for testing
+   */
+  protected TransactionBridge(AddressSpecHash hash, long value)
+  {
+    Random rnd = new Random();
 
+    out = TransactionOutput.newBuilder()
+      .setRecipientSpecHash(hash.getBytes())
+      .setValue(value)
+      .build();
+
+    byte[] txid = new byte[Globals.BLOCKCHAIN_HASH_LEN];
+    rnd.nextBytes(txid);
+
+    in = TransactionInput.newBuilder()
+      .setSpecHash(hash.getBytes())
+      .setSrcTxId(ByteString.copyFrom(txid))
+      .setSrcTxOutIdx(rnd.nextInt(100))
+      .build();
+
+    this.value = value;
+
+    
   }
 
 

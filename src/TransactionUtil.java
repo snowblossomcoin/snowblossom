@@ -52,7 +52,7 @@ public class TransactionUtil
    * Also assumes the inputs and output funds are exactly matched
    * with no fee.
    */
-  public static Transaction createTransaction(
+  protected static Transaction createTransaction(
     List<TransactionInput> sources,
     List<TransactionOutput> dests,
     KeyPair key_pair)
@@ -197,7 +197,13 @@ public class TransactionUtil
 
     tx.setTxHash(tx_hash.getBytes());
 
-
+    // Note number of needed signatures for each claim
+    int[] needed_sigs = new int[claims.size()];
+    for(int i =0;i<claims.size(); i++)
+    {
+      AddressSpec spec = claims.get(i);
+      needed_sigs[i] = spec.getRequiredSigners();
+    }
     //Sign
 
     for(WalletKeyPair key_pair : wallet.getKeysList())
@@ -206,22 +212,25 @@ public class TransactionUtil
 
       for(int i=0; i<claims.size(); i++)
       {
-        AddressSpec spec = claims.get(i);
-        for(int j=0; j<spec.getSigSpecsCount(); j++)
+        if (needed_sigs[i] > 0)
         {
-          SigSpec sig_spec = spec.getSigSpecs(j);
-          if (sig_spec.getSignatureType() == key_pair.getSignatureType())
-          if (sig_spec.getPublicKey().equals(public_key))
+          AddressSpec spec = claims.get(i);
+          for(int j=0; j<spec.getSigSpecsCount(); j++)
           {
-            tx.addSignatures( SignatureEntry.newBuilder()
-              .setClaimIdx(i)
-              .setKeyIdx(j)
-              .setSignature( SignatureUtil.sign(key_pair, tx_hash) )
-              .build());
+            SigSpec sig_spec = spec.getSigSpecs(j);
+            if (sig_spec.getSignatureType() == key_pair.getSignatureType())
+            if (sig_spec.getPublicKey().equals(public_key))
+            {
+              tx.addSignatures( SignatureEntry.newBuilder()
+                .setClaimIdx(i)
+                .setKeyIdx(j)
+                .setSignature( SignatureUtil.sign(key_pair, tx_hash) )
+                .build());
+              needed_sigs[i]--;
+            }
+
           }
-
         }
-
       }
     }
 

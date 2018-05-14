@@ -31,7 +31,6 @@ import org.bouncycastle.jcajce.provider.asymmetric.ec.BCECPublicKey;
 
 import org.junit.Assert;
 
-
 public class KeyUtil
 {
   public static ByteString EC_SECP256K1_PREFIX= HexUtil.stringToHex("3036301006072a8648ce3d020106052b8104000a032200");
@@ -245,7 +244,6 @@ public class KeyUtil
   {
     try
     {
-      Assert.assertTrue(SignatureUtil.ALLOWED_ECDSA_CURVES.contains(curve_name));
       
       ECGenParameterSpec spec = new ECGenParameterSpec(curve_name);
 
@@ -298,6 +296,8 @@ public class KeyUtil
     {
       KeyPairGenerator key_gen = KeyPairGenerator.getInstance("DSA","BC");
 
+      key_gen.initialize(3072);
+
       KeyPair key_pair = key_gen.genKeyPair();
 
       WalletKeyPair wkp = WalletKeyPair.newBuilder()
@@ -312,7 +312,30 @@ public class KeyUtil
       throw new RuntimeException(e);
     }
   }
+  public static WalletKeyPair generateWalletDSTU4145Key(int curve)
+  {
+    try
+    {
+      ECGenParameterSpec spec = new ECGenParameterSpec("1.2.804.2.1.1.1.1.3.1.1.2." + curve);
 
+      KeyPairGenerator key_gen = KeyPairGenerator.getInstance("DSTU4145","BC");
+
+      key_gen.initialize(spec);
+      KeyPair key_pair = key_gen.genKeyPair();
+
+      WalletKeyPair wkp = WalletKeyPair.newBuilder()
+        .setPublicKey(ByteString.copyFrom(key_pair.getPublic().getEncoded()))
+        .setPrivateKey(ByteString.copyFrom(key_pair.getPrivate().getEncoded()))
+        .setSignatureType(SignatureUtil.SIG_TYPE_DSTU4145)
+        .build();
+      return wkp;
+    }
+    catch(Exception e)
+    {
+      throw new RuntimeException(e);
+    }
+  }
+ 
 
 
 }
