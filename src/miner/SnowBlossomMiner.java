@@ -13,12 +13,15 @@ import snowblossom.proto.Block;
 import snowblossom.proto.BlockHeader;
 import snowblossom.proto.SnowPowProof;
 import snowblossom.proto.SubmitReply;
+import snowblossom.proto.AddressSpec;
+import snowblossom.proto.WalletDatabase;
 import snowblossom.NetworkParams;
 import snowblossom.NetworkParamsProd;
 import snowblossom.NetworkParamsTestnet;
 import snowblossom.AddressSpecHash;
 import snowblossom.HexUtil;
 import snowblossom.ChainHash;
+import snowblossom.AddressUtil;
 
 
 import java.util.logging.Logger;
@@ -35,6 +38,9 @@ import com.google.protobuf.ByteString;
 import java.security.Security;
 import java.security.MessageDigest;
 import java.io.File;
+import java.util.Collections;
+import java.io.FileInputStream;
+import java.util.LinkedList;
 import java.util.concurrent.atomic.AtomicLong;
 import java.text.DecimalFormat;
 
@@ -91,7 +97,15 @@ public class SnowBlossomMiner
 
     snow_path = new File(config.get("snow_path"));
 
-    config.require("mine_to_address");
+    if ((!config.isSet("mine_to_address")) && (!config.isSet("mine_to_wallet")))
+    {
+      throw new RuntimeException("Config must either specify mine_to_address or mine_to_wallet");
+    }
+    if ((config.isSet("mine_to_address")) && (config.isSet("mine_to_wallet")))
+    {
+      throw new RuntimeException("Config must either specify mine_to_address or mine_to_wallet, not both");
+    }
+
     int threads = config.getIntWithDefault("threads", 8);
     
     field_scan = new FieldScan(snow_path, params, config);
@@ -113,14 +127,45 @@ public class SnowBlossomMiner
     asyncStub = UserServiceGrpc.newStub(channel);
     blockingStub = UserServiceGrpc.newBlockingStub(channel);
 
-    String address = config.get("mine_to_address");
-
-    AddressSpecHash to_addr = new AddressSpecHash(address, params);
+    AddressSpecHash to_addr = getMineToAddress();
 
     asyncStub.subscribeBlockTemplate(SubscribeBlockTemplateRequest.newBuilder()
       .setPayRewardToSpecHash(to_addr.getBytes()).build(), new BlockTemplateEater());
     logger.info("Subscribed to blocks");  
 
+  }
+
+  private AddressSpecHash getMineToAddress()
+    throws Exception
+  {
+
+    if (config.isSet("mine_to_address"))
+    {
+      String address = config.get("mine_to_address");
+      AddressSpecHash to_addr = new AddressSpecHash(address, params);
+      return to_addr;
+    }
+    if (config.isSet("mine_to_wallet"))
+    {
+      File wallet_path = new File(config.get("mine_to_wallet"));
+      File wallet_db = new File(wallet_path, "wallet.db");
+
+      FileInputStream in = new FileInputStream(wallet_db);
+      WalletDatabase wallet = WalletDatabase.parseFrom(in);
+      in.close();
+      if (wallet.getAddressesCount() == 0)
+      {
+        throw new RuntimeException("Wallet has no addresses");
+      }
+      LinkedList<AddressSpec> specs = new LinkedList<AddressSpec>();
+      specs.addAll(wallet.getAddressesList());
+      Collections.shuffle(specs);
+
+      AddressSpec spec = specs.get(0);
+      AddressSpecHash to_addr = AddressUtil.getHashForSpec(spec);
+      return to_addr;
+    }
+    return null;
   }
 
   public void stop()
