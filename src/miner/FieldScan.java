@@ -82,8 +82,6 @@ public class FieldScan
 
     availible_fields = ImmutableSortedMap.copyOf(fmap);
 
-    
-
   }
 
   private void checkField(int field_number, SnowMerkleProof proof)
@@ -137,6 +135,25 @@ public class FieldScan
   public SnowMerkleProof getFieldProof(int f)
   {
     return availible_fields.get(f);
+  }
+
+  public SnowMerkleProof getSingleUserFieldProof(int f)
+    throws Exception
+  {
+    if (!availible_fields.containsKey(f))
+    {
+      return null;
+    }
+
+
+    String name = params.getFieldSeeds().get(f);
+    File field_folder = new File(path, name);
+
+    return new SnowMerkleProof(field_folder, name);
+
+
+
+
   }
 
 }

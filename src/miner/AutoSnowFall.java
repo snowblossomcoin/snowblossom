@@ -39,7 +39,8 @@ public class AutoSnowFall extends Thread
     SnowFieldInfo field_info = params.getSnowFieldInfo(field);
     logger.info(String.format("Started automatic snowfall of field %d - %s", field, field_info.getName()));
 
-    String path_name = params.getNetworkName() + "." + field;
+    String path_name = params.getFieldSeeds().get(field);
+
     File field_dir = new File(snow_path, path_name);
     File snow_file = new File(field_dir, path_name +".snow");
 

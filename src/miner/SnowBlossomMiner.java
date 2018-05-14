@@ -210,6 +210,10 @@ public class SnowBlossomMiner
   {
     Random rnd;
     MessageDigest md = DigestUtil.getMD();
+
+    SnowMerkleProof merkle_proof;
+    int proof_field;
+
     public MinerThread()
     {
       setName("MinerThread");
@@ -237,7 +241,16 @@ public class SnowBlossomMiner
       // TODO, modify headers to put snow field in
       byte[] first_hash = PowUtil.hashHeaderBits(b.getHeader(), nonce, md);
 
-      SnowMerkleProof merkle_proof = field_scan.getFieldProof(b.getHeader().getSnowField());
+     
+      /**
+       * This is a windows specific improvement since windows likes separete file descriptors
+       * per thread.
+       */
+      if ((merkle_proof == null) || (proof_field != b.getHeader().getSnowField()))
+      {
+        merkle_proof = field_scan.getSingleUserFieldProof(b.getHeader().getSnowField());
+        proof_field = b.getHeader().getSnowField();
+      }
 
       byte[] context = first_hash;
       for(int pass=0; pass<Globals.POW_LOOK_PASSES; pass++)
