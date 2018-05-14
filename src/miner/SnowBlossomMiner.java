@@ -75,6 +75,10 @@ public class SnowBlossomMiner
   private long last_stats_time = System.currentTimeMillis();
   private Config config;
 
+  private File snow_path;
+
+  private AutoSnowFall auto_snow;
+
 
   public SnowBlossomMiner(Config config) throws Exception
   {
@@ -85,13 +89,12 @@ public class SnowBlossomMiner
     
     params = NetworkParams.loadFromConfig(config);
 
-    File path = new File(config.get("snow_path"));
+    snow_path = new File(config.get("snow_path"));
 
     config.require("mine_to_address");
     int threads = config.getIntWithDefault("threads", 8);
     
-		
-    field_scan = new FieldScan(path, params);
+    field_scan = new FieldScan(snow_path, params, config);
     subscribe();
 
     for(int i=0; i<threads; i++)
@@ -323,7 +326,6 @@ public class SnowBlossomMiner
         last_block_template = null;
       }
     }
-
 
   }
 

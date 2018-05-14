@@ -4,6 +4,7 @@ import snowblossom.NetworkParams;
 import snowblossom.SnowMerkleProof;
 import snowblossom.SnowFieldInfo;
 import snowblossom.proto.SnowPowProof;
+import snowblossom.Config;
 
 import java.io.File;
 
@@ -25,10 +26,14 @@ public class FieldScan
 
   private ImmutableSortedMap<Integer, SnowMerkleProof> availible_fields;
 
-  public FieldScan(File path, NetworkParams params)
+  private volatile AutoSnowFall auto_snow;
+  private Config config;
+
+  public FieldScan(File path, NetworkParams params, Config config)
   {
     this.path = path;
     this.params = params;
+    this.config = config;
     scan(true);
   }
 
@@ -101,10 +106,30 @@ public class FieldScan
     }
   }
 
-  public int selectField(int min_field)
+  public synchronized int selectField(int min_field)
   {
+    if (auto_snow != null)
+    {
+      if(auto_snow.isDone())
+      {
+        auto_snow=null;
+        scan(true);
+      }
+    }
+
     Integer i = availible_fields.ceilingKey(min_field);
-    if (i == null) throw new RuntimeException(String.format("Unable to select a field of at least %d.  Availible: %s", min_field, availible_fields.keySet().toString()));
+    if (i == null)
+    {
+      if (config.isSet("auto_snow") && config.getBoolean("auto_snow"))
+      {
+        if (auto_snow == null)
+        {
+          auto_snow = new AutoSnowFall(path, params, min_field);
+          auto_snow.start();
+        }
+      }
+      throw new RuntimeException(String.format("Unable to select a field of at least %d.  Availible: %s", min_field, availible_fields.keySet().toString()));
+    }
 
     return i;
   }
