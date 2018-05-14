@@ -93,6 +93,28 @@ public class SnowBlossomClient
         client.send(value, to);
 
       }
+      else if (command.equals("monitor"))
+      {
+        while(true)
+        {
+          Thread.sleep(60000);
+          try
+          {
+            if (client == null)
+            {
+               client = new SnowBlossomClient(config);
+            }
+            client.showBalances();
+
+          }
+          catch(Throwable t)
+          {
+            t.printStackTrace();
+            client = null;
+
+          }
+        }
+      }
       else 
       {
         logger.log(Level.SEVERE, String.format("Unknown command %s.  Try 'send'", command));
