@@ -16,11 +16,11 @@
 * p2p networking
 * switching to best chain
 * snow storms
+* any sort of wallet (via lite client)
 
 
 # Does not work
 
-* any sort of wallet (via lite client)
 * UPNP ports
 * onion/proxy support
 

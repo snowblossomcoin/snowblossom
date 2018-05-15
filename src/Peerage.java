@@ -29,6 +29,7 @@ import java.util.List;
 import java.util.LinkedList;
 import java.net.URL;
 import java.util.Random;
+import java.net.InetAddress;
 
 /**
  * Joe: Should I class that handles communicating with a bunch of peers be called the Peerage?
@@ -182,12 +183,25 @@ public class Peerage
     }
     for(String s : node.getParams().getSeedNodes())
     {
-      PeerInfo pi = PeerInfo.newBuilder()
-        .setHost(s)
-        .setPort(node.getParams().getDefaultPort())
-        .setLearned(System.currentTimeMillis())
-        .build();
-      learnPeer(pi);
+      try
+      {
+        for(InetAddress ia : InetAddress.getAllByName(s))
+        {
+          String address = ia.getHostAddress();
+
+          PeerInfo pi = PeerInfo.newBuilder()
+            .setHost(address)
+            .setPort(node.getParams().getDefaultPort())
+            .setLearned(System.currentTimeMillis())
+            .build();
+          learnPeer(pi);
+
+        }
+      }
+      catch(Exception e)
+      {
+        logger.info(String.format("Exception resolving %s - %s", s, e.toString()));
+      }
     }
 
   }

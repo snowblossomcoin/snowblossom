@@ -49,7 +49,7 @@ public class NetworkParamsTestnet extends NetworkParams
   @Override
   public List<String> getSeedNodes()
   {
-    return ImmutableList.of("seed-testnet-v4.snowblossom.org", "seed-testnet-v6.snowblossom.org");
+    return ImmutableList.of("seed-testnet.snowblossom.org");
   }
   @Override
   public int getDefaultPort() { return 2339; }
