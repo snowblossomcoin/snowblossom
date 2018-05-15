@@ -64,7 +64,7 @@ public class KeyUtilTest
   {
     WalletKeyPair wkp = KeyUtil.generateWalletStandardECKey();
 
-    testKeyPair(wkp);
+    testKeyPair(wkp, "standard");
   }
 
   @Test
@@ -75,7 +75,7 @@ public class KeyUtilTest
     {
       WalletKeyPair wkp = KeyUtil.generateWalletECKey(curve);
 
-      testKeyPair(wkp);
+      testKeyPair(wkp, curve);
     }
   }
   @Test
@@ -92,7 +92,7 @@ public class KeyUtilTest
     {
       WalletKeyPair wkp = KeyUtil.generateWalletECKey(curve);
 
-      testKeyPair(wkp);
+      testKeyPair(wkp, curve);
     }
   }
  
@@ -110,7 +110,7 @@ public class KeyUtilTest
       logger.info(KeyUtil.decomposeASN1Encoded(wkp.getPublicKey()));
 
       logger.info("Testing key size: " + i);
-      testKeyPair(wkp);
+      testKeyPair(wkp, "RSA " + i);
     }
   }
 
@@ -124,7 +124,7 @@ public class KeyUtilTest
 
       logger.info(KeyUtil.decomposeASN1Encoded(wkp.getPublicKey()));
 
-      testKeyPair(wkp);
+      testKeyPair(wkp, "DSA");
   }
 
   @Test
@@ -138,11 +138,11 @@ public class KeyUtilTest
 
       logger.info(KeyUtil.decomposeASN1Encoded(wkp.getPublicKey()));
 
-      testKeyPair(wkp);
+      testKeyPair(wkp, "DSTU " + i);
     }
   } 
 
-  private void testKeyPair(WalletKeyPair wkp)
+  private void testKeyPair(WalletKeyPair wkp, String name)
     throws Exception
   {
     Random rnd = new Random();
@@ -157,7 +157,7 @@ public class KeyUtilTest
       .setPublicKey(wkp.getPublicKey())
       .build();
 
-    logger.info(String.format("Pub size: %d, sig %d", wkp.getPublicKey().size(), sig.size()));
+    logger.info(String.format("Key report %s Pub size: %d, sig %d", name, wkp.getPublicKey().size(), sig.size()));
 
     Assert.assertTrue(SignatureUtil.checkSignature(sig_spec, hash.getBytes(), sig));
 

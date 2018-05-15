@@ -13,7 +13,7 @@ public class NetworkParamsProd extends NetworkParams
   @Override
   public long getMaxTarget()
   {
-    return 1L << (64 - 25); //should probably be 24 to start
+    return 1L << (64 - 25); //should probably be 25 to start
   }
 
   @Override
