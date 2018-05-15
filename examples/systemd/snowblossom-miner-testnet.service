@@ -1,0 +1,11 @@
+[Unit]
+Description=Snowblossom Miner - testnet
+After=network.target
+
+[Service]
+WorkingDirectory=/var/snowblossom
+ExecStart=/var/snowblossom/source/snowblossom/bazel-bin/SnowBlossomMiner configs/snowblossom-miner-testnet.conf
+User=snowblossom
+
+[Install]
+WantedBy=multi-user.target
