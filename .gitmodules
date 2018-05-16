@@ -1,0 +1,3 @@
+[submodule "documentation/wiki-github"]
+	path = documentation/wiki-github
+	url = https://github.com/snowblossomcoin/snowblossom.wiki.git
