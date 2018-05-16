@@ -5,9 +5,10 @@ if [[ $EUID -ne 0 ]]; then
 fi
 
 snowblossom_home="`eval echo "~$SUDO_USER"`/.snowblossom"
-latest_release="`wget -qO - https://api.github.com/repos/snowblossomcoin/snowblossom/releases`"
-release_name="`echo $latest_release | grep -Po '"name": "\K.*?(?=")'`"
-release_tag="`echo $latest_release | grep -Po '"tag_name": "\K.*?(?=")'`"
+latest_release=`wget -qO - https://api.github.com/repos/snowblossomcoin/snowblossom/releases` 
+release_name=`echo "$latest_release" | grep -Po -m 1 '"name": "\K.*?(?=")'`
+release_tag=`echo "$latest_release" | grep -Po -m 1 '"tag_name": "\K.*?(?=")'`
+
 echo "Installing snowblossom $release_name $release_tag in $snowblossom_home"
 
 # install openjdk-8-jdk and bazel
