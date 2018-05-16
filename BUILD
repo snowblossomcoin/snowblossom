@@ -239,7 +239,7 @@ java_test(
   name = "mem_pool_test",
   srcs = ["test/MemPoolTest.java"],
   test_class = "snowblossom.MemPoolTest",
-  size="small",
+  size="medium",
   deps = [
       "@junit_junit//jar",
       ":snowblossomlib",

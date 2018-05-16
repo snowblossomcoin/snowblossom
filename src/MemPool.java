@@ -17,8 +17,13 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.Collection;
 import java.util.TreeSet;
+import java.util.Random;
 import com.google.common.collect.ImmutableList;
 import com.google.protobuf.ByteString;
+import com.google.common.collect.HashMultimap;
+
+import org.junit.Assert;
+
 
 /**
  * This class has the potential to be the most complex here.  
@@ -110,7 +115,9 @@ public class MemPool
   public synchronized boolean addTransaction(Transaction tx)
     throws ValidationException
   {
+    long t1= System.nanoTime();
     Validation.checkTransactionBasics(tx, false);
+    TimeRecord.record(t1, "tx_validation");
     ChainHash tx_hash = new ChainHash(tx.getTxHash());
     if (known_transactions.containsKey(tx_hash)) return false;
 
@@ -121,7 +128,9 @@ public class MemPool
     
     TransactionInner inner = TransactionUtil.getInner(tx);
     TreeSet<String> used_outputs = new TreeSet<>();
+    TimeRecord.record(t1, "mempool:p1");
 
+    long t3=System.nanoTime();
     for(TransactionInput in : inner.getInputsList())
     {
       String key = HexUtil.getHexString( in.getSrcTxId() ) + ":" + in.getSrcTxOutIdx();
@@ -135,18 +144,28 @@ public class MemPool
         }
       }
     }
+    TimeRecord.record(t3, "mempool:input_proc");
 
     if (utxo_for_pri_map != null)
     {
+      long t2=System.nanoTime();
       TXCluster cluster = buildTXCluster(tx);
+      TimeRecord.record(t2, "mempool:build_cluster");
       if (cluster == null)
       {
         throw new ValidationException("Unable to find a tx cluster that makes this work");
       }
       double ratio = (double)cluster.total_fee / (double)cluster.total_size;
+
+      //Random rnd = new Random();
+      //ratio = ratio * 1e9 + rnd.nextDouble();
+      long t4=System.nanoTime();
       priority_map.put(ratio, cluster);
+      TimeRecord.record(t4, "mempool:primapput");
+
 
     }
+    TimeRecord.record(t1, "mempool:p2");
     
     known_transactions.put(tx_hash, info);
     // Claim outputs used by inputs
@@ -154,6 +173,8 @@ public class MemPool
     {
       claimed_outputs.put(key, tx_hash);
     }
+    TimeRecord.record(t1, "mempool:tx_add");
+    TimeRecord.record(t1, "mempool:p3");
 
     return true;
   }
@@ -203,6 +224,63 @@ public class MemPool
 
   }
 
+  private static void addInputRequirements(Transaction tx, HashMultimap<ChainHash, ChainHash> depends_on_map, List<TransactionInput> needed_inputs)
+  {
+    ChainHash tx_id = new ChainHash(tx.getTxHash());
+    TransactionInner inner = TransactionUtil.getInner(tx);
+    for(TransactionInput in : inner.getInputsList())
+    {
+      depends_on_map.put(tx_id, new ChainHash(in.getSrcTxId()));
+      needed_inputs.add(in);
+    }
+  }
+
+  private static LinkedList<Transaction> getOrderdTxList(HashMap<ChainHash, Transaction> working_map,
+    HashMultimap<ChainHash, ChainHash> depends_on_map, ChainHash target_tx)
+  {
+    HashMap<ChainHash, Integer> level_map=new HashMap<>();
+
+    populateLevelMap(working_map, depends_on_map, level_map, target_tx, 0);
+
+    Assert.assertEquals(level_map.size(), working_map.size());
+
+    TreeMultimap<Integer, ChainHash> ordered_tree = TreeMultimap.<Integer, ChainHash>create();
+
+    for(Map.Entry<ChainHash, Integer> me : level_map.entrySet())
+    {
+      ordered_tree.put(me.getValue(), me.getKey());
+    }
+
+    LinkedList<Transaction> return_list = new LinkedList<Transaction>();
+    for(Map.Entry<Integer, ChainHash> me : ordered_tree.entries())
+    {
+      return_list.add(working_map.get(me.getValue()));
+    }
+
+    Assert.assertEquals(working_map.size(), return_list.size());
+    Assert.assertEquals(target_tx, return_list.getLast().getTxHash());
+
+    return return_list;
+  }
+
+  private static void populateLevelMap(HashMap<ChainHash, Transaction> working_map,
+        HashMultimap<ChainHash, ChainHash> depends_on_map, 
+        HashMap<ChainHash, Integer> level_map, 
+        ChainHash tx, int level)
+  {
+    if (!working_map.containsKey(tx)) return;
+
+    if (level_map.containsKey(tx))
+    {
+      if (level_map.get(tx) <= level) return; //already lower or same
+    }
+    level_map.put(tx, level);
+
+    for(ChainHash sub : depends_on_map.get(tx))
+    {
+      populateLevelMap( working_map, depends_on_map, level_map, sub, level-1);
+    }
+  }
   /**
    * Attemped to build an ordered list of transactions
    * that can confirm.  In the simple case, it is just
@@ -216,115 +294,65 @@ public class MemPool
   private TXCluster buildTXCluster(Transaction target_tx)
     throws ValidationException
   {
-    HashSet<ChainHash> working_set = new HashSet<>();
-    
-    LinkedList<Transaction> working_list = new LinkedList<>();
-    working_list.add(target_tx);
-    working_set.add(new ChainHash(target_tx.getTxHash()));
+    HashMap<ChainHash, Transaction> working_map = new HashMap<>();
 
-    TreeMap<ChainHash, Integer> level_map = new TreeMap<>();
-    level_map.put(new ChainHash(target_tx.getTxHash()), 0);
+    HashMultimap<ChainHash, ChainHash> depends_on_map=HashMultimap.<ChainHash,ChainHash>create();
 
-    int added = 1;
+    LinkedList<TransactionInput> needed_inputs = new LinkedList<>();
 
-    // The case where nothing is added but we are still here is that
-    // We built a list of transactions that *should* work but it is 
-    // still failing deep validation, which means amounts of maybe output indexes
-    // or number of times spending each output (lol) don't match up and never will.
-    while(added > 0)
+    addInputRequirements(target_tx, depends_on_map, needed_inputs);
+
+    working_map.put(new ChainHash(target_tx.getTxHash()), target_tx);
+    long t1;
+
+
+    while(needed_inputs.size()>0)
     {
-      added=0;
-      try
+      TransactionInput in = needed_inputs.pop();
+      ChainHash needed_tx = new ChainHash(in.getSrcTxId());
+      if (!working_map.containsKey(needed_tx))
       {
-        UtxoUpdateBuffer test_buffer = new UtxoUpdateBuffer(utxo_hashed_trie, utxo_for_pri_map);
-        for(Transaction t : working_list)
-        {
-          Validation.deepTransactionCheck(t, test_buffer);
-        }
-        return new TXCluster(working_list);
-      }
-      catch(ValidationException ve){
-      }
 
-      LinkedList<Transaction> add_list = new LinkedList<>();
-     
-      for(Transaction t : working_list)
-      {
-        TransactionInner inner = TransactionUtil.getInner(t);
-        for(TransactionInput in : inner.getInputsList())
+        ByteString key = UtxoUpdateBuffer.getKey(in);
+        t1=System.nanoTime();
+        ByteString matching_output = utxo_hashed_trie.getLeafData(utxo_for_pri_map.getBytes(), key);
+        TimeRecord.record(t1, "utxo_lookup");
+        if (matching_output == null)
         {
-          ChainHash needed_tx = new ChainHash(in.getSrcTxId());
-          int needed_level = level_map.get(new ChainHash(t.getTxHash())) - 1;
-
-          if ((!level_map.containsKey(needed_tx)) || (level_map.get(needed_tx) > needed_level))
+          if (known_transactions.containsKey(needed_tx))
           {
-            level_map.put(needed_tx, needed_level);
-            added++;
+            t1=System.nanoTime();
+            Transaction found_tx = known_transactions.get(needed_tx).getTx();
+
+            working_map.put(needed_tx, found_tx);
+            addInputRequirements(found_tx, depends_on_map, needed_inputs);
+            TimeRecord.record(t1, "input_add");
           }
-
-          if (!working_set.contains(needed_tx))
+          else
           {
-            ByteString key = UtxoUpdateBuffer.getKey(in);
-
-            ByteString matching_output = utxo_hashed_trie.getLeafData(utxo_for_pri_map.getBytes(), key);
-            if (matching_output == null)
-            {
-              if (known_transactions.containsKey(needed_tx))
-              {
-                add_list.add(known_transactions.get(needed_tx).getTx());
-                working_set.add(needed_tx);
-                added++;
-              }
-              else
-              {
-                throw new ValidationException("Can't find source tx: " + needed_tx.toString());
-              }
-            }
-            else
-            {
-              working_set.add(needed_tx); //it is in utxo, no need to keep looking
-            }
+            throw new ValidationException(String.format("Unable to find source tx %s", needed_tx.toString()));
           }
         }
       }
-
-      for(Transaction tx : add_list)
-      {
-        working_list.push(tx);
-      }
-      //Reorder working list
-
-      //System.out.println("Level map: " + level_map);
-
-      TreeMap<ChainHash, Transaction> tx_map = new TreeMap<>();
-      for(Transaction tx : working_list)
-      {
-        tx_map.put(new ChainHash(tx.getTxHash()), tx);
-      }
-      TreeMultimap<Integer, ChainHash> order_map = TreeMultimap.<Integer, ChainHash>create();
-
-      for(Map.Entry<ChainHash, Integer> me : level_map.entrySet())
-      {
-        if (tx_map.containsKey(me.getKey()))
-        {
-          order_map.put(me.getValue(), me.getKey());
-        }
-      }
-      working_list.clear();
-      //System.out.println("Order map: " + order_map);
-      while(order_map.size() > 0)
-      {
-        for(ChainHash hash : order_map.asMap().pollFirstEntry().getValue())
-        {
-          working_list.add( tx_map.get( hash ) );
-        }
-      }
-
-      //
     }
 
-    return null;
 
+    //At this point we have all the inputs satisfied.  Now to figure out ordering.
+
+    t1 = System.nanoTime();
+    LinkedList<Transaction> ordered_list = getOrderdTxList(working_map, depends_on_map, new ChainHash(target_tx.getTxHash()));
+    TimeRecord.record( t1, "get_order");
+
+    t1 = System.nanoTime();
+    UtxoUpdateBuffer test_buffer = new UtxoUpdateBuffer(utxo_hashed_trie, utxo_for_pri_map);
+    for(Transaction t : ordered_list)
+    {
+      Validation.deepTransactionCheck(t, test_buffer);
+    }
+    TimeRecord.record( t1, "utxo_sim");
+
+
+    return new TXCluster(ordered_list);
 
   }
 
@@ -342,6 +370,7 @@ public class MemPool
     ImmutableList<Transaction> tx_list;
     int total_size;
     long total_fee;
+    String rnd_val;
 
     public TXCluster(List<Transaction> tx_in_list)
     {
@@ -354,12 +383,16 @@ public class MemPool
         TransactionInner inner = TransactionUtil.getInner(t);
         total_fee += inner.getFee();
       }
+      rnd_val = "" + new Random().nextDouble();
     }
-    
+   
+    //Don't care about ordering, just want something
     public int compareTo(TXCluster o)
     {
-      return tx_list.toString().compareTo(o.tx_list.toString());
+      return rnd_val.compareTo(o.rnd_val);
+
     }
+
 
   }
 

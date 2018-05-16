@@ -126,7 +126,7 @@ public class MemPoolTest
     }
     catch(ValidationException e)
     {
-      Assert.assertTrue(e.getMessage(), e.getMessage().startsWith("Can't find source tx"));
+      Assert.assertTrue(e.getMessage(), e.getMessage().startsWith("Unable to find source tx"));
     }
 
   }
@@ -309,9 +309,14 @@ public class MemPoolTest
     ChainHash utxo_root = utxo_buffer.commit();
 
     MemPool mem_pool = new MemPool(utxo_trie);
+    Assert.assertEquals(0, mem_pool.getTransactionsForBlock(utxo_root, 1048576).size());
 
-    for(int i=0; i<90; i++)
+    TimeRecord tr = new TimeRecord();
+    TimeRecord.setSharedRecord(tr);
+    for(int i=0; i<500; i++)
     {
+      long t1= System.nanoTime();
+
       InputInfo ia = ready_inputs.pollFirstEntry().getValue();
       InputInfo ib = ready_inputs.pollFirstEntry().getValue();
       InputInfo ic = ready_inputs.pollFirstEntry().getValue();
@@ -323,12 +328,15 @@ public class MemPoolTest
 
       System.out.println("Selected inputs: " + ia + " " + ib + " " + ic);
 
+      long t3=System.nanoTime();
       Transaction tx = TransactionUtil.createTransaction(ImmutableList.of(ia.in, ib.in, ic.in), ImmutableList.of(out,out,out), keys);
+      TimeRecord.record(t3,"create_tx");
       System.out.println("Intermediate transaction: " + new ChainHash(tx.getTxHash()));
 
+      long t2=System.nanoTime();
       mem_pool.addTransaction(tx);
+      TimeRecord.record(t2, "mem_pool");
     
-      Assert.assertEquals(i+1, mem_pool.getTransactionsForBlock(utxo_root, 1048576).size());
 
       for(int j=0; j<3; j++)
       {
@@ -345,7 +353,14 @@ public class MemPoolTest
         ready_inputs.put(rnd.nextDouble(), ii);
       }
 
+      TimeRecord.record(t1, "tx");
+
+
     }
+      long t4=System.nanoTime();
+      Assert.assertEquals(500, mem_pool.getTransactionsForBlock(utxo_root, 1048576).size());
+      TimeRecord.record(t4,"get_block_tx_list");
+    tr.printReport(System.out);
 
   }
 
