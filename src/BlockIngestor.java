@@ -15,6 +15,7 @@ import org.junit.Assert;
 import java.util.logging.Logger;
 import java.util.logging.Level;
 
+import java.math.BigInteger;
 
 /**
  * This class takes in new blocks, validates them and stores them in the db.
@@ -89,7 +90,14 @@ public class BlockIngestor
     db.getBlockMap().put( blockhash.getBytes(), blk);
     db.getBlockSummaryMap().put( blockhash.getBytes(), summary);
 
-    if ((chainhead == null) || (summary.getWorkSum() > chainhead.getWorkSum()))
+    BigInteger summary_work_sum = BlockchainUtil.readInteger(summary.getWorkSum());
+    BigInteger chainhead_work_sum = BigInteger.ZERO;
+    if (chainhead != null)
+    {
+      chainhead_work_sum = BlockchainUtil.readInteger(chainhead.getWorkSum());
+    }
+
+    if (summary_work_sum.compareTo(chainhead_work_sum) > 0)
     {
       chainhead = summary;
       db.getBlockSummaryMap().put(HEAD, summary);
@@ -143,20 +151,28 @@ public class BlockIngestor
   {
     BlockSummary.Builder bs = BlockSummary.newBuilder();
 
-    long target = BlockchainUtil.targetBytesToLong(header.getTarget());
+    BigInteger target = BlockchainUtil.targetBytesToBigInteger(header.getTarget());
 
-    long work_in_block = params.getMaxTarget() * 128L / (target);
-    Assert.assertTrue(work_in_block >= 128L);
-    long worksum = prev_summary.getWorkSum() + work_in_block;
+    BigInteger slice = BigInteger.valueOf(1024L);
 
-    bs.setWorkSum(worksum);
+    // So a block at max target is 'slice' number of work units
+    // A block at half the target (harder) is twice the number of slices.
+    BigInteger work_in_block = params.getMaxTarget().multiply(slice).divide(target);
+    BigInteger prev_work_sum = BlockchainUtil.readInteger(prev_summary.getWorkSum());
+
+
+    BigInteger worksum = prev_work_sum.add(work_in_block);
+
+    bs.setWorkSum(worksum.toString());
 
     long weight = params.getAvgWeight();
     long decay = 1000L - weight;
+    BigInteger decay_bi = BigInteger.valueOf(decay);
+    BigInteger weight_bi = BigInteger.valueOf(weight);
 
     long block_time;
     long prev_block_time;
-    long prev_target_avg;
+    BigInteger prev_target_avg;
 
     if (prev_summary.getHeader().getTimestamp() == 0)
     { // first block, just pick a time
@@ -168,7 +184,7 @@ public class BlockIngestor
     {
       block_time = header.getTimestamp() - prev_summary.getHeader().getTimestamp();
       prev_block_time = prev_summary.getBlocktimeAverageMs();
-      prev_target_avg = prev_summary.getTargetAverage();
+      prev_target_avg = BlockchainUtil.readInteger(prev_summary.getTargetAverage());
     }
     int field = prev_summary.getActivatedField();
     bs.setActivatedField( field );
@@ -181,15 +197,19 @@ public class BlockIngestor
       /*System.out.println(String.format("Field %d Target %f, activation %f", field+1,
         PowUtil.getDiffForTarget(prev_target_avg), 
         PowUtil.getDiffForTarget(next_field.getActivationTarget())));*/
-      if (prev_target_avg < next_field.getActivationTarget())
+      if (prev_target_avg.compareTo(next_field.getActivationTarget()) <= 0)
       {
-        bs.setActivatedField( field + 1);
+        bs.setActivatedField( field + 1 );
       }
     }
 
     bs.setBlocktimeAverageMs(  (prev_block_time * decay + block_time * weight) / 1000L );
 
-    bs.setTargetAverage( (prev_target_avg * decay + target * weight) / 1000L );
+    bs.setTargetAverage( 
+      prev_target_avg.multiply(decay_bi)
+        .add(target.multiply(weight_bi))
+        .divide(BigInteger.valueOf(1000L))
+        .toString());
 
     bs.setHeader(header);
     

@@ -9,6 +9,8 @@ import org.apache.commons.codec.binary.Hex;
 import snowblossom.proto.BlockSummary;
 import snowblossom.proto.BlockHeader;
 
+import java.math.BigInteger;
+
 
 public class BlockIngestorTest
 {
@@ -18,7 +20,7 @@ public class BlockIngestorTest
     NetworkParams params = new NetworkParamsTestnet();
 
 		BlockHeader header = BlockHeader.newBuilder()
-      .setTarget(BlockchainUtil.targetLongToBytes( params.getMaxTarget() ))
+      .setTarget(BlockchainUtil.targetBigIntegerToBytes( params.getMaxTarget() ))
       .setTimestamp(System.currentTimeMillis())
       .build();
 
@@ -29,8 +31,8 @@ public class BlockIngestorTest
 		BlockSummary s = BlockIngestor.getNewSummary(header, prev_summary, params);
 
     Assert.assertNotNull(s.getHeader());
-    Assert.assertEquals(128, s.getWorkSum());
-    Assert.assertEquals(params.getMaxTarget(), s.getTargetAverage());
+    Assert.assertEquals("1024", s.getWorkSum());
+    Assert.assertEquals(params.getMaxTarget().toString(), s.getTargetAverage());
     Assert.assertEquals(params.getBlockTimeTarget(), s.getBlocktimeAverageMs());
 		
   }
@@ -41,10 +43,10 @@ public class BlockIngestorTest
     NetworkParams params = new NetworkParamsTestnet();
     long time = System.currentTimeMillis();
 
-    long using_target = params.getMaxTarget() / 2;
+    BigInteger using_target = params.getMaxTarget().divide(BigInteger.valueOf(2L));
 
 		BlockHeader header = BlockHeader.newBuilder()
-      .setTarget(BlockchainUtil.targetLongToBytes( using_target ))
+      .setTarget(BlockchainUtil.targetBigIntegerToBytes( using_target ))
       .setTimestamp(time)
       .build();
 
@@ -56,21 +58,22 @@ public class BlockIngestorTest
 
     BlockSummary prev_summary;
       prev_summary = BlockSummary.newBuilder()
-        .setWorkSum(1000L)
+        .setWorkSum("1000")
         .setBlocktimeAverageMs(params.getBlockTimeTarget())
-        .setTargetAverage(params.getMaxTarget())
+        .setTargetAverage(params.getMaxTarget().toString())
         .setHeader(prev_header)
         .build();
     System.out.println(prev_summary);
 
 		BlockSummary s = BlockIngestor.getNewSummary(header, prev_summary, params);
 
-    long expected_target = (params.getMaxTarget() * 990L + using_target * 10L) / 1000L;
+    BigInteger expected_target = params.getMaxTarget().multiply(BigInteger.valueOf(990L)).add(using_target.multiply(BigInteger.valueOf(10L))).divide(BigInteger.valueOf(1000L));
     long expected_time = (params.getBlockTimeTarget() * 990L + using_time * 10L) / 1000L;
 
     Assert.assertNotNull(s.getHeader());
-    Assert.assertEquals(1000 + 128 * 2, s.getWorkSum());
-    Assert.assertEquals(expected_target, s.getTargetAverage());
+    int work = 1000 + 1024 * 2;
+    Assert.assertEquals("" + work, s.getWorkSum());
+    Assert.assertEquals(expected_target.toString(), s.getTargetAverage());
     Assert.assertEquals(expected_time, s.getBlocktimeAverageMs());
 		
   }

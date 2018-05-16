@@ -7,15 +7,16 @@ import java.util.TreeMap;
 import java.util.List;
 
 import com.google.common.collect.ImmutableList;
+import java.math.BigInteger;
 
 
 public class NetworkParamsRegtest extends NetworkParams
 {
 
   @Override
-  public long getMaxTarget()
+  public BigInteger getMaxTarget()
   {
-    return 1L << (64 - 11); //should probably be 24 to start
+    return BlockchainUtil.getTargetForDiff(11);
   }
 
   @Override

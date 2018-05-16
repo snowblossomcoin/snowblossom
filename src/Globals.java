@@ -4,8 +4,6 @@ import java.security.Security;
 
 public class Globals
 {
-  public static final int NONCE_LEN = 12;
-  public static final int TARGET_LEN = 8;
 
   public static final int POW_LOOK_PASSES = 6;
 
@@ -17,7 +15,8 @@ public class Globals
   public static final String BLOCKCHAIN_HASH_ALGO="Skein-256-256";
   public static final int BLOCKCHAIN_HASH_LEN=32;
 
-  public static final int NONCE_LENGTH=12;
+  public static final int NONCE_LENGTH = 12;
+  public static final int TARGET_LENGTH = 32;
 
   public static final int COINBASE_REMARKS_MAX=100;
 

@@ -9,7 +9,7 @@ import com.google.protobuf.ByteString;
 
 import java.util.logging.Logger;
 import java.util.logging.Level;
-
+import java.math.BigInteger;
 
 public abstract class NetworkParams
 {
@@ -30,11 +30,9 @@ public abstract class NetworkParams
 
   public abstract String getAddressPrefix();
 
-  // If this times 1000 is more than Long.MAX_VALUE, there will be trouble
-  // in the running average calculation so probably always want to shift by at least 10.
-  public long getMaxTarget()
+  public BigInteger getMaxTarget()
   {
-    return 1L << (64 - 24); //should probably be 24 to start
+    return BlockchainUtil.getTargetForDiff(24);
   }
 
   /** Get the weighting to use for running averages, in parts per 1000 */

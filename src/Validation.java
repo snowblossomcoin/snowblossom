@@ -24,6 +24,7 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.Set;
 import java.util.ArrayList;
+import java.math.BigInteger;
 
 import org.junit.Assert;
 
@@ -53,7 +54,7 @@ public class Validation
     validateChainHash(header.getSnowHash(), "snow_hash");
 
     validateByteString(header.getNonce(), "nonce", Globals.NONCE_LENGTH);
-    validateByteString(header.getTarget(), "target", 8);
+    validateByteString(header.getTarget(), "target", Globals.TARGET_LENGTH);
 
     // TODO - make sure target is correct 
 
@@ -144,9 +145,8 @@ public class Validation
     throws ValidationException
   {
     //Check expected target
-    long expected_target = PowUtil.calcNextTarget(prev_summary, node.getParams(), blk.getHeader().getTimestamp());
-    ByteString expected_target_bytes = BlockchainUtil.targetLongToBytes(expected_target);
-
+    BigInteger expected_target = PowUtil.calcNextTarget(prev_summary, node.getParams(), blk.getHeader().getTimestamp());
+    ByteString expected_target_bytes = BlockchainUtil.targetBigIntegerToBytes(expected_target);
 
     if (!blk.getHeader().getTarget().equals(expected_target_bytes))
     {

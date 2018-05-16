@@ -16,6 +16,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 import java.security.MessageDigest;
+import java.math.BigInteger;
 
 /**
  * This class creates new blocks for miners to work on
@@ -58,11 +59,11 @@ public class BlockForge
 
 
     long time = System.currentTimeMillis();
-    long target = PowUtil.calcNextTarget(head, params, time);
+    BigInteger target = PowUtil.calcNextTarget(head, params, time);
 
 
     header_builder.setTimestamp(time);
-    header_builder.setTarget(BlockchainUtil.targetLongToBytes(target));
+    header_builder.setTarget(BlockchainUtil.targetBigIntegerToBytes(target));
     header_builder.setSnowField(head.getActivatedField());
 
     try

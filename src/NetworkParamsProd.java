@@ -6,14 +6,14 @@ import java.util.TreeMap;
 
 import java.util.List;
 import com.google.common.collect.ImmutableList;
-
+import java.math.BigInteger;
 
 public class NetworkParamsProd extends NetworkParams
 {
   @Override
-  public long getMaxTarget()
+  public BigInteger getMaxTarget()
   {
-    return 1L << (64 - 25); //should probably be 25 to start
+    return BlockchainUtil.getTargetForDiff(25);
   }
 
   @Override
