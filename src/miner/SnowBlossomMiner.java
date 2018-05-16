@@ -235,7 +235,7 @@ public class SnowBlossomMiner
         logger.log(Level.WARNING, "Last block is old, not mining it");
         last_block_template = null;
       }
-      byte[] nonce = new byte[Globals.NONCE_LEN];
+      byte[] nonce = new byte[Globals.NONCE_LENGTH];
       rnd.nextBytes(nonce);
 
       // TODO, modify headers to put snow field in

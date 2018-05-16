@@ -155,6 +155,19 @@ java_test(
   ],
 )
 java_test(
+  name = "blockchain_util_test",
+  srcs = ["test/BlockchainUtilTest.java"],
+  test_class = "snowblossom.BlockchainUtilTest",
+  size="small",
+  deps = [
+      "@junit_junit//jar",
+      ":snowblossomlib",
+      "@commons_codec//jar",
+      "@org_pubref_rules_protobuf//java:grpc_compiletime_deps",
+  ],
+)
+
+java_test(
   name = "address_util_test",
   srcs = ["test/AddressUtilTest.java"],
   test_class = "snowblossom.AddressUtilTest",

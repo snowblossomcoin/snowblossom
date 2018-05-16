@@ -7,15 +7,16 @@ import java.util.List;
 
 import com.google.common.collect.ImmutableList;
 import com.google.protobuf.ByteString;
+import java.math.BigInteger;
 
 
 public class NetworkParamsTestnet extends NetworkParams
 {
 
   @Override
-  public long getMaxTarget()
+  public BigInteger getMaxTarget()
   {
-    return 1L << (64 - 22);
+    return BlockchainUtil.getTargetForDiff(22);
   }
 
   @Override
@@ -55,6 +56,6 @@ public class NetworkParamsTestnet extends NetworkParams
   public int getDefaultPort() { return 2339; }
 
   @Override
-  public ByteString getBlockZeroRemark() { return ByteString.copyFrom(new String("testnet-20180508-0000000000000000000a5a1c520be6c3e4685eeaf7ddba3e5b6423042c72d42f").getBytes()); }
+  public ByteString getBlockZeroRemark() { return ByteString.copyFrom(new String("testnet2-20180516").getBytes()); }
 
 }

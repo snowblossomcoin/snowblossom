@@ -16,6 +16,7 @@ import snowblossom.trie.HashUtils;
 import java.util.logging.Logger;
 
 import java.text.DecimalFormat;
+import java.math.BigInteger;
 
 public class PowUtil
 {
@@ -88,13 +89,13 @@ public class PowUtil
 
   public static boolean lessThanTarget(byte[] found_hash, ByteString target)
   {
-    ByteString found = ByteString.copyFrom(found_hash,0, Globals.TARGET_LEN);
+    ByteString found = ByteString.copyFrom(found_hash,0, Globals.TARGET_LENGTH);
 
     return (ByteStringComparator.compareStatic(found, target) < 0);
 
   }
 
-  public static long calcNextTarget(BlockSummary prev_summary, NetworkParams params, long clock_time)
+  public static BigInteger calcNextTarget(BlockSummary prev_summary, NetworkParams params, long clock_time)
   {
     if (prev_summary.getHeader().getTimestamp() == 0) return params.getMaxTarget();
 
@@ -125,29 +126,43 @@ public class PowUtil
     scale = Math.max(scale, -500);
 
     // Larger target -> less work
-    long new_target = prev_summary.getTargetAverage() + prev_summary.getTargetAverage() * scale / 1000;
+
+    BigInteger prev_target_average = new BigInteger(prev_summary.getTargetAverage());
+    BigInteger scale_bi = BigInteger.valueOf(scale);
+    BigInteger thousand = BigInteger.valueOf(1000L);
+
+
+    BigInteger new_target = prev_target_average.add( 
+      prev_target_average.multiply(scale_bi).divide(thousand) );
+    //long new_target = prev_summary.getTargetAverage() + prev_summary.getTargetAverage() * scale / 1000;
 
     logger.info(String.format("Delta_t: %d (%d) scale: %d",averaged_delta_t, target_delta_t, scale));
 
     ByteBuffer bb = ByteBuffer.allocate(8);
 
-    new_target = Math.min(new_target, params.getMaxTarget());
+    new_target = new_target.min(params.getMaxTarget());
 
-    bb.putLong(new_target);
+    ByteString new_target_display = BlockchainUtil.targetBigIntegerToBytes(new_target).substring(0,16);
+
     double diff = getDiffForTarget(new_target);
-    double avg_diff = getDiffForTarget( prev_summary.getTargetAverage() );
+    double avg_diff = getDiffForTarget( prev_target_average );
     DecimalFormat df = new DecimalFormat("0.000");
     logger.info(String.format("New target: %s, %s, (avg %s)", 
-      HashUtils.getHexString(bb.array()), 
+      HashUtils.getHexString(new_target_display), 
       df.format(diff),
       df.format(avg_diff)));
 
     return new_target;
 
   }
-  public static double getDiffForTarget(long target)
+
+  /**
+   * Not for use in the chain, only for display purposes. lossy.
+   */
+  public static double getDiffForTarget(BigInteger target)
   {
-    return 64.0 - Math.log(target) / Math.log(2);
+    double t = target.doubleValue();
+    return 256.0 - Math.log(t) / Math.log(2);
   }
 
   public static long getBlockReward(NetworkParams params, int block_height)

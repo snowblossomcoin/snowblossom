@@ -9,6 +9,7 @@ import org.apache.commons.codec.binary.Hex;
 import snowblossom.proto.BlockSummary;
 import snowblossom.proto.BlockHeader;
 
+import java.math.BigInteger;
 
 public class PowUtilTest
 {
@@ -19,7 +20,7 @@ public class PowUtilTest
 
     NetworkParams params = new NetworkParamsRegtest();
 
-    long target = PowUtil.calcNextTarget(bs, params, System.currentTimeMillis());
+    BigInteger target = PowUtil.calcNextTarget(bs, params, System.currentTimeMillis());
 
     Assert.assertEquals(params.getMaxTarget(), target);
     
@@ -38,14 +39,14 @@ public class PowUtilTest
 
     BlockSummary bs = BlockSummary.newBuilder()
       .setHeader(prev_header)
-      .setTargetAverage(params.getMaxTarget())
+      .setTargetAverage(params.getMaxTarget().toString())
       .setBlocktimeAverageMs(params.getBlockTimeTarget())
       .build();
 
 
-    long target = PowUtil.calcNextTarget(bs, params, System.currentTimeMillis());
+    BigInteger target = PowUtil.calcNextTarget(bs, params, System.currentTimeMillis());
 
-    Assert.assertTrue(target < params.getMaxTarget());
+    Assert.assertTrue(target.compareTo(params.getMaxTarget()) < 0);
 
   }
 
@@ -60,17 +61,17 @@ public class PowUtilTest
       .setTimestamp(time - params.getBlockTimeTarget() / 2)
       .build();
 
-    long average_target = params.getMaxTarget() / 100;
+    BigInteger average_target = params.getMaxTarget().divide(BigInteger.valueOf(100L));
 
     BlockSummary bs = BlockSummary.newBuilder()
       .setHeader(prev_header)
-      .setTargetAverage(average_target)
+      .setTargetAverage(average_target.toString())
       .setBlocktimeAverageMs(params.getBlockTimeTarget())
       .build();
 
-    long target = PowUtil.calcNextTarget(bs, params, System.currentTimeMillis());
+    BigInteger target = PowUtil.calcNextTarget(bs, params, System.currentTimeMillis());
 
-    Assert.assertTrue(target < average_target);
+    Assert.assertTrue(target.compareTo(average_target) < 0);
   }
 
   @Test
@@ -84,19 +85,19 @@ public class PowUtilTest
       .setTimestamp(time - params.getBlockTimeTarget() * 2)
       .build();
 
-    long average_target = params.getMaxTarget() / 100;
+    BigInteger average_target = params.getMaxTarget().divide(BigInteger.valueOf(100));
 
     BlockSummary bs = BlockSummary.newBuilder()
       .setHeader(prev_header)
-      .setTargetAverage(average_target)
+      .setTargetAverage(average_target.toString())
       .setBlocktimeAverageMs(params.getBlockTimeTarget())
       .build();
 
 
-    long target = PowUtil.calcNextTarget(bs, params, System.currentTimeMillis());
+    BigInteger target = PowUtil.calcNextTarget(bs, params, System.currentTimeMillis());
     System.out.println("Old: " + average_target + " new: " + target);
 
-    Assert.assertTrue(target > average_target);
+    Assert.assertTrue(target.compareTo(average_target) > 0);
 
   }
 
@@ -105,7 +106,7 @@ public class PowUtilTest
   {
     NetworkParams params = new NetworkParamsRegtest();
     long time = 1000000000L;
-    long target = params.getMaxTarget();
+    BigInteger target = params.getMaxTarget();
     double simulated_solve_rate = 100; //per ms
 
     BlockSummary bs = BlockSummary.newBuilder().build();
@@ -116,17 +117,15 @@ public class PowUtilTest
       
       target = PowUtil.calcNextTarget(bs, params, time);
 
-      double tar_double = target;
-      double max = Long.MAX_VALUE;
-      double solve_prob = tar_double / max;
-      double solve_work = max / tar_double;
+      double tdiff = PowUtil.getDiffForTarget(target);
+      double work = Math.pow(2, tdiff);
+      long solve_time =(long) (work / simulated_solve_rate);
 
-      long solve_time =(long) (solve_work / simulated_solve_rate);
       if (solve_time <= 0) solve_time=1;
       time = time + solve_time;
 
       BlockHeader header = BlockHeader.newBuilder()
-        .setTarget(BlockchainUtil.targetLongToBytes(target))
+        .setTarget(BlockchainUtil.targetBigIntegerToBytes(target))
         .setTimestamp(time)
         .build();
 
@@ -150,17 +149,15 @@ public class PowUtilTest
       
       target = PowUtil.calcNextTarget(bs, params, time);
 
-      double tar_double = target;
-      double max = Long.MAX_VALUE;
-      double solve_prob = tar_double / max;
-      double solve_work = max / tar_double;
+      double tdiff = PowUtil.getDiffForTarget(target);
+      double work = Math.pow(2, tdiff);
+      long solve_time =(long) (work / simulated_solve_rate);
 
-      long solve_time =(long) (solve_work / simulated_solve_rate);
       if (solve_time <= 0) solve_time=1;
       time = time + solve_time;
 
       BlockHeader header = BlockHeader.newBuilder()
-        .setTarget(BlockchainUtil.targetLongToBytes(target))
+        .setTarget(BlockchainUtil.targetBigIntegerToBytes(target))
         .setTimestamp(time)
         .build();
 

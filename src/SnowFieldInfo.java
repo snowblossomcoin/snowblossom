@@ -4,13 +4,14 @@ package snowblossom;
 import org.apache.commons.codec.binary.Hex;
 import com.google.protobuf.ByteString;
 
+import java.math.BigInteger;
 
   public class SnowFieldInfo
   {
     private final String name;
     private final long length;
     private final ByteString merkle_root_hash;
-    private final long activation_target;
+    private final BigInteger activation_target;
 
     public SnowFieldInfo(String name, long length, String hash)
     {
@@ -20,7 +21,7 @@ import com.google.protobuf.ByteString;
     {
       this.name = name;
       this.length = length;
-      activation_target = 1L << (64 - activation_bits);
+      activation_target = BlockchainUtil.getTargetForDiff(activation_bits);
 
       try
       {
@@ -35,7 +36,7 @@ import com.google.protobuf.ByteString;
     public String getName(){return name;}
     public long getLength(){return length;}
     public ByteString getMerkleRootHash(){return merkle_root_hash;}
-    public long getActivationTarget() { return activation_target; }
+    public BigInteger getActivationTarget() { return activation_target; }
 
   }
 
