@@ -86,6 +86,8 @@ public class Peerage
   {
     logger.info("Starting peerage");
     new PeerageMaintThread().start();
+
+    connectPeer("snow-test-a.1209k.com", 2339);
   }
 
   public void register(PeerLink link)
@@ -104,6 +106,7 @@ public class Peerage
     BlockSummary summary = node.getBlockIngestor().getHead();
 
     tip.setNetworkName(node.getParams().getNetworkName());
+    tip.setVersion(Globals.VERSION);
 
     if (summary != null)
     {
@@ -208,6 +211,8 @@ public class Peerage
 
   public void learnPeer(PeerInfo info)
   {
+    if (info.getLearned() + 3600L * 1000L < System.currentTimeMillis()) return;
+
     synchronized(peer_rumor_list)
     {
       String name = PeerUtil.getString(info);
