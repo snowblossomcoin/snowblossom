@@ -4,7 +4,7 @@ java_binary(
   name = "SnowBlossomNode",
   main_class = "snowblossom.SnowBlossomNode",
   jvm_flags = [ 
-    "-Xmx1G",
+    "-Xmx1600M",
   ],
   runtime_deps = [
     ":snowblossomlib",

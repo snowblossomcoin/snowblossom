@@ -52,6 +52,8 @@ public class SnowBlossomNode
   {
     this.config = config;
 
+    LogSetup.setup(config);
+
     config.require("db_type");
 
     setupParams();
@@ -62,6 +64,9 @@ public class SnowBlossomNode
     startWidgets();
 
     startServices();
+
+
+    LogSetup.listLoggers();
 
   }
 

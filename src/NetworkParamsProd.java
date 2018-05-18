@@ -52,4 +52,8 @@ public class NetworkParamsProd extends NetworkParams
   }
   @Override
   public int getDefaultPort() { return 2338; }
+  
+  // Fill in hash of bitcoin block 523850 when it occurs, in hex replacing the zeros to start mainnet
+  @Override
+  public ByteString getBlockZeroRemark() { return ByteString.copyFrom(new String("000000").getBytes()); }
 }
