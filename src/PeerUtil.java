@@ -13,8 +13,16 @@ public class PeerUtil
     Assert.assertEquals(a.getHost(), b.getHost());
     Assert.assertEquals(a.getPort(), b.getPort());
 
-    n.mergeFrom(a);
+    if (a.getLearned() > b.getLearned())
+    {
     n.mergeFrom(b);
+    n.mergeFrom(a);
+    }
+    else
+    {
+      n.mergeFrom(a);
+      n.mergeFrom(b);
+    }
 
     n.setLastChecked( Math.max(a.getLastChecked(), b.getLastChecked()));
     n.setLastPassed( Math.max(a.getLastPassed(), b.getLastPassed()));

@@ -4,6 +4,8 @@ import org.junit.Assert;
 
 import snowblossom.proto.TransactionInput;
 import snowblossom.proto.TransactionOutput;
+import snowblossom.proto.Transaction;
+import snowblossom.proto.TransactionInner;
 import java.nio.ByteBuffer;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
@@ -11,6 +13,9 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import snowblossom.trie.proto.TrieNode;
 
 import java.util.Random;
+
+import java.util.LinkedList;
+import java.util.List;
 
 /**
  * Simple class that acts as an easy way to make a transaction input
@@ -27,7 +32,6 @@ public class TransactionBridge
 
     try
     {
-
       out = TransactionOutput.parseFrom(node.getLeafData());
 
       ByteString key = node.getPrefix();
@@ -54,6 +58,32 @@ public class TransactionBridge
     }
   }
 
+  public TransactionBridge(TransactionOutput out, int out_idx, ChainHash txid)
+  {
+    this.out = out;
+    value = out.getValue();
+      in = TransactionInput.newBuilder()
+        .setSpecHash( out.getRecipientSpecHash())
+        .setSrcTxId( txid.getBytes())
+        .setSrcTxOutIdx( out_idx)
+        .build();
+  }
+
+  public static List<TransactionBridge> getConnections(Transaction tx)
+  {
+    TransactionInner inner = TransactionUtil.getInner(tx);
+
+    LinkedList<TransactionBridge> lst = new LinkedList<>();
+
+    for(int i=0; i<inner.getOutputsCount(); i++)
+    {
+      TransactionOutput out = inner.getOutputs(i);
+      lst.add(new TransactionBridge(out, i, new ChainHash(tx.getTxHash())));
+    }
+
+    return lst;
+  }
+
   /**
    * create fake bridge for testing
    */
@@ -76,9 +106,8 @@ public class TransactionBridge
       .build();
 
     this.value = value;
-
-    
   }
+
 
 
 }

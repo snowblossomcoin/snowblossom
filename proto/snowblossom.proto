@@ -164,6 +164,7 @@ message PeerChainTip {
   string network_name = 1;
   BlockHeader header = 2;
   repeated PeerInfo peers = 3;
+  string version = 4;
 }
 message PeerInfo {
   string host = 1;
@@ -171,6 +172,7 @@ message PeerInfo {
   int64 last_checked = 3;
   int64 last_passed = 4;
   int64 learned = 5;
+  string version = 6;
 }
 
 message RequestBlock {

@@ -356,6 +356,7 @@ public class Peerage
           .setHost(host)
           .setPort(port)
           .setLearned(System.currentTimeMillis())
+          .setVersion(Globals.VERSION)
           .build();
 
         self_peers.add(pi);
