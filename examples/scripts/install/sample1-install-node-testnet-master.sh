@@ -30,6 +30,6 @@ cp --no-clobber --recursive "$snowblossom_home/source/snowblossom/examples/confi
 chmod 750 -R "$snowblossom_home/configs"
 
 cd "$snowblossom_home"
-$snowblossom_home/source/snowblossom/bazel-bin/SnowBlossomNode configs/snowblossom-node-testnet.conf
+$snowblossom_home/source/snowblossom/bazel-bin/SnowBlossomNode configs/node-testnet.conf
 EOF
 

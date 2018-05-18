@@ -4,7 +4,7 @@ After=network.target
 
 [Service]
 WorkingDirectory=/var/snowblossom
-ExecStart=/var/snowblossom/source/snowblossom/bazel-bin/SnowBlossomNode configs/snowblossom-node-testnet.conf
+ExecStart=/var/snowblossom/source/snowblossom/bazel-bin/SnowBlossomNode configs/node-testnet.conf
 User=snowblossom
 
 [Install]
