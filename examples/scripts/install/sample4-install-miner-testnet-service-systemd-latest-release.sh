@@ -33,6 +33,10 @@ bazel build :all
 cp --no-clobber --recursive "$snowblossom_home/source/snowblossom/examples/configs" "$snowblossom_home/"
 chmod 750 -R "$snowblossom_home/configs"
 
+# run wallet once to generate addresses for miner to send to
+cd "$snowblossom_home"
+$snowblossom_home/source/snowblosom/bazel-bin/SnowBlossomClient configs/client-testnet.conf
+
 EOF
 
 # install systemd service
