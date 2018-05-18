@@ -16,6 +16,7 @@ import java.text.DecimalFormat;
 
 import snowblossom.proto.SubmitReply;
 import snowblossom.proto.TransactionOutput;
+import snowblossom.proto.TransactionInner;
 import snowblossom.trie.proto.TrieNode;
 import snowblossom.NetworkParams;
 import snowblossom.AddressSpecHash;
@@ -54,6 +55,8 @@ import java.util.List;
 import java.util.TreeMap;
 import snowblossom.TransactionBridge;
 import snowblossom.TransactionUtil;
+import java.util.Collections;
+import java.util.SplittableRandom;
 
 public class SnowBlossomClient
 {
@@ -114,6 +117,10 @@ public class SnowBlossomClient
 
           }
         }
+      }
+      else if (command.equals("loadtest"))
+      {
+        client.runLoadTest();
       }
       else 
       {
@@ -319,5 +326,85 @@ public class SnowBlossomClient
     return reply.getSuccess();
   }
 
+  public void runLoadTest()
+    throws Exception
+  {
+    LinkedList<TransactionBridge> spendable = new LinkedList<>();
+    spendable.addAll(getAllSpendable());
+    long min_send =  500000L;
+    long max_send = 5000000L;
+    long send_delta = max_send - min_send;
+    SplittableRandom rnd = new SplittableRandom();
+    int output_count = 5;
 
+    while(true)
+    {
+      //Collections.shuffle(spendable);
+
+      LinkedList<TransactionOutput> out_list = new LinkedList<>();
+      long needed_value = 0;
+      for(int i=0; i< output_count; i++)
+      {
+        long value = min_send + rnd.nextLong(send_delta);
+
+        out_list.add( TransactionOutput.newBuilder()
+          .setRecipientSpecHash( TransactionUtil.getRandomChangeAddress(wallet_database).getBytes() )
+          .setValue(value)
+          .build());
+        needed_value+=value;
+      }
+
+      LinkedList<TransactionBridge> input_list = new LinkedList<>();
+      while(needed_value > 0)
+      {
+        TransactionBridge b = spendable.pop();
+        needed_value -= b.value;
+        input_list.add(b);
+      }
+
+      Transaction tx = TransactionUtil.makeTransaction(wallet_database, input_list, out_list);
+      TransactionInner inner = TransactionUtil.getInner(tx);
+
+      ChainHash tx_hash = new ChainHash(tx.getTxHash());
+      for(int i=0; i<inner.getOutputsCount(); i++)
+      {
+        TransactionBridge b = new TransactionBridge( inner.getOutputs(i), i, tx_hash);
+        spendable.add(b);
+      }
+
+      logger.info("Transaction: " + new ChainHash(tx.getTxHash()) + " - " + tx.toByteString().size());
+      //logger.info(tx.toString());
+
+      boolean sent=false;
+      while(!sent)
+      {
+        SubmitReply reply = blockingStub.submitTransaction(tx);
+        if (reply.getSuccess())
+        {
+          sent=true;
+        }
+        else
+        {
+          logger.info("Error: " + reply.getErrorMessage());
+          if (reply.getErrorMessage().contains("full"))
+          {
+            Thread.sleep(60000);
+          }
+          else
+          {
+            return;
+          }
+        }
+
+      }
+      boolean success = submitTransaction(tx);
+      System.out.println("Submit: " + success);
+      if (!success)
+      {
+        return;
+      }
+
+    }
+    
+  }
 }

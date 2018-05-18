@@ -106,7 +106,7 @@ public class BlockIngestor
 
       updateHeights(summary);
 
-      logger.info(String.format("New chain tip: %d %s (%d)", blk.getHeader().getBlockHeight(), blockhash, blk.getTransactionsCount()));
+      logger.info(String.format("New chain tip: Height %d %s (tx:%d sz:%d)", blk.getHeader().getBlockHeight(), blockhash, blk.getTransactionsCount(), blk.toByteString().size()));
 
       SnowUserService u = node.getUserService();
       if (u != null)

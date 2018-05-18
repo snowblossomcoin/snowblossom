@@ -63,6 +63,8 @@ public class MemPool
 
   private HashedTrie utxo_hashed_trie;
 
+  public static int MEM_POOL_MAX=10000;
+
   public MemPool(HashedTrie utxo_hashed_trie)
   {
     this.utxo_hashed_trie = utxo_hashed_trie;
@@ -120,6 +122,11 @@ public class MemPool
     TimeRecord.record(t1, "tx_validation");
     ChainHash tx_hash = new ChainHash(tx.getTxHash());
     if (known_transactions.containsKey(tx_hash)) return false;
+
+    if (known_transactions.size() >= MEM_POOL_MAX)
+    {
+      throw new ValidationException("mempool is full");
+    }
 
     TransactionMempoolInfo info = TransactionMempoolInfo.newBuilder()
       .setTx(tx)
