@@ -1,7 +1,7 @@
 git_repository(
   name = "org_pubref_rules_protobuf",
-  remote = "https://github.com/pubref/rules_protobuf",
-  tag = "v0.8.2",
+  remote = "https://github.com/fireduck64/rules_protobuf",
+  tag = "gnet-up3",
 )
 
 load("@org_pubref_rules_protobuf//java:rules.bzl", "java_proto_repositories")

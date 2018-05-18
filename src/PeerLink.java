@@ -17,6 +17,7 @@ import snowblossom.proto.PeerInfo;
 import snowblossom.proto.BlockSummary;
 import snowblossom.proto.RequestBlock;
 import snowblossom.proto.RequestBlockHeader;
+import java.util.concurrent.TimeUnit;
 
 
 import java.util.TreeMap;
@@ -101,10 +102,15 @@ public class PeerLink implements StreamObserver<PeerMessage>
       if (msg.hasTx())
       {
         Transaction tx = msg.getTx();
-        if (node.getMemPool().addTransaction(tx))
+        try
         {
-          node.getPeerage().broadcastTransaction(tx);
+          if (node.getMemPool().addTransaction(tx))
+          {
+            node.getPeerage().broadcastTransaction(tx);
+          }
         }
+        catch(ValidationException e){}
+        // do not care about tx validation errors from peers
       }
       else if (msg.hasTip())
       {
@@ -251,6 +257,7 @@ public class PeerLink implements StreamObserver<PeerMessage>
       if (channel != null)
       {
         channel.shutdown();
+        channel.awaitTermination(3, TimeUnit.SECONDS);
       }
     }
     catch(Throwable e){}

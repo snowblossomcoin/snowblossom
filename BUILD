@@ -3,6 +3,9 @@ load("@org_pubref_rules_protobuf//java:rules.bzl", "java_proto_library")
 java_binary(
   name = "SnowBlossomNode",
   main_class = "snowblossom.SnowBlossomNode",
+  jvm_flags = [ 
+    "-Xmx1G",
+  ],
   runtime_deps = [
     ":snowblossomlib",
   ]
