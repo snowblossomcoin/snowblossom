@@ -36,7 +36,7 @@ chmod 750 -R "$snowblossom_home/configs"
 EOF
 
 # install systemd service
-cp "$snowblossom_home/source/snowblossom/examples/systemd/miner-testnet.service" /etc/systemd/system/
+cp "$snowblossom_home/source/snowblossom/examples/systemd/snowblossom-miner-testnet.service" /etc/systemd/system/
 systemctl daemon-reload
 # startup automatically at boot
 systemctl enable snowblossom-miner-testnet.service
