@@ -35,7 +35,7 @@ chmod 750 -R "$snowblossom_home/configs"
 
 # run wallet once to generate addresses for miner to send to
 cd "$snowblossom_home"
-$snowblossom_home/source/snowblosom/bazel-bin/SnowBlossomClient configs/client-testnet.conf
+$snowblossom_home/source/snowblossom/bazel-bin/SnowBlossomClient configs/client-testnet.conf
 
 EOF
 
