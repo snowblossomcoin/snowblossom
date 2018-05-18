@@ -7,6 +7,7 @@ import java.util.TreeMap;
 import java.util.List;
 import com.google.common.collect.ImmutableList;
 import java.math.BigInteger;
+import com.google.protobuf.ByteString;
 
 public class NetworkParamsProd extends NetworkParams
 {
