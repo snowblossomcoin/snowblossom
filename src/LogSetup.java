@@ -5,16 +5,23 @@ import java.util.logging.LogManager;
 import java.util.logging.Level;
 import java.util.Enumeration;
 import java.util.logging.Handler;
+import java.io.FileInputStream;
 
 public class LogSetup
 {
   public static void setup(Config config)
+    throws java.io.IOException
   {
 
-    LogManager.getLogManager().getLogger(Logger.GLOBAL_LOGGER_NAME).setLevel(Level.WARNING);
-    LogManager.getLogManager().getLogger("").setLevel(Level.WARNING);
+    if (config.isSet("log_config_file"))
+    {
+      LogManager.getLogManager().readConfiguration(new FileInputStream(config.get("log_config_file")));
+
+    }
+    //LogManager.getLogManager().getLogger(Logger.GLOBAL_LOGGER_NAME).setLevel(Level.WARNING);
+    //LogManager.getLogManager().getLogger("").setLevel(Level.WARNING);
   
-    listLoggers();
+    //listLoggers();
   }
 
   public static void listLoggers()

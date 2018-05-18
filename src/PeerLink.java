@@ -256,7 +256,7 @@ public class PeerLink implements StreamObserver<PeerMessage>
 
       if (channel != null)
       {
-        channel.shutdown();
+        channel.shutdownNow();
         channel.awaitTermination(3, TimeUnit.SECONDS);
       }
     }

@@ -64,10 +64,6 @@ public class SnowBlossomNode
     startWidgets();
 
     startServices();
-
-
-    LogSetup.listLoggers();
-
   }
 
   public void stop()
