@@ -142,7 +142,7 @@ public class BlockForge
 
   private List<Transaction> getTransactions(ChainHash prev_utxo_root)
   {
-    return node.getMemPool().getTransactionsForBlock(prev_utxo_root, 1048576);
+    return node.getMemPool().getTransactionsForBlock(prev_utxo_root, Globals.MAX_BLOCK_SIZE);
   }
 
 
