@@ -30,7 +30,7 @@ import java.util.TreeMap;
  */
 public class PeerLink implements StreamObserver<PeerMessage>
 {
-  private static final Logger logger = Logger.getLogger("PeerLink");
+  private static final Logger logger = Logger.getLogger("snowblossom.peering");
 
   private SnowBlossomNode node;
   private StreamObserver<PeerMessage> sink;

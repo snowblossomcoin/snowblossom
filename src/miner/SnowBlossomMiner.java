@@ -46,7 +46,7 @@ import java.text.DecimalFormat;
 
 public class SnowBlossomMiner
 {
-  private static final Logger logger = Logger.getLogger("SnowBlossomMiner");
+  private static final Logger logger = Logger.getLogger("snowblossom.miner");
 
   public static void main(String args[]) throws Exception
   {

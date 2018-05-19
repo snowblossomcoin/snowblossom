@@ -14,7 +14,7 @@ import java.io.File;
 
 public class SnowBlossomNode
 {
-  private static final Logger logger = Logger.getLogger("SnowBlossomNode");
+  private static final Logger logger = Logger.getLogger("snowblossom.node");
   public static void main(String args[]) throws Exception
   {
     Globals.addCryptoProvider();

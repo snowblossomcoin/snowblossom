@@ -20,7 +20,7 @@ import java.io.File;
 
 public class JRocksDB extends DB
 {
-  private static final Logger logger = Logger.getLogger("SnowblossomDB");
+  private static final Logger logger = Logger.getLogger("snowblossom.db");
 
   private RocksDB db;
   private Options options;

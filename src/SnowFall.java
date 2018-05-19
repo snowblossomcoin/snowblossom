@@ -45,7 +45,7 @@ public class SnowFall
   // These two can be changed without changing the result
   public static final int threads = 128;
 
-  private static final Logger logger = Logger.getLogger("SnowFall");
+  private static final Logger logger = Logger.getLogger("snowblossom.miner");
 
   public static void main(String args[]) throws Exception
   {

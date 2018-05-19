@@ -24,7 +24,7 @@ import java.math.BigInteger;
 public class BlockIngestor
 {
 
-  private static final Logger logger = Logger.getLogger("BlockIngestor");
+  private static final Logger logger = Logger.getLogger("snowblossom.blockchain");
   private SnowBlossomNode node;
   private DB db;
   private NetworkParams params;

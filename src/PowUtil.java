@@ -20,7 +20,7 @@ import java.math.BigInteger;
 
 public class PowUtil
 {
-  private static final Logger logger = Logger.getLogger("PowUtil");
+  private static final Logger logger = Logger.getLogger("snowblossom.blockchain");
 
   public static byte[] hashHeaderBits(BlockHeader header, byte[] nonce)
   {

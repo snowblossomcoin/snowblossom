@@ -16,7 +16,7 @@ import com.google.protobuf.ByteString;
 
 public class AutoSnowFall extends Thread
 {
-  private static final Logger logger = Logger.getLogger("SnowBlossomMiner");
+  private static final Logger logger = Logger.getLogger("snowblossom.miner");
   
   private boolean done=false;
 

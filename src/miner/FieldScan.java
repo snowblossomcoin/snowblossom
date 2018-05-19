@@ -19,7 +19,7 @@ import com.google.common.collect.ImmutableSortedMap;
 public class FieldScan
 {
 
-  private static final Logger logger = Logger.getLogger("FieldScan");
+  private static final Logger logger = Logger.getLogger("snowblossom.miner");
 
   private File path;
   private NetworkParams params;

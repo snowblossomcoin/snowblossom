@@ -30,7 +30,7 @@ import java.nio.ByteBuffer;
 
 public abstract class DB implements DBFace
 {
-  private static final Logger logger = Logger.getLogger("SnowblossomDB");
+  private static final Logger logger = Logger.getLogger("snowblossom.db");
   protected int max_set_return_count=100000;
 
   protected Executor exec;

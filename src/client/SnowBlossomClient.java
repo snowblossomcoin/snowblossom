@@ -60,7 +60,7 @@ import java.util.SplittableRandom;
 
 public class SnowBlossomClient
 {
-  private static final Logger logger = Logger.getLogger("SnowBlossomClient");
+  private static final Logger logger = Logger.getLogger("snowblossom.client");
 
   public static void main(String args[]) throws Exception
   {

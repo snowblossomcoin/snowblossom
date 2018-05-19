@@ -19,7 +19,7 @@ import java.util.TreeMap;
 
 public class SnowPeerService extends PeerServiceGrpc.PeerServiceImplBase
 {
-  private static final Logger logger = Logger.getLogger("SnowPeerService");
+  private static final Logger logger = Logger.getLogger("snowblossom.peering");
 
   private SnowBlossomNode node;
 

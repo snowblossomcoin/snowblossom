@@ -25,7 +25,7 @@ import java.util.List;
 
 public class SnowUserService extends UserServiceGrpc.UserServiceImplBase
 {
-  private static final Logger logger = Logger.getLogger("SnowUserService");
+  private static final Logger logger = Logger.getLogger("snowblossom.userservice");
 
   private LinkedList<BlockSubscriberInfo> block_subscribers = new LinkedList<>();
 

@@ -13,7 +13,7 @@ import java.math.BigInteger;
 
 public abstract class NetworkParams
 {
-	private static final Logger logger = Logger.getLogger("NetworkParams");
+	private static final Logger logger = Logger.getLogger("snowblossom.blockchain");
 
   protected final ImmutableMap<Integer, SnowFieldInfo> snow_fields;
 
