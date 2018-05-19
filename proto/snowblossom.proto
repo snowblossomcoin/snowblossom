@@ -145,6 +145,12 @@ service UserService {
   rpc SubmitBlock ( Block ) returns ( SubmitReply ) {}
   rpc SubmitTransaction ( Transaction ) returns ( SubmitReply ) {}
   rpc GetUTXONode( GetUTXONodeRequest ) returns ( GetUTXONodeReply ) {}
+
+  rpc GetNodeStatus ( NullRequest ) returns ( NodeStatus ) {}
+  rpc GetHead ( NullRequest ) returns ( BlockHeader ) {}
+  rpc GetBlock ( RequestBlock ) returns ( Block ) {}
+  rpc GetTransaction ( RequestTransaction ) returns ( Transaction ) {}
+  rpc GetBlockHeader ( RequestBlockHeader ) returns ( BlockHeader ) {}
 }
 
 message PeerMessage {
@@ -177,6 +183,9 @@ message PeerInfo {
 
 message RequestBlock {
   bytes block_hash = 2;
+}
+message RequestTransaction {
+  bytes tx_hash = 1;
 }
 message RequestBlockHeader {
   int32 block_height = 1;
@@ -218,6 +227,15 @@ message GetUTXONodeReply {
   // The nodes that go from the top utxo root to the
   // requested prefix or would if they prefix node existed
   repeated TrieNode proof = 3;
+}
+
+message NullRequest {
+
+}
+
+message NodeStatus {
+  int32 mem_pool_size = 1;
+  int32 connected_peers = 2;
 }
 
 // -------------------------------------------------------------------
