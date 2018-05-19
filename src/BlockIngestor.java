@@ -82,7 +82,6 @@ public class BlockIngestor
       return false;
     }
 
-    // TODO - deeper validation here
     BlockSummary summary = getNewSummary(blk.getHeader(), prev_summary, node.getParams());
 
     Validation.deepBlockValidation(node, blk, prev_summary);
@@ -113,6 +112,7 @@ public class BlockIngestor
       {
         u.tickleBlocks();
       }
+      node.getMemPool().tickleBlocks(new ChainHash(summary.getHeader().getUtxoRootHash()));
     }
 
 

@@ -6,6 +6,7 @@ import snowblossom.proto.TransactionMempoolInfo;
 import snowblossom.proto.Transaction;
 import snowblossom.proto.TransactionInput;
 import snowblossom.proto.TransactionInner;
+import snowblossom.proto.BlockSummary;
 import snowblossom.trie.HashedTrie;
 import java.util.List;
 import java.util.ArrayList;
@@ -23,6 +24,9 @@ import com.google.protobuf.ByteString;
 import com.google.common.collect.HashMultimap;
 
 import org.junit.Assert;
+import java.util.logging.Logger;
+import java.util.logging.Level;
+
 
 
 /**
@@ -41,6 +45,8 @@ import org.junit.Assert;
  */
 public class MemPool
 {
+  private static final Logger logger = Logger.getLogger("snowblossom.mempool");
+
   private Map<ChainHash, TransactionMempoolInfo> known_transactions = new HashMap<>(512, 0.5f);
 
   private HashMap<String, ChainHash> claimed_outputs = new HashMap<>();
@@ -65,9 +71,13 @@ public class MemPool
 
   public static int MEM_POOL_MAX=10000;
 
+  private Object tickle_trigger = new Object();
+
   public MemPool(HashedTrie utxo_hashed_trie)
   {
     this.utxo_hashed_trie = utxo_hashed_trie;
+
+    new Tickler().start();
   }
 
   public synchronized List<Transaction> getTransactionsForBlock(ChainHash last_utxo, int max_size)
@@ -188,6 +198,7 @@ public class MemPool
 
   public synchronized void rebuildPriorityMap(ChainHash new_utxo_root)
   {
+    logger.log(Level.INFO, String.format("Mempool.rebuildPriorityMap(%s)", new_utxo_root));
     utxo_for_pri_map = new_utxo_root;
     priority_map.clear();
 
@@ -222,6 +233,7 @@ public class MemPool
         priority_map.put(ratio, cluster);
       }
     }
+    logger.log(Level.INFO, String.format("Removing %d transactions from mempool", remove_list.size())); 
 
     for(ChainHash h : remove_list)
     {
@@ -403,6 +415,47 @@ public class MemPool
 
   }
 
-  
+  private ChainHash tickle_hash = null;
+  public void tickleBlocks(ChainHash utxo_root_hash)
+  {
+    tickle_hash = utxo_root_hash;
+    synchronized(tickle_trigger)
+    {
+      tickle_trigger.notifyAll();
+    }
+  }
+
+  public class Tickler extends Thread
+  {
+    public Tickler()
+    {
+      setName("MemPool/Tickler");
+      setDaemon(true);
+    }
+
+    public void run()
+    {
+      while(true)
+      {
+        try
+        {
+          synchronized(tickle_trigger)
+          {
+            tickle_trigger.wait(60000);
+          }
+					if (tickle_hash != null)
+					{
+						rebuildPriorityMap(tickle_hash);
+          }
+        }
+        catch(Throwable t)
+        {
+          logger.log(Level.INFO, "Tickle error: " + t);
+        }
+      }
+    }
+
+  }
+ 
 
 }

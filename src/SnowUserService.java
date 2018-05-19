@@ -231,9 +231,6 @@ public class SnowUserService extends UserServiceGrpc.UserServiceImplBase
         {
           logger.log(Level.INFO, "Tickle error: " + t);
         }
-
-
-
       }
     }
 
