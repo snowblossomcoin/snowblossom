@@ -223,7 +223,7 @@ public class SnowUserService extends UserServiceGrpc.UserServiceImplBase
         {
           synchronized(tickle_trigger)
           {
-            tickle_trigger.wait(60000);
+            tickle_trigger.wait(30000);
           }
           sendNewBlocks();
         }

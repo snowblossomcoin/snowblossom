@@ -85,6 +85,8 @@ public class SnowBlossomNode
     mem_pool = new MemPool(utxo_hashed_trie);
 
     peerage = new Peerage(this);
+    mem_pool.setPeerage(peerage);
+
   }
 
   private void startWidgets()

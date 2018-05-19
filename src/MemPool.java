@@ -80,6 +80,17 @@ public class MemPool
     new Tickler().start();
   }
 
+  public synchronized TransactionMempoolInfo getRandomPoolTransaction()
+  {
+    ArrayList<TransactionMempoolInfo> list = new ArrayList<>();
+    list.addAll(known_transactions.values());
+    if (list.size() == 0) return null;
+    Random rnd = new Random();
+
+    return list.get(rnd.nextInt(list.size()));
+
+  }
+
   public synchronized List<Transaction> getTransactionsForBlock(ChainHash last_utxo, int max_size)
   {
     List<Transaction> block_list = new ArrayList<Transaction>();
@@ -240,6 +251,7 @@ public class MemPool
       known_transactions.remove(h);
 
     }
+    logger.log(Level.INFO, String.format("Remaining in mempool: %d",  known_transactions.size()));
 
   }
 
@@ -425,6 +437,13 @@ public class MemPool
     }
   }
 
+  private Peerage peerage = null;
+
+  public void setPeerage(Peerage peerage)
+  {
+    this.peerage = peerage;
+  }
+
   public class Tickler extends Thread
   {
     public Tickler()
@@ -441,12 +460,26 @@ public class MemPool
         {
           synchronized(tickle_trigger)
           {
-            tickle_trigger.wait(60000);
+            tickle_trigger.wait(1000);
           }
 					if (tickle_hash != null)
 					{
 						rebuildPriorityMap(tickle_hash);
+            tickle_hash = null;
           }
+          else
+          {
+            if (peerage!=null)
+            {
+              TransactionMempoolInfo info = getRandomPoolTransaction();
+              if (info != null)
+              {
+                peerage.broadcastTransaction(info.getTx());
+              }
+            }
+
+          }
+
         }
         catch(Throwable t)
         {
