@@ -8,6 +8,7 @@ import com.google.protobuf.InvalidProtocolBufferException;
 
 import java.util.Map;
 import java.util.TreeMap;
+import snowblossom.trie.ByteStringComparator;
 
 public class ProtoDBMap<M extends Message>
 {
@@ -45,4 +46,15 @@ public class ProtoDBMap<M extends Message>
     return inner.containsKey(key);
   }
 
+  public void putAll(Map<ByteString, M> map)
+  {
+    TreeMap<ByteString, ByteString> sorted = new TreeMap<>(new ByteStringComparator());
+    for(Map.Entry<ByteString, M> me : map.entrySet())
+    {
+      sorted.put(me.getKey(), me.getValue().toByteString());
+    }
+    inner.putAll(sorted);
+
+
+  }
 }

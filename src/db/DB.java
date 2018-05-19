@@ -22,6 +22,7 @@ import snowblossom.Config;
 
 import snowblossom.proto.Block;
 import snowblossom.proto.BlockSummary;
+import snowblossom.proto.Transaction;
 
 import java.util.logging.Logger;
 import java.util.logging.Level;
@@ -39,6 +40,7 @@ public abstract class DB implements DBFace
   protected DBMap utxo_node_map;
   protected DBMap block_height_map;
   protected DBMap special_map;
+  protected ProtoDBMap<Transaction> tx_map;
 
   public DB(Config config)
   {
@@ -54,6 +56,7 @@ public abstract class DB implements DBFace
     throws Exception
   {
     block_map = new ProtoDBMap(Block.newBuilder().build().getParserForType(), openMap("block"));
+    tx_map = new ProtoDBMap(Transaction.newBuilder().build().getParserForType(), openMap("tx"));
     block_summary_map = new ProtoDBMap(BlockSummary.newBuilder().build().getParserForType(), openMap("blocksummary"));
 
     utxo_node_map = openMap("u");
@@ -66,6 +69,9 @@ public abstract class DB implements DBFace
 
   @Override 
   public ProtoDBMap<BlockSummary> getBlockSummaryMap(){return block_summary_map; }
+
+  @Override
+  public ProtoDBMap<Transaction> getTransactionMap(){return tx_map; }
 
   @Override
   public DBMap getSpecialMap() { return special_map; }
