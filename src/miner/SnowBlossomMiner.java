@@ -43,6 +43,7 @@ import java.io.FileInputStream;
 import java.util.LinkedList;
 import java.util.concurrent.atomic.AtomicLong;
 import java.text.DecimalFormat;
+import snowblossom.LogSetup;
 
 public class SnowBlossomMiner
 {
@@ -58,6 +59,8 @@ public class SnowBlossomMiner
     }
 
     ConfigFile config = new ConfigFile(args[0]);
+    
+    LogSetup.setup(config);
 
 
     SnowBlossomMiner miner = new SnowBlossomMiner(config); 

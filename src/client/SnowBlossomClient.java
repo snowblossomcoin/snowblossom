@@ -57,6 +57,7 @@ import snowblossom.TransactionBridge;
 import snowblossom.TransactionUtil;
 import java.util.Collections;
 import java.util.SplittableRandom;
+import snowblossom.LogSetup;
 
 public class SnowBlossomClient
 {
@@ -72,6 +73,8 @@ public class SnowBlossomClient
     }
 
     ConfigFile config = new ConfigFile(args[0]);
+    
+    LogSetup.setup(config);
 
     SnowBlossomClient client = new SnowBlossomClient(config);
 

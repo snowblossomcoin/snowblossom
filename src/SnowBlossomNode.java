@@ -26,6 +26,8 @@ public class SnowBlossomNode
     }
 
     ConfigFile config = new ConfigFile(args[0]);
+    
+    LogSetup.setup(config);
 
     new SnowBlossomNode(config);
     while(true)
@@ -52,7 +54,6 @@ public class SnowBlossomNode
   {
     this.config = config;
 
-    LogSetup.setup(config);
 
     config.require("db_type");
 
