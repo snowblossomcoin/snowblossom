@@ -80,6 +80,11 @@ public class MemPool
     new Tickler().start();
   }
 
+  public synchronized int getMemPoolSize()
+  {
+    return known_transactions.size();
+  }
+
   public synchronized TransactionMempoolInfo getRandomPoolTransaction()
   {
     ArrayList<TransactionMempoolInfo> list = new ArrayList<>();

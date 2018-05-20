@@ -134,6 +134,14 @@ public class Peerage
     return tip.build();
   }
 
+  public int getConnectedPeerCount()
+  {
+    synchronized(links)
+    {
+      return links.size();
+    }
+  }
+
   private ImmutableList<PeerLink> getLinkList()
   {
     synchronized(links)
@@ -274,6 +282,7 @@ public class Peerage
         }
       }
     }
+
 
     private void connectToPeers()
     {

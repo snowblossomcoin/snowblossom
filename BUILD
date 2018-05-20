@@ -18,6 +18,14 @@ java_binary(
   ]
 )
 java_binary(
+  name = "Shackleton",
+  main_class = "snowblossom.shackleton.Shackleton",
+  runtime_deps = [
+    ":shackletonlib",
+  ]
+)
+
+java_binary(
   name = "SnowBlossomClient",
   main_class = "snowblossom.client.SnowBlossomClient",
   runtime_deps = [
@@ -73,6 +81,19 @@ java_library(
     "@bcprov//jar",
   ],
 )
+
+java_library(
+  name = "shackletonlib",
+  srcs = glob(["src/shackleton/*.java"]),
+  deps = [
+    ":snowblossomprotolib",
+    ":snowblossomlib",
+    "@junit_junit//jar",
+    "@commons_codec//jar",
+    "@bcprov//jar",
+  ],
+)
+
 
 java_library(
   name = "clientlib",

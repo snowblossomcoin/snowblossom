@@ -9,6 +9,8 @@ import snowblossom.proto.BlockSummary;
 import snowblossom.proto.SubmitReply;
 import snowblossom.proto.GetUTXONodeRequest;
 import snowblossom.proto.GetUTXONodeReply;
+import snowblossom.proto.NullRequest;
+import snowblossom.proto.NodeStatus;
 import snowblossom.trie.proto.TrieNode;
 import io.grpc.stub.StreamObserver;
 
@@ -193,6 +195,19 @@ public class SnowUserService extends UserServiceGrpc.UserServiceImplBase
 
     responseObserver.onNext(reply.build());
     responseObserver.onCompleted();
+  }
+
+  @Override
+  public void getNodeStatus(NullRequest null_request, StreamObserver<NodeStatus> responseObserver)
+  {
+    NodeStatus ns = NodeStatus.newBuilder()
+      .setMemPoolSize(node.getMemPool().getMemPoolSize())
+      .setConnectedPeers(node.getPeerage().getConnectedPeerCount())
+      .build();
+
+    responseObserver.onNext(ns);
+    responseObserver.onCompleted();
+
   }
 
   class BlockSubscriberInfo

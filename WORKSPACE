@@ -42,8 +42,3 @@ maven_jar(
   sha1 = "2507204241ab450456bdb8e8c0a8f986e418bd99",
 )
 
-maven_jar(
-  name = "bitcoinj",
-  artifact = "org.bitcoinj:bitcoinj-core:0.14.7",
-  sha1 = "5e58d6921e1d8dfce81525b22c0de97f34be1f5c",
-)
