@@ -334,6 +334,7 @@ public class SnowBlossomClient
   {
     LinkedList<TransactionBridge> spendable = new LinkedList<>();
     spendable.addAll(getAllSpendable());
+    Collections.shuffle(spendable);
     long min_send =  500000L;
     long max_send = 5000000L;
     long send_delta = max_send - min_send;

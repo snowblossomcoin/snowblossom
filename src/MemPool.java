@@ -97,7 +97,7 @@ public class MemPool
     Set<ChainHash> included_txs = new HashSet<>();
 
 
-    if (last_utxo != utxo_for_pri_map)
+    if (!last_utxo.equals(utxo_for_pri_map))
     {
       rebuildPriorityMap(last_utxo);
     }

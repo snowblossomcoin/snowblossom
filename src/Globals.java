@@ -34,7 +34,7 @@ public class Globals
   public static final long FLAKE_VALUE = 1L;
   public static final long SNOW_VALUE = 1000000L;
 
-  public static final int MAX_BLOCK_SIZE = 3 * 1024 * 1024;
+  public static final int MAX_BLOCK_SIZE = 3800000;
 
 
   public static void addCryptoProvider()
