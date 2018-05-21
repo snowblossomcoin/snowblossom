@@ -66,6 +66,7 @@ public class SnowBlossomClient
   public static void main(String args[]) throws Exception
   {
     Globals.addCryptoProvider();
+
     if (args.length < 1)
     {
       logger.log(Level.SEVERE, "Incorrect syntax. Syntax: SnowBlossomClient <config_file> [commands]");
@@ -245,7 +246,7 @@ public class SnowBlossomClient
   {
     WalletDatabase.Builder builder = WalletDatabase.newBuilder();
 
-    for(int i=0;i<800; i++)
+    for(int i=0;i<8; i++)
     {
       genNewKey(builder);
     }
