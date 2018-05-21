@@ -93,7 +93,16 @@ public class MemPool
     Random rnd = new Random();
 
     return list.get(rnd.nextInt(list.size()));
+  }
 
+  public synchronized Transaction getTransaction(ChainHash tx_hash)
+  {
+    TransactionMempoolInfo info = known_transactions.get(tx_hash);
+    if (info != null)
+    {
+      return info.getTx();
+    }
+    return null;
   }
 
   public synchronized List<Transaction> getTransactionsForBlock(ChainHash last_utxo, int max_size)

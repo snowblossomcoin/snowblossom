@@ -26,6 +26,12 @@ public class ChainHash implements Comparable<ChainHash>
     this(ByteString.copyFrom(b));
   }
 
+  public ChainHash(String str)
+  {
+    Assert.assertEquals(Globals.BLOCKCHAIN_HASH_LEN*2, str.length());
+    this.bytes = HexUtil.stringToHex(str);
+  }
+
   @Override
   public String toString()
   {

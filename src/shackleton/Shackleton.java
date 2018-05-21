@@ -69,11 +69,14 @@ public class Shackleton
 
   }
 
-
   public UserServiceBlockingStub getStub()
   {
     return blockingStub;
   }
 
+  public NetworkParams getParams()
+  {
+    return params;
+  }
 
 }

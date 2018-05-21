@@ -11,6 +11,9 @@ import snowblossom.proto.GetUTXONodeRequest;
 import snowblossom.proto.GetUTXONodeReply;
 import snowblossom.proto.NullRequest;
 import snowblossom.proto.NodeStatus;
+import snowblossom.proto.RequestBlock;
+import snowblossom.proto.RequestBlockHeader;
+import snowblossom.proto.RequestTransaction;
 import snowblossom.trie.proto.TrieNode;
 import io.grpc.stub.StreamObserver;
 
@@ -221,8 +224,46 @@ public class SnowUserService extends UserServiceGrpc.UserServiceImplBase
 
     responseObserver.onNext(ns);
     responseObserver.onCompleted();
-
   }
+
+  @Override
+  public void getBlock(RequestBlock req, StreamObserver<Block> responseObserver)
+  {
+    Block blk = node.getDB().getBlockMap().get(req.getBlockHash());
+    responseObserver.onNext(blk);
+    responseObserver.onCompleted();
+  }
+
+  @Override
+  public void getBlockHeader(RequestBlockHeader req, StreamObserver<BlockHeader> responseObserver)
+  {
+    ChainHash block_hash = node.getDB().getBlockHashAtHeight(req.getBlockHeight());
+
+    BlockHeader answer = null;
+
+    if (block_hash != null)
+    {
+      BlockSummary sum = node.getDB().getBlockSummaryMap().get(block_hash.getBytes());
+      answer = sum.getHeader();
+    }
+    responseObserver.onNext(answer);
+    responseObserver.onCompleted();
+  }
+
+  @Override
+  public void getTransaction(RequestTransaction req, StreamObserver<Transaction> observer)
+  {
+    Transaction tx = node.getDB().getTransactionMap().get(req.getTxHash());
+
+    if (tx == null)
+    {
+      tx = node.getMemPool().getTransaction(new ChainHash(req.getTxHash()));
+    }
+
+    observer.onNext(tx);
+    observer.onCompleted();
+  }
+
 
   class BlockSubscriberInfo
   {
