@@ -144,6 +144,7 @@ public class WebServer
     out.println("blocktime_average_ms: " + summary.getBlocktimeAverageMs());
     out.println("activated_field: " + summary.getActivatedField());
     out.println("block_height: " + header.getBlockHeight());
+    out.println("total_transactions: " + summary.getTotalTransactions());
 
     double avg_diff = PowUtil.getDiffForTarget(BlockchainUtil.readInteger(summary.getTargetAverage()));
     double target_diff = PowUtil.getDiffForTarget(BlockchainUtil.targetBytesToBigInteger(header.getTarget()));

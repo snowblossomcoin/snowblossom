@@ -80,12 +80,26 @@ public abstract class NetworkParams
       {
         return new NetworkParamsProd();
       }
+      else if (network.equals("mainnet"))
+      {
+        return new NetworkParamsProd();
+      }
+      else if (network.equals("testnet"))
+      {
+        logger.info("Using network teapot - testnet");
+        return new NetworkParamsTestnet();
+      }
       else if (network.equals("teapot"))
       {
         logger.info("Using network teapot - testnet");
         return new NetworkParamsTestnet();
       }
       else if (network.equals("spoon"))
+      {
+        logger.info("Using network spoon - regtest");
+        return new NetworkParamsRegtest();
+      }
+      else if (network.equals("regtest"))
       {
         logger.info("Using network spoon - regtest");
         return new NetworkParamsRegtest();
