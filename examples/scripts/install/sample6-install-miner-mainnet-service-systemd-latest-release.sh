@@ -33,13 +33,17 @@ bazel build :all
 cp --no-clobber --recursive "$snowblossom_home/source/snowblossom/examples/configs" "$snowblossom_home/"
 chmod 750 -R "$snowblossom_home/configs"
 
+# run wallet once to generate addresses for miner to send to
+cd "$snowblossom_home"
+$snowblossom_home/source/snowblossom/bazel-bin/SnowBlossomClient configs/client-mainnet.conf
+
 EOF
 
 # install systemd service
-cp "$snowblossom_home/source/snowblossom/examples/systemd/snowblossom-node-testnet.service" /etc/systemd/system/
+cp "$snowblossom_home/source/snowblossom/examples/systemd/snowblossom-miner-mainnet.service" /etc/systemd/system/
 systemctl daemon-reload
 # startup automatically at boot
-systemctl enable snowblossom-node-testnet.service
+systemctl enable snowblossom-miner-mainnet.service
 # start
-systemctl restart snowblossom-node-testnet.service
-journalctl -f -u snowblossom-node-testnet.service
+systemctl restart snowblossom-miner-mainnet.service
+journalctl -f -u snowblossom-miner-mainnet.service

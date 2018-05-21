@@ -1,0 +1,11 @@
+[Unit]
+Description=Snowblossom Node - mainnet
+After=network.target
+
+[Service]
+WorkingDirectory=/var/snowblossom
+ExecStart=/var/snowblossom/source/snowblossom/bazel-bin/SnowBlossomNode configs/node-mainnet.conf
+User=snowblossom
+
+[Install]
+WantedBy=multi-user.target
