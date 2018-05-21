@@ -242,7 +242,7 @@ public class SnowBlossomClient
   {
     WalletDatabase.Builder builder = WalletDatabase.newBuilder();
 
-    for(int i=0;i<8; i++)
+    for(int i=0;i<800; i++)
     {
       genNewKey(builder);
     }

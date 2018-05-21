@@ -96,9 +96,11 @@ public class PeerLink implements StreamObserver<PeerMessage>
   @Override
   public void onNext(PeerMessage msg)
   {
+
     last_received_message_time = System.currentTimeMillis();
     try
     {
+      msg = PeerMessage.parseFrom(msg.toByteString());
       if (msg.hasTx())
       {
         Transaction tx = msg.getTx();

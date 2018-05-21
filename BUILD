@@ -222,7 +222,7 @@ java_test(
   name = "signature_test",
   srcs = ["test/SignatureTest.java"],
   test_class = "snowblossom.SignatureTest",
-  size="small",
+  size="medium",
   deps = [
       "@junit_junit//jar",
       ":snowblossomlib",

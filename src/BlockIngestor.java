@@ -82,7 +82,7 @@ public class BlockIngestor
       return false;
     }
 
-    BlockSummary summary = getNewSummary(blk.getHeader(), prev_summary, node.getParams());
+    BlockSummary summary = getNewSummary(blk.getHeader(), prev_summary, node.getParams(), blk.getTransactionsCount() );
 
     Validation.deepBlockValidation(node, blk, prev_summary);
 
@@ -147,7 +147,7 @@ public class BlockIngestor
     return chainhead;
   }
 
-  public static BlockSummary getNewSummary(BlockHeader header, BlockSummary prev_summary, NetworkParams params)
+  public static BlockSummary getNewSummary(BlockHeader header, BlockSummary prev_summary, NetworkParams params, long tx_count)
   {
     BlockSummary.Builder bs = BlockSummary.newBuilder();
 
@@ -160,6 +160,7 @@ public class BlockIngestor
     BigInteger work_in_block = params.getMaxTarget().multiply(slice).divide(target);
     BigInteger prev_work_sum = BlockchainUtil.readInteger(prev_summary.getWorkSum());
 
+    bs.setTotalTransactions( prev_summary.getTotalTransactions() + tx_count );
 
     BigInteger worksum = prev_work_sum.add(work_in_block);
 

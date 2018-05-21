@@ -129,7 +129,7 @@ public class PowUtilTest
         .setTimestamp(time)
         .build();
 
-      bs = BlockIngestor.getNewSummary(header, bs, params);
+      bs = BlockIngestor.getNewSummary(header, bs, params, 1L);
 
       Assert.assertEquals(time, bs.getHeader().getTimestamp());
 
@@ -161,7 +161,7 @@ public class PowUtilTest
         .setTimestamp(time)
         .build();
 
-      bs = BlockIngestor.getNewSummary(header, bs, params);
+      bs = BlockIngestor.getNewSummary(header, bs, params, 1L);
 
       Assert.assertEquals(time, bs.getHeader().getTimestamp());
 

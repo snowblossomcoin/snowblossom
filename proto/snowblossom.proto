@@ -147,7 +147,6 @@ service UserService {
   rpc GetUTXONode( GetUTXONodeRequest ) returns ( GetUTXONodeReply ) {}
 
   rpc GetNodeStatus ( NullRequest ) returns ( NodeStatus ) {}
-  rpc GetHead ( NullRequest ) returns ( BlockHeader ) {}
   rpc GetBlock ( RequestBlock ) returns ( Block ) {}
   rpc GetTransaction ( RequestTransaction ) returns ( Transaction ) {}
   rpc GetBlockHeader ( RequestBlockHeader ) returns ( BlockHeader ) {}
@@ -236,6 +235,8 @@ message NullRequest {
 message NodeStatus {
   int32 mem_pool_size = 1;
   int32 connected_peers = 2;
+
+  BlockSummary head_summary = 3;
 }
 
 // -------------------------------------------------------------------
@@ -249,6 +250,8 @@ message BlockSummary {
   int32 activated_field = 4;
   
   BlockHeader header = 5;
+  int64 total_transactions = 6;
+
 }
 
 message MemPoolList {

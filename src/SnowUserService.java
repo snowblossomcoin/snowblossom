@@ -136,13 +136,26 @@ public class SnowUserService extends UserServiceGrpc.UserServiceImplBase
   {
     try
     {
-      node.getMemPool().addTransaction(tx);
-      node.getPeerage().broadcastTransaction(tx);
+      tx = Transaction.parseFrom(tx.toByteString());
+      if (node.getMemPool().addTransaction(tx))
+      {
+        node.getPeerage().broadcastTransaction(tx);
+      }
     }
     catch(ValidationException e)
     {
       logger.info("Rejecting transaction: " + e);
 
+      responseObserver.onNext(SubmitReply.newBuilder()
+          .setSuccess(false)
+          .setErrorMessage(e.toString())
+        .build());
+      responseObserver.onCompleted();
+      return;
+    }
+    catch(com.google.protobuf.InvalidProtocolBufferException e)
+    {
+      logger.info("Rejecting transaction, strange error: " + e);
       responseObserver.onNext(SubmitReply.newBuilder()
           .setSuccess(false)
           .setErrorMessage(e.toString())
@@ -203,6 +216,7 @@ public class SnowUserService extends UserServiceGrpc.UserServiceImplBase
     NodeStatus ns = NodeStatus.newBuilder()
       .setMemPoolSize(node.getMemPool().getMemPoolSize())
       .setConnectedPeers(node.getPeerage().getConnectedPeerCount())
+      .setHeadSummary(node.getBlockIngestor().getHead())
       .build();
 
     responseObserver.onNext(ns);
