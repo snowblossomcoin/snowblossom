@@ -164,7 +164,7 @@ public class ValidationTest
     inner.addClaims(claim);
 
     inner.setFee(50L);
-    inner.setExtra("hellllo");
+    inner.setExtra(ByteString.copyFrom(new String("hellllo").getBytes()));
 
     ByteString inner_data= inner.build().toByteString();
     tx.setInnerData(inner_data);

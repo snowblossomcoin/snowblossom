@@ -27,5 +27,11 @@ public class HexUtil
   {
     return getHexString(bs.toByteArray());
   }
+
+  // TODO - do something more useful
+  public static String getSafeString(ByteString data)
+  {
+    return data.toString();
+  }
  
 }

@@ -10,6 +10,9 @@ import snowblossom.proto.WalletKeyPair;
 import com.google.protobuf.ByteString;
 
 import java.security.PublicKey;
+import java.io.PrintStream;
+import java.util.Set;
+import com.google.common.collect.ImmutableSet;
 
 
 public class AddressUtil
@@ -61,7 +64,6 @@ public class AddressUtil
     return getSimpleSpecForKey(wkp.getPublicKey(), wkp.getSignatureType());
   }
 
-
   public static AddressSpec getSimpleSpecForKey(PublicKey key, int sig_type)
   {
     ByteString key_data;
@@ -85,6 +87,41 @@ public class AddressUtil
     throws ValidationException
   {
     return new AddressSpecHash( Duck32.decode(human, address) );
+  }
+
+  public static void prettyDisplayAddressSpec(AddressSpec spec, PrintStream out, NetworkParams params)
+    throws ValidationException
+  {
+    prettyDisplayAddressSpec(spec, out, params, 0, ImmutableSet.of());
+  }
+  public static void prettyDisplayAddressSpec(AddressSpec spec, PrintStream out, NetworkParams params, 
+    int c_idx, Set<String> signed_list)
+    throws ValidationException
+  {
+    AddressSpecHash hash = getHashForSpec(spec);
+    String address = getAddressString(params.getAddressPrefix(), hash);
+    out.print("AddressSpec " + address);
+
+    out.println(String.format(" %dof%d", spec.getRequiredSigners(), spec.getSigSpecsCount()));
+
+    for(int s = 0; s<spec.getSigSpecsCount(); s++)
+    {
+      String key = c_idx +":" + s;
+      boolean signed=false;
+      if (signed_list.contains(key)) signed=true;
+      SigSpec sig = spec.getSigSpecs(s);
+
+      String algo = SignatureUtil.getAlgo(sig.getSignatureType());
+
+      out.print("   sigspec:" + algo);
+      if (signed)
+      {
+        out.print(" SIGNED");
+      }
+      out.print(" pub:");
+      out.println(HexUtil.getHexString(sig.getPublicKey()));
+    }
+
   }
 
 }

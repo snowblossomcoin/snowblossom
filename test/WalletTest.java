@@ -66,7 +66,7 @@ public class WalletTest
 
 
 
-    Transaction tx = TransactionUtil.makeTransaction(wallet, ImmutableList.of(a,b,c),address_hash, 150000);
+    Transaction tx = TransactionUtil.makeTransaction(wallet, ImmutableList.of(a,b,c),address_hash, 150000,0L);
 
     Validation.checkTransactionBasics(tx, false);
 
@@ -108,7 +108,7 @@ public class WalletTest
     TransactionBridge b = new TransactionBridge(address_hash, 50000);
     TransactionBridge c = new TransactionBridge(address_hash, 50000);
 
-    Transaction tx = TransactionUtil.makeTransaction(wallet, ImmutableList.of(a,b,c),address_hash, 150000);
+    Transaction tx = TransactionUtil.makeTransaction(wallet, ImmutableList.of(a,b,c),address_hash, 150000, 0L);
 
     Validation.checkTransactionBasics(tx, false);
 

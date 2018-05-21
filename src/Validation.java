@@ -329,6 +329,10 @@ public class Validation
   public static void checkTransactionBasics(Transaction tx, boolean must_be_coinbase)
     throws ValidationException
   {
+    if (tx.toByteString().size() > Globals.MAX_TX_SIZE)
+    {
+      throw new ValidationException("Transaction too big");
+    }
     validateChainHash(tx.getTxHash(), "tx_hash");
 
 
@@ -499,7 +503,6 @@ public class Validation
       }
     }
 
-
     //Sanity check outputs
     for(TransactionOutput out : inner.getOutputsList())
     {
@@ -507,7 +510,7 @@ public class Validation
        validateAddressSpecHash(out.getRecipientSpecHash(), "output spec hash");
     }
 
-    if (inner.getExtra().getBytes().length > Globals.MAX_TX_EXTRA)
+    if (inner.getExtra().size() > Globals.MAX_TX_EXTRA)
     {
       throw new ValidationException("Extra string too long");
     }

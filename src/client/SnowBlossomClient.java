@@ -169,9 +169,12 @@ public class SnowBlossomClient
     throws Exception
   {
     AddressSpecHash to_hash = AddressUtil.getHashForAddress(params.getAddressPrefix(), to);
-    Transaction tx = TransactionUtil.makeTransaction(wallet_database, getAllSpendable(), to_hash, value);
+    Transaction tx = TransactionUtil.makeTransaction(wallet_database, getAllSpendable(), to_hash, value, 0L);
 
     logger.info("Transaction: " + new ChainHash(tx.getTxHash()) + " - " + tx.toByteString().size());
+
+    TransactionUtil.prettyDisplayTx(tx, System.out, params);
+
     //logger.info(tx.toString());
 
     System.out.println(blockingStub.submitTransaction(tx));
@@ -365,8 +368,14 @@ public class SnowBlossomClient
         needed_value -= b.value;
         input_list.add(b);
       }
+      long fee = rnd.nextLong(5000);
 
-      Transaction tx = TransactionUtil.makeTransaction(wallet_database, input_list, out_list);
+      Transaction tx = TransactionUtil.makeTransaction(wallet_database, input_list, out_list, fee);
+      if (tx == null)
+      {
+        logger.warning("Unable to make transaction");
+        return;
+      }
       TransactionInner inner = TransactionUtil.getInner(tx);
 
       ChainHash tx_hash = new ChainHash(tx.getTxHash());

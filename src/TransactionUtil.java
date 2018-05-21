@@ -4,6 +4,7 @@ import snowblossom.proto.Transaction;
 import snowblossom.proto.TransactionInner;
 import snowblossom.proto.TransactionInput;
 import snowblossom.proto.TransactionOutput;
+import snowblossom.proto.CoinbaseExtras;
 
 import snowblossom.proto.SigSpec;
 import snowblossom.proto.SignatureEntry;
@@ -24,6 +25,10 @@ import java.util.Collections;
 import java.util.Collection;
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.TreeSet;
+import java.io.PrintStream;
+import java.text.DecimalFormat;
+
 
 
 public class TransactionUtil
@@ -107,7 +112,7 @@ public class TransactionUtil
   public static Transaction makeTransaction(WalletDatabase wallet,
     Collection<TransactionBridge> spendable,
     AddressSpecHash to,
-    long value)
+    long value, long fee)
     throws ValidationException
   {
     TransactionOutput out = TransactionOutput.newBuilder()
@@ -115,22 +120,24 @@ public class TransactionUtil
       .setRecipientSpecHash(to.getBytes())
       .build();
 
-    return makeTransaction(wallet, spendable, ImmutableList.of(out));
+    return makeTransaction(wallet, spendable, ImmutableList.of(out), fee);
 
   }
   
   public static Transaction makeTransaction(WalletDatabase wallet, 
     Collection<TransactionBridge> spendable, 
-    List<TransactionOutput> output_list)
+    List<TransactionOutput> output_list, long fee)
     throws ValidationException
   {
     TransactionInner.Builder tx_inner = TransactionInner.newBuilder();
+
+    tx_inner.setFee(fee);
 
     LinkedList<TransactionOutput> tx_outputs = new LinkedList<>();
     tx_outputs.addAll(output_list);
 
 
-    long needed_input = 0;
+    long needed_input = fee;
     
     for(TransactionOutput tx_out : output_list)
     {
@@ -246,6 +253,84 @@ public class TransactionUtil
     Collections.shuffle(lst);
 
     return AddressUtil.getHashForSpec(lst.pop());
+  }
+
+  public static void prettyDisplayTx(Transaction tx, PrintStream out, NetworkParams params)
+    throws ValidationException
+  {
+    ChainHash tx_hash = new ChainHash(tx.getTxHash());
+    out.println("Transaction: " + tx_hash);
+    TreeSet<String> sign_set=new TreeSet<>();
+    DecimalFormat df = new DecimalFormat("0.000000");
+
+    for(SignatureEntry se : tx.getSignaturesList())
+    {
+      String key = "" + se.getClaimIdx() + ":" + se.getKeyIdx();
+      sign_set.add(key);
+    }
+
+    TransactionInner inner = getInner(tx);
+
+    if (inner.getIsCoinbase())
+    {
+      CoinbaseExtras extras = inner.getCoinbaseExtras();
+      out.print("  Coinbase - height:");
+      out.print(extras.getBlockHeight());
+      out.print(" remark:");
+      out.print(HexUtil.getSafeString(extras.getRemarks()));
+      out.println();
+      if (extras.getMotionsApprovedCount() > 0)
+      {
+        out.print("    Motions Approved:" );
+        for(int i : extras.getMotionsApprovedList())
+        {
+          out.print(' ');
+          out.print(i);
+        }
+        out.println();
+      }
+      if (extras.getMotionsRejectedCount() > 0)
+      {
+        out.print("    Motions Rejected:" );
+        for(int i : extras.getMotionsRejectedList())
+        {
+          out.print(' ');
+          out.print(i);
+        }
+        out.println();
+      }
+    }
+
+    for(TransactionInput in : inner.getInputsList())
+    {
+      String address = AddressUtil.getAddressString(params.getAddressPrefix(), new AddressSpecHash( in.getSpecHash()));
+      ChainHash src_tx = new ChainHash(in.getSrcTxId());
+      int idx = in.getSrcTxOutIdx();
+      out.println(String.format("  Input: %s - %s:%d", address, src_tx, idx));
+    }
+    for(TransactionOutput o : inner.getOutputsList())
+    {
+      String address =  AddressUtil.getAddressString(params.getAddressPrefix(), new AddressSpecHash( o.getRecipientSpecHash()));
+      double value = o.getValue() / Globals.SNOW_VALUE_D;
+
+      out.println(String.format("  Output: %s %s", address, df.format(value)));
+    }
+
+    for(int c_idx = 0; c_idx < inner.getClaimsCount(); c_idx++)
+    {
+      AddressSpec claim = inner.getClaims(c_idx);
+
+      out.print("  Claim: ");
+      AddressUtil.prettyDisplayAddressSpec(claim, out, params, c_idx, sign_set);
+
+    }
+    out.println(String.format("  Fee: %s", df.format( inner.getFee() / Globals.SNOW_VALUE_D)));
+    if (inner.getExtra().size() > 0)
+    {
+      out.println("  Extra: " + HexUtil.getSafeString(inner.getExtra()));
+    }
+    
+    
   }
 
 }

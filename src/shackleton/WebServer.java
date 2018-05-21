@@ -32,12 +32,15 @@ import snowblossom.proto.BlockHeader;
 import snowblossom.proto.BlockSummary;
 import snowblossom.proto.RequestBlockHeader;
 
+import snowblossom.TransactionUtil;
+import snowblossom.ValidationException;
+
 public class WebServer
 {
   private HttpServer server;
   private Shackleton shackleton;
 
-  private LRUCache<Integer, String> block_summary_lines = new LRUCache<>(500);
+  private LRUCache<ChainHash, String> block_summary_lines = new LRUCache<>(500);
 
   public WebServer(Config config, Shackleton shackleton)
 		throws Exception
@@ -64,6 +67,7 @@ public class WebServer
   {
     @Override
     public void innerHandle(HttpExchange t, PrintStream out)
+      throws Exception
     {
       NetworkParams params = shackleton.getParams();
       String query = t.getRequestURI().getQuery();
@@ -161,27 +165,24 @@ public class WebServer
     out.println("<thead><tr><th>Height</th><th>Hash</th><th>Transactions</th><th>Size</th></tr></thead>");
     for(int h=header.getBlockHeight(); h>=min; h--)
     {
-      out.println(getBlockSummaryLine(h));
+      BlockHeader blk_head = shackleton.getStub().getBlockHeader(RequestBlockHeader.newBuilder().setBlockHeight(h).build());
+      ChainHash hash = new ChainHash(blk_head.getSnowHash());
+      out.println(getBlockSummaryLine(hash));
     }
     out.println("</table>");
 
-
-    out.println("<pre>");
-    out.println(node_status.toString());
-    out.println("</pre>");
   }
 
-  private String getBlockSummaryLine(int h)
+  private String getBlockSummaryLine(ChainHash hash)
   {
     synchronized(block_summary_lines)
     {
-      if (block_summary_lines.containsKey(h))
+      if (block_summary_lines.containsKey(hash))
       {
-        return block_summary_lines.get(h);
+        return block_summary_lines.get(hash);
       }
     }
-    BlockHeader blk_head = shackleton.getStub().getBlockHeader(RequestBlockHeader.newBuilder().setBlockHeight(h).build());
-    ChainHash hash = new ChainHash(blk_head.getSnowHash());
+
     int tx_count = 0;
     int size =0;
     String link = String.format(" <a href='/?search=%s'>B</a>", hash);
@@ -193,18 +194,19 @@ public class WebServer
     
 
     String s = String.format("<tr><td>%d</td><td>%s %s</td><td>%d</td><td>%d</td></tr>", 
-        h, 
+        blk.getHeader().getBlockHeight(), 
         hash.toString(), link,
         tx_count, size);
 
     synchronized(block_summary_lines)
     {
-      block_summary_lines.put(h, s);
+      block_summary_lines.put(hash, s);
     }
     return s;
   }
 
   private void displayHash(PrintStream out, ChainHash hash)
+    throws ValidationException
   {
     Block blk = shackleton.getStub().getBlock( RequestBlock.newBuilder().setBlockHash(hash.getBytes()).build());
     if ((blk!=null) && (blk.getHeader().getVersion() != 0))
@@ -233,18 +235,35 @@ public class WebServer
   }
 
   private void displayBlock(PrintStream out, Block blk)
+    throws ValidationException
   {
+      BlockHeader header = blk.getHeader();
       out.println("<pre>");
-      out.println("Found block");
-      out.println(blk);
+      out.println("hash: " + new ChainHash(header.getSnowHash()));
+      out.println("height: " + header.getBlockHeight());
+      out.println("prev_block_hash: " + new ChainHash(header.getPrevBlockHash()));
+      out.println("utxo_root_hash: " + new ChainHash(header.getUtxoRootHash()));
+      out.println("timestamp: " + header.getTimestamp());
+      out.println("snow_field: " + header.getSnowField());
+      out.println("size: " + blk.toByteString().size());
+      out.println();
+
+      out.flush();
+
+      for(Transaction tx : blk.getTransactionsList())
+      {
+        TransactionUtil.prettyDisplayTx(tx, out, shackleton.getParams());
+        out.println();
+      }
       out.println("</pre>");
   }
 
   private void displayTransaction(PrintStream out, Transaction tx)
+    throws ValidationException
   {
       out.println("<pre>");
       out.println("Found transaction");
-      out.println(tx);
+      TransactionUtil.prettyDisplayTx(tx, out, shackleton.getParams());
       out.println("</pre>");
   }
 

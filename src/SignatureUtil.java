@@ -95,11 +95,9 @@ public class SignatureUtil
     }
   }
 
-  public static ByteString sign(WalletKeyPair key_pair, ChainHash data)
+  public static String getAlgo(int sig_type)
     throws ValidationException
   {
-
-    int sig_type = key_pair.getSignatureType();
     String algo="";
 
     if (sig_type == SIG_TYPE_ECDSA_COMPRESSED)
@@ -126,6 +124,17 @@ public class SignatureUtil
 		{
 			throw new ValidationException(String.format("Unknown sig type %d", sig_type));
 		}
+    return algo;
+
+
+  }
+
+  public static ByteString sign(WalletKeyPair key_pair, ChainHash data)
+    throws ValidationException
+  {
+
+    int sig_type = key_pair.getSignatureType();
+    String algo=getAlgo(sig_type);
 
 		PrivateKey priv_key = KeyUtil.decodePrivateKey(key_pair.getPrivateKey(), algo);
 	  
