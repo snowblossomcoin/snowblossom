@@ -36,10 +36,10 @@ chmod 750 -R "$snowblossom_home/configs"
 EOF
 
 # install systemd service
-cp "$snowblossom_home/source/snowblossom/examples/systemd/snowblossom-node-testnet.service" /etc/systemd/system/
+cp "$snowblossom_home/source/snowblossom/examples/systemd/snowblossom-node-mainnet.service" /etc/systemd/system/
 systemctl daemon-reload
 # startup automatically at boot
-systemctl enable snowblossom-node-testnet.service
+systemctl enable snowblossom-node-mainnet.service
 # start
-systemctl restart snowblossom-node-testnet.service
-journalctl -f -u snowblossom-node-testnet.service
+systemctl restart snowblossom-node-mainnet.service
+journalctl -f -u snowblossom-node-mainnet.service

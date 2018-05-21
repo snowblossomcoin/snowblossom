@@ -5,7 +5,7 @@ if [[ $EUID -ne 0 ]]; then
 fi
 
 snowblossom_home=/var/snowblossom
-latest_release=`wget -qO - https://api.github.com/repos/snowblossomcoin/snowblossom/releases` 
+latest_release=`wget -qO - https://api.github.com/repos/snowblossomcoin/snowblossom/releases`
 release_name=`echo "$latest_release" | grep -Po -m 1 '"name": "\K.*?(?=")'`
 release_tag=`echo "$latest_release" | grep -Po -m 1 '"tag_name": "\K.*?(?=")'`
 
@@ -45,5 +45,5 @@ systemctl daemon-reload
 # startup automatically at boot
 systemctl enable snowblossom-miner-testnet.service
 # start
-systemctl start snowblossom-miner-testnet.service
+systemctl restart snowblossom-miner-testnet.service
 journalctl -f -u snowblossom-miner-testnet.service
