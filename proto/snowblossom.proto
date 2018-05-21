@@ -145,6 +145,7 @@ service UserService {
   rpc SubmitBlock ( Block ) returns ( SubmitReply ) {}
   rpc SubmitTransaction ( Transaction ) returns ( SubmitReply ) {}
   rpc GetUTXONode( GetUTXONodeRequest ) returns ( GetUTXONodeReply ) {}
+  rpc GetMempoolTransactionList ( RequestAddress ) returns ( TransactionHashList ) {}
 
   rpc GetNodeStatus ( NullRequest ) returns ( NodeStatus ) {}
   rpc GetBlock ( RequestBlock ) returns ( Block ) {}
@@ -228,6 +229,13 @@ message GetUTXONodeReply {
   repeated TrieNode proof = 3;
 }
 
+message RequestAddress {
+  bytes address_spec_hash = 1;
+}
+message TransactionHashList {
+  repeated bytes tx_hashes = 1;
+}
+
 message NullRequest {
 
 }
@@ -252,15 +260,6 @@ message BlockSummary {
   BlockHeader header = 5;
   int64 total_transactions = 6;
 
-}
-
-message MemPoolList {
-  repeated TransactionMempoolInfo tx_info = 1;
-}
-
-message TransactionMempoolInfo {
-  Transaction tx = 1;
-  int64 seen = 2;
 }
 
 message PeerList {

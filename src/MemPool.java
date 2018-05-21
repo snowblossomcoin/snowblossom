@@ -2,9 +2,9 @@ package snowblossom;
 
 import com.google.common.collect.TreeMultimap;
 
-import snowblossom.proto.TransactionMempoolInfo;
 import snowblossom.proto.Transaction;
 import snowblossom.proto.TransactionInput;
+import snowblossom.proto.TransactionOutput;
 import snowblossom.proto.TransactionInner;
 import snowblossom.proto.BlockSummary;
 import snowblossom.trie.HashedTrie;
@@ -20,6 +20,7 @@ import java.util.Collection;
 import java.util.TreeSet;
 import java.util.Random;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.protobuf.ByteString;
 import com.google.common.collect.HashMultimap;
 
@@ -50,6 +51,9 @@ public class MemPool
   private Map<ChainHash, TransactionMempoolInfo> known_transactions = new HashMap<>(512, 0.5f);
 
   private HashMap<String, ChainHash> claimed_outputs = new HashMap<>();
+
+  // Mapping of addresses to transactions that involve them
+  private HashMultimap<AddressSpecHash, ChainHash> address_tx_map = HashMultimap.<AddressSpecHash, ChainHash>create();
 
 
   // In normal operation, the priority map is updated as transactions come in
@@ -100,9 +104,14 @@ public class MemPool
     TransactionMempoolInfo info = known_transactions.get(tx_hash);
     if (info != null)
     {
-      return info.getTx();
+      return info.tx;
     }
     return null;
+  }
+
+  public synchronized Set<ChainHash> getTransactionsForAddress(AddressSpecHash spec_hash)
+  {
+    return ImmutableSet.copyOf(address_tx_map.get(spec_hash));
   }
 
   public synchronized List<Transaction> getTransactionsForBlock(ChainHash last_utxo, int max_size)
@@ -163,12 +172,9 @@ public class MemPool
       throw new ValidationException("mempool is full");
     }
 
-    TransactionMempoolInfo info = TransactionMempoolInfo.newBuilder()
-      .setTx(tx)
-      .setSeen(System.currentTimeMillis())
-      .build();
+    TransactionMempoolInfo info = new TransactionMempoolInfo(tx);
     
-    TransactionInner inner = TransactionUtil.getInner(tx);
+    TransactionInner inner = info.inner;
     TreeSet<String> used_outputs = new TreeSet<>();
     TimeRecord.record(t1, "mempool:p1");
 
@@ -210,6 +216,12 @@ public class MemPool
     TimeRecord.record(t1, "mempool:p2");
     
     known_transactions.put(tx_hash, info);
+
+    for(AddressSpecHash spec_hash : info.involved_addresses)
+    {
+      address_tx_map.put(spec_hash, tx_hash);
+    }
+
     // Claim outputs used by inputs
     for(String key : used_outputs)
     {
@@ -231,7 +243,7 @@ public class MemPool
 
     for(TransactionMempoolInfo info : known_transactions.values())
     {
-      Transaction tx = info.getTx();
+      Transaction tx = info.tx;
       TXCluster cluster;
       try
       {
@@ -262,7 +274,12 @@ public class MemPool
 
     for(ChainHash h : remove_list)
     {
-      known_transactions.remove(h);
+      TransactionMempoolInfo info = known_transactions.remove(h);
+
+      for(AddressSpecHash spec_hash : info.involved_addresses)
+      {
+        address_tx_map.remove(spec_hash, h);
+      }
 
     }
     logger.log(Level.INFO, String.format("Remaining in mempool: %d",  known_transactions.size()));
@@ -367,7 +384,7 @@ public class MemPool
           if (known_transactions.containsKey(needed_tx))
           {
             t1=System.nanoTime();
-            Transaction found_tx = known_transactions.get(needed_tx).getTx();
+            Transaction found_tx = known_transactions.get(needed_tx).tx;
 
             working_map.put(needed_tx, found_tx);
             addInputRequirements(found_tx, depends_on_map, needed_inputs);
@@ -488,7 +505,7 @@ public class MemPool
               TransactionMempoolInfo info = getRandomPoolTransaction();
               if (info != null)
               {
-                peerage.broadcastTransaction(info.getTx());
+                peerage.broadcastTransaction(info.tx);
               }
             }
 
@@ -504,5 +521,32 @@ public class MemPool
 
   }
  
+  public class TransactionMempoolInfo
+  {
+    public final Transaction tx;
+    public final ImmutableSet<AddressSpecHash> involved_addresses;
+    public final TransactionInner inner;
 
+    public TransactionMempoolInfo(Transaction tx)
+    {
+      this.tx = tx;
+
+      HashSet<AddressSpecHash> add_set=new HashSet<>();
+      inner = TransactionUtil.getInner(tx);
+
+      for(TransactionInput in : inner.getInputsList())
+      {
+        add_set.add(new AddressSpecHash(in.getSpecHash()));
+      }
+      for(TransactionOutput out : inner.getOutputsList())
+      {
+        add_set.add(new AddressSpecHash(out.getRecipientSpecHash()));
+      }
+
+      involved_addresses = ImmutableSet.copyOf(add_set);
+
+    }
+
+
+  }
 }

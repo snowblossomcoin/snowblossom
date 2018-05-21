@@ -41,6 +41,7 @@ public class Peerage
 {
   public static final long REFRESH_LEARN_TIME = 4L * 3600L * 1000L; //4hr
   public static final long SAVE_PEER_TIME = 300L * 1000L; //5min
+  public static final long PEER_EXPIRE_TIME = 14L * 86400L * 1000L; // 14 days
 
   private static final Logger logger = Logger.getLogger("snowblossom.peering");
 
@@ -86,8 +87,6 @@ public class Peerage
   {
     logger.info("Starting peerage");
     new PeerageMaintThread().start();
-
-    connectPeer("snow-test-a.1209k.com", 2339);
   }
 
   public void register(PeerLink link)
@@ -219,7 +218,7 @@ public class Peerage
 
   public void learnPeer(PeerInfo info)
   {
-    if (info.getLearned() + 3600L * 1000L < System.currentTimeMillis()) return;
+    if (info.getLearned() + PEER_EXPIRE_TIME < System.currentTimeMillis()) return;
 
     synchronized(peer_rumor_list)
     {

@@ -14,6 +14,8 @@ import snowblossom.proto.NodeStatus;
 import snowblossom.proto.RequestBlock;
 import snowblossom.proto.RequestBlockHeader;
 import snowblossom.proto.RequestTransaction;
+import snowblossom.proto.RequestAddress;
+import snowblossom.proto.TransactionHashList;
 import snowblossom.trie.proto.TrieNode;
 import io.grpc.stub.StreamObserver;
 
@@ -261,6 +263,21 @@ public class SnowUserService extends UserServiceGrpc.UserServiceImplBase
     }
 
     observer.onNext(tx);
+    observer.onCompleted();
+  }
+
+  @Override
+  public void getMempoolTransactionList(RequestAddress req, StreamObserver<TransactionHashList> observer)
+  {
+    AddressSpecHash spec_hash = new AddressSpecHash(req.getAddressSpecHash());
+
+    TransactionHashList.Builder list = TransactionHashList.newBuilder();
+    for(ChainHash h : node.getMemPool().getTransactionsForAddress(spec_hash))
+    {
+      list.addTxHashes(h.getBytes());
+    }
+
+    observer.onNext( list.build());
     observer.onCompleted();
   }
 
