@@ -15,6 +15,9 @@ import java.util.Set;
 import com.google.common.collect.ImmutableSet;
 
 
+import org.junit.Assert;
+import java.util.List;
+
 public class AddressUtil
 {
   public static AddressSpecHash getHashForSpec(AddressSpec spec)
@@ -57,6 +60,22 @@ public class AddressUtil
         .setPublicKey(key_data)
         .build())
       .build();
+  }
+
+  public static AddressSpec getMultiSig(int required, List<WalletKeyPair> wkp_list)
+  {
+    AddressSpec.Builder addrspec = AddressSpec.newBuilder();
+    addrspec.setRequiredSigners(required);
+
+    Assert.assertTrue(required >= wkp_list.size());
+    for(WalletKeyPair wkp : wkp_list)
+    {
+      addrspec.addSigSpecs ( SigSpec.newBuilder()
+        .setSignatureType( wkp.getSignatureType() )
+        .setPublicKey ( wkp.getPublicKey() )
+        .build() );
+    }
+    return addrspec.build();
   }
   
   public static AddressSpec getSimpleSpecForKey(WalletKeyPair wkp)

@@ -147,9 +147,11 @@ public class SnowBlossomClient
 
   private File wallet_path;
   private WalletDatabase wallet_database;
+  private Config config;
 
   public SnowBlossomClient(Config config) throws Exception
   {
+    this.config = config;
     config.require("node_host");
 
     String host = config.get("node_host");
@@ -201,7 +203,7 @@ public class SnowBlossomClient
     else
     {
       logger.log(Level.WARNING, String.format("File %s does not exist, creating new wallet", db_file.getPath()));
-      wallet_database = makeNewDatabase();
+      wallet_database = WalletUtil.makeNewDatabase(config);
       saveWallet();
     }
 
@@ -246,31 +248,6 @@ public class SnowBlossomClient
 
 
   }
-
-  public WalletDatabase makeNewDatabase()
-  {
-    WalletDatabase.Builder builder = WalletDatabase.newBuilder();
-
-    for(int i=0;i<8; i++)
-    {
-      genNewKey(builder);
-    }
-
-    return builder.build();
-  }
-
-  public void genNewKey(WalletDatabase.Builder wallet_builder)
-  {
-
-    WalletKeyPair wkp = KeyUtil.generateWalletStandardECKey();
-
-    wallet_builder.addKeys(wkp);
-
-    AddressSpec claim = AddressUtil.getSimpleSpecForKey(wkp);
-
-    wallet_builder.addAddresses(claim);
-
-  } 
 
   public void showBalances()
   {
