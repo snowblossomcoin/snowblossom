@@ -20,11 +20,14 @@ import java.util.List;
 /**
  * Simple class that acts as an easy way to make a transaction input
  * from an output or trie node or whatever */
-public class TransactionBridge
+public class TransactionBridge implements Comparable<TransactionBridge>
 {
   public final TransactionOutput out;
   public final TransactionInput in;
   public final long value;
+
+  public boolean spent;
+  public boolean unconfirmed;
 
   public TransactionBridge(TrieNode node)
   {
@@ -68,6 +71,19 @@ public class TransactionBridge
         .setSrcTxOutIdx( out_idx)
         .build();
   }
+  public TransactionBridge(TransactionInput in)
+  {
+    spent=true;
+    this.in = in;
+
+    value=-1;
+    this.out=null;
+  }
+
+  public String getKeyString()
+  {
+    return in.toString();
+  }
 
   public static List<TransactionBridge> getConnections(Transaction tx)
   {
@@ -108,6 +124,24 @@ public class TransactionBridge
     this.value = value;
   }
 
+  public int compareTo(TransactionBridge o)
+  {
+    return in.toString().compareTo(o.in.toString());
+  }
 
+  public int hashCode()
+  {
+    return in.toString().hashCode();
+  }
+
+  public boolean equals(Object o)
+  {
+    if (o instanceof TransactionBridge)
+    {
+      TransactionBridge b = (TransactionBridge)o;
+      return in.equals(b.in);
+    }
+    return false;
+  }
 
 }
