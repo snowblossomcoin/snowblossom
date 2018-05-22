@@ -26,8 +26,10 @@ import java.util.Collection;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.TreeSet;
+import java.util.TreeMap;
 import java.io.PrintStream;
 import java.text.DecimalFormat;
+import java.util.Random;
 
 
 
@@ -143,19 +145,30 @@ public class TransactionUtil
     {
       needed_input += tx_out.getValue();
     }
-    
-    LinkedList<TransactionBridge> spendable_shuffle = new LinkedList<>();
-    spendable_shuffle.addAll(spendable);
 
-    Collections.shuffle(spendable_shuffle);
+    TreeMap<Double, TransactionBridge> spendable_map = new TreeMap<>();
+    Random rnd = new Random();
+    for(TransactionBridge br : spendable)
+    {
+      if (!br.spent)
+      {
+        double v=0.0;
+        if (br.unconfirmed) v=rnd.nextDouble();
+        else v=-rnd.nextDouble();
+
+        // Put confirmed first, so they are picked before
+        // anything uncomfirmed
+        spendable_map.put(v, br);
+      }
+    }
 
     HashSet<AddressSpecHash> needed_claims=new HashSet<>();
 
     LinkedList<TransactionInput> input_list = new LinkedList<>();
 
-    while((needed_input > 0) && (spendable_shuffle.size() > 0))
+    while((needed_input > 0) && (spendable_map.size() > 0))
     {
-      TransactionBridge br = spendable_shuffle.pop();
+      TransactionBridge br = spendable_map.pollFirstEntry().getValue();
       needed_input -= br.value;
 
       input_list.add(br.in);

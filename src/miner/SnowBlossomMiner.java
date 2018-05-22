@@ -121,12 +121,20 @@ public class SnowBlossomMiner
     }
   }
 
+  private ManagedChannel channel;
+
   private void subscribe()
     throws Exception
   {
+    if (channel != null)
+    {
+      channel.shutdownNow();
+      channel=null;
+    }
+
     String host = config.get("node_host");
     int port = config.getIntWithDefault("node_port", params.getDefaultPort());
-    ManagedChannel channel = ManagedChannelBuilder.forAddress(host, port).usePlaintext(true).build();
+    channel = ManagedChannelBuilder.forAddress(host, port).usePlaintext(true).build();
 
     asyncStub = UserServiceGrpc.newStub(channel);
     blockingStub = UserServiceGrpc.newBlockingStub(channel);
