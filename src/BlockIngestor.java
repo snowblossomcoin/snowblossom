@@ -12,7 +12,7 @@ import snowblossom.trie.HashUtils;
 import snowblossom.db.DB;
 import org.junit.Assert;
 
-
+import java.util.HashMap;
 import java.util.logging.Logger;
 import java.util.logging.Level;
 
@@ -41,6 +41,8 @@ public class BlockIngestor
 
   private PrintStream block_log;
 
+  private boolean tx_index=false;
+
 
   public BlockIngestor(SnowBlossomNode node)
     throws Exception
@@ -61,6 +63,8 @@ public class BlockIngestor
         chainhead.getHeader().getBlockHeight(), 
         new ChainHash(chainhead.getHeader().getSnowHash())));
     }
+
+    tx_index = node.getConfig().getBoolean("tx_index");
 
   }
 
@@ -98,6 +102,17 @@ public class BlockIngestor
     BlockSummary summary = getNewSummary(blk.getHeader(), prev_summary, node.getParams(), blk.getTransactionsCount() );
 
     Validation.deepBlockValidation(node, blk, prev_summary);
+
+    if (tx_index)
+    {
+      HashMap<ByteString, Transaction> tx_map = new HashMap<>();
+      for(Transaction tx : blk.getTransactionsList())
+      {
+        tx_map.put(tx.getTxHash(), tx);
+      }
+      db.getTransactionMap().putAll(tx_map);
+    }
+
 
     db.getBlockMap().put( blockhash.getBytes(), blk);
     db.getBlockSummaryMap().put( blockhash.getBytes(), summary);
