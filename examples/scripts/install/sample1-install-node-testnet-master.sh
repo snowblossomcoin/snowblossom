@@ -32,4 +32,3 @@ chmod 750 -R "$snowblossom_home/configs"
 cd "$snowblossom_home"
 $snowblossom_home/source/snowblossom/bazel-bin/SnowBlossomNode configs/node-testnet.conf
 EOF
-
