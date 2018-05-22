@@ -121,6 +121,7 @@ public class PeerLink implements StreamObserver<PeerMessage>
         {
           logger.log(Level.INFO, String.format("Peer has wrong name: %s", tip.getNetworkName()));
           close();
+          return;
         }
 
         BlockHeader header = tip.getHeader();
@@ -277,9 +278,12 @@ public class PeerLink implements StreamObserver<PeerMessage>
   
   public void writeMessage(PeerMessage msg)
   {
-    synchronized(sink)
+    if (!closed)
     {
-      sink.onNext(msg);
+      synchronized(sink)
+      {
+        sink.onNext(msg);
+      }
     }
   }
 

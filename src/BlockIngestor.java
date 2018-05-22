@@ -5,6 +5,7 @@ import com.google.protobuf.ByteString;
 import snowblossom.proto.Block;
 import snowblossom.proto.BlockSummary;
 import snowblossom.proto.BlockHeader;
+import snowblossom.proto.Transaction;
 
 import snowblossom.trie.HashUtils;
 
@@ -16,6 +17,9 @@ import java.util.logging.Logger;
 import java.util.logging.Level;
 
 import java.math.BigInteger;
+
+import java.io.PrintStream;
+import java.io.FileOutputStream;
 
 /**
  * This class takes in new blocks, validates them and stores them in the db.
@@ -35,12 +39,20 @@ public class BlockIngestor
 
   private LRUCache<ChainHash, Long> block_pull_map = new LRUCache<>(1000);
 
+  private PrintStream block_log;
+
 
   public BlockIngestor(SnowBlossomNode node)
+    throws Exception
   {
     this.node = node;
     this.db = node.getDB();
     this.params = node.getParams();
+
+    if (node.getConfig().isSet("block_log"))
+    {
+      block_log = new PrintStream(new FileOutputStream(node.getConfig().get("block_log"), true));
+    }
 
     chainhead = db.getBlockSummaryMap().get(HEAD);
     if (chainhead != null)
@@ -49,6 +61,7 @@ public class BlockIngestor
         chainhead.getHeader().getBlockHeight(), 
         new ChainHash(chainhead.getHeader().getSnowHash())));
     }
+
   }
 
   public boolean ingestBlock(Block blk)
@@ -117,6 +130,18 @@ public class BlockIngestor
 
 
     node.getPeerage().sendAllTips();
+
+    if (block_log != null)
+    {
+      block_log.println("-------------------------------------------------------------");
+      block_log.println("Block: " +  blk.getHeader().getBlockHeight() + " " + blockhash );
+      for(Transaction tx : blk.getTransactionsList())
+      {
+        TransactionUtil.prettyDisplayTx(tx, block_log, params);
+        block_log.println();
+      }
+    }
+
     return true;
 
   }

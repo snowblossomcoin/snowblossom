@@ -41,7 +41,7 @@ public class Peerage
 {
   public static final long REFRESH_LEARN_TIME = 4L * 3600L * 1000L; //4hr
   public static final long SAVE_PEER_TIME = 300L * 1000L; //5min
-  public static final long PEER_EXPIRE_TIME = 14L * 86400L * 1000L; // 14 days
+  public static final long PEER_EXPIRE_TIME = 1L * 86400L * 1000L; // 1 days
 
   private static final Logger logger = Logger.getLogger("snowblossom.peering");
 

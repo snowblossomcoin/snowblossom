@@ -79,6 +79,7 @@ public class SnowBlossomNode
   }
 
   private void loadWidgets()
+    throws Exception
   {
     ingestor = new BlockIngestor(this);
     forge = new BlockForge(this);
