@@ -56,5 +56,5 @@ public class NetworkParamsProd extends NetworkParams
   
   // Fill in hash of bitcoin block 523850 when it occurs, in hex replacing the zeros to start mainnet
   @Override
-  public ByteString getBlockZeroRemark() { return ByteString.copyFrom(new String("000000").getBytes()); }
+  public ByteString getBlockZeroRemark() { return ByteString.copyFrom(new String("00000000000000000019d1562bd02674302db7ddd6ccdb77be3e6daaa8eb8a51").getBytes()); }
 }
