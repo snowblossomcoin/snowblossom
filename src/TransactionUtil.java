@@ -272,7 +272,7 @@ public class TransactionUtil
     throws ValidationException
   {
     ChainHash tx_hash = new ChainHash(tx.getTxHash());
-    out.println("Transaction: " + tx_hash);
+    out.println("Transaction: " + tx_hash + " size: " + tx.toByteString().size());
     TreeSet<String> sign_set=new TreeSet<>();
     DecimalFormat df = new DecimalFormat("0.000000");
 
