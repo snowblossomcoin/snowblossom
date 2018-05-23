@@ -28,6 +28,7 @@ import java.util.Scanner;
 import java.util.List;
 import java.util.LinkedList;
 import java.net.URL;
+import java.util.HashSet;
 import java.util.Random;
 import java.net.InetAddress;
 
@@ -52,6 +53,7 @@ public class Peerage
   private Map<String, PeerInfo> peer_rumor_list;
 
   private ImmutableSet<String> self_peer_names;
+  private ImmutableList<PeerInfo> self_peer_info;
   
   public Peerage(SnowBlossomNode node)
   {
@@ -121,14 +123,14 @@ public class Peerage
       }
     }
 
-    for(int i=0; i<8; i++)
+    tip.addAllPeers(self_peer_info);
+    for(int i=0; i<4; i++)
     {
       if (peer_map.size() > 0)
       {
         tip.addPeers(peer_map.pollFirstEntry().getValue());
       }
     }
-    
    
     return tip.build();
   }
@@ -139,6 +141,20 @@ public class Peerage
     {
       return links.size();
     }
+  }
+
+  public int getEstimateUniqueNodes()
+  {
+    HashSet<ByteString> set = new HashSet<>();
+    synchronized(peer_rumor_list)
+    {
+      for(PeerInfo info : peer_rumor_list.values())
+      {
+        set.add(info.getNodeId());
+      }
+    }
+    return set.size();
+
   }
 
   private ImmutableList<PeerLink> getLinkList()
@@ -219,6 +235,7 @@ public class Peerage
   public void learnPeer(PeerInfo info)
   {
     if (info.getLearned() + PEER_EXPIRE_TIME < System.currentTimeMillis()) return;
+    if (info.getNodeId().size() > Globals.MAX_NODE_ID_SIZE) return; 
 
     synchronized(peer_rumor_list)
     {
@@ -339,6 +356,21 @@ public class Peerage
     }
   }
 
+  private ByteString getNodeId()
+  {
+    ByteString id = node.getDB().getSpecialMap().get("node_id");
+    if (id == null)
+    {
+      Random rnd = new Random();
+      byte[] b = new byte[Globals.MAX_NODE_ID_SIZE];
+      rnd.nextBytes(b);
+      id = ByteString.copyFrom(b);
+      node.getDB().getSpecialMap().put("node_id", id);
+    }
+
+    return id;
+  }
+
   private List<PeerInfo> getSelfPeers()
   {
     List<String> advertise_hosts= new LinkedList<>();
@@ -362,6 +394,8 @@ public class Peerage
       }
       catch(Throwable t){}
 
+      ByteString node_id = getNodeId();
+
       int port = node.getConfig().getInt("service_port");
       for(String host : advertise_hosts)
       {
@@ -370,6 +404,7 @@ public class Peerage
           .setPort(port)
           .setLearned(System.currentTimeMillis())
           .setVersion(Globals.VERSION)
+          .setNodeId(node_id)
           .build();
 
         self_peers.add(pi);
@@ -380,6 +415,7 @@ public class Peerage
 
 		}
     self_peer_names = ImmutableSet.copyOf(self_names);
+    self_peer_info = ImmutableList.copyOf(self_peers);
 
     return self_peers;
 		

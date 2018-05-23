@@ -119,7 +119,7 @@ public class PeerLink implements StreamObserver<PeerMessage>
         PeerChainTip tip = msg.getTip();
         if (!node.getParams().getNetworkName().equals(tip.getNetworkName()))
         {
-          logger.log(Level.INFO, String.format("Peer has wrong name: %s", tip.getNetworkName()));
+          logger.log(Level.FINE, String.format("Peer has wrong name: %s", tip.getNetworkName()));
           close();
           return;
         }

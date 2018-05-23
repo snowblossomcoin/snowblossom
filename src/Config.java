@@ -12,6 +12,15 @@ public abstract class Config
 
     public abstract String get(String key);
 
+    public String getWithDefault(String key, String def)
+    {
+      if (isSet(key))
+      {
+        return get(key);
+      }
+      return def;
+    }
+
     public void require(String key)
     {
       if(get(key) == null)

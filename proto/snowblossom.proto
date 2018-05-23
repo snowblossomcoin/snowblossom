@@ -179,6 +179,7 @@ message PeerInfo {
   int64 last_passed = 4;
   int64 learned = 5;
   string version = 6;
+  bytes node_id = 7;
 }
 
 message RequestBlock {
@@ -243,8 +244,8 @@ message NullRequest {
 message NodeStatus {
   int32 mem_pool_size = 1;
   int32 connected_peers = 2;
-
   BlockSummary head_summary = 3;
+  int32 estimated_nodes = 4;
 }
 
 // -------------------------------------------------------------------

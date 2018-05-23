@@ -38,6 +38,8 @@ public class Globals
   public static final int MAX_BLOCK_SIZE = 3800000;
   public static final int MAX_TX_SIZE    = 1000000;
 
+  public static final int MAX_NODE_ID_SIZE = 8;
+
 
   public static void addCryptoProvider()
   {
