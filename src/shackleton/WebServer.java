@@ -137,6 +137,7 @@ public class WebServer
     out.println("<pre>");
     out.println("mem_pool_size: " + node_status.getMemPoolSize());
     out.println("connected_peers: " + node_status.getConnectedPeers());
+    out.println("estimated_nodes: " + node_status.getEstimatedNodes());
     out.println("</pre>");
 
     BlockSummary summary = node_status.getHeadSummary();
