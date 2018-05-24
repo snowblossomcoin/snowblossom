@@ -19,6 +19,7 @@ su - $SUDO_USER <<EOF
 
 # download source
 mkdir -p "$snowblossom_home/source" && cd "$snowblossom_home/source"
+rm -rf snowblossom
 git clone https://github.com/snowblossomcoin/snowblossom.git
 
 # build

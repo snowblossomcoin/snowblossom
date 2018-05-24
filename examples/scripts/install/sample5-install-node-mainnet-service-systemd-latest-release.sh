@@ -23,6 +23,7 @@ su - snowblossom <<EOF
 
 # download source code
 mkdir -p "$snowblossom_home/source" && cd "$snowblossom_home/source"
+rm -rf snowblossom
 git clone -b $release_tag https://github.com/snowblossomcoin/snowblossom.git
 
 # build snowblossom
