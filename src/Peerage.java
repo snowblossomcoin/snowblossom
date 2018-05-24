@@ -123,7 +123,10 @@ public class Peerage
       }
     }
 
-    tip.addAllPeers(self_peer_info);
+    if (self_peer_info != null)
+    {
+      tip.addAllPeers(self_peer_info);
+    }
     for(int i=0; i<4; i++)
     {
       if (peer_map.size() > 0)
