@@ -198,7 +198,6 @@ public class SnowBlossomClient
     if (db_file.exists())
     {
       wallet_database = WalletDatabase.parseFrom(new FileInputStream(db_file));
-
     }
     else
     {
@@ -261,42 +260,50 @@ public class SnowBlossomClient
       AddressSpecHash hash = AddressUtil.getHashForSpec(claim);
       String address = AddressUtil.getAddressString(params.getAddressPrefix(), hash);
       System.out.print("Address: " + address + " - ");
-      List<TransactionBridge> bridges = getSpendable(hash);
-
       long value_confirmed = 0;
       long value_unconfirmed = 0;
-      for(TransactionBridge b : bridges)
+      try
       {
-        
-        if (b.unconfirmed)
+        List<TransactionBridge> bridges = getSpendable(hash);
+
+        for(TransactionBridge b : bridges)
         {
+          
+          if (b.unconfirmed)
+          {
+            if (!b.spent)
+            {
+              value_unconfirmed += b.value;
+            }
+          }
+          else //confirmed
+          {
+            value_confirmed += b.value;
+            if (b.spent)
+            {
+              value_unconfirmed -= b.value;
+            }
+          }
           if (!b.spent)
           {
-            value_unconfirmed += b.value;
+            total_spendable += b.value;
           }
-        }
-        else //confirmed
-        {
-          value_confirmed += b.value;
-          if (b.spent)
-          {
-            value_unconfirmed -= b.value;
-          }
-        }
-        if (!b.spent)
-        {
-          total_spendable += b.value;
+
         }
 
+        double val_conf_d = (double) value_confirmed / (double) Globals.SNOW_VALUE;
+        double val_unconf_d = (double) value_unconfirmed / (double) Globals.SNOW_VALUE;
+        System.out.println(String.format(" %s (%s pending) in %d outputs", 
+          df.format(val_conf_d), df.format(val_unconf_d), bridges.size()));
+
+        total_confirmed += value_confirmed;
+        total_unconfirmed += value_unconfirmed;
       }
-      double val_conf_d = (double) value_confirmed / (double) Globals.SNOW_VALUE;
-      double val_unconf_d = (double) value_unconfirmed / (double) Globals.SNOW_VALUE;
-      System.out.println(String.format(" %s (%s pending) in %d outputs", 
-        df.format(val_conf_d), df.format(val_unconf_d), bridges.size()));
+      catch(Throwable e)
+      {
+        System.out.println(e);
+      }
 
-      total_confirmed += value_confirmed;
-      total_unconfirmed += value_unconfirmed;
-      
     }
     double total_conf_d = (double) total_confirmed / (double) Globals.SNOW_VALUE;
     double total_unconf_d = (double) total_unconfirmed / (double) Globals.SNOW_VALUE;
