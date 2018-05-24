@@ -1,6 +1,6 @@
 package snowblossom.db;
 
-import snowblossom.TimeRecord;
+import duckutil.TimeRecord;
 import com.google.protobuf.ByteString;
 import java.util.SortedMap;
 import java.util.Map;

@@ -1,4 +1,10 @@
 git_repository(
+  name = "duckutil",
+  remote = "https://github.com/fireduck64/duckutil",
+  tag = "1.1",
+)
+
+git_repository(
   name = "org_pubref_rules_protobuf",
   remote = "https://github.com/fireduck64/rules_protobuf",
   tag = "gnet-up3",

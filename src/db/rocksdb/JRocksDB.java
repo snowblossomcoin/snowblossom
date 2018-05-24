@@ -1,6 +1,6 @@
 package snowblossom.db.rocksdb;
 
-import snowblossom.Config;
+import duckutil.Config;
 
 import snowblossom.db.DB;
 import snowblossom.db.DBMap;

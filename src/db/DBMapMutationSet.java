@@ -3,7 +3,7 @@ package snowblossom.db;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
-import snowblossom.TimeRecord;
+import duckutil.TimeRecord;
 import com.google.protobuf.ByteString;
 import snowblossom.db.DBTooManyResultsException;
 

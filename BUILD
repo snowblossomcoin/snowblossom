@@ -67,6 +67,7 @@ java_library(
     "@bcprov//jar",
     "@junit_junit//jar",
     "@org_rocksdb_rocksdbjni//jar",
+    "@duckutil//:duckutil_lib",
     ],
 )
 
@@ -79,6 +80,7 @@ java_library(
     "@junit_junit//jar",
     "@commons_codec//jar",
     "@bcprov//jar",
+    "@duckutil//:duckutil_lib",
   ],
 )
 
@@ -91,6 +93,7 @@ java_library(
     "@junit_junit//jar",
     "@commons_codec//jar",
     "@bcprov//jar",
+    "@duckutil//:duckutil_lib",
   ],
 )
 
@@ -104,6 +107,7 @@ java_library(
     "@junit_junit//jar",
     "@commons_codec//jar",
     "@bcprov//jar",
+    "@duckutil//:duckutil_lib",
   ],
 )
 
@@ -269,6 +273,7 @@ java_test(
       ":snowblossomlib",
       "@commons_codec//jar",
       "@org_pubref_rules_protobuf//java:grpc_compiletime_deps",
+      "@duckutil//:duckutil_lib",
       "//:snowblossomprotolib",
   ],
 )
@@ -297,6 +302,7 @@ java_test(
       ":snowblossomlib",
       "@commons_codec//jar",
       "@org_pubref_rules_protobuf//java:grpc_compiletime_deps",
+      "@duckutil//:duckutil_lib",
       "//:snowblossomprotolib",
       ":minerlib",
       ":clientlib",

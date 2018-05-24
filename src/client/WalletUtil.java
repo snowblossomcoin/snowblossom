@@ -7,6 +7,7 @@ import com.google.common.collect.ImmutableList;
 import java.util.logging.Logger;
 import java.util.logging.Level;
 
+import duckutil.Config;
 
 public class WalletUtil
 {

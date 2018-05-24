@@ -7,6 +7,8 @@ import java.util.Enumeration;
 import java.util.logging.Handler;
 import java.io.FileInputStream;
 
+import duckutil.Config;
+
 public class LogSetup
 {
   public static void setup(Config config)

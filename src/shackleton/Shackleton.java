@@ -1,7 +1,7 @@
 package snowblossom.shackleton;
 
-import snowblossom.Config;
-import snowblossom.ConfigFile;
+import duckutil.Config;
+import duckutil.ConfigFile;
 import snowblossom.Globals;
 import snowblossom.LogSetup;
 

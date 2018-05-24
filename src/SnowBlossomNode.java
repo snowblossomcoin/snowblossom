@@ -12,6 +12,9 @@ import java.util.logging.Logger;
 import java.util.logging.Level;
 import java.io.File;
 
+import duckutil.Config;
+import duckutil.ConfigFile;
+
 public class SnowBlossomNode
 {
   private static final Logger logger = Logger.getLogger("snowblossom.node");

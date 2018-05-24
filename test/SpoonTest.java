@@ -26,6 +26,8 @@ import snowblossom.proto.TransactionOutput;
 import snowblossom.proto.Transaction;
 import snowblossom.proto.BlockSummary;
 import com.google.common.collect.ImmutableList;
+import duckutil.ConfigMem;
+
 
 public class SpoonTest
 {

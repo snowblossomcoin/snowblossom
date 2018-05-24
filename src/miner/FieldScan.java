@@ -4,7 +4,7 @@ import snowblossom.NetworkParams;
 import snowblossom.SnowMerkleProof;
 import snowblossom.SnowFieldInfo;
 import snowblossom.proto.SnowPowProof;
-import snowblossom.Config;
+import duckutil.Config;
 
 import java.io.File;
 

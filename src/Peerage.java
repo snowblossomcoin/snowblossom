@@ -32,6 +32,8 @@ import java.util.HashSet;
 import java.util.Random;
 import java.net.InetAddress;
 
+import duckutil.Config;
+
 /**
  * Joe: Should I class that handles communicating with a bunch of peers be called the Peerage?
  * Tyler: Gossiper

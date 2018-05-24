@@ -19,6 +19,7 @@ import snowblossom.proto.SigSpec;
 
 import com.google.protobuf.ByteString;
 import com.google.common.collect.ImmutableList;
+import duckutil.TimeRecord;
 
 public class MemPoolTest
 {

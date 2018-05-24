@@ -18,7 +18,7 @@ import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
 import snowblossom.DaemonThreadFactory;
-import snowblossom.Config;
+import duckutil.Config;
 
 import snowblossom.proto.Block;
 import snowblossom.proto.BlockSummary;

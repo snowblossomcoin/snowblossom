@@ -20,6 +20,7 @@ import java.math.BigInteger;
 
 import java.io.PrintStream;
 import java.io.FileOutputStream;
+import duckutil.Config;
 
 /**
  * This class takes in new blocks, validates them and stores them in the db.

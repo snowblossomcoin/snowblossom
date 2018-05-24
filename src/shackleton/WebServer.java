@@ -1,6 +1,6 @@
 package snowblossom.shackleton;
 
-import snowblossom.Config;
+import duckutil.Config;
 import snowblossom.NetworkParams;
 import snowblossom.ChainHash;
 import snowblossom.AddressSpecHash;

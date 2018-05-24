@@ -11,6 +11,8 @@ import java.util.logging.Logger;
 import java.util.logging.Level;
 import java.math.BigInteger;
 
+import duckutil.Config;
+
 public abstract class NetworkParams
 {
 	private static final Logger logger = Logger.getLogger("snowblossom.blockchain");
