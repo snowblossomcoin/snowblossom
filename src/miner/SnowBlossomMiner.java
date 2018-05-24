@@ -15,25 +15,15 @@ import snowblossom.proto.SnowPowProof;
 import snowblossom.proto.SubmitReply;
 import snowblossom.proto.AddressSpec;
 import snowblossom.proto.WalletDatabase;
-import snowblossom.NetworkParams;
-import snowblossom.NetworkParamsProd;
-import snowblossom.NetworkParamsTestnet;
-import snowblossom.AddressSpecHash;
-import snowblossom.HexUtil;
-import snowblossom.ChainHash;
-import snowblossom.AddressUtil;
+import snowblossom.*;
 
 
 import java.util.logging.Logger;
 import java.util.logging.Level;
 import java.util.Random;
-import snowblossom.PowUtil;
-import snowblossom.Globals;
-import snowblossom.SnowMerkleProof;
 import snowblossom.trie.HashUtils;
 import duckutil.Config;
 import duckutil.ConfigFile;
-import snowblossom.DigestUtil;
 import com.google.protobuf.ByteString;
 import java.security.Security;
 import java.security.MessageDigest;
@@ -43,7 +33,7 @@ import java.io.FileInputStream;
 import java.util.LinkedList;
 import java.util.concurrent.atomic.AtomicLong;
 import java.text.DecimalFormat;
-import snowblossom.LogSetup;
+import java.math.BigInteger;
 
 public class SnowBlossomMiner
 {
@@ -197,7 +187,20 @@ public class SnowBlossomMiner
 
     DecimalFormat df=new DecimalFormat("0.0");
 
-    logger.info(String.format("Mining rate: %s/sec", df.format(rate)));
+    String block_time_report ="";
+    if (last_block_template != null)
+    {
+      BigInteger target = BlockchainUtil.targetBytesToBigInteger(last_block_template.getHeader().getTarget());
+
+      double diff = PowUtil.getDiffForTarget(target);
+
+      double block_time_sec = Math.pow(2.0, diff) / rate;
+      double hours = block_time_sec / 3600.0;
+      block_time_report = String.format("- at this rate %s hours per block", df.format(hours));
+    }
+
+
+    logger.info(String.format("Mining rate: %s/sec %s", df.format(rate),block_time_report));
 
     last_stats_time = now;
 

@@ -415,8 +415,8 @@ public class SnowBlossomClient
       if (!br.spent) spendable.add(br);
     }
     Collections.shuffle(spendable);
-    long min_send =  500000L;
-    long max_send = 5000000L;
+    long min_send =  50000L;
+    long max_send = 500000L;
     long send_delta = max_send - min_send;
     SplittableRandom rnd = new SplittableRandom();
     int output_count = 2;
@@ -426,7 +426,7 @@ public class SnowBlossomClient
       //Collections.shuffle(spendable);
 
       LinkedList<TransactionOutput> out_list = new LinkedList<>();
-      long fee = rnd.nextLong(5000);
+      long fee = rnd.nextLong(500);
       long needed_value = fee;
       for(int i=0; i< output_count; i++)
       {
