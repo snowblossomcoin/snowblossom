@@ -1,8 +1,15 @@
 git_repository(
   name = "duckutil",
   remote = "https://github.com/fireduck64/duckutil",
-  tag = "1.1",
+  tag = "1.2",
 )
+
+maven_jar(
+  name = "protobuf",
+  artifact = "com.google.protobuf:protobuf-java:3.5.1",
+  sha1 = "8c3492f7662fa1cbf8ca76a0f5eb1146f7725acd",
+)
+
 
 git_repository(
   name = "org_pubref_rules_protobuf",

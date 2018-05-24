@@ -129,6 +129,10 @@ public class SnowBlossomNode
     {
       db = new snowblossom.db.rocksdb.JRocksDB(config);    
     }
+    else if (db_type.equals("lobstack"))
+    {
+      db = new snowblossom.db.lobstack.LobstackDB(config);
+    }
     else
     {
       logger.log(Level.SEVERE, String.format("Unknown db_type: %s", db_type));
