@@ -116,6 +116,12 @@ public class SnowMerkleProof
 			RandomAccessFile deck_file = new RandomAccessFile(new File(path, base +".deck." + letter), "r");
 			FileChannel deck_channel = deck_file.getChannel();
 
+      long expected_len = snow_file.length() / h;
+      if (deck_file.length() != expected_len)
+      {
+        throw new java.io.IOException("Unexpected length on " + base +".deck." + letter);
+      }
+
 			deck_map.put(h, deck_channel);
 		}
 		deck_files = ImmutableMap.copyOf(deck_map);

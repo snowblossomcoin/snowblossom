@@ -9,7 +9,7 @@ import duckutil.Config;
 import java.io.File;
 
 import java.util.logging.Logger;
-import java.util.Random;
+import java.util.SplittableRandom;
 
 import java.util.Map;
 import java.util.SortedMap;
@@ -87,13 +87,11 @@ public class FieldScan
   private void checkField(int field_number, SnowMerkleProof proof)
     throws java.io.IOException
   {
-    Random rnd = new Random();
+    SplittableRandom rnd = new SplittableRandom();
 
-    // If the field ends up with more than 32 bits of words, just check one from
-    // the first part. meh.
-    long max = Math.min((long)Integer.MAX_VALUE, proof.getTotalWords());
+    long max = proof.getTotalWords();
 
-    long check = rnd.nextInt((int)max);
+    long check = rnd.nextLong(max);
     SnowPowProof p = proof.getProof(check);
 
     SnowFieldInfo info = params.getSnowFieldInfo(field_number);
