@@ -24,6 +24,8 @@ import java.util.Random;
 import snowblossom.trie.HashUtils;
 import duckutil.Config;
 import duckutil.ConfigFile;
+import duckutil.TimeRecord;
+import duckutil.TimeRecordAuto;
 import com.google.protobuf.ByteString;
 import java.security.Security;
 import java.security.MessageDigest;
@@ -34,6 +36,7 @@ import java.util.LinkedList;
 import java.util.concurrent.atomic.AtomicLong;
 import java.text.DecimalFormat;
 import java.math.BigInteger;
+import java.nio.ByteBuffer;
 
 public class SnowBlossomMiner
 {
@@ -77,6 +80,7 @@ public class SnowBlossomMiner
   private File snow_path;
 
   private AutoSnowFall auto_snow;
+  private TimeRecord time_record;
 
 
   public SnowBlossomMiner(Config config) throws Exception
@@ -97,6 +101,11 @@ public class SnowBlossomMiner
     if ((config.isSet("mine_to_address")) && (config.isSet("mine_to_wallet")))
     {
       throw new RuntimeException("Config must either specify mine_to_address or mine_to_wallet, not both");
+    }
+    if (config.getBoolean("display_timerecord"))
+    {
+      time_record = new TimeRecord();
+      TimeRecord.setSharedRecord(time_record);
     }
 
     int threads = config.getIntWithDefault("threads", 8);
@@ -217,6 +226,18 @@ public class SnowBlossomMiner
       }
     }
 
+    if (config.getBoolean("display_timerecord"))
+    {
+        
+      TimeRecord old = time_record;
+
+      time_record = new TimeRecord();
+      TimeRecord.setSharedRecord(time_record);
+
+      old.printReport(System.out);
+      
+    }
+
 
   }
 
@@ -241,16 +262,23 @@ public class SnowBlossomMiner
       Block b = last_block_template;
       if (b == null)
       {
-        Thread.sleep(100);
-        return;
+        try(TimeRecordAuto tra = new TimeRecordAuto("MinerThread.nullBlockSleep"))
+        {
+          Thread.sleep(100);
+          return;
+        }
       }
       if (b.getHeader().getTimestamp() + 75000 < System.currentTimeMillis())
       {
         logger.log(Level.WARNING, "Last block is old, not mining it");
         last_block_template = null;
       }
+
       byte[] nonce = new byte[Globals.NONCE_LENGTH];
-      rnd.nextBytes(nonce);
+      try(TimeRecordAuto tra = new TimeRecordAuto("MinerThread.rndNonce"))
+      {
+        rnd.nextBytes(nonce);
+      }
 
       // TODO, modify headers to put snow field in
       byte[] first_hash = PowUtil.hashHeaderBits(b.getHeader(), nonce, md);
@@ -267,11 +295,15 @@ public class SnowBlossomMiner
       }
 
       byte[] context = first_hash;
+      byte[] word_buff = new byte[SnowMerkle.HASH_LEN];
+      ByteBuffer word_bb = ByteBuffer.wrap(word_buff);
+
       for(int pass=0; pass<Globals.POW_LOOK_PASSES; pass++)
       {
+        word_bb.clear();
         long word_idx = PowUtil.getNextSnowFieldIndex(context, merkle_proof.getTotalWords(), md);
-        byte[] word = merkle_proof.readWord(word_idx);
-        context = PowUtil.getNextContext(context, word, md);
+        merkle_proof.readWord(word_idx, word_bb);
+        context = PowUtil.getNextContext(context, word_buff, md);
       }
 
 
@@ -297,13 +329,19 @@ public class SnowBlossomMiner
       
       byte[] first_hash = PowUtil.hashHeaderBits(b.getHeader(), nonce);
       byte[] context = first_hash;
+
+      byte[] word_buff = new byte[SnowMerkle.HASH_LEN];
+      ByteBuffer word_bb = ByteBuffer.wrap(word_buff);
+
       for(int pass=0; pass<Globals.POW_LOOK_PASSES; pass++)
       {
+        word_bb.clear();
+
         long word_idx = PowUtil.getNextSnowFieldIndex(context, merkle_proof.getTotalWords());
-        byte[] word = merkle_proof.readWord(word_idx);
+        merkle_proof.readWord(word_idx, word_bb);
         SnowPowProof proof = merkle_proof.getProof(word_idx);
         header.addPowProof(proof);
-        context = PowUtil.getNextContext(context, word);
+        context = PowUtil.getNextContext(context, word_buff);
       }
 
       byte[] found_hash = context;
@@ -325,7 +363,7 @@ public class SnowBlossomMiner
       while(!terminate)
       {
         boolean err=false;
-        try
+        try(TimeRecordAuto tra = new TimeRecordAuto("MinerThread.runPass"))
         {
           runPass();
         }
@@ -338,7 +376,7 @@ public class SnowBlossomMiner
         if (err)
         {
 
-          try
+          try(TimeRecordAuto tra = new TimeRecordAuto("MinerThread.errorSleep"))
           {
             Thread.sleep(5000);
           }

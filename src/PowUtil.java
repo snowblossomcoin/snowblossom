@@ -17,6 +17,7 @@ import java.util.logging.Logger;
 
 import java.text.DecimalFormat;
 import java.math.BigInteger;
+import duckutil.TimeRecordAuto;
 
 public class PowUtil
 {
@@ -30,25 +31,28 @@ public class PowUtil
   }
   public static byte[] hashHeaderBits(BlockHeader header, byte[] nonce, MessageDigest md)
   {
+    try(TimeRecordAuto tra = new TimeRecordAuto("PowUtil.hashHeaderBits"))
+    {
 
-    byte[] int_data = new byte[3*4 + 1*8];
-    ByteBuffer bb = ByteBuffer.wrap(int_data);
+      byte[] int_data = new byte[3*4 + 1*8];
+      ByteBuffer bb = ByteBuffer.wrap(int_data);
 
-    bb.putInt(header.getVersion());
-    bb.putInt(header.getBlockHeight());
-    bb.putLong(header.getTimestamp());
-    bb.putInt(header.getSnowField());
+      bb.putInt(header.getVersion());
+      bb.putInt(header.getBlockHeight());
+      bb.putLong(header.getTimestamp());
+      bb.putInt(header.getSnowField());
 
-    Assert.assertEquals(0, bb.remaining());
-    
-    md.update(nonce);
-    md.update(int_data);
-    md.update(header.getPrevBlockHash().toByteArray());
-    md.update(header.getMerkleRootHash().toByteArray());
-    md.update(header.getUtxoRootHash().toByteArray());
-    md.update(header.getTarget().toByteArray());
+      Assert.assertEquals(0, bb.remaining());
+      
+      md.update(nonce);
+      md.update(int_data);
+      md.update(header.getPrevBlockHash().toByteArray());
+      md.update(header.getMerkleRootHash().toByteArray());
+      md.update(header.getUtxoRootHash().toByteArray());
+      md.update(header.getTarget().toByteArray());
 
-    return md.digest();
+      return md.digest();
+    }
   }
 
   public static long getNextSnowFieldIndex(byte[] context, long word_count)
@@ -59,19 +63,22 @@ public class PowUtil
   }
   public static long getNextSnowFieldIndex(byte[] context, long word_count, MessageDigest md)
   {
-    md.update(context);
-    byte[] hash = md.digest();
-
-    byte[] longdata = new byte[8];
-
-    for(int i=1; i<8; i++)
+    try(TimeRecordAuto tra = new TimeRecordAuto("PowUtil.getNextSnowFieldIndex"))
     {
-      longdata[i] = hash[i];
-    }
-    ByteBuffer bb = ByteBuffer.wrap(longdata);
-    long v = bb.getLong();
+      md.update(context);
+      byte[] hash = md.digest();
 
-    return v % word_count;
+      byte[] longdata = new byte[8];
+
+      for(int i=1; i<8; i++)
+      {
+        longdata[i] = hash[i];
+      }
+      ByteBuffer bb = ByteBuffer.wrap(longdata);
+      long v = bb.getLong();
+
+      return v % word_count;
+    }
   }
 
   public static byte[] getNextContext(byte[] prev_context, byte[] found_data)
@@ -82,16 +89,23 @@ public class PowUtil
   }
   public static byte[] getNextContext(byte[] prev_context, byte[] found_data, MessageDigest md)
   {
-    md.update(prev_context);
-    md.update(found_data);
-    return md.digest();
+    try(TimeRecordAuto tra = new TimeRecordAuto("PowUtil.getNextContext"))
+    {
+      md.update(prev_context);
+      md.update(found_data);
+      return md.digest();
+    }
   }
 
   public static boolean lessThanTarget(byte[] found_hash, ByteString target)
   {
-    ByteString found = ByteString.copyFrom(found_hash,0, Globals.TARGET_LENGTH);
 
-    return (ByteStringComparator.compareStatic(found, target) < 0);
+    try(TimeRecordAuto tra = new TimeRecordAuto("PowUtil.lessThanTarget"))
+    {
+      ByteString found = ByteString.copyFrom(found_hash,0, Globals.TARGET_LENGTH);
+
+      return (ByteStringComparator.compareStatic(found, target) < 0);
+    }
 
   }
 

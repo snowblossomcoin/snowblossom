@@ -15,6 +15,7 @@ import java.security.MessageDigest;
 import org.junit.Assert;
 import com.google.common.collect.ImmutableMap;
 import snowblossom.trie.HashUtils;
+import duckutil.TimeRecordAuto;
 
 public class SnowMerkleProof
 {
@@ -131,24 +132,27 @@ public class SnowMerkleProof
   public SnowPowProof getProof(long word_index)
     throws java.io.IOException
   {
-    LinkedList<ByteString> partners = new LinkedList<ByteString>();
-
-    MessageDigest md;
-    try
+    try(TimeRecordAuto tra = new TimeRecordAuto("SnowMerkleProof.getProof"))
     {
-      md = MessageDigest.getInstance(Globals.SNOW_MERKLE_HASH_ALGO);
-    }
-    catch(java.security.NoSuchAlgorithmException e)
-    {
-      throw new RuntimeException( e );
-    }
-    getInnerProof(md, partners, word_index, 0, total_words);
+      LinkedList<ByteString> partners = new LinkedList<ByteString>();
 
-    SnowPowProof.Builder builder = SnowPowProof.newBuilder();
-    builder.setWordIdx(word_index);
-    builder.addAllMerkleComponent(partners);
+      MessageDigest md;
+      try
+      {
+        md = MessageDigest.getInstance(Globals.SNOW_MERKLE_HASH_ALGO);
+      }
+      catch(java.security.NoSuchAlgorithmException e)
+      {
+        throw new RuntimeException( e );
+      }
+      getInnerProof(md, partners, word_index, 0, total_words);
 
-    return builder.build();
+      SnowPowProof.Builder builder = SnowPowProof.newBuilder();
+      builder.setWordIdx(word_index);
+      builder.addAllMerkleComponent(partners);
+
+      return builder.build();
+    }
   }
 
   public long getTotalWords()
@@ -156,15 +160,18 @@ public class SnowMerkleProof
     return total_words;
   }
 
-  public byte[] readWord(long word_index)
+  public void readWord(long word_index, ByteBuffer bb)
     throws java.io.IOException
   {
-    long word_pos = word_index * SnowMerkle.HASH_LEN_LONG;
-    byte[] buff = new byte[SnowMerkle.HASH_LEN];
-    ByteBuffer bb = ByteBuffer.wrap(buff);
-    ChannelUtil.readFully(snow_file_channel, bb, word_pos);
+    try(TimeRecordAuto tra = new TimeRecordAuto("SnowMerkleProof.readWord"))
+    {
+      long word_pos = word_index * SnowMerkle.HASH_LEN_LONG;
+      //byte[] buff = new byte[SnowMerkle.HASH_LEN];
+      //ByteBuffer bb = ByteBuffer.wrap(buff);
+      ChannelUtil.readFully(snow_file_channel, bb, word_pos);
 
-    return buff;
+      //return buff;
+    }
   }
 
   /**
