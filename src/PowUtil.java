@@ -18,6 +18,7 @@ import java.util.logging.Logger;
 import java.text.DecimalFormat;
 import java.math.BigInteger;
 import duckutil.TimeRecordAuto;
+import duckutil.TimeRecord;
 
 public class PowUtil
 {
@@ -31,7 +32,7 @@ public class PowUtil
   }
   public static byte[] hashHeaderBits(BlockHeader header, byte[] nonce, MessageDigest md)
   {
-    try(TimeRecordAuto tra = new TimeRecordAuto("PowUtil.hashHeaderBits"))
+    try(TimeRecordAuto tra = TimeRecord.openAuto("PowUtil.hashHeaderBits"))
     {
 
       byte[] int_data = new byte[3*4 + 1*8];
@@ -63,7 +64,7 @@ public class PowUtil
   }
   public static long getNextSnowFieldIndex(byte[] context, long word_count, MessageDigest md)
   {
-    try(TimeRecordAuto tra = new TimeRecordAuto("PowUtil.getNextSnowFieldIndex"))
+    try(TimeRecordAuto tra = TimeRecord.openAuto("PowUtil.getNextSnowFieldIndex"))
     {
       md.update(context);
       byte[] hash = md.digest();
@@ -89,7 +90,7 @@ public class PowUtil
   }
   public static byte[] getNextContext(byte[] prev_context, byte[] found_data, MessageDigest md)
   {
-    try(TimeRecordAuto tra = new TimeRecordAuto("PowUtil.getNextContext"))
+    try(TimeRecordAuto tra = TimeRecord.openAuto("PowUtil.getNextContext"))
     {
       md.update(prev_context);
       md.update(found_data);
@@ -100,7 +101,7 @@ public class PowUtil
   public static boolean lessThanTarget(byte[] found_hash, ByteString target)
   {
 
-    try(TimeRecordAuto tra = new TimeRecordAuto("PowUtil.lessThanTarget"))
+    try(TimeRecordAuto tra = TimeRecord.openAuto("PowUtil.lessThanTarget"))
     {
       ByteString found = ByteString.copyFrom(found_hash,0, Globals.TARGET_LENGTH);
 

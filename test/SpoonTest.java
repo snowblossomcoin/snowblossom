@@ -248,6 +248,10 @@ public class SpoonTest
     config_map.put("mine_to_address", mine_to.toAddressString(new NetworkParamsRegtest()));
     config_map.put("snow_path", snow_path.getPath());
     config_map.put("network","spoon");
+    if (port % 2 == 1)
+    {
+      config_map.put("memfield","true");
+    }
 
     return new SnowBlossomMiner(new ConfigMem(config_map));
 

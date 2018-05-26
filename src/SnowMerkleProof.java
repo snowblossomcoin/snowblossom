@@ -16,6 +16,7 @@ import org.junit.Assert;
 import com.google.common.collect.ImmutableMap;
 import snowblossom.trie.HashUtils;
 import duckutil.TimeRecordAuto;
+import duckutil.TimeRecord;
 
 public class SnowMerkleProof
 {
@@ -92,13 +93,24 @@ public class SnowMerkleProof
 
   private final ImmutableMap<Long, FileChannel> deck_files;
   private final long total_words;
+  private final boolean memcache;
 
-  /**
-   * Only needed by miners
-   */
+  private byte[][] mem_buff;
+  public static final int MEM_BLOCK=1024*1024;
+
   public SnowMerkleProof(File path, String base)
     throws java.io.IOException
   {
+    this(path, base, false);
+  }
+  /**
+   * Only needed by miners
+   */
+  public SnowMerkleProof(File path, String base, boolean memcache)
+    throws java.io.IOException
+  {
+    this.memcache = memcache;
+
     snow_file = new RandomAccessFile(new File(path, base +".snow"), "r");
     snow_file_channel = snow_file.getChannel();
     
@@ -127,12 +139,18 @@ public class SnowMerkleProof
 		}
 		deck_files = ImmutableMap.copyOf(deck_map);
 
+    if (memcache)
+    {
+      mem_buff = new byte[(int)(snow_file.length() / MEM_BLOCK)][];
+      
+    }
+
   }
 
   public SnowPowProof getProof(long word_index)
     throws java.io.IOException
   {
-    try(TimeRecordAuto tra = new TimeRecordAuto("SnowMerkleProof.getProof"))
+    try(TimeRecordAuto tra = TimeRecord.openAuto("SnowMerkleProof.getProof"))
     {
       LinkedList<ByteString> partners = new LinkedList<ByteString>();
 
@@ -163,9 +181,27 @@ public class SnowMerkleProof
   public void readWord(long word_index, ByteBuffer bb)
     throws java.io.IOException
   {
-    try(TimeRecordAuto tra = new TimeRecordAuto("SnowMerkleProof.readWord"))
+    try(TimeRecordAuto tra = TimeRecord.openAuto("SnowMerkleProof.readWord"))
     {
       long word_pos = word_index * SnowMerkle.HASH_LEN_LONG;
+      if (memcache)
+      {
+        int block = (int)(word_pos / MEM_BLOCK);
+        int off_in_block = (int)(word_pos % MEM_BLOCK);
+        if (mem_buff[block] == null)
+        {
+          try(TimeRecordAuto tra2 = TimeRecord.openAuto("SnowMerkleProof.readBlock"))
+          {
+            byte[] block_data = new byte[MEM_BLOCK];
+            long file_offset = (long) block * (long) MEM_BLOCK;
+            ChannelUtil.readFully(snow_file_channel, ByteBuffer.wrap(block_data), file_offset);
+            mem_buff[block] = block_data;
+          }
+        }
+        bb.put(mem_buff[block], off_in_block, SnowMerkle.HASH_LEN);
+        return;
+        
+      }
       //byte[] buff = new byte[SnowMerkle.HASH_LEN];
       //ByteBuffer bb = ByteBuffer.wrap(buff);
       ChannelUtil.readFully(snow_file_channel, bb, word_pos);

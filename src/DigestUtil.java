@@ -7,6 +7,7 @@ import java.util.List;
 
 import org.junit.Assert;
 import duckutil.TimeRecordAuto;
+import duckutil.TimeRecord;
 
 
 public class DigestUtil
@@ -14,7 +15,7 @@ public class DigestUtil
 
   public static MessageDigest getMD()
   {
-    try(TimeRecordAuto tra = new TimeRecordAuto("MessageDigest.getMD"))
+    try(TimeRecordAuto tra = TimeRecord.openAuto("MessageDigest.getMD"))
     {
       MessageDigest md = MessageDigest.getInstance(Globals.BLOCKCHAIN_HASH_ALGO);
       return md;
@@ -26,7 +27,7 @@ public class DigestUtil
   }
   public static MessageDigest getMDAddressSpec()
   {
-    try(TimeRecordAuto tra = new TimeRecordAuto("MessageDigest.getMDAddressSpec"))
+    try(TimeRecordAuto tra = TimeRecord.openAuto("MessageDigest.getMDAddressSpec"))
     {
       MessageDigest md = MessageDigest.getInstance(Globals.ADDRESS_SPEC_HASH_ALGO);
       return md;

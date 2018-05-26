@@ -246,6 +246,8 @@ public class SnowBlossomMiner
     Random rnd;
     MessageDigest md = DigestUtil.getMD();
 
+    byte[] word_buff = new byte[SnowMerkle.HASH_LEN];
+    ByteBuffer word_bb = ByteBuffer.wrap(word_buff);
     SnowMerkleProof merkle_proof;
     int proof_field;
 
@@ -262,7 +264,7 @@ public class SnowBlossomMiner
       Block b = last_block_template;
       if (b == null)
       {
-        try(TimeRecordAuto tra = new TimeRecordAuto("MinerThread.nullBlockSleep"))
+        try(TimeRecordAuto tra = TimeRecord.openAuto("MinerThread.nullBlockSleep"))
         {
           Thread.sleep(100);
           return;
@@ -275,7 +277,7 @@ public class SnowBlossomMiner
       }
 
       byte[] nonce = new byte[Globals.NONCE_LENGTH];
-      try(TimeRecordAuto tra = new TimeRecordAuto("MinerThread.rndNonce"))
+      try(TimeRecordAuto tra = TimeRecord.openAuto("MinerThread.rndNonce"))
       {
         rnd.nextBytes(nonce);
       }
@@ -295,15 +297,17 @@ public class SnowBlossomMiner
       }
 
       byte[] context = first_hash;
-      byte[] word_buff = new byte[SnowMerkle.HASH_LEN];
-      ByteBuffer word_bb = ByteBuffer.wrap(word_buff);
 
-      for(int pass=0; pass<Globals.POW_LOOK_PASSES; pass++)
+      try(TimeRecordAuto tra = null)
       {
-        word_bb.clear();
-        long word_idx = PowUtil.getNextSnowFieldIndex(context, merkle_proof.getTotalWords(), md);
-        merkle_proof.readWord(word_idx, word_bb);
-        context = PowUtil.getNextContext(context, word_buff, md);
+        for(int pass=0; pass<Globals.POW_LOOK_PASSES; pass++)
+        {
+          long word_idx;
+          word_bb.clear();
+          word_idx = PowUtil.getNextSnowFieldIndex(context, merkle_proof.getTotalWords(), md);
+          merkle_proof.readWord(word_idx, word_bb);
+          context = PowUtil.getNextContext(context, word_buff, md);
+        }
       }
 
 
@@ -329,9 +333,6 @@ public class SnowBlossomMiner
       
       byte[] first_hash = PowUtil.hashHeaderBits(b.getHeader(), nonce);
       byte[] context = first_hash;
-
-      byte[] word_buff = new byte[SnowMerkle.HASH_LEN];
-      ByteBuffer word_bb = ByteBuffer.wrap(word_buff);
 
       for(int pass=0; pass<Globals.POW_LOOK_PASSES; pass++)
       {
@@ -363,7 +364,7 @@ public class SnowBlossomMiner
       while(!terminate)
       {
         boolean err=false;
-        try(TimeRecordAuto tra = new TimeRecordAuto("MinerThread.runPass"))
+        try(TimeRecordAuto tra = TimeRecord.openAuto("MinerThread.runPass"))
         {
           runPass();
         }
@@ -376,7 +377,7 @@ public class SnowBlossomMiner
         if (err)
         {
 
-          try(TimeRecordAuto tra = new TimeRecordAuto("MinerThread.errorSleep"))
+          try(TimeRecordAuto tra = TimeRecord.openAuto("MinerThread.errorSleep"))
           {
             Thread.sleep(5000);
           }

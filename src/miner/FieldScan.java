@@ -52,7 +52,7 @@ public class FieldScan
       {
         try
         {
-          SnowMerkleProof proof = new SnowMerkleProof(field_folder, name);
+          SnowMerkleProof proof = new SnowMerkleProof(field_folder, name, config.getBoolean("memfield"));
 
           for(int i = 0; i<16; i++)
           {
@@ -143,15 +143,15 @@ public class FieldScan
       return null;
     }
 
+    if (config.getBoolean("memfield"))
+    {
+      return getFieldProof(f);
+    }
 
     String name = params.getFieldSeeds().get(f);
     File field_folder = new File(path, name);
 
     return new SnowMerkleProof(field_folder, name);
-
-
-
-
   }
 
 }
