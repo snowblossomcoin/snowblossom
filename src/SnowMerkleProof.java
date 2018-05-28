@@ -18,8 +18,14 @@ import snowblossom.trie.HashUtils;
 import duckutil.TimeRecordAuto;
 import duckutil.TimeRecord;
 
+import java.util.logging.Logger;
+import java.util.logging.Level;
+
+
 public class SnowMerkleProof
 {
+  private static final Logger logger = Logger.getLogger("snowblossom.miner");
+
   public static boolean checkProof(SnowPowProof proof, ByteString expected_merkle_root, long snow_field_size)
   {
     long target_index = proof.getWordIdx();
@@ -95,8 +101,10 @@ public class SnowMerkleProof
   private final long total_words;
   private final boolean memcache;
 
+
   private byte[][] mem_buff;
   public static final int MEM_BLOCK=1024*1024;
+  
 
   public SnowMerkleProof(File path, String base)
     throws java.io.IOException
@@ -147,6 +155,12 @@ public class SnowMerkleProof
 
   }
 
+  public long getLength()
+    throws java.io.IOException
+  {
+    return snow_file.length();
+  }
+
   public SnowPowProof getProof(long word_index)
     throws java.io.IOException
   {
@@ -178,9 +192,17 @@ public class SnowMerkleProof
     return total_words;
   }
 
+  public void readChunk(long offset, ByteBuffer bb)
+    throws java.io.IOException
+  {
+    ChannelUtil.readFully(snow_file_channel, bb, offset);
+
+  }
+
   public void readWord(long word_index, ByteBuffer bb)
     throws java.io.IOException
   {
+
     try(TimeRecordAuto tra = TimeRecord.openAuto("SnowMerkleProof.readWord"))
     {
       long word_pos = word_index * SnowMerkle.HASH_LEN_LONG;
@@ -274,7 +296,6 @@ public class SnowMerkleProof
         partners.add(ByteString.copyFrom(buff));
         return null;
       }
-      
 
       long mid = (start + end) / 2;
 

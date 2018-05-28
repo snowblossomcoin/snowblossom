@@ -118,6 +118,7 @@ public class SnowBlossomMiner
     {
       new MinerThread().start();
     }
+    //new Sweeper(this).start();
   }
 
   private ManagedChannel channel;
@@ -237,8 +238,16 @@ public class SnowBlossomMiner
       old.printReport(System.out);
       
     }
+  }
 
+  public Block getBlockTemplate()
+  {
+    return last_block_template;
+  }
 
+  public FieldScan getFieldScan()
+  {
+    return field_scan;
   }
 
   public class MinerThread extends Thread
