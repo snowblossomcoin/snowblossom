@@ -16,6 +16,4 @@ public class NetUtil
     return line;
   }
 
-
-
 }
