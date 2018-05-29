@@ -24,10 +24,8 @@ import snowblossom.proto.PeerList;
 
 import com.google.protobuf.ByteString;
 
-import java.util.Scanner;
 import java.util.List;
 import java.util.LinkedList;
-import java.net.URL;
 import java.util.HashSet;
 import java.util.Random;
 import java.net.InetAddress;
@@ -388,13 +386,13 @@ public class Peerage
     {
 
       try{
-        String ipv4_host = getUrlLine("http://ipv4-lookup.snowblossom.org/myip");
+        String ipv4_host = NetUtil.getUrlLine("http://ipv4-lookup.snowblossom.org/myip");
         advertise_hosts.add(ipv4_host);
       }
       catch(Throwable t){}
 
       try{
-        String ipv6_host = getUrlLine("http://ipv6-lookup.snowblossom.org/myip");
+        String ipv6_host = NetUtil.getUrlLine("http://ipv6-lookup.snowblossom.org/myip");
         advertise_hosts.add(ipv6_host);
       }
       catch(Throwable t){}
@@ -427,15 +425,6 @@ public class Peerage
   }
 
 
-  private static String getUrlLine(String url)
-    throws java.io.IOException
-  {
-    URL u = new URL(url);
-    Scanner scan =new Scanner(u.openStream());
-    String line = scan.nextLine();
-    scan.close();
-    return line;
-  }
   
 
 }

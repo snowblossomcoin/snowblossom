@@ -49,7 +49,7 @@ public abstract class NetworkParams
   /**
    * Use NTP
    */
-  public long getMaxClockSkewMs() { return 50; }
+  public long getMaxClockSkewMs() { return 45000; }
 
   public abstract List<String> getSeedNodes();
   public int getDefaultPort() { return 2338; }

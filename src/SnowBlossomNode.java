@@ -96,6 +96,7 @@ public class SnowBlossomNode
   private void startWidgets()
   {
     peerage.start();
+    new TimeWatcher().start();
   }
 
   private void startServices()
