@@ -93,6 +93,14 @@ public class PeerLink implements StreamObserver<PeerMessage>
     close();
   }
 
+
+  /**
+   * This peer syncing is ever so much fun.  The basic contract is that each side sends its
+   * PeerChainTip on connect, on each new block, and every 10 seconds.  Then the other side has to 
+   * ask if it is interested in anything.
+   *
+   * So when a side receives a tip, it decides if it wants what the peer is selling.
+   */
   @Override
   public void onNext(PeerMessage msg)
   {
@@ -136,6 +144,7 @@ public class PeerLink implements StreamObserver<PeerMessage>
       }
       else if (msg.hasReqBlock())
       {
+        // Other side is asking for a block
         ChainHash hash = new ChainHash(msg.getReqBlock().getBlockHash());
         Block blk = node.getDB().getBlockMap().get(hash.getBytes());
         if (blk != null)
@@ -145,29 +154,40 @@ public class PeerLink implements StreamObserver<PeerMessage>
       }
       else if (msg.hasBlock())
       {
+        // Getting a block, we probably asked for it.  See if we can eat it.
         Block blk = msg.getBlock();
-        if (node.getBlockIngestor().ingestBlock(blk))
-        { // think about getting more blocks
-          int next = blk.getHeader().getBlockHeight()+1;
-          synchronized(peer_block_map)
-          {
-            if (peer_block_map.containsKey(next))
+        try
+        {
+          if (node.getBlockIngestor().ingestBlock(blk))
+          { // we could eat it, think about getting more blocks
+            int next = blk.getHeader().getBlockHeight()+1;
+            synchronized(peer_block_map)
             {
-              ChainHash target = peer_block_map.get(next);
-
-              if (node.getBlockIngestor().reserveBlock(target))
+              if (peer_block_map.containsKey(next))
               {
-                writeMessage( PeerMessage.newBuilder()
-                  .setReqBlock(
-                    RequestBlock.newBuilder().setBlockHash(target.getBytes()).build())
-                  .build());
+                ChainHash target = peer_block_map.get(next);
+
+                if (node.getBlockIngestor().reserveBlock(target))
+                {
+                  writeMessage( PeerMessage.newBuilder()
+                    .setReqBlock(
+                      RequestBlock.newBuilder().setBlockHash(target.getBytes()).build())
+                    .build());
+                }
               }
             }
           }
         }
+        catch(ValidationException ve)
+        {
+          logger.info("Got a block %s that didn't validate - closing link");
+          close();
+          throw(ve);
+        }
       }
       else if (msg.hasReqHeader())
-      {
+      { 
+        // Peer is asking for a block header
         int height = msg.getReqHeader().getBlockHeight();
         ChainHash hash = node.getDB().getBlockHashAtHeight(height);
         if (hash != null)
@@ -178,6 +198,7 @@ public class PeerLink implements StreamObserver<PeerMessage>
       }
       else if (msg.hasHeader())
       {
+        // We got a header, probably one we asked for
         BlockHeader header = msg.getHeader();
         considerBlockHeader(header);
       }
@@ -210,7 +231,7 @@ public class PeerLink implements StreamObserver<PeerMessage>
     {
       int height = header.getBlockHeight();
       if ((height == 0) || (node.getDB().getBlockSummaryMap().get(header.getPrevBlockHash())!=null))
-      { //get this block 
+      { // but we have the prev block - get this block 
         if (node.getBlockIngestor().reserveBlock(new ChainHash(header.getSnowHash())))
         {
           writeMessage( PeerMessage.newBuilder()
@@ -220,7 +241,7 @@ public class PeerLink implements StreamObserver<PeerMessage>
         }
       }
       else
-      { //get more headers
+      { //get more headers, still in the woods
         int next = header.getBlockHeight() - 1;
         
         if (next >= 0)
