@@ -1,14 +1,6 @@
 package snowblossom.shackleton;
 
 import duckutil.Config;
-import snowblossom.NetworkParams;
-import snowblossom.ChainHash;
-import snowblossom.AddressSpecHash;
-import snowblossom.AddressUtil;
-import snowblossom.Globals;
-import snowblossom.BlockchainUtil;
-import snowblossom.PowUtil;
-import snowblossom.LRUCache;
 import java.util.Map;
 
 import java.net.InetSocketAddress;
@@ -32,8 +24,7 @@ import snowblossom.proto.BlockHeader;
 import snowblossom.proto.BlockSummary;
 import snowblossom.proto.RequestBlockHeader;
 
-import snowblossom.TransactionUtil;
-import snowblossom.ValidationException;
+import snowblossom.*;
 
 public class WebServer
 {
@@ -132,6 +123,7 @@ public class WebServer
 
   private void displayStatus(PrintStream out)
   {
+    NetworkParams params = shackleton.getParams();
     NodeStatus node_status = shackleton.getStub().getNodeStatus(nr());
     out.println("<h2>Node Status</h2>");
     out.println("<pre>");
@@ -145,17 +137,25 @@ public class WebServer
     out.println("<h2>Chain Status</h2>");
     out.println("<pre>");
 
+    SnowFieldInfo sf = params.getSnowFieldInfo(summary.getActivatedField());
+
+
     out.println("work_sum: " + summary.getWorkSum());
     out.println("blocktime_average_ms: " + summary.getBlocktimeAverageMs());
-    out.println("activated_field: " + summary.getActivatedField());
+    out.println("activated_field: " + summary.getActivatedField() + " " + sf.getName());
     out.println("block_height: " + header.getBlockHeight());
     out.println("total_transactions: " + summary.getTotalTransactions());
 
+
+
     double avg_diff = PowUtil.getDiffForTarget(BlockchainUtil.readInteger(summary.getTargetAverage()));
     double target_diff = PowUtil.getDiffForTarget(BlockchainUtil.targetBytesToBigInteger(header.getTarget()));
-    DecimalFormat df =new DecimalFormat("0.00");
+    double block_time_sec = summary.getBlocktimeAverageMs() / 1000.0 ;
+    double estimated_hash = Math.pow(2.0, target_diff) / block_time_sec / 1e6;
+    DecimalFormat df =new DecimalFormat("0.000");
 
     out.println(String.format("difficulty (avg): %s (%s)", df.format(target_diff), df.format(avg_diff)));
+    out.println(String.format("estimated network hash rate: %s Mh/s", df.format(estimated_hash)));
 
     out.println("</pre>");
 
