@@ -200,6 +200,7 @@ message SubmitReply {
 message SubscribeBlockTemplateRequest {
   bytes pay_reward_to_spec_hash = 1;
   int64 refresh_delay = 2; // time in ms to get updated block templates of the same block number
+  CoinbaseExtras extras = 3;
 }
 
 message GetUTXONodeRequest {

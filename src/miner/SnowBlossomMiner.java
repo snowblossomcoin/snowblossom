@@ -15,6 +15,7 @@ import snowblossom.proto.SnowPowProof;
 import snowblossom.proto.SubmitReply;
 import snowblossom.proto.AddressSpec;
 import snowblossom.proto.WalletDatabase;
+import snowblossom.proto.CoinbaseExtras;
 import snowblossom.*;
 
 
@@ -141,8 +142,18 @@ public class SnowBlossomMiner
 
     AddressSpecHash to_addr = getMineToAddress();
 
-    asyncStub.subscribeBlockTemplate(SubscribeBlockTemplateRequest.newBuilder()
-      .setPayRewardToSpecHash(to_addr.getBytes()).build(), new BlockTemplateEater());
+    CoinbaseExtras.Builder extras = CoinbaseExtras.newBuilder();
+    if (config.isSet("remark"))
+    {
+      extras.setRemarks(ByteString.copyFrom(config.get("remark").getBytes()));
+    }
+
+    asyncStub.subscribeBlockTemplate(
+      SubscribeBlockTemplateRequest.newBuilder()
+        .setPayRewardToSpecHash(to_addr.getBytes())
+        .setExtras(extras.build())
+        .build(), 
+        new BlockTemplateEater());
     logger.info("Subscribed to blocks");  
 
   }
@@ -392,7 +403,6 @@ public class SnowBlossomMiner
           }
           catch(Throwable t){}
         }
-
 
       }
 

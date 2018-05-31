@@ -16,6 +16,7 @@ import snowblossom.proto.RequestBlockHeader;
 import snowblossom.proto.RequestTransaction;
 import snowblossom.proto.RequestAddress;
 import snowblossom.proto.TransactionHashList;
+import snowblossom.proto.CoinbaseExtras;
 import snowblossom.trie.proto.TrieNode;
 import io.grpc.stub.StreamObserver;
 
@@ -60,8 +61,7 @@ public class SnowUserService extends UserServiceGrpc.UserServiceImplBase
     logger.info("Subscribe block template called");
     AddressSpecHash pay_to = new AddressSpecHash(req.getPayRewardToSpecHash());
 
-
-    BlockSubscriberInfo info = new BlockSubscriberInfo(pay_to, responseObserver);
+    BlockSubscriberInfo info = new BlockSubscriberInfo(pay_to, req.getExtras(), responseObserver);
 
     synchronized(block_subscribers)
     {
@@ -73,9 +73,8 @@ public class SnowUserService extends UserServiceGrpc.UserServiceImplBase
 
   protected void sendBlock(BlockSubscriberInfo info)
   {
-    Block block = node.getBlockForge().getBlockTemplate(info.mine_to);
+    Block block = node.getBlockForge().getBlockTemplate(info.mine_to, info.extras);
     info.sink.onNext(block);
-
   }
 
   /**
@@ -288,12 +287,14 @@ public class SnowUserService extends UserServiceGrpc.UserServiceImplBase
   class BlockSubscriberInfo
   {
     final AddressSpecHash mine_to;
+    final CoinbaseExtras extras;
     final StreamObserver<Block> sink;
 
-    public BlockSubscriberInfo(AddressSpecHash mine_to, StreamObserver<Block> sink)
+    public BlockSubscriberInfo(AddressSpecHash mine_to, CoinbaseExtras extras, StreamObserver<Block> sink)
     {
       this.mine_to = mine_to;
       this.sink = sink;
+      this.extras = extras;
     }
   }
 

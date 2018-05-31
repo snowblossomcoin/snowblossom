@@ -32,7 +32,7 @@ public class BlockForge
     this.params = node.getParams();
   }
 
-  public Block getBlockTemplate(AddressSpecHash mine_to)
+  public Block getBlockTemplate(AddressSpecHash mine_to, CoinbaseExtras extras)
   {
     BlockSummary head = node.getBlockIngestor().getHead();
 
@@ -78,7 +78,7 @@ public class BlockForge
          fee_sum += Validation.deepTransactionCheck(tx, utxo_buffer);
       }
 
-      Transaction coinbase = buildCoinbase( header_builder.getBlockHeight(), fee_sum, mine_to);
+      Transaction coinbase = buildCoinbase( header_builder.getBlockHeight(), fee_sum, mine_to, extras);
       Validation.deepTransactionCheck(coinbase, utxo_buffer);
 
       block_builder.addTransactions(coinbase);
@@ -104,7 +104,7 @@ public class BlockForge
 
   }
 
-  private Transaction buildCoinbase(int height, long fees, AddressSpecHash mine_to)
+  private Transaction buildCoinbase(int height, long fees, AddressSpecHash mine_to, CoinbaseExtras extras)
   {
     Transaction.Builder tx = Transaction.newBuilder();
 
@@ -113,6 +113,7 @@ public class BlockForge
     inner.setIsCoinbase(true);
 
     CoinbaseExtras.Builder ext = CoinbaseExtras.newBuilder();
+    ext.mergeFrom(extras);
 
     if (height == 0)
     {
