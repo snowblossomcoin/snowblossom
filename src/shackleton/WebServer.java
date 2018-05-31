@@ -19,6 +19,7 @@ import snowblossom.proto.Block;
 import snowblossom.proto.RequestBlock;
 import snowblossom.proto.RequestTransaction;
 import snowblossom.proto.Transaction;
+import snowblossom.proto.TransactionInner;
 import snowblossom.proto.NodeStatus;
 import snowblossom.proto.BlockHeader;
 import snowblossom.proto.BlockSummary;
@@ -171,7 +172,7 @@ public class WebServer
     out.println("<h2>Recent Blocks</h2>");
     int min = Math.max(0, header.getBlockHeight()-25);
     out.println("<table border='0' cellspacing='0'>");
-    out.println("<thead><tr><th>Height</th><th>Hash</th><th>Transactions</th><th>Size</th></tr></thead>");
+    out.println("<thead><tr><th>Height</th><th>Hash</th><th>Transactions</th><th>Size</th><th>Miner</th></tr></thead>");
     for(int h=header.getBlockHeight(); h>=min; h--)
     {
       BlockHeader blk_head = shackleton.getStub().getBlockHeader(RequestBlockHeader.newBuilder().setBlockHeight(h).build());
@@ -191,6 +192,8 @@ public class WebServer
         return block_summary_lines.get(hash);
       }
     }
+      
+    NetworkParams params = shackleton.getParams();
 
     int tx_count = 0;
     int size =0;
@@ -200,12 +203,22 @@ public class WebServer
     tx_count = blk.getTransactionsCount();
     size = blk.toByteString().size();
 
+    TransactionInner inner = TransactionUtil.getInner(blk.getTransactions(0));
+
+    String miner_addr = AddressUtil.getAddressString( params.getAddressPrefix(), new AddressSpecHash(inner.getOutputs(0).getRecipientSpecHash()));
+    String remark = HexUtil.getSafeString(inner.getCoinbaseExtras().getRemarks());
+    String miner = miner_addr;
+    if (remark.length() > 0)
+    {
+      miner = miner_addr + " - " + remark;
+    }
+
     
 
-    String s = String.format("<tr><td>%d</td><td>%s %s</td><td>%d</td><td>%d</td></tr>", 
+    String s = String.format("<tr><td>%d</td><td>%s %s</td><td>%d</td><td>%d</td><td>%s</td></tr>", 
         blk.getHeader().getBlockHeight(), 
         hash.toString(), link,
-        tx_count, size);
+        tx_count, size, miner);
 
     synchronized(block_summary_lines)
     {
