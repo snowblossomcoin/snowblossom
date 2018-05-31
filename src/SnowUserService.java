@@ -223,6 +223,8 @@ public class SnowUserService extends UserServiceGrpc.UserServiceImplBase
       .setConnectedPeers(node.getPeerage().getConnectedPeerCount())
       .setHeadSummary(node.getBlockIngestor().getHead())
       .setEstimatedNodes(node.getPeerage().getEstimateUniqueNodes())
+      .setNodeVersion(Globals.VERSION)
+      .putAllVersionMap(node.getPeerage().getVersionMap())
       .build();
 
     responseObserver.onNext(ns);

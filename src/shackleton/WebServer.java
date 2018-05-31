@@ -156,6 +156,14 @@ public class WebServer
 
     out.println(String.format("difficulty (avg): %s (%s)", df.format(target_diff), df.format(avg_diff)));
     out.println(String.format("estimated network hash rate: %s Mh/s", df.format(estimated_hash)));
+    out.println("Node version: " + HexUtil.getSafeString( node_status.getNodeVersion()));
+    out.println("Version counts:");
+    for(Map.Entry<String, Integer> me : node_status.getVersionMap().entrySet())
+    {
+      String version = HexUtil.getSafeString(me.getKey());
+      int count = me.getValue();
+      out.println("  " + version + " - " + count);
+    }
 
     out.println("</pre>");
 

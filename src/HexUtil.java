@@ -28,10 +28,31 @@ public class HexUtil
     return getHexString(bs.toByteArray());
   }
 
-  // TODO - do something more useful
   public static String getSafeString(ByteString data)
   {
-    return data.toString();
+    return getSafeString(new String(data.toByteArray()));  
+  }
+  
+  public static String getSafeString(String in)
+  {
+    StringBuilder sb = new StringBuilder();
+
+    for(int i = 0; i<in.length(); i++)
+    {
+      char z = in.charAt(i);
+      char u = '.'; // character to print
+
+      if (z == ' ') u = z;
+      if (z == '-') u = z;
+      if (z == '_') u = z;
+      if (z == '.') u = z;
+      if (Character.isDigit(z)) u = z;
+      if (Character.isLetter(z)) u = z;
+      sb.append(u);
+    }
+
+
+    return sb.toString();
   }
  
 }

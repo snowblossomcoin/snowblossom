@@ -159,6 +159,28 @@ public class Peerage
     return set.size();
 
   }
+  public Map<String, Integer> getVersionMap()
+  {
+    TreeMap<String, Integer> map = new TreeMap<>();
+    HashSet<ByteString> set = new HashSet<>();
+    synchronized(peer_rumor_list)
+    {
+      for(PeerInfo info : peer_rumor_list.values())
+      {
+        String ver = info.getVersion();
+        if (!set.contains(info.getNodeId()))
+        {
+          set.add(info.getNodeId());
+        
+          if (!map.containsKey(ver)) map.put(ver, 0);
+
+          map.put(ver, map.get(ver) + 1);
+        }
+      }
+    }
+
+    return map;
+  }
 
   private ImmutableList<PeerLink> getLinkList()
   {
