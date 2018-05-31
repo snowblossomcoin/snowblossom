@@ -170,9 +170,9 @@ public class WebServer
 
 
     out.println("<h2>Recent Blocks</h2>");
-    int min = Math.max(0, header.getBlockHeight()-25);
+    int min = Math.max(0, header.getBlockHeight()-75);
     out.println("<table border='0' cellspacing='0'>");
-    out.println("<thead><tr><th>Height</th><th>Hash</th><th>Transactions</th><th>Size</th><th>Miner</th></tr></thead>");
+    out.println("<thead><tr><th>Height</th><th>Hash</th><th>Tx</th><th>Size</th><th>Miner</th></tr></thead>");
     for(int h=header.getBlockHeight(); h>=min; h--)
     {
       BlockHeader blk_head = shackleton.getStub().getBlockHeader(RequestBlockHeader.newBuilder().setBlockHeight(h).build());
