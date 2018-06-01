@@ -95,6 +95,11 @@ public class SnowFall
         writeFully(w * 1048576L, w_buff);
         rng_stream.mixBytes(snow_monster.poll().array());
         fillSnowMonster(rng_stream);
+        if (w % 128 == 0)
+        {
+          logger.info(String.format("Initial write of %s - %d mb done", filename, w));
+
+        }
       }
     }
     fillSnowMonster(rng_stream);
@@ -130,7 +135,7 @@ public class SnowFall
 
     for(long w=0; w<writes; w++)
     {
-      if ((last_report + 60000L < System.currentTimeMillis()) || (w+1 == writes))
+      if ((last_report + 10000L < System.currentTimeMillis()) || (w+1 == writes))
       {
         double delta_w = w * MULTIPLICITY;
         double ms = System.currentTimeMillis() - start_time;

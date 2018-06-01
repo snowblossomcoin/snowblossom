@@ -7,9 +7,14 @@ import java.io.*;
 import java.security.MessageDigest;
 import java.security.Security;
 import java.util.TreeMap;
+import java.util.logging.Logger;
+import java.text.DecimalFormat;
+
 
 public class SnowMerkle
 {
+  private static final Logger logger = Logger.getLogger("snowblossom.miner");
+
   public static void main(String args[]) throws Exception
   {
     Security.addProvider(new org.bouncycastle.jce.provider.BouncyCastleProvider());
@@ -40,6 +45,7 @@ public class SnowMerkle
   private byte[] root_hash;
 
   private TreeMap<Long, OutputStream> deck_map;
+  private long blocks;
 
   public SnowMerkle(File path, String base, boolean make_decks)
     throws Exception
@@ -55,7 +61,7 @@ public class SnowMerkle
     long total_len = input.length();
     if (total_len % HASH_LEN_LONG != 0) throw new RuntimeException("Impedence mismatch - " + total_len);
 
-    long blocks = total_len / HASH_LEN_LONG;
+    blocks = total_len / HASH_LEN_LONG;
 
 
     deck_map = new TreeMap<>();
@@ -128,6 +134,12 @@ public class SnowMerkle
     if (deck_map.containsKey(dist))
     {
       deck_map.get(dist).write(hash);
+      if (dist == DECK_ENTIRES * DECK_ENTIRES)
+      {
+        double percent = (double) end / (double) blocks;
+        DecimalFormat df = new DecimalFormat("0.0");
+        logger.info(String.format("SnowMerkle computation %s complete", df.format(percent)));
+      }
     }
 
     return hash;
