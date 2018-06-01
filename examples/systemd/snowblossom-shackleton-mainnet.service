@@ -1,0 +1,12 @@
+[Unit]
+Description=Snowblossom Shackleton - mainnet
+After=network.target
+
+[Service]
+WorkingDirectory=/var/snowblossom
+ExecStart=/var/snowblossom/source/snowblossom/bazel-bin/Shackleton configs/shackleton-mainnet.conf
+User=snowblossom
+
+[Install]
+WantedBy=multi-user.target
+
