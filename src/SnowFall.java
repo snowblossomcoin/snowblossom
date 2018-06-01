@@ -146,7 +146,7 @@ public class SnowFall
         double per_comp = (double)w / (double)writes;
         DecimalFormat df = new DecimalFormat("0.00");
 
-        logger.info(String.format("Running at %s writes per second.  Estimated total runtime is %s hours. %s complete.",
+        logger.info(String.format("Generating snow field at %s writes per second.  Estimated total runtime is %s hours. %s complete.",
           df.format(rate),
           df.format(runtime_est_hours),
           df.format(per_comp)));
