@@ -121,7 +121,14 @@ public class FieldScan
           auto_snow.start();
         }
       }
-      throw new RuntimeException(String.format("Unable to select a field of at least %d.  Availible: %s", min_field, availible_fields.keySet().toString()));
+      if (auto_snow != null)
+      {
+        throw new RuntimeException(String.format("Unable to select a field %d but snowfall is working on it", min_field));
+      }
+      else
+      {
+        throw new RuntimeException(String.format("Unable to select a field of at least %d.  Availible: %s", min_field, availible_fields.keySet().toString()));
+      }
     }
 
     return i;

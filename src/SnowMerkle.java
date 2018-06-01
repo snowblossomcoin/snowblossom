@@ -137,8 +137,8 @@ public class SnowMerkle
       if (dist == DECK_ENTIRES * DECK_ENTIRES)
       {
         double percent = (double) end / (double) blocks;
-        DecimalFormat df = new DecimalFormat("0.0");
-        logger.info(String.format("SnowMerkle computation %s complete", df.format(percent)));
+        DecimalFormat df = new DecimalFormat("0.000");
+        logger.info(String.format("SnowMerkle computation %s complete %d/%d", df.format(percent), end, blocks));
       }
     }
 

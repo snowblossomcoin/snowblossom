@@ -68,7 +68,6 @@ public class SnowBlossomMiner
 
   private File snow_path;
 
-  private AutoSnowFall auto_snow;
   private TimeRecord time_record;
 
 
