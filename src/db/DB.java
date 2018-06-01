@@ -1,33 +1,20 @@
 package snowblossom.db;
 
-import java.io.File;
-import java.util.Map;
-import java.util.Set;
-import java.util.HashSet;
-import java.util.Collection;
-import java.util.LinkedList;
-import java.text.DecimalFormat;
 import com.google.protobuf.ByteString;
-
-import java.util.AbstractMap.SimpleEntry;
-
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.Executor;
-import java.util.concurrent.Semaphore;
-import java.util.concurrent.TimeUnit;
-
-import snowblossom.DaemonThreadFactory;
 import duckutil.Config;
-
+import snowblossom.ChainHash;
+import snowblossom.DaemonThreadFactory;
 import snowblossom.proto.Block;
 import snowblossom.proto.BlockSummary;
 import snowblossom.proto.Transaction;
 
-import java.util.logging.Logger;
-import java.util.logging.Level;
-import snowblossom.ChainHash;
 import java.nio.ByteBuffer;
+import java.util.concurrent.Executor;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public abstract class DB implements DBFace
 {

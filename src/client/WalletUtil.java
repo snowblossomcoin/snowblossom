@@ -1,13 +1,14 @@
 package snowblossom.client;
 
-import snowblossom.*;
-import snowblossom.proto.*;
 import com.google.common.collect.ImmutableList;
+import duckutil.Config;
+import snowblossom.AddressUtil;
+import snowblossom.KeyUtil;
+import snowblossom.proto.AddressSpec;
+import snowblossom.proto.WalletDatabase;
+import snowblossom.proto.WalletKeyPair;
 
 import java.util.logging.Logger;
-import java.util.logging.Level;
-
-import duckutil.Config;
 
 public class WalletUtil
 {

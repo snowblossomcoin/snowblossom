@@ -1,20 +1,17 @@
 package snowblossom.db.rocksdb;
 
 import duckutil.Config;
-
+import org.rocksdb.FlushOptions;
+import org.rocksdb.Options;
+import org.rocksdb.RocksDB;
+import org.rocksdb.WriteOptions;
 import snowblossom.db.DB;
 import snowblossom.db.DBMap;
 import snowblossom.db.DBMapMutationSet;
 
-import org.rocksdb.RocksDB;
-import org.rocksdb.Options;
-import org.rocksdb.WriteOptions;
-import org.rocksdb.FlushOptions;
-
-import java.util.logging.Logger;
-import java.util.logging.Level;
-
 import java.io.File;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 
 

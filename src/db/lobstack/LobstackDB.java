@@ -1,17 +1,13 @@
 package snowblossom.db.lobstack;
 
 import duckutil.Config;
-
+import lobstack.Lobstack;
 import snowblossom.db.DB;
 import snowblossom.db.DBMap;
 import snowblossom.db.DBMapMutationSet;
 
-
-import java.util.logging.Logger;
-import java.util.logging.Level;
-
 import java.io.File;
-import lobstack.Lobstack;
+import java.util.logging.Logger;
 
 
 public class LobstackDB extends DB

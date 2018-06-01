@@ -1,36 +1,14 @@
 package snowblossom;
 
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeSet;
-import java.util.TreeMap;
-import java.util.HashMap;
-import snowblossom.proto.BlockSummary;
-import snowblossom.proto.PeerMessage;
-import snowblossom.proto.PeerChainTip;
-
-import snowblossom.proto.Transaction;
-
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-
-
-import java.util.logging.Logger;
-import java.util.logging.Level;
-
-import java.util.ArrayList;
-import snowblossom.proto.PeerInfo;
-import snowblossom.proto.PeerList;
-
 import com.google.protobuf.ByteString;
+import snowblossom.proto.*;
 
-import java.util.List;
-import java.util.LinkedList;
-import java.util.HashSet;
-import java.util.Random;
 import java.net.InetAddress;
-
-import duckutil.Config;
+import java.util.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Joe: Should I class that handles communicating with a bunch of peers be called the Peerage?

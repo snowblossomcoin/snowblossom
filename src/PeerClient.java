@@ -3,11 +3,10 @@ package snowblossom;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 import io.grpc.stub.StreamObserver;
-import snowblossom.proto.PeerServiceGrpc.PeerServiceStub;
-import snowblossom.proto.PeerServiceGrpc;
-
-import snowblossom.proto.PeerMessage;
 import snowblossom.proto.PeerInfo;
+import snowblossom.proto.PeerMessage;
+import snowblossom.proto.PeerServiceGrpc;
+import snowblossom.proto.PeerServiceGrpc.PeerServiceStub;
 
 
 public class PeerClient

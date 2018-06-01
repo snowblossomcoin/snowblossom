@@ -1,21 +1,17 @@
 package snowblossom;
 
-import org.junit.Assert;
-import org.junit.Test;
-import org.junit.BeforeClass;
-
-import java.security.MessageDigest;
-
-import snowblossom.proto.SigSpec;
-import snowblossom.proto.AddressSpec;
-
-import java.util.Random;
-
 import com.google.protobuf.ByteString;
-import java.nio.ByteBuffer;
+import org.junit.Assert;
+import org.junit.BeforeClass;
+import org.junit.Test;
+import snowblossom.proto.AddressSpec;
+import snowblossom.proto.SigSpec;
 
+import java.nio.ByteBuffer;
+import java.security.MessageDigest;
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.Random;
 
 public class AddressUtilTest
 {

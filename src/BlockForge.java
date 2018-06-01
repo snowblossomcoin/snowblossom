@@ -1,22 +1,13 @@
 package snowblossom;
 
-import snowblossom.proto.Block;
-import snowblossom.proto.BlockHeader;
-import snowblossom.proto.BlockSummary;
-import snowblossom.proto.Transaction;
-import snowblossom.proto.TransactionInner;
-import snowblossom.proto.TransactionOutput;
-import snowblossom.proto.CoinbaseExtras;
-import java.util.Random;
-
 import com.google.protobuf.ByteString;
+import snowblossom.proto.*;
 import snowblossom.trie.HashUtils;
 
+import java.math.BigInteger;
+import java.security.MessageDigest;
 import java.util.LinkedList;
 import java.util.List;
-
-import java.security.MessageDigest;
-import java.math.BigInteger;
 
 /**
  * This class creates new blocks for miners to work on

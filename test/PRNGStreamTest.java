@@ -1,10 +1,9 @@
 package snowblossom;
 
-import org.junit.Test;
-import org.junit.Assert;
-
 import com.google.protobuf.ByteString;
 import org.apache.commons.codec.binary.Hex;
+import org.junit.Assert;
+import org.junit.Test;
 
 public class PRNGStreamTest
 {

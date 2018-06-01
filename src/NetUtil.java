@@ -1,7 +1,7 @@
 package snowblossom;
 
-import java.util.Scanner;
 import java.net.URL;
+import java.util.Scanner;
 
 public class NetUtil
 {

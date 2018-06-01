@@ -1,24 +1,19 @@
 package snowblossom;
 
-import java.security.MessageDigest;
+import com.google.protobuf.ByteString;
+import duckutil.TimeRecord;
+import duckutil.TimeRecordAuto;
 import org.junit.Assert;
-
-import java.nio.ByteBuffer;
-
 import snowblossom.proto.BlockHeader;
 import snowblossom.proto.BlockSummary;
 import snowblossom.trie.ByteStringComparator;
-
-import com.google.protobuf.ByteString;
-
 import snowblossom.trie.HashUtils;
 
-import java.util.logging.Logger;
-
-import java.text.DecimalFormat;
 import java.math.BigInteger;
-import duckutil.TimeRecordAuto;
-import duckutil.TimeRecord;
+import java.nio.ByteBuffer;
+import java.security.MessageDigest;
+import java.text.DecimalFormat;
+import java.util.logging.Logger;
 
 public class PowUtil
 {

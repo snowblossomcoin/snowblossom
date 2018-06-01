@@ -1,13 +1,13 @@
 package snowblossom;
 
 
-import java.util.Map;
-import java.util.TreeMap;
-import java.util.List;
-
 import com.google.common.collect.ImmutableList;
 import com.google.protobuf.ByteString;
+
 import java.math.BigInteger;
+import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 
 
 public class NetworkParamsTestnet extends NetworkParams

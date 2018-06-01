@@ -1,23 +1,18 @@
 package snowblossom;
 
 
-import org.junit.Test;
-import org.junit.Assert;
-
-import com.google.protobuf.ByteString;
 import org.apache.commons.codec.binary.Hex;
+import org.junit.Assert;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 
 import java.io.BufferedInputStream;
-import java.io.FileInputStream;
 import java.io.DataInputStream;
-
 import java.io.File;
-import org.apache.commons.codec.binary.Hex;
+import java.io.FileInputStream;
 import java.security.MessageDigest;
 import java.util.HashMap;
-
-import org.junit.rules.TemporaryFolder;
-import org.junit.Rule;
 
 public class SnowFallMerkleTest
 {

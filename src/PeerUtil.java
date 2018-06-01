@@ -1,7 +1,7 @@
 package snowblossom;
 
-import snowblossom.proto.PeerInfo;
 import org.junit.Assert;
+import snowblossom.proto.PeerInfo;
 
 public class PeerUtil
 {

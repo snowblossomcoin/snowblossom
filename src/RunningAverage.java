@@ -1,6 +1,7 @@
 package snowblossom;
-import java.util.LinkedList;
+
 import java.math.BigInteger;
+import java.util.LinkedList;
 
 
 public class RunningAverage

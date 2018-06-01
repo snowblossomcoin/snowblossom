@@ -1,68 +1,28 @@
 package snowblossom.client;
 
-import io.grpc.ManagedChannel;
-import io.grpc.ManagedChannelBuilder;
-import io.grpc.stub.StreamObserver;
-
-import snowblossom.proto.UserServiceGrpc.UserServiceStub;
-import snowblossom.proto.UserServiceGrpc.UserServiceBlockingStub;
-import snowblossom.proto.UserServiceGrpc;
-
-import snowblossom.proto.GetUTXONodeReply;
-import snowblossom.proto.GetUTXONodeRequest;
-import org.junit.Assert;
-import snowblossom.ChainHash;
-import java.text.DecimalFormat;
-
-import snowblossom.proto.SubmitReply;
-import snowblossom.proto.TransactionOutput;
-import snowblossom.proto.TransactionInner;
-import snowblossom.trie.proto.TrieNode;
-import snowblossom.NetworkParams;
-import snowblossom.AddressSpecHash;
-import snowblossom.HexUtil;
-import snowblossom.KeyUtil;
-import snowblossom.SignatureUtil;
-import snowblossom.AddressUtil;
-import snowblossom.proto.AddressSpec;
-import snowblossom.proto.SigSpec;
-import snowblossom.proto.Transaction;
-import java.security.KeyPair;
-import snowblossom.proto.TransactionInput;
-import snowblossom.proto.WalletKeyPair;
-import snowblossom.proto.WalletDatabase;
-import snowblossom.proto.RequestAddress;
-import snowblossom.proto.RequestTransaction;
-import snowblossom.proto.TransactionHashList;
-
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
-import java.nio.file.FileSystems;
-import java.util.logging.Logger;
-import java.util.logging.Level;
-import java.util.Random;
-import java.util.HashMap;
-import snowblossom.Globals;
-import snowblossom.SnowMerkleProof;
-import snowblossom.trie.HashUtils;
+import com.google.protobuf.ByteString;
 import duckutil.Config;
 import duckutil.ConfigFile;
-import com.google.protobuf.ByteString;
-import java.security.Security;
+import io.grpc.ManagedChannel;
+import io.grpc.ManagedChannelBuilder;
+import org.junit.Assert;
+import snowblossom.*;
+import snowblossom.proto.*;
+import snowblossom.proto.UserServiceGrpc.UserServiceBlockingStub;
+import snowblossom.proto.UserServiceGrpc.UserServiceStub;
+import snowblossom.trie.proto.TrieNode;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.io.IOException;
-
-import java.util.LinkedList;
-import java.util.List;
-import java.util.TreeMap;
-import snowblossom.TransactionBridge;
-import snowblossom.TransactionUtil;
-import java.util.Collections;
-import java.util.SplittableRandom;
-import snowblossom.LogSetup;
+import java.nio.file.FileSystems;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
+import java.text.DecimalFormat;
+import java.util.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class SnowBlossomClient
 {

@@ -1,19 +1,15 @@
 package snowblossom;
 
-import io.grpc.ServerBuilder;
+import duckutil.Config;
+import duckutil.ConfigFile;
 import io.grpc.Server;
-
+import io.grpc.ServerBuilder;
 import snowblossom.db.DB;
 import snowblossom.trie.HashedTrie;
 import snowblossom.trie.TrieDBMap;
 
-import java.security.Security;
-import java.util.logging.Logger;
 import java.util.logging.Level;
-import java.io.File;
-
-import duckutil.Config;
-import duckutil.ConfigFile;
+import java.util.logging.Logger;
 
 public class SnowBlossomNode
 {

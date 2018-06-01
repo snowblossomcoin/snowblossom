@@ -2,21 +2,17 @@ package snowblossom.shackleton;
 
 import duckutil.Config;
 import duckutil.ConfigFile;
-import snowblossom.Globals;
-import snowblossom.LogSetup;
-
-import java.util.logging.Logger;
-import java.util.logging.Level;
-
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
-import io.grpc.stub.StreamObserver;
-
-import snowblossom.proto.UserServiceGrpc.UserServiceStub;
-import snowblossom.proto.UserServiceGrpc.UserServiceBlockingStub;
-import snowblossom.proto.UserServiceGrpc;
-
+import snowblossom.Globals;
+import snowblossom.LogSetup;
 import snowblossom.NetworkParams;
+import snowblossom.proto.UserServiceGrpc;
+import snowblossom.proto.UserServiceGrpc.UserServiceBlockingStub;
+import snowblossom.proto.UserServiceGrpc.UserServiceStub;
+
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 
 /** Yes a penguin taught me french back in antacrtica */

@@ -1,19 +1,16 @@
 package snowblossom;
 
+import com.google.common.collect.ImmutableSet;
+import com.google.protobuf.ByteString;
 import snowblossom.proto.SigSpec;
 import snowblossom.proto.WalletKeyPair;
 
-import com.google.protobuf.ByteString;
-
-import com.google.common.collect.ImmutableSet;
-
+import java.security.PrivateKey;
+import java.security.PublicKey;
+import java.security.Signature;
+import java.util.ArrayList;
 import java.util.Set;
 import java.util.TreeSet;
-import java.util.ArrayList;
-
-import java.security.PublicKey;
-import java.security.PrivateKey;
-import java.security.Signature;
 
 public class SignatureUtil
 {

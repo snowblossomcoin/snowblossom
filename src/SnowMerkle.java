@@ -1,19 +1,12 @@
 package snowblossom;
 
-import java.security.MessageDigest;
-import java.io.BufferedInputStream;
-import java.io.FileInputStream;
-import java.io.DataInputStream;
-import java.io.BufferedOutputStream;
-import java.io.FileOutputStream;
-import java.io.OutputStream;
-
-import snowblossom.trie.HashUtils;
-import java.security.Security;
 import com.google.protobuf.ByteString;
+import snowblossom.trie.HashUtils;
 
+import java.io.*;
+import java.security.MessageDigest;
+import java.security.Security;
 import java.util.TreeMap;
-import java.io.File;
 
 public class SnowMerkle
 {

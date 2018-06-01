@@ -1,32 +1,19 @@
 package snowblossom;
 
-import org.junit.Assert;
-import org.junit.Test;
-
-import org.junit.rules.TemporaryFolder;
-import org.junit.Rule;
-
-import java.util.Map;
-import java.util.TreeMap;
-
-import java.util.Random;
-import java.util.List;
-import java.util.LinkedList;
-
-import snowblossom.miner.SnowBlossomMiner;
-import snowblossom.client.SnowBlossomClient;
-
+import com.google.common.collect.ImmutableList;
 import com.google.protobuf.ByteString;
+import duckutil.ConfigMem;
+import org.junit.Assert;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
+import snowblossom.client.SnowBlossomClient;
+import snowblossom.miner.SnowBlossomMiner;
+import snowblossom.proto.*;
+
 import java.io.File;
 import java.security.KeyPair;
-import snowblossom.proto.AddressSpec;
-import snowblossom.proto.SigSpec;
-import snowblossom.proto.TransactionInput;
-import snowblossom.proto.TransactionOutput;
-import snowblossom.proto.Transaction;
-import snowblossom.proto.BlockSummary;
-import com.google.common.collect.ImmutableList;
-import duckutil.ConfigMem;
+import java.util.*;
 
 
 public class SpoonTest

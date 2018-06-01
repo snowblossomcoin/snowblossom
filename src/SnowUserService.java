@@ -1,34 +1,13 @@
 package snowblossom;
 
-import snowblossom.proto.UserServiceGrpc;
-import snowblossom.proto.SubscribeBlockTemplateRequest;
-import snowblossom.proto.Block;
-import snowblossom.proto.Transaction;
-import snowblossom.proto.BlockHeader;
-import snowblossom.proto.BlockSummary;
-import snowblossom.proto.SubmitReply;
-import snowblossom.proto.GetUTXONodeRequest;
-import snowblossom.proto.GetUTXONodeReply;
-import snowblossom.proto.NullRequest;
-import snowblossom.proto.NodeStatus;
-import snowblossom.proto.RequestBlock;
-import snowblossom.proto.RequestBlockHeader;
-import snowblossom.proto.RequestTransaction;
-import snowblossom.proto.RequestAddress;
-import snowblossom.proto.TransactionHashList;
-import snowblossom.proto.CoinbaseExtras;
-import snowblossom.trie.proto.TrieNode;
-import io.grpc.stub.StreamObserver;
-
-import java.util.Random;
-import java.util.logging.Logger;
-import java.util.logging.Level;
 import com.google.protobuf.ByteString;
-import java.nio.ByteBuffer;
+import io.grpc.stub.StreamObserver;
+import snowblossom.proto.*;
+import snowblossom.trie.proto.TrieNode;
 
 import java.util.LinkedList;
-import java.util.TreeMap;
-import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 
 public class SnowUserService extends UserServiceGrpc.UserServiceImplBase

@@ -1,10 +1,9 @@
 package snowblossom.db;
 
-import snowblossom.proto.BlockSummary;
-import snowblossom.proto.Block;
-import snowblossom.proto.Transaction;
-
 import snowblossom.ChainHash;
+import snowblossom.proto.Block;
+import snowblossom.proto.BlockSummary;
+import snowblossom.proto.Transaction;
 
 public interface DBFace
 {

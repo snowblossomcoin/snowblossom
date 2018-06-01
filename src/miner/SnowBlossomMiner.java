@@ -1,43 +1,31 @@
 package snowblossom.miner;
 
-import io.grpc.ManagedChannel;
-import io.grpc.ManagedChannelBuilder;
-import io.grpc.stub.StreamObserver;
-
-import snowblossom.proto.UserServiceGrpc.UserServiceStub;
-import snowblossom.proto.UserServiceGrpc.UserServiceBlockingStub;
-import snowblossom.proto.UserServiceGrpc;
-
-import snowblossom.proto.SubscribeBlockTemplateRequest;
-import snowblossom.proto.Block;
-import snowblossom.proto.BlockHeader;
-import snowblossom.proto.SnowPowProof;
-import snowblossom.proto.SubmitReply;
-import snowblossom.proto.AddressSpec;
-import snowblossom.proto.WalletDatabase;
-import snowblossom.proto.CoinbaseExtras;
-import snowblossom.*;
-
-
-import java.util.logging.Logger;
-import java.util.logging.Level;
-import java.util.Random;
-import snowblossom.trie.HashUtils;
+import com.google.protobuf.ByteString;
 import duckutil.Config;
 import duckutil.ConfigFile;
 import duckutil.TimeRecord;
 import duckutil.TimeRecordAuto;
-import com.google.protobuf.ByteString;
-import java.security.Security;
-import java.security.MessageDigest;
+import io.grpc.ManagedChannel;
+import io.grpc.ManagedChannelBuilder;
+import io.grpc.stub.StreamObserver;
+import snowblossom.*;
+import snowblossom.proto.*;
+import snowblossom.proto.UserServiceGrpc.UserServiceBlockingStub;
+import snowblossom.proto.UserServiceGrpc.UserServiceStub;
+import snowblossom.trie.HashUtils;
+
 import java.io.File;
-import java.util.Collections;
 import java.io.FileInputStream;
-import java.util.LinkedList;
-import java.util.concurrent.atomic.AtomicLong;
-import java.text.DecimalFormat;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
+import java.security.MessageDigest;
+import java.text.DecimalFormat;
+import java.util.Collections;
+import java.util.LinkedList;
+import java.util.Random;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class SnowBlossomMiner
 {

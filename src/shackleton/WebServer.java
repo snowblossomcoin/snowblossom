@@ -1,31 +1,18 @@
 package snowblossom.shackleton;
 
-import duckutil.Config;
-import java.util.Map;
-
-import java.net.InetSocketAddress;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
-import java.io.OutputStream;
-import java.io.IOException;
-import java.io.ByteArrayOutputStream;
-import java.io.PrintStream;
-import java.text.DecimalFormat;
-
-import snowblossom.proto.UserServiceGrpc.UserServiceStub;
-import snowblossom.proto.NullRequest;
-import snowblossom.proto.Block;
-import snowblossom.proto.RequestBlock;
-import snowblossom.proto.RequestTransaction;
-import snowblossom.proto.Transaction;
-import snowblossom.proto.TransactionInner;
-import snowblossom.proto.NodeStatus;
-import snowblossom.proto.BlockHeader;
-import snowblossom.proto.BlockSummary;
-import snowblossom.proto.RequestBlockHeader;
-
+import duckutil.Config;
 import snowblossom.*;
+import snowblossom.proto.*;
+
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.PrintStream;
+import java.net.InetSocketAddress;
+import java.text.DecimalFormat;
+import java.util.Map;
 
 public class WebServer
 {

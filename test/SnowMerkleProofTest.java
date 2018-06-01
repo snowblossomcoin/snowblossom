@@ -1,26 +1,17 @@
 package snowblossom;
 
 
-import org.junit.Test;
-import org.junit.Assert;
-import org.junit.rules.TemporaryFolder;
-import org.junit.Rule;
-
 import com.google.protobuf.ByteString;
-import org.apache.commons.codec.binary.Hex;
-
-import java.io.BufferedInputStream;
-import java.io.FileInputStream;
-import java.io.DataInputStream;
-
-import java.io.File;
-import org.apache.commons.codec.binary.Hex;
-import java.security.MessageDigest;
-import java.util.HashMap;
+import org.junit.Assert;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 import snowblossom.proto.SnowPowProof;
 
-import java.util.Random;
+import java.io.File;
+import java.security.MessageDigest;
 import java.util.LinkedList;
+import java.util.Random;
 
 public class SnowMerkleProofTest
 {

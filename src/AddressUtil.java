@@ -1,22 +1,19 @@
 package snowblossom;
 
-import java.security.MessageDigest;
-import java.io.ByteArrayOutputStream;
-import java.io.DataOutputStream;
-
+import com.google.common.collect.ImmutableSet;
+import com.google.protobuf.ByteString;
+import org.junit.Assert;
 import snowblossom.proto.AddressSpec;
 import snowblossom.proto.SigSpec;
 import snowblossom.proto.WalletKeyPair;
-import com.google.protobuf.ByteString;
 
-import java.security.PublicKey;
+import java.io.ByteArrayOutputStream;
+import java.io.DataOutputStream;
 import java.io.PrintStream;
-import java.util.Set;
-import com.google.common.collect.ImmutableSet;
-
-
-import org.junit.Assert;
+import java.security.MessageDigest;
+import java.security.PublicKey;
 import java.util.List;
+import java.util.Set;
 
 public class AddressUtil
 {

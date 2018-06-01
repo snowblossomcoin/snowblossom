@@ -1,25 +1,21 @@
 package snowblossom;
+
+import com.google.common.collect.ImmutableMap;
+import com.google.protobuf.ByteString;
+import duckutil.TimeRecord;
+import duckutil.TimeRecordAuto;
+import org.junit.Assert;
 import snowblossom.proto.SnowPowProof;
 
-import com.google.protobuf.ByteString;
-import java.nio.channels.FileChannel;
-import java.nio.ByteBuffer;
-
-import java.io.RandomAccessFile;
-import java.util.List;
-import java.util.LinkedList;
-import java.util.TreeMap;
 import java.io.File;
+import java.io.RandomAccessFile;
+import java.nio.ByteBuffer;
+import java.nio.channels.FileChannel;
 import java.security.MessageDigest;
-
-import org.junit.Assert;
-import com.google.common.collect.ImmutableMap;
-import snowblossom.trie.HashUtils;
-import duckutil.TimeRecordAuto;
-import duckutil.TimeRecord;
-
+import java.util.LinkedList;
+import java.util.List;
+import java.util.TreeMap;
 import java.util.logging.Logger;
-import java.util.logging.Level;
 
 
 public class SnowMerkleProof

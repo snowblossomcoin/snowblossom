@@ -1,16 +1,10 @@
 package snowblossom;
 
-import org.junit.Assert;
-import org.junit.Test;
-import org.junit.BeforeClass;
-
-import snowblossom.proto.WalletDatabase;
-import snowblossom.proto.AddressSpec;
-import snowblossom.proto.SigSpec;
-import snowblossom.proto.WalletKeyPair;
-import snowblossom.proto.Transaction;
-
 import com.google.common.collect.ImmutableList;
+import org.junit.Assert;
+import org.junit.BeforeClass;
+import org.junit.Test;
+import snowblossom.proto.*;
 
 
 public class WalletTest

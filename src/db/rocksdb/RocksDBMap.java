@@ -1,18 +1,13 @@
 package snowblossom.db.rocksdb;
 
-import snowblossom.db.DBMap;
-
+import com.google.protobuf.ByteString;
 import org.rocksdb.RocksDB;
 import org.rocksdb.RocksDBException;
 import org.rocksdb.WriteBatch;
-import org.rocksdb.WriteOptions;
+import snowblossom.db.DBMap;
+
 import java.util.Map;
 import java.util.SortedMap;
-import java.util.TreeMap;
-
-import java.util.concurrent.Executor;
-
-import com.google.protobuf.ByteString;
 
 
 public class RocksDBMap extends DBMap

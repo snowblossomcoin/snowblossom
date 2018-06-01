@@ -1,20 +1,10 @@
 package snowblossom;
 
-import snowblossom.proto.PeerServiceGrpc;
-import snowblossom.proto.SubscribeBlockTemplateRequest;
-import snowblossom.proto.Block;
-import snowblossom.proto.BlockHeader;
-import snowblossom.proto.SubmitReply;
-import snowblossom.proto.PeerMessage;
 import io.grpc.stub.StreamObserver;
+import snowblossom.proto.PeerMessage;
+import snowblossom.proto.PeerServiceGrpc;
 
-import java.util.Random;
 import java.util.logging.Logger;
-import com.google.protobuf.ByteString;
-import java.nio.ByteBuffer;
-
-import java.util.LinkedList;
-import java.util.TreeMap;
 
 
 public class SnowPeerService extends PeerServiceGrpc.PeerServiceImplBase

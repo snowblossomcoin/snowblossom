@@ -1,17 +1,14 @@
 package snowblossom.miner;
 
+import com.google.protobuf.ByteString;
 import snowblossom.NetworkParams;
 import snowblossom.SnowFall;
-import snowblossom.SnowMerkle;
 import snowblossom.SnowFieldInfo;
+import snowblossom.SnowMerkle;
 
 import java.io.File;
-
-
-import java.util.logging.Logger;
 import java.util.logging.Level;
-
-import com.google.protobuf.ByteString;
+import java.util.logging.Logger;
 
 
 public class AutoSnowFall extends Thread

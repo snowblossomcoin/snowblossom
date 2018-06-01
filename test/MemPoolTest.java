@@ -1,25 +1,20 @@
 package snowblossom;
 
+import com.google.common.collect.ImmutableList;
+import duckutil.TimeRecord;
 import org.junit.Assert;
-import org.junit.Test;
 import org.junit.BeforeClass;
-
+import org.junit.Test;
+import snowblossom.proto.AddressSpec;
+import snowblossom.proto.Transaction;
+import snowblossom.proto.TransactionInput;
+import snowblossom.proto.TransactionOutput;
 import snowblossom.trie.HashedTrie;
 import snowblossom.trie.TrieDBMem;
 
 import java.security.KeyPair;
 import java.util.Random;
 import java.util.TreeMap;
-
-import snowblossom.proto.Transaction;
-import snowblossom.proto.TransactionInput;
-import snowblossom.proto.TransactionOutput;
-import snowblossom.proto.AddressSpec;
-import snowblossom.proto.SigSpec;
-
-import com.google.protobuf.ByteString;
-import com.google.common.collect.ImmutableList;
-import duckutil.TimeRecord;
 
 public class MemPoolTest
 {

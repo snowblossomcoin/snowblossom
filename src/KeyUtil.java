@@ -1,35 +1,19 @@
 package snowblossom;
 
 import com.google.protobuf.ByteString;
-
-import org.bouncycastle.asn1.ASN1StreamParser;
-import org.bouncycastle.asn1.DERSequenceParser;
-import org.bouncycastle.asn1.DERBitString;
-import org.bouncycastle.asn1.ASN1ObjectIdentifier;
-import org.bouncycastle.asn1.ASN1Encodable;
-import org.bouncycastle.asn1.ASN1Integer;
-import java.security.spec.ECGenParameterSpec;
-
+import org.bouncycastle.asn1.*;
+import org.bouncycastle.jcajce.provider.asymmetric.ec.BCECPublicKey;
+import org.junit.Assert;
+import snowblossom.proto.WalletKeyPair;
 
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
-
-import org.apache.commons.codec.binary.Hex;
-import java.security.PublicKey;
-import java.security.PrivateKey;
-import java.security.KeyFactory;
-import java.security.KeyPair;
-import java.security.KeyPairGenerator;
-import snowblossom.proto.WalletKeyPair;
+import java.security.*;
+import java.security.spec.ECGenParameterSpec;
+import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.RSAKeyGenParameterSpec;
 import java.security.spec.X509EncodedKeySpec;
-import java.security.spec.PKCS8EncodedKeySpec;
-import java.security.spec.ECGenParameterSpec;
 import java.util.ArrayList;
-
-import org.bouncycastle.jcajce.provider.asymmetric.ec.BCECPublicKey;
-
-import org.junit.Assert;
 
 public class KeyUtil
 {

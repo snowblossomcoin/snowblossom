@@ -1,23 +1,14 @@
 package snowblossom.trie;
 
-import org.junit.Test;
-import org.junit.Assert;
+import com.google.common.collect.ImmutableList;
+import com.google.protobuf.ByteString;
+import org.junit.*;
+import org.junit.rules.TemporaryFolder;
 
+import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
-
-import com.google.protobuf.ByteString;
-import com.google.common.collect.ImmutableList;
-
-import org.junit.Before;
-import org.junit.After;
-
-import java.io.File;
-import org.apache.commons.io.FileUtils;
-
-import org.junit.rules.TemporaryFolder;
-import org.junit.Rule;
 
 
 public class TrieRocksTest

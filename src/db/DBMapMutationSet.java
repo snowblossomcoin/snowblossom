@@ -1,11 +1,11 @@
 package snowblossom.db;
 
+import com.google.protobuf.ByteString;
+import duckutil.TimeRecord;
+
 import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
-import duckutil.TimeRecord;
-import com.google.protobuf.ByteString;
-import snowblossom.db.DBTooManyResultsException;
 
 public abstract class DBMapMutationSet
 {

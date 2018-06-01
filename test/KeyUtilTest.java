@@ -1,22 +1,18 @@
 package snowblossom;
 
+import com.google.protobuf.ByteString;
 import org.junit.Assert;
-import org.junit.Test;
 import org.junit.BeforeClass;
+import org.junit.Test;
+import snowblossom.proto.SigSpec;
+import snowblossom.proto.WalletKeyPair;
 
 import java.security.KeyPair;
-import com.google.protobuf.ByteString;
-import java.security.PublicKey;
 import java.security.PrivateKey;
-
-import snowblossom.proto.WalletKeyPair;
-import snowblossom.proto.SigSpec;
-
-import java.util.Random;
-
-import java.util.logging.Logger;
-import java.util.logging.Level;
+import java.security.PublicKey;
 import java.util.ArrayList;
+import java.util.Random;
+import java.util.logging.Logger;
 
 
 public class KeyUtilTest

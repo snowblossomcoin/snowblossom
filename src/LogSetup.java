@@ -1,13 +1,12 @@
 package snowblossom;
 
-import java.util.logging.Logger;
-import java.util.logging.LogManager;
-import java.util.logging.Level;
+import duckutil.Config;
+
+import java.io.FileInputStream;
 import java.util.Enumeration;
 import java.util.logging.Handler;
-import java.io.FileInputStream;
-
-import duckutil.Config;
+import java.util.logging.LogManager;
+import java.util.logging.Logger;
 
 public class LogSetup
 {

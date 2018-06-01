@@ -1,22 +1,13 @@
 package snowblossom;
 
-import org.junit.Test;
-import org.junit.Assert;
-import org.junit.BeforeClass;
-
 import com.google.protobuf.ByteString;
-import java.security.MessageDigest;
-import java.security.KeyPair;
-import java.security.Signature;
+import org.junit.BeforeClass;
+import org.junit.Test;
+import snowblossom.proto.*;
 
-import snowblossom.proto.Transaction;
-import snowblossom.proto.TransactionInner;
-import snowblossom.proto.TransactionInput;
-import snowblossom.proto.TransactionOutput;
-import snowblossom.proto.CoinbaseExtras;
-import snowblossom.proto.SignatureEntry;
-import snowblossom.proto.SigSpec;
-import snowblossom.proto.AddressSpec;
+import java.security.KeyPair;
+import java.security.MessageDigest;
+import java.security.Signature;
 import java.util.Random;
 
 public class ValidationTest

@@ -1,9 +1,9 @@
 package snowblossom.trie;
 
-import snowblossom.trie.proto.TrieNode;
-
 import com.google.protobuf.ByteString;
 import org.junit.Assert;
+import snowblossom.trie.proto.TrieNode;
+
 import java.util.Map;
 import java.util.TreeMap;
 

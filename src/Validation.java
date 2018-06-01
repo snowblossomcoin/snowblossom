@@ -1,32 +1,13 @@
 package snowblossom;
 
-import snowblossom.proto.Block;
-import snowblossom.proto.BlockHeader;
-import snowblossom.proto.Transaction;
-import snowblossom.proto.SnowPowProof;
-import snowblossom.proto.TransactionInner;
-import snowblossom.proto.CoinbaseExtras;
-import snowblossom.proto.TransactionInput;
-import snowblossom.proto.TransactionOutput;
-import snowblossom.proto.AddressSpec;
-import snowblossom.proto.SigSpec;
-import snowblossom.proto.SignatureEntry;
-import snowblossom.proto.BlockSummary;
-
 import com.google.protobuf.ByteString;
 import com.google.protobuf.CodedInputStream;
-
-import java.security.MessageDigest;
-
-import java.util.LinkedList;
-import java.util.HashSet;
-import java.util.TreeMap;
-import java.util.TreeSet;
-import java.util.Set;
-import java.util.ArrayList;
-import java.math.BigInteger;
-
 import org.junit.Assert;
+import snowblossom.proto.*;
+
+import java.math.BigInteger;
+import java.security.MessageDigest;
+import java.util.*;
 
 public class Validation
 {

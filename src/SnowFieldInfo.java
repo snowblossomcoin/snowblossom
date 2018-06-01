@@ -1,8 +1,8 @@
 package snowblossom;
 
 
-import org.apache.commons.codec.binary.Hex;
 import com.google.protobuf.ByteString;
+import org.apache.commons.codec.binary.Hex;
 
 import java.math.BigInteger;
 

@@ -1,13 +1,9 @@
 package snowblossom;
 
-import org.junit.Test;
 import org.junit.Assert;
-
-import com.google.protobuf.ByteString;
-import org.apache.commons.codec.binary.Hex;
-
-import snowblossom.proto.BlockSummary;
+import org.junit.Test;
 import snowblossom.proto.BlockHeader;
+import snowblossom.proto.BlockSummary;
 
 import java.math.BigInteger;
 

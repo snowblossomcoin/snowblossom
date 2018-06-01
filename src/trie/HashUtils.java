@@ -1,10 +1,11 @@
 package snowblossom.trie;
 
-import com.google.protobuf.ByteString;
-import java.util.List;
-import java.security.MessageDigest;
-import org.apache.commons.codec.binary.Hex;
 import com.google.common.collect.ImmutableList;
+import com.google.protobuf.ByteString;
+import org.apache.commons.codec.binary.Hex;
+
+import java.security.MessageDigest;
+import java.util.List;
 
 public class HashUtils
 {

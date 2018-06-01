@@ -1,9 +1,10 @@
 package snowblossom.db;
 
-import duckutil.TimeRecord;
 import com.google.protobuf.ByteString;
-import java.util.SortedMap;
+import duckutil.TimeRecord;
+
 import java.util.Map;
+import java.util.SortedMap;
 
 public abstract class DBMap
 {

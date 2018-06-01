@@ -1,33 +1,21 @@
 package snowblossom;
 
-import com.google.common.collect.TreeMultimap;
-
-import snowblossom.proto.Transaction;
-import snowblossom.proto.TransactionInput;
-import snowblossom.proto.TransactionOutput;
-import snowblossom.proto.TransactionInner;
-import snowblossom.proto.BlockSummary;
-import snowblossom.trie.HashedTrie;
-import java.util.List;
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.Map;
-import java.util.TreeMap;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.Collection;
-import java.util.TreeSet;
-import java.util.Random;
+import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.TreeMultimap;
 import com.google.protobuf.ByteString;
-import com.google.common.collect.HashMultimap;
-
-import org.junit.Assert;
-import java.util.logging.Logger;
-import java.util.logging.Level;
 import duckutil.TimeRecord;
+import org.junit.Assert;
+import snowblossom.proto.Transaction;
+import snowblossom.proto.TransactionInner;
+import snowblossom.proto.TransactionInput;
+import snowblossom.proto.TransactionOutput;
+import snowblossom.trie.HashedTrie;
+
+import java.util.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 
 

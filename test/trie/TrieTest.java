@@ -1,15 +1,14 @@
 package snowblossom.trie;
 
-import org.junit.Test;
+import com.google.common.collect.ImmutableList;
+import com.google.protobuf.ByteString;
 import org.junit.Assert;
+import org.junit.Test;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
-import java.util.ArrayList;
-
-import com.google.protobuf.ByteString;
-import com.google.common.collect.ImmutableList;
 
 public class TrieTest
 {

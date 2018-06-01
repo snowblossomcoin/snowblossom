@@ -1,26 +1,18 @@
 package snowblossom;
 
 import com.google.protobuf.ByteString;
-
+import snowblossom.db.DB;
 import snowblossom.proto.Block;
-import snowblossom.proto.BlockSummary;
 import snowblossom.proto.BlockHeader;
+import snowblossom.proto.BlockSummary;
 import snowblossom.proto.Transaction;
-
 import snowblossom.trie.HashUtils;
 
-import snowblossom.db.DB;
-import org.junit.Assert;
-
+import java.io.FileOutputStream;
+import java.io.PrintStream;
+import java.math.BigInteger;
 import java.util.HashMap;
 import java.util.logging.Logger;
-import java.util.logging.Level;
-
-import java.math.BigInteger;
-
-import java.io.PrintStream;
-import java.io.FileOutputStream;
-import duckutil.Config;
 
 /**
  * This class takes in new blocks, validates them and stores them in the db.

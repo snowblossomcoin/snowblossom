@@ -1,7 +1,8 @@
 package snowblossom.trie;
 
-import java.util.Comparator;
 import com.google.protobuf.ByteString;
+
+import java.util.Comparator;
 
 
 public class ByteStringComparator implements Comparator<ByteString>

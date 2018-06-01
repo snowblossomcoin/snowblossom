@@ -1,17 +1,15 @@
 package snowblossom;
 
 import com.google.common.collect.ImmutableMap;
+import com.google.protobuf.ByteString;
+import duckutil.Config;
+
+import java.math.BigInteger;
+import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
-import java.util.List;
-
-import com.google.protobuf.ByteString;
-
-import java.util.logging.Logger;
 import java.util.logging.Level;
-import java.math.BigInteger;
-
-import duckutil.Config;
+import java.util.logging.Logger;
 
 public abstract class NetworkParams
 {

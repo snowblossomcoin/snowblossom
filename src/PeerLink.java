@@ -1,26 +1,14 @@
 package snowblossom;
 
-import io.grpc.stub.StreamObserver;
-import snowblossom.proto.PeerMessage;
 import io.grpc.ManagedChannel;
-
-import java.util.logging.Logger;
-import java.util.logging.Level;
+import io.grpc.stub.StreamObserver;
+import snowblossom.proto.*;
 
 import java.util.Random;
-
-import snowblossom.proto.Transaction;
-import snowblossom.proto.Block;
-import snowblossom.proto.BlockHeader;
-import snowblossom.proto.PeerChainTip;
-import snowblossom.proto.PeerInfo;
-import snowblossom.proto.BlockSummary;
-import snowblossom.proto.RequestBlock;
-import snowblossom.proto.RequestBlockHeader;
-import java.util.concurrent.TimeUnit;
-
-
 import java.util.TreeMap;
+import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * This class exists to present a single view of a peer regardless

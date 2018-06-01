@@ -1,20 +1,17 @@
 package snowblossom.miner;
 
-import snowblossom.NetworkParams;
-import snowblossom.SnowMerkleProof;
-import snowblossom.SnowFieldInfo;
-import snowblossom.proto.SnowPowProof;
+import com.google.common.collect.ImmutableSortedMap;
 import duckutil.Config;
+import snowblossom.NetworkParams;
+import snowblossom.SnowFieldInfo;
+import snowblossom.SnowMerkleProof;
+import snowblossom.proto.SnowPowProof;
 
 import java.io.File;
-
-import java.util.logging.Logger;
-import java.util.SplittableRandom;
-
 import java.util.Map;
-import java.util.SortedMap;
+import java.util.SplittableRandom;
 import java.util.TreeMap;
-import com.google.common.collect.ImmutableSortedMap;
+import java.util.logging.Logger;
 
 public class FieldScan
 {

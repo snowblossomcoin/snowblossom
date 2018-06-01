@@ -1,10 +1,9 @@
 package snowblossom;
 
-import org.junit.Assert;
-
-import snowblossom.trie.HashUtils;
-import snowblossom.trie.ByteStringComparator;
 import com.google.protobuf.ByteString;
+import org.junit.Assert;
+import snowblossom.trie.ByteStringComparator;
+import snowblossom.trie.HashUtils;
 
 /**
  * Represents a basic hash that could be anything on

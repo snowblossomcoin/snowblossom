@@ -1,21 +1,18 @@
 package snowblossom;
+
 import java.io.RandomAccessFile;
+import java.math.BigInteger;
 import java.nio.ByteBuffer;
-import java.util.Random;
+import java.nio.channels.FileChannel;
+import java.text.DecimalFormat;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Queue;
-import java.math.BigInteger;
-import java.util.HashSet;
-
-import java.nio.channels.FileChannel;
-
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.Semaphore;
-
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
-import java.text.DecimalFormat;
 
 /** 
  * Objective - create a deterministic large file.

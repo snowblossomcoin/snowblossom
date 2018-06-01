@@ -1,35 +1,15 @@
 package snowblossom;
 
-import snowblossom.proto.Transaction;
-import snowblossom.proto.TransactionInner;
-import snowblossom.proto.TransactionInput;
-import snowblossom.proto.TransactionOutput;
-import snowblossom.proto.CoinbaseExtras;
+import com.google.common.collect.ImmutableList;
+import com.google.protobuf.ByteString;
+import snowblossom.proto.*;
 
-import snowblossom.proto.SigSpec;
-import snowblossom.proto.SignatureEntry;
-import snowblossom.proto.AddressSpec;
-import snowblossom.proto.WalletDatabase;
-import snowblossom.proto.WalletKeyPair;
-
+import java.io.PrintStream;
+import java.security.KeyPair;
 import java.security.MessageDigest;
 import java.security.Signature;
-import java.security.KeyPair;
-
-import com.google.protobuf.ByteString;
-import com.google.common.collect.ImmutableList;
-
-import java.util.List;
-import java.util.LinkedList;
-import java.util.Collections;
-import java.util.Collection;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.TreeSet;
-import java.util.TreeMap;
-import java.io.PrintStream;
 import java.text.DecimalFormat;
-import java.util.Random;
+import java.util.*;
 
 
 

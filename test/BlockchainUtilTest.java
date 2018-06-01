@@ -1,11 +1,11 @@
 package snowblossom;
 
+import com.google.protobuf.ByteString;
 import org.junit.Assert;
 import org.junit.Test;
 
-import java.util.Random;
 import java.math.BigInteger;
-import com.google.protobuf.ByteString;
+import java.util.Random;
 
 
 public class BlockchainUtilTest

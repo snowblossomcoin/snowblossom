@@ -1,14 +1,13 @@
 package snowblossom;
 
 import org.apache.commons.math3.random.AbstractWell;
-import org.apache.commons.math3.random.Well1024a;
 import org.apache.commons.math3.random.Well44497b;
 
-import java.util.TreeMap;
 import java.nio.ByteBuffer;
-import java.security.Security;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.security.Security;
+import java.util.TreeMap;
 
  /** not thread safe */
   public class PRNGStream

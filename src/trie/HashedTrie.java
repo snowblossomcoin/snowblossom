@@ -1,22 +1,14 @@
 package snowblossom.trie;
 
-import com.google.protobuf.ByteString;
-import snowblossom.trie.proto.TrieNode;
-import snowblossom.trie.proto.ChildEntry;
-
-import java.util.Map;
-import java.util.Set;
-import java.util.HashMap;
-import java.util.TreeMap;
-import java.util.ArrayList;
-import java.util.LinkedList;
-
-import org.junit.Assert;
-
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.MultimapBuilder;
 import com.google.common.collect.SetMultimap;
+import com.google.protobuf.ByteString;
+import org.junit.Assert;
+import snowblossom.trie.proto.ChildEntry;
+import snowblossom.trie.proto.TrieNode;
 
-import com.google.common.collect.ImmutableList;
+import java.util.*;
 
 /**
  * So this is a trie with the following properties:

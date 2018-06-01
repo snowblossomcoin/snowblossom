@@ -1,17 +1,12 @@
 package snowblossom;
 
+import com.google.common.collect.ImmutableList;
 import org.junit.Assert;
-import org.junit.Test;
 import org.junit.BeforeClass;
+import org.junit.Test;
 
 import java.security.MessageDigest;
-
 import java.util.Random;
-import java.util.ArrayList;
-
-import com.google.protobuf.ByteString;
-
-import com.google.common.collect.ImmutableList;
 
 public class DigestUtilTest
 {

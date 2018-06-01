@@ -1,21 +1,14 @@
 package snowblossom.db.rocksdb;
 
-import snowblossom.db.DBTooManyResultsException;
-import org.rocksdb.RocksDB;
-import org.rocksdb.RocksIterator;
-import org.rocksdb.RocksDBException;
-import org.rocksdb.WriteBatch;
-import org.rocksdb.WriteOptions;
-
-import snowblossom.db.DBMapMutationSet;
 import com.google.protobuf.ByteString;
-import java.util.Collection;
-import java.util.Set;
-import java.util.HashSet;
-import java.util.concurrent.Executor;
+import org.rocksdb.RocksDB;
+import org.rocksdb.RocksDBException;
+import org.rocksdb.RocksIterator;
+import snowblossom.db.DBMapMutationSet;
+import snowblossom.db.DBTooManyResultsException;
 
-import java.util.SortedMap;
-import java.util.TreeMap;
+import java.util.HashSet;
+import java.util.Set;
 
 public class RocksDBMapMutationSet extends DBMapMutationSet
 {
