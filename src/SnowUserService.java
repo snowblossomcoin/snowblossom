@@ -196,16 +196,21 @@ public class SnowUserService extends UserServiceGrpc.UserServiceImplBase
   @Override
   public void getNodeStatus(NullRequest null_request, StreamObserver<NodeStatus> responseObserver)
   {
-    NodeStatus ns = NodeStatus.newBuilder()
+    NodeStatus.Builder ns = NodeStatus.newBuilder();
+
+    ns
       .setMemPoolSize(node.getMemPool().getMemPoolSize())
       .setConnectedPeers(node.getPeerage().getConnectedPeerCount())
-      .setHeadSummary(node.getBlockIngestor().getHead())
       .setEstimatedNodes(node.getPeerage().getEstimateUniqueNodes())
       .setNodeVersion(Globals.VERSION)
-      .putAllVersionMap(node.getPeerage().getVersionMap())
-      .build();
+      .putAllVersionMap(node.getPeerage().getVersionMap());
 
-    responseObserver.onNext(ns);
+    if (node.getBlockIngestor().getHead() != null)
+    {
+      ns.setHeadSummary(node.getBlockIngestor().getHead());
+    }
+
+    responseObserver.onNext(ns.build());
     responseObserver.onCompleted();
   }
 
