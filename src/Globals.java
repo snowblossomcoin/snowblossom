@@ -42,6 +42,8 @@ public class Globals
 
   public static final long CLOCK_SKEW_WARN_MS = 5000;
 
+  public static final int BLOCK_CHUNK_HEADER_DOWNLOAD_SIZE = 500;
+
   public static void addCryptoProvider()
   {
     Security.addProvider(new org.bouncycastle.jce.provider.BouncyCastleProvider());

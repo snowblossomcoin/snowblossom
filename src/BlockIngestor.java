@@ -180,6 +180,13 @@ public class BlockIngestor
     return chainhead;
   }
 
+  public int getHeight()
+  {
+    BlockSummary summ = getHead();
+    if (summ == null) return 0;
+    return summ.getHeader().getBlockHeight();
+  }
+
   public static BlockSummary getNewSummary(BlockHeader header, BlockSummary prev_summary, NetworkParams params, long tx_count)
   {
     BlockSummary.Builder bs = BlockSummary.newBuilder();

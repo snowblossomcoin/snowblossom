@@ -230,7 +230,15 @@ public class PeerLink implements StreamObserver<PeerMessage>
       }
       else
       { //get more headers, still in the woods
-        int next = header.getBlockHeight() - 1;
+        int next = header.getBlockHeight();
+        if (node.getBlockIngestor().getHeight() + Globals.BLOCK_CHUNK_HEADER_DOWNLOAD_SIZE < next)
+        {
+          next = node.getBlockIngestor().getHeight() + Globals.BLOCK_CHUNK_HEADER_DOWNLOAD_SIZE;
+        }
+        while(peer_block_map.containsKey(next))
+        {
+          next--;
+        }
         
         if (next >= 0)
         {

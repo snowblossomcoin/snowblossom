@@ -240,7 +240,7 @@ java_test(
   name = "wallet_test",
   srcs = ["test/WalletTest.java"],
   test_class = "snowblossom.WalletTest",
-  size="medium",
+  size="large",
   deps = [
       "@junit_junit//jar",
       ":snowblossomlib",
