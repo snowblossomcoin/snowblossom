@@ -1,6 +1,8 @@
 package snowblossom;
 
 import com.google.protobuf.ByteString;
+import duckutil.TimeRecord;
+import duckutil.TimeRecordAuto;
 import snowblossom.db.DB;
 import snowblossom.proto.Block;
 import snowblossom.proto.BlockHeader;
@@ -33,6 +35,7 @@ public class BlockIngestor
   private LRUCache<ChainHash, Long> block_pull_map = new LRUCache<>(1000);
 
   private PrintStream block_log;
+  private TimeRecord time_record;
 
   private boolean tx_index=false;
 
@@ -47,6 +50,8 @@ public class BlockIngestor
     if (node.getConfig().isSet("block_log"))
     {
       block_log = new PrintStream(new FileOutputStream(node.getConfig().get("block_log"), true));
+      time_record = new TimeRecord();
+      TimeRecord.setSharedRecord(time_record);
     }
 
     chainhead = db.getBlockSummaryMap().get(HEAD);
@@ -64,80 +69,95 @@ public class BlockIngestor
   public boolean ingestBlock(Block blk)
     throws ValidationException
   {
-    Validation.checkBlockBasics(node.getParams(), blk, true);
+    if (time_record != null) time_record.reset();
 
-    ChainHash blockhash = new ChainHash(blk.getHeader().getSnowHash());
-
-    if (db.getBlockSummaryMap().containsKey(blockhash.getBytes() ))
+    ChainHash blockhash;
+    try(TimeRecordAuto tra_blk = TimeRecord.openAuto("BlockIngestor.ingestBlock"))
     {
-      return false;
-    }
+      Validation.checkBlockBasics(node.getParams(), blk, true);
 
-    ChainHash prevblock = new ChainHash(blk.getHeader().getPrevBlockHash());
+      blockhash = new ChainHash(blk.getHeader().getSnowHash());
 
-    BlockSummary prev_summary;
-    if (prevblock.equals(ChainHash.ZERO_HASH))
-    {
-      prev_summary = BlockSummary.newBuilder()
-          .setHeader(BlockHeader.newBuilder().setUtxoRootHash( HashUtils.hashOfEmpty() ).build())
-        .build();
-    }
-    else
-    {
-      prev_summary = db.getBlockSummaryMap().get( prevblock.getBytes() );
-    }
-
-    if (prev_summary == null)
-    {
-      return false;
-    }
-
-    BlockSummary summary = getNewSummary(blk.getHeader(), prev_summary, node.getParams(), blk.getTransactionsCount() );
-
-    Validation.deepBlockValidation(node, blk, prev_summary);
-
-    if (tx_index)
-    {
-      HashMap<ByteString, Transaction> tx_map = new HashMap<>();
-      for(Transaction tx : blk.getTransactionsList())
+      if (db.getBlockSummaryMap().containsKey(blockhash.getBytes() ))
       {
-        tx_map.put(tx.getTxHash(), tx);
+        return false;
       }
-      db.getTransactionMap().putAll(tx_map);
-    }
 
+      ChainHash prevblock = new ChainHash(blk.getHeader().getPrevBlockHash());
 
-    db.getBlockMap().put( blockhash.getBytes(), blk);
-    db.getBlockSummaryMap().put( blockhash.getBytes(), summary);
-
-    BigInteger summary_work_sum = BlockchainUtil.readInteger(summary.getWorkSum());
-    BigInteger chainhead_work_sum = BigInteger.ZERO;
-    if (chainhead != null)
-    {
-      chainhead_work_sum = BlockchainUtil.readInteger(chainhead.getWorkSum());
-    }
-
-    if (summary_work_sum.compareTo(chainhead_work_sum) > 0)
-    {
-      chainhead = summary;
-      db.getBlockSummaryMap().put(HEAD, summary);
-      //System.out.println("UTXO at new root: " + HexUtil.getHexString(summary.getHeader().getUtxoRootHash()));
-      //node.getUtxoHashedTrie().printTree(summary.getHeader().getUtxoRootHash());
-
-      updateHeights(summary);
-
-      logger.info(String.format("New chain tip: Height %d %s (tx:%d sz:%d)", blk.getHeader().getBlockHeight(), blockhash, blk.getTransactionsCount(), blk.toByteString().size()));
-
-      SnowUserService u = node.getUserService();
-      if (u != null)
+      BlockSummary prev_summary;
+      if (prevblock.equals(ChainHash.ZERO_HASH))
       {
-        u.tickleBlocks();
+        prev_summary = BlockSummary.newBuilder()
+            .setHeader(BlockHeader.newBuilder().setUtxoRootHash( HashUtils.hashOfEmpty() ).build())
+          .build();
       }
-      node.getMemPool().tickleBlocks(new ChainHash(summary.getHeader().getUtxoRootHash()));
+      else
+      {
+        try(TimeRecordAuto tra_prv = TimeRecord.openAuto("BlockIngestor.getPrevSummary"))
+        {
+          prev_summary = db.getBlockSummaryMap().get( prevblock.getBytes() );
+        }
+      }
+
+      if (prev_summary == null)
+      {
+        return false;
+      }
+
+      BlockSummary summary = getNewSummary(blk.getHeader(), prev_summary, node.getParams(), blk.getTransactionsCount() );
+
+      Validation.deepBlockValidation(node, blk, prev_summary);
+
+      if (tx_index)
+      {
+        try(TimeRecordAuto tra_tx = TimeRecord.openAuto("BlockIngestor.saveTx"))
+        {
+          HashMap<ByteString, Transaction> tx_map = new HashMap<>();
+          for(Transaction tx : blk.getTransactionsList())
+          {
+            tx_map.put(tx.getTxHash(), tx);
+          }
+          db.getTransactionMap().putAll(tx_map);
+        }
+      }
+
+
+      try(TimeRecordAuto tra_tx = TimeRecord.openAuto("BlockIngestor.blockSave"))
+      {
+        db.getBlockMap().put( blockhash.getBytes(), blk);
+        db.getBlockSummaryMap().put( blockhash.getBytes(), summary);
+      }
+
+      BigInteger summary_work_sum = BlockchainUtil.readInteger(summary.getWorkSum());
+      BigInteger chainhead_work_sum = BigInteger.ZERO;
+      if (chainhead != null)
+      {
+        chainhead_work_sum = BlockchainUtil.readInteger(chainhead.getWorkSum());
+      }
+
+      if (summary_work_sum.compareTo(chainhead_work_sum) > 0)
+      {
+        chainhead = summary;
+        db.getBlockSummaryMap().put(HEAD, summary);
+        //System.out.println("UTXO at new root: " + HexUtil.getHexString(summary.getHeader().getUtxoRootHash()));
+        //node.getUtxoHashedTrie().printTree(summary.getHeader().getUtxoRootHash());
+
+        updateHeights(summary);
+
+        logger.info(String.format("New chain tip: Height %d %s (tx:%d sz:%d)", blk.getHeader().getBlockHeight(), blockhash, blk.getTransactionsCount(), blk.toByteString().size()));
+
+        SnowUserService u = node.getUserService();
+        if (u != null)
+        {
+          u.tickleBlocks();
+        }
+        node.getMemPool().tickleBlocks(new ChainHash(summary.getHeader().getUtxoRootHash()));
+      }
+
+
+      node.getPeerage().sendAllTips();
     }
-
-
-    node.getPeerage().sendAllTips();
 
     if (block_log != null)
     {
@@ -148,6 +168,10 @@ public class BlockIngestor
         TransactionUtil.prettyDisplayTx(tx, block_log, params);
         block_log.println();
       }
+      time_record.printReport(block_log);
+      time_record.reset();
+
+
     }
 
     return true;
