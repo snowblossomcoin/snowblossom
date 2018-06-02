@@ -193,7 +193,7 @@ public class SnowBlossomMiner
     double time_sec = time_ms / 1000.0;
     double rate = count / time_sec;
 
-    DecimalFormat df=new DecimalFormat("0.0");
+    DecimalFormat df=new DecimalFormat("0.000");
 
     String block_time_report ="";
     if (last_block_template != null)
