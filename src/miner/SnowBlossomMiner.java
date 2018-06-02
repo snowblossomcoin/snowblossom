@@ -257,6 +257,7 @@ public class SnowBlossomMiner
     ByteBuffer word_bb = ByteBuffer.wrap(word_buff);
     SnowMerkleProof merkle_proof;
     int proof_field;
+    byte[] nonce = new byte[Globals.NONCE_LENGTH];
 
     public MinerThread()
     {
@@ -283,7 +284,6 @@ public class SnowBlossomMiner
         last_block_template = null;
       }
 
-      byte[] nonce = new byte[Globals.NONCE_LENGTH];
       try(TimeRecordAuto tra = TimeRecord.openAuto("MinerThread.rndNonce"))
       {
         rnd.nextBytes(nonce);
