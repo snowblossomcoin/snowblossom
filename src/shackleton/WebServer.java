@@ -4,8 +4,8 @@ import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
 import duckutil.Config;
-import snowblossom.*;
 import snowblossom.proto.*;
+import snowblossomlib.ValidationException;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -19,7 +19,7 @@ public class WebServer
   private HttpServer server;
   private Shackleton shackleton;
 
-  private LRUCache<ChainHash, String> block_summary_lines = new LRUCache<>(500);
+  private snowblossomlib.LRUCache<snowblossomlib.ChainHash, String> block_summary_lines = new snowblossomlib.LRUCache<>(500);
 
   public WebServer(Config config, Shackleton shackleton)
 		throws Exception
@@ -48,7 +48,7 @@ public class WebServer
     public void innerHandle(HttpExchange t, PrintStream out)
       throws Exception
     {
-      NetworkParams params = shackleton.getParams();
+      snowblossomlib.NetworkParams params = shackleton.getParams();
       String query = t.getRequestURI().getQuery();
       if ((query != null) && (query.startsWith("search=")))
       {
@@ -60,12 +60,12 @@ public class WebServer
           return;
         }
 
-        if (search.length()==Globals.BLOCKCHAIN_HASH_LEN*2)
+        if (search.length()== snowblossomlib.Globals.BLOCKCHAIN_HASH_LEN*2)
         {
-          ChainHash hash = null;
+          snowblossomlib.ChainHash hash = null;
           try
           {
-            hash = new ChainHash(search);
+            hash = new snowblossomlib.ChainHash(search);
 
           }
           catch(Throwable e){}
@@ -76,19 +76,19 @@ public class WebServer
           }
         }
         
-        AddressSpecHash address = null;
+        snowblossomlib.AddressSpecHash address = null;
         try
         {
-          address = AddressUtil.getHashForAddress( params.getAddressPrefix(), search);
+          address = snowblossomlib.AddressUtil.getHashForAddress(params.getAddressPrefix(), search);
         }
         catch(Throwable e){}
         if (address == null)
         {
-          if (search.length()==Globals.ADDRESS_SPEC_HASH_LEN*2)
+          if (search.length()== snowblossomlib.Globals.ADDRESS_SPEC_HASH_LEN*2)
           {
             try
             {
-              address = new AddressSpecHash(search);
+              address = new snowblossomlib.AddressSpecHash(search);
             }
             catch(Throwable e){}
           }
@@ -111,7 +111,7 @@ public class WebServer
 
   private void displayStatus(PrintStream out)
   {
-    NetworkParams params = shackleton.getParams();
+    snowblossomlib.NetworkParams params = shackleton.getParams();
     NodeStatus node_status = shackleton.getStub().getNodeStatus(nr());
     out.println("<h2>Node Status</h2>");
     out.println("<pre>");
@@ -125,7 +125,7 @@ public class WebServer
     out.println("<h2>Chain Status</h2>");
     out.println("<pre>");
 
-    SnowFieldInfo sf = params.getSnowFieldInfo(summary.getActivatedField());
+    snowblossomlib.SnowFieldInfo sf = params.getSnowFieldInfo(summary.getActivatedField());
 
 
     out.println("work_sum: " + summary.getWorkSum());
@@ -136,19 +136,19 @@ public class WebServer
 
 
 
-    double avg_diff = PowUtil.getDiffForTarget(BlockchainUtil.readInteger(summary.getTargetAverage()));
-    double target_diff = PowUtil.getDiffForTarget(BlockchainUtil.targetBytesToBigInteger(header.getTarget()));
+    double avg_diff = snowblossomlib.PowUtil.getDiffForTarget(snowblossomlib.BlockchainUtil.readInteger(summary.getTargetAverage()));
+    double target_diff = snowblossomlib.PowUtil.getDiffForTarget(snowblossomlib.BlockchainUtil.targetBytesToBigInteger(header.getTarget()));
     double block_time_sec = summary.getBlocktimeAverageMs() / 1000.0 ;
     double estimated_hash = Math.pow(2.0, target_diff) / block_time_sec / 1e6;
     DecimalFormat df =new DecimalFormat("0.000");
 
     out.println(String.format("difficulty (avg): %s (%s)", df.format(target_diff), df.format(avg_diff)));
     out.println(String.format("estimated network hash rate: %s Mh/s", df.format(estimated_hash)));
-    out.println("Node version: " + HexUtil.getSafeString( node_status.getNodeVersion()));
+    out.println("Node version: " + snowblossomlib.HexUtil.getSafeString(node_status.getNodeVersion()));
     out.println("Version counts:");
     for(Map.Entry<String, Integer> me : node_status.getVersionMap().entrySet())
     {
-      String version = HexUtil.getSafeString(me.getKey());
+      String version = snowblossomlib.HexUtil.getSafeString(me.getKey());
       int count = me.getValue();
       out.println("  " + version + " - " + count);
     }
@@ -163,14 +163,14 @@ public class WebServer
     for(int h=header.getBlockHeight(); h>=min; h--)
     {
       BlockHeader blk_head = shackleton.getStub().getBlockHeader(RequestBlockHeader.newBuilder().setBlockHeight(h).build());
-      ChainHash hash = new ChainHash(blk_head.getSnowHash());
+      snowblossomlib.ChainHash hash = new snowblossomlib.ChainHash(blk_head.getSnowHash());
       out.println(getBlockSummaryLine(hash));
     }
     out.println("</table>");
 
   }
 
-  private String getBlockSummaryLine(ChainHash hash)
+  private String getBlockSummaryLine(snowblossomlib.ChainHash hash)
   {
     synchronized(block_summary_lines)
     {
@@ -180,7 +180,7 @@ public class WebServer
       }
     }
       
-    NetworkParams params = shackleton.getParams();
+    snowblossomlib.NetworkParams params = shackleton.getParams();
 
     int tx_count = 0;
     int size =0;
@@ -190,10 +190,10 @@ public class WebServer
     tx_count = blk.getTransactionsCount();
     size = blk.toByteString().size();
 
-    TransactionInner inner = TransactionUtil.getInner(blk.getTransactions(0));
+    TransactionInner inner = snowblossomlib.TransactionUtil.getInner(blk.getTransactions(0));
 
-    String miner_addr = AddressUtil.getAddressString( params.getAddressPrefix(), new AddressSpecHash(inner.getOutputs(0).getRecipientSpecHash()));
-    String remark = HexUtil.getSafeString(inner.getCoinbaseExtras().getRemarks());
+    String miner_addr = snowblossomlib.AddressUtil.getAddressString(params.getAddressPrefix(), new snowblossomlib.AddressSpecHash(inner.getOutputs(0).getRecipientSpecHash()));
+    String remark = snowblossomlib.HexUtil.getSafeString(inner.getCoinbaseExtras().getRemarks());
     String miner = miner_addr;
     if (remark.length() > 0)
     {
@@ -214,8 +214,8 @@ public class WebServer
     return s;
   }
 
-  private void displayHash(PrintStream out, ChainHash hash)
-    throws ValidationException
+  private void displayHash(PrintStream out, snowblossomlib.ChainHash hash)
+    throws snowblossomlib.ValidationException
   {
     Block blk = shackleton.getStub().getBlock( RequestBlock.newBuilder().setBlockHash(hash.getBytes()).build());
     if ((blk!=null) && (blk.getHeader().getVersion() != 0))
@@ -237,21 +237,21 @@ public class WebServer
     }
 
   }
-  private void displayAddress(PrintStream out, AddressSpecHash address)
+  private void displayAddress(PrintStream out, snowblossomlib.AddressSpecHash address)
   {
-    NetworkParams params = shackleton.getParams();
-    out.println("Address: " + AddressUtil.getAddressString(params.getAddressPrefix(), address));
+    snowblossomlib.NetworkParams params = shackleton.getParams();
+    out.println("Address: " + snowblossomlib.AddressUtil.getAddressString(params.getAddressPrefix(), address));
   }
 
   private void displayBlock(PrintStream out, Block blk)
-    throws ValidationException
+    throws snowblossomlib.ValidationException
   {
       BlockHeader header = blk.getHeader();
       out.println("<pre>");
-      out.println("hash: " + new ChainHash(header.getSnowHash()));
+      out.println("hash: " + new snowblossomlib.ChainHash(header.getSnowHash()));
       out.println("height: " + header.getBlockHeight());
-      out.println("prev_block_hash: " + new ChainHash(header.getPrevBlockHash()));
-      out.println("utxo_root_hash: " + new ChainHash(header.getUtxoRootHash()));
+      out.println("prev_block_hash: " + new snowblossomlib.ChainHash(header.getPrevBlockHash()));
+      out.println("utxo_root_hash: " + new snowblossomlib.ChainHash(header.getUtxoRootHash()));
       out.println("timestamp: " + header.getTimestamp());
       out.println("snow_field: " + header.getSnowField());
       out.println("size: " + blk.toByteString().size());
@@ -261,7 +261,7 @@ public class WebServer
 
       for(Transaction tx : blk.getTransactionsList())
       {
-        TransactionUtil.prettyDisplayTx(tx, out, shackleton.getParams());
+        snowblossomlib.TransactionUtil.prettyDisplayTx(tx, out, shackleton.getParams());
         out.println();
       }
       out.println("</pre>");
@@ -272,7 +272,7 @@ public class WebServer
   {
       out.println("<pre>");
       out.println("Found transaction");
-      TransactionUtil.prettyDisplayTx(tx, out, shackleton.getParams());
+      snowblossomlib.TransactionUtil.prettyDisplayTx(tx, out, shackleton.getParams());
       out.println("</pre>");
   }
 
@@ -309,7 +309,7 @@ public class WebServer
 
     private void addHeader(PrintStream out)
     {
-      NetworkParams params = shackleton.getParams();
+      snowblossomlib.NetworkParams params = shackleton.getParams();
       out.println("<html>");
       out.println("<head>");
       out.println("<title>Snowblossom " + params.getNetworkName() + "</title>");

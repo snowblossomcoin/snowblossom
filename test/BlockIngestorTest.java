@@ -4,6 +4,10 @@ import org.junit.Assert;
 import org.junit.Test;
 import snowblossom.proto.BlockHeader;
 import snowblossom.proto.BlockSummary;
+import snowblossomlib.BlockIngestor;
+import snowblossomlib.BlockchainUtil;
+import snowblossomlib.NetworkParams;
+import snowblossomlib.NetworkParamsTestnet;
 
 import java.math.BigInteger;
 
@@ -13,10 +17,10 @@ public class BlockIngestorTest
   @Test
   public void testFirstBlockSummary()
   {
-    NetworkParams params = new NetworkParamsTestnet();
+    snowblossomlib.NetworkParams params = new snowblossomlib.NetworkParamsTestnet();
 
 		BlockHeader header = BlockHeader.newBuilder()
-      .setTarget(BlockchainUtil.targetBigIntegerToBytes( params.getMaxTarget() ))
+      .setTarget(snowblossomlib.BlockchainUtil.targetBigIntegerToBytes(params.getMaxTarget() ))
       .setTimestamp(System.currentTimeMillis())
       .build();
 
@@ -24,7 +28,7 @@ public class BlockIngestorTest
       prev_summary = BlockSummary.newBuilder().build();
     System.out.println(prev_summary);
 
-		BlockSummary s = BlockIngestor.getNewSummary(header, prev_summary, params, 1L);
+		BlockSummary s = snowblossomlib.BlockIngestor.getNewSummary(header, prev_summary, params, 1L);
 
     Assert.assertNotNull(s.getHeader());
     Assert.assertEquals("1024", s.getWorkSum());
@@ -42,7 +46,7 @@ public class BlockIngestorTest
     BigInteger using_target = params.getMaxTarget().divide(BigInteger.valueOf(2L));
 
 		BlockHeader header = BlockHeader.newBuilder()
-      .setTarget(BlockchainUtil.targetBigIntegerToBytes( using_target ))
+      .setTarget(BlockchainUtil.targetBigIntegerToBytes(using_target ))
       .setTimestamp(time)
       .build();
 

@@ -6,6 +6,16 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import snowblossom.proto.AddressSpec;
 import snowblossom.proto.SigSpec;
+import snowblossomlib.AddressSpecHash;
+import snowblossomlib.AddressUtil;
+import snowblossomlib.DigestUtil;
+import snowblossomlib.Duck32;
+import snowblossomlib.Globals;
+import snowblossomlib.NetworkParams;
+import snowblossomlib.NetworkParamsProd;
+import snowblossomlib.NetworkParamsRegtest;
+import snowblossomlib.NetworkParamsTestnet;
+import snowblossomlib.ValidationException;
 
 import java.nio.ByteBuffer;
 import java.security.MessageDigest;
@@ -18,7 +28,7 @@ public class AddressUtilTest
   @BeforeClass
   public static void loadProvider()
   {
-    Globals.addCryptoProvider();
+    snowblossomlib.Globals.addCryptoProvider();
   }
 
 
@@ -67,14 +77,14 @@ public class AddressUtilTest
       b.addSigSpecs(ss);
     }
 
-    AddressSpecHash found_hash = AddressUtil.getHashForSpec(b.build(),  DigestUtil.getMDAddressSpec());
+    snowblossomlib.AddressSpecHash found_hash = AddressUtil.getHashForSpec(b.build(), snowblossomlib.DigestUtil.getMDAddressSpec());
 
     MessageDigest md = DigestUtil.getMDAddressSpec();
     md.update(bb.array(), 0, bb.position());
 
     byte[] h = md.digest();
 
-    AddressSpecHash expected_hash = new AddressSpecHash(h);
+    snowblossomlib.AddressSpecHash expected_hash = new snowblossomlib.AddressSpecHash(h);
 
     Assert.assertEquals(expected_hash, found_hash);
 
@@ -83,14 +93,14 @@ public class AddressUtilTest
 
   @Test
   public void testAddressConversions()
-    throws ValidationException
+    throws snowblossomlib.ValidationException
   {
-    ArrayList<NetworkParams> plist = new ArrayList<NetworkParams>();
+    ArrayList<snowblossomlib.NetworkParams> plist = new ArrayList<snowblossomlib.NetworkParams>();
     plist.add(new NetworkParamsProd());
     plist.add(new NetworkParamsTestnet());
     plist.add(new NetworkParamsRegtest());
 
-    byte[] buff = new byte[Globals.ADDRESS_SPEC_HASH_LEN];
+    byte[] buff = new byte[snowblossomlib.Globals.ADDRESS_SPEC_HASH_LEN];
     Random rnd = new Random();
     HashSet<String> addresses = new HashSet<>();
 
@@ -101,7 +111,7 @@ public class AddressUtilTest
         rnd.nextBytes(buff);
       }
 
-      AddressSpecHash spec = new AddressSpecHash(buff);
+      snowblossomlib.AddressSpecHash spec = new snowblossomlib.AddressSpecHash(buff);
       for(NetworkParams p : plist)
       {
         String addr = spec.toAddressString(p);
@@ -109,66 +119,66 @@ public class AddressUtilTest
         addresses.add(addr);
         System.out.println("Address: "  + addr);
 
-        AddressSpecHash dec = new AddressSpecHash(addr, p);
+        snowblossomlib.AddressSpecHash dec = new snowblossomlib.AddressSpecHash(addr, p);
         Assert.assertEquals(spec, dec);
 
 
         int colon = addr.indexOf(":");
         String without = addr.substring(colon+1);
 
-        AddressSpecHash dec2 = new AddressSpecHash(without, p);
+        snowblossomlib.AddressSpecHash dec2 = new snowblossomlib.AddressSpecHash(without, p);
         Assert.assertEquals(spec, dec2);
       }
     }
   }
 
-  @Test(expected=ValidationException.class)
+  @Test(expected= snowblossomlib.ValidationException.class)
   public void testAddressChecksumWrongLabel()
     throws Exception
   {
     Random rnd = new Random();
-    byte[] buff = new byte[Globals.ADDRESS_SPEC_HASH_LEN];
+    byte[] buff = new byte[snowblossomlib.Globals.ADDRESS_SPEC_HASH_LEN];
     rnd.nextBytes(buff);
-    AddressSpecHash spec = new AddressSpecHash(buff);
+    snowblossomlib.AddressSpecHash spec = new snowblossomlib.AddressSpecHash(buff);
 
-    String addr = Duck32.encode("d1", spec.getBytes());
+    String addr = snowblossomlib.Duck32.encode("d1", spec.getBytes());
 
     int colon = addr.indexOf(":");
     String without = addr.substring(colon+1);
 
-    Duck32.decode("d2", without);
+    snowblossomlib.Duck32.decode("d2", without);
   }
 
-  @Test(expected=ValidationException.class)
+  @Test(expected= snowblossomlib.ValidationException.class)
   public void testAddressChecksumChangeLabelPrefix()
     throws Exception
   {
     Random rnd = new Random();
-    byte[] buff = new byte[Globals.ADDRESS_SPEC_HASH_LEN];
+    byte[] buff = new byte[snowblossomlib.Globals.ADDRESS_SPEC_HASH_LEN];
     rnd.nextBytes(buff);
-    AddressSpecHash spec = new AddressSpecHash(buff);
+    snowblossomlib.AddressSpecHash spec = new snowblossomlib.AddressSpecHash(buff);
 
-    String addr = Duck32.encode("d2", spec.getBytes());
+    String addr = snowblossomlib.Duck32.encode("d2", spec.getBytes());
 
-    Duck32.decode("d1", addr);
+    snowblossomlib.Duck32.decode("d1", addr);
   }
  
-  @Test(expected=ValidationException.class)
+  @Test(expected= snowblossomlib.ValidationException.class)
   public void testAddressChecksumChangeLabel()
     throws Exception
   {
     Random rnd = new Random();
-    byte[] buff = new byte[Globals.ADDRESS_SPEC_HASH_LEN];
+    byte[] buff = new byte[snowblossomlib.Globals.ADDRESS_SPEC_HASH_LEN];
     rnd.nextBytes(buff);
-    AddressSpecHash spec = new AddressSpecHash(buff);
+    snowblossomlib.AddressSpecHash spec = new snowblossomlib.AddressSpecHash(buff);
 
-    String addr = Duck32.encode("d1", spec.getBytes());
+    String addr = snowblossomlib.Duck32.encode("d1", spec.getBytes());
 
     int colon = addr.indexOf(":");
     String without = addr.substring(colon+1);
     String wrong = "d2:" + without;
 
-    Duck32.decode("d2", wrong);
+    snowblossomlib.Duck32.decode("d2", wrong);
   }
 
   @Test
@@ -182,15 +192,15 @@ public class AddressUtilTest
     for(int pass=0; pass<10000; pass++)
     {
       rnd.nextBytes(buff);
-      AddressSpecHash spec = new AddressSpecHash(buff);
+      snowblossomlib.AddressSpecHash spec = new AddressSpecHash(buff);
 
-      String addr = Duck32.encode("d1", spec.getBytes());
+      String addr = snowblossomlib.Duck32.encode("d1", spec.getBytes());
 
       int colon = addr.indexOf(":");
       String without = addr.substring(colon+1);
 
       int idx = rnd.nextInt(without.length());
-      char replace = Duck32.CHARSET.charAt( rnd.nextInt(32) );
+      char replace = snowblossomlib.Duck32.CHARSET.charAt(rnd.nextInt(32) );
 
       String n = without.substring(0, idx) + replace + without.substring(idx+1);
 

@@ -2,9 +2,9 @@ package snowblossom.miner;
 
 import com.google.common.collect.ImmutableSortedMap;
 import duckutil.Config;
-import snowblossom.NetworkParams;
-import snowblossom.SnowFieldInfo;
-import snowblossom.SnowMerkleProof;
+import snowblossomlib.NetworkParams;
+import snowblossomlib.SnowFieldInfo;
+import snowblossomlib.SnowMerkleProof;
 import snowblossom.proto.SnowPowProof;
 
 import java.io.File;

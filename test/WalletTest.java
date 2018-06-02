@@ -5,6 +5,13 @@ import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import snowblossom.proto.*;
+import snowblossomlib.AddressSpecHash;
+import snowblossomlib.AddressUtil;
+import snowblossomlib.Globals;
+import snowblossomlib.KeyUtil;
+import snowblossomlib.TransactionBridge;
+import snowblossomlib.TransactionUtil;
+import snowblossomlib.Validation;
 
 
 public class WalletTest
@@ -24,16 +31,16 @@ public class WalletTest
   {
     WalletDatabase.Builder builder = WalletDatabase.newBuilder();
 
-    builder.addKeys(KeyUtil.generateWalletStandardECKey());
-    builder.addKeys(KeyUtil.generateWalletECKey("secp521r1"));
-    builder.addKeys(KeyUtil.generateWalletECKey("secp384r1"));
-    builder.addKeys(KeyUtil.generateWalletRSAKey(1024));
-    builder.addKeys(KeyUtil.generateWalletRSAKey(2048));
-    builder.addKeys(KeyUtil.generateWalletDSAKey());
-    builder.addKeys(KeyUtil.generateWalletDSTU4145Key(0));
-    builder.addKeys(KeyUtil.generateWalletDSTU4145Key(1));
-    builder.addKeys(KeyUtil.generateWalletDSTU4145Key(7));
-    builder.addKeys(KeyUtil.generateWalletDSTU4145Key(9));
+    builder.addKeys(snowblossomlib.KeyUtil.generateWalletStandardECKey());
+    builder.addKeys(snowblossomlib.KeyUtil.generateWalletECKey("secp521r1"));
+    builder.addKeys(snowblossomlib.KeyUtil.generateWalletECKey("secp384r1"));
+    builder.addKeys(snowblossomlib.KeyUtil.generateWalletRSAKey(1024));
+    builder.addKeys(snowblossomlib.KeyUtil.generateWalletRSAKey(2048));
+    builder.addKeys(snowblossomlib.KeyUtil.generateWalletDSAKey());
+    builder.addKeys(snowblossomlib.KeyUtil.generateWalletDSTU4145Key(0));
+    builder.addKeys(snowblossomlib.KeyUtil.generateWalletDSTU4145Key(1));
+    builder.addKeys(snowblossomlib.KeyUtil.generateWalletDSTU4145Key(7));
+    builder.addKeys(snowblossomlib.KeyUtil.generateWalletDSTU4145Key(9));
 
     AddressSpec.Builder spec = AddressSpec.newBuilder();
 
@@ -60,9 +67,9 @@ public class WalletTest
 
 
 
-    Transaction tx = TransactionUtil.makeTransaction(wallet, ImmutableList.of(a,b,c),address_hash, 150000,0L);
+    Transaction tx = snowblossomlib.TransactionUtil.makeTransaction(wallet, ImmutableList.of(a, b, c), address_hash, 150000, 0L);
 
-    Validation.checkTransactionBasics(tx, false);
+    snowblossomlib.Validation.checkTransactionBasics(tx, false);
 
     Assert.assertEquals(wallet.getKeysCount(), tx.getSignaturesCount());
 
@@ -98,11 +105,11 @@ public class WalletTest
 
     AddressSpecHash address_hash = AddressUtil.getHashForSpec(claim);
 
-    TransactionBridge a = new TransactionBridge(address_hash, 50000);
-    TransactionBridge b = new TransactionBridge(address_hash, 50000);
-    TransactionBridge c = new TransactionBridge(address_hash, 50000);
+    snowblossomlib.TransactionBridge a = new snowblossomlib.TransactionBridge(address_hash, 50000);
+    snowblossomlib.TransactionBridge b = new snowblossomlib.TransactionBridge(address_hash, 50000);
+    snowblossomlib.TransactionBridge c = new TransactionBridge(address_hash, 50000);
 
-    Transaction tx = TransactionUtil.makeTransaction(wallet, ImmutableList.of(a,b,c),address_hash, 150000, 0L);
+    Transaction tx = TransactionUtil.makeTransaction(wallet, ImmutableList.of(a, b, c), address_hash, 150000, 0L);
 
     Validation.checkTransactionBasics(tx, false);
 

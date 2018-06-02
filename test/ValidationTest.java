@@ -4,6 +4,14 @@ import com.google.protobuf.ByteString;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import snowblossom.proto.*;
+import snowblossomlib.AddressSpecHash;
+import snowblossomlib.AddressUtil;
+import snowblossomlib.DigestUtil;
+import snowblossomlib.Globals;
+import snowblossomlib.KeyUtil;
+import snowblossomlib.SignatureUtil;
+import snowblossomlib.Validation;
+import snowblossomlib.ValidationException;
 
 import java.security.KeyPair;
 import java.security.MessageDigest;
@@ -16,53 +24,53 @@ public class ValidationTest
   @BeforeClass
   public static void loadProvider()
   {
-    Globals.addCryptoProvider();
+    snowblossomlib.Globals.addCryptoProvider();
   }
 
-  @Test(expected = ValidationException.class)
+  @Test(expected = snowblossomlib.ValidationException.class)
   public void testAddrSpecEmptyString()
     throws Exception
   {
     byte[] empty=new byte[0];
     ByteString bs = ByteString.copyFrom(empty);
 
-    Validation.validateAddressSpecHash(bs, "empty");
+    snowblossomlib.Validation.validateAddressSpecHash(bs, "empty");
   }
 
-  @Test(expected = ValidationException.class)
+  @Test(expected = snowblossomlib.ValidationException.class)
   public void testAddrSpecShortString()
     throws Exception
   {
     byte[] b=new byte[12];
     ByteString bs = ByteString.copyFrom(b);
 
-    Validation.validateAddressSpecHash(bs, "short");
+    snowblossomlib.Validation.validateAddressSpecHash(bs, "short");
   }
   @Test(expected = ValidationException.class)
   public void testAddrSpecNullString()
     throws Exception
   {
-    Validation.validateAddressSpecHash(null, "short");
+    snowblossomlib.Validation.validateAddressSpecHash(null, "short");
   }
 
   @Test
   public void testAddrSpecCorrectString()
     throws Exception
   {
-    byte[] b=new byte[Globals.ADDRESS_SPEC_HASH_LEN];
+    byte[] b=new byte[snowblossomlib.Globals.ADDRESS_SPEC_HASH_LEN];
     ByteString bs = ByteString.copyFrom(b);
 
-    Validation.validateAddressSpecHash(bs, "correct");
+    snowblossomlib.Validation.validateAddressSpecHash(bs, "correct");
   }
  
   @Test
   public void testChainHashCorrectString()
     throws Exception
   {
-    byte[] b=new byte[Globals.BLOCKCHAIN_HASH_LEN];
+    byte[] b=new byte[snowblossomlib.Globals.BLOCKCHAIN_HASH_LEN];
     ByteString bs = ByteString.copyFrom(b);
 
-    Validation.validateChainHash(bs, "correct");
+    snowblossomlib.Validation.validateChainHash(bs, "correct");
   }
 
   private Random rnd = new Random();
@@ -71,7 +79,7 @@ public class ValidationTest
   public void testCoinbaseTx()
     throws Exception
   {
-    MessageDigest md_bc = DigestUtil.getMD();
+    MessageDigest md_bc = snowblossomlib.DigestUtil.getMD();
     Transaction.Builder tx = Transaction.newBuilder();
     
     TransactionInner.Builder inner = TransactionInner.newBuilder();
@@ -86,7 +94,7 @@ public class ValidationTest
       .addMotionsRejected(91)
       .build() );
 
-    byte[] addr = new byte[Globals.ADDRESS_SPEC_HASH_LEN];
+    byte[] addr = new byte[snowblossomlib.Globals.ADDRESS_SPEC_HASH_LEN];
     rnd.nextBytes(addr);
 
     inner.addOutputs( TransactionOutput.newBuilder()
@@ -98,7 +106,7 @@ public class ValidationTest
     tx.setInnerData(inner_data);
     tx.setTxHash(ByteString.copyFrom(md_bc.digest(inner_data.toByteArray())));
 
-    Validation.checkTransactionBasics(tx.build(), true);
+    snowblossomlib.Validation.checkTransactionBasics(tx.build(), true);
 
   }
 
@@ -106,13 +114,13 @@ public class ValidationTest
   public void testBasicTx()
     throws Exception
   {
-    MessageDigest md_bc = DigestUtil.getMD();
+    MessageDigest md_bc = snowblossomlib.DigestUtil.getMD();
     Transaction.Builder tx = Transaction.newBuilder();
     
     TransactionInner.Builder inner = TransactionInner.newBuilder();
     inner.setVersion(1);
 
-    byte[] to_addr = new byte[Globals.ADDRESS_SPEC_HASH_LEN];
+    byte[] to_addr = new byte[snowblossomlib.Globals.ADDRESS_SPEC_HASH_LEN];
     rnd.nextBytes(to_addr);
 
     KeyPair key_pair = KeyUtil.generateECCompressedKey();
@@ -128,7 +136,7 @@ public class ValidationTest
     AddressSpec claim = AddressSpec.newBuilder()
       .setRequiredSigners(1)
       .addSigSpecs( SigSpec.newBuilder()
-        .setSignatureType( SignatureUtil.SIG_TYPE_ECDSA)
+        .setSignatureType(SignatureUtil.SIG_TYPE_ECDSA)
         .setPublicKey(ByteString.copyFrom(public_key))
         .build())
       .build();

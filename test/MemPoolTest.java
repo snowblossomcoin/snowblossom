@@ -9,8 +9,18 @@ import snowblossom.proto.AddressSpec;
 import snowblossom.proto.Transaction;
 import snowblossom.proto.TransactionInput;
 import snowblossom.proto.TransactionOutput;
-import snowblossom.trie.HashedTrie;
-import snowblossom.trie.TrieDBMem;
+import snowblossomlib.trie.HashedTrie;
+import snowblossomlib.trie.TrieDBMem;
+import snowblossomlib.AddressSpecHash;
+import snowblossomlib.AddressUtil;
+import snowblossomlib.ChainHash;
+import snowblossomlib.Globals;
+import snowblossomlib.KeyUtil;
+import snowblossomlib.MemPool;
+import snowblossomlib.SignatureUtil;
+import snowblossomlib.TransactionUtil;
+import snowblossomlib.UtxoUpdateBuffer;
+import snowblossomlib.ValidationException;
 
 import java.security.KeyPair;
 import java.util.Random;
@@ -22,7 +32,7 @@ public class MemPoolTest
   @BeforeClass
   public static void loadProvider()
   {
-    Globals.addCryptoProvider();
+    snowblossomlib.Globals.addCryptoProvider();
   }
 
   @Test
@@ -30,22 +40,22 @@ public class MemPoolTest
     throws Exception
   {
     HashedTrie utxo_trie = newMemoryTrie();
-    KeyPair keys = KeyUtil.generateECCompressedKey();
+    KeyPair keys = snowblossomlib.KeyUtil.generateECCompressedKey();
 
-    UtxoUpdateBuffer utxo_buffer = new UtxoUpdateBuffer(utxo_trie, UtxoUpdateBuffer.EMPTY);
+    snowblossomlib.UtxoUpdateBuffer utxo_buffer = new snowblossomlib.UtxoUpdateBuffer(utxo_trie, snowblossomlib.UtxoUpdateBuffer.EMPTY);
     
     TransactionInput in = addUtxoToUseAtInput(utxo_buffer, keys, 100000L);
 
-    ChainHash utxo_root = utxo_buffer.commit();
+    snowblossomlib.ChainHash utxo_root = utxo_buffer.commit();
 
     TransactionOutput out = TransactionOutput.newBuilder()
       .setRecipientSpecHash(in.getSpecHash())
       .setValue(100000L)
       .build();
 
-    Transaction tx = TransactionUtil.createTransaction(ImmutableList.of(in), ImmutableList.of(out), keys);
+    Transaction tx = snowblossomlib.TransactionUtil.createTransaction(ImmutableList.of(in), ImmutableList.of(out), keys);
 
-    MemPool mem_pool = new MemPool(utxo_trie);
+    snowblossomlib.MemPool mem_pool = new snowblossomlib.MemPool(utxo_trie);
 
     mem_pool.rebuildPriorityMap(utxo_root);
 
@@ -62,7 +72,7 @@ public class MemPoolTest
     // Still has our transaction
     Assert.assertEquals(1, mem_pool.getTransactionsForBlock(utxo_root, 1048576).size());
     
-    mem_pool.rebuildPriorityMap(UtxoUpdateBuffer.EMPTY);
+    mem_pool.rebuildPriorityMap(snowblossomlib.UtxoUpdateBuffer.EMPTY);
     
     // That transaction is impossible now
     Assert.assertEquals(0, mem_pool.getTransactionsForBlock(utxo_root, 1048576).size());
@@ -78,7 +88,7 @@ public class MemPoolTest
       .setValue(50000L)
       .build();
 
-    Transaction tx2 = TransactionUtil.createTransaction(ImmutableList.of(in), ImmutableList.of(out_a, out_a), keys);
+    Transaction tx2 = snowblossomlib.TransactionUtil.createTransaction(ImmutableList.of(in), ImmutableList.of(out_a, out_a), keys);
 
     Assert.assertNotEquals(tx.getTxHash(), tx2.getTxHash());
 
@@ -93,22 +103,22 @@ public class MemPoolTest
     throws Exception
   {
     HashedTrie utxo_trie = newMemoryTrie();
-    KeyPair keys = KeyUtil.generateECCompressedKey();
+    KeyPair keys = snowblossomlib.KeyUtil.generateECCompressedKey();
 
-    UtxoUpdateBuffer utxo_buffer = new UtxoUpdateBuffer(utxo_trie, UtxoUpdateBuffer.EMPTY);
+    snowblossomlib.UtxoUpdateBuffer utxo_buffer = new snowblossomlib.UtxoUpdateBuffer(utxo_trie, snowblossomlib.UtxoUpdateBuffer.EMPTY);
     
     TransactionInput in = addUtxoToUseAtInput(utxo_buffer, keys, 100000L);
 
-    ChainHash utxo_root = UtxoUpdateBuffer.EMPTY;
+    snowblossomlib.ChainHash utxo_root = snowblossomlib.UtxoUpdateBuffer.EMPTY;
 
     TransactionOutput out = TransactionOutput.newBuilder()
       .setRecipientSpecHash(in.getSpecHash())
       .setValue(100000L)
       .build();
 
-    Transaction tx = TransactionUtil.createTransaction(ImmutableList.of(in), ImmutableList.of(out), keys);
+    Transaction tx = snowblossomlib.TransactionUtil.createTransaction(ImmutableList.of(in), ImmutableList.of(out), keys);
 
-    MemPool mem_pool = new MemPool(utxo_trie);
+    snowblossomlib.MemPool mem_pool = new snowblossomlib.MemPool(utxo_trie);
 
     mem_pool.rebuildPriorityMap(utxo_root);
 
@@ -120,7 +130,7 @@ public class MemPoolTest
       mem_pool.addTransaction(tx);
       Assert.fail();
     }
-    catch(ValidationException e)
+    catch(snowblossomlib.ValidationException e)
     {
       Assert.assertTrue(e.getMessage(), e.getMessage().startsWith("Unable to find source tx"));
     }
@@ -132,22 +142,22 @@ public class MemPoolTest
     throws Exception
   {
     HashedTrie utxo_trie = newMemoryTrie();
-    KeyPair keys = KeyUtil.generateECCompressedKey();
+    KeyPair keys = snowblossomlib.KeyUtil.generateECCompressedKey();
 
-    UtxoUpdateBuffer utxo_buffer = new UtxoUpdateBuffer(utxo_trie, UtxoUpdateBuffer.EMPTY);
+    snowblossomlib.UtxoUpdateBuffer utxo_buffer = new snowblossomlib.UtxoUpdateBuffer(utxo_trie, snowblossomlib.UtxoUpdateBuffer.EMPTY);
     
     TransactionInput in = addUtxoToUseAtInput(utxo_buffer, keys, 100000L);
 
-    ChainHash utxo_root = utxo_buffer.commit();
+    snowblossomlib.ChainHash utxo_root = utxo_buffer.commit();
 
     TransactionOutput out = TransactionOutput.newBuilder()
       .setRecipientSpecHash(in.getSpecHash())
       .setValue(100000L)
       .build();
 
-    Transaction tx = TransactionUtil.createTransaction(ImmutableList.of(in), ImmutableList.of(out), keys);
+    Transaction tx = snowblossomlib.TransactionUtil.createTransaction(ImmutableList.of(in), ImmutableList.of(out), keys);
 
-    MemPool mem_pool = new MemPool(utxo_trie);
+    snowblossomlib.MemPool mem_pool = new snowblossomlib.MemPool(utxo_trie);
 
     mem_pool.rebuildPriorityMap(utxo_root);
 
@@ -160,7 +170,7 @@ public class MemPoolTest
       .setValue(50000L)
       .build();
 
-    Transaction tx2 = TransactionUtil.createTransaction(ImmutableList.of(in), ImmutableList.of(out_a, out_a), keys);
+    Transaction tx2 = snowblossomlib.TransactionUtil.createTransaction(ImmutableList.of(in), ImmutableList.of(out_a, out_a), keys);
 
     Assert.assertNotEquals(tx.getTxHash(), tx2.getTxHash());
 
@@ -169,7 +179,7 @@ public class MemPoolTest
       mem_pool.addTransaction(tx2);
       Assert.fail();
     }
-    catch(ValidationException e){System.out.println(e);}
+    catch(snowblossomlib.ValidationException e){System.out.println(e);}
 
   }
 
@@ -179,22 +189,22 @@ public class MemPoolTest
     throws Exception
   {
     HashedTrie utxo_trie = newMemoryTrie();
-    KeyPair keys = KeyUtil.generateECCompressedKey();
+    KeyPair keys = snowblossomlib.KeyUtil.generateECCompressedKey();
 
-    UtxoUpdateBuffer utxo_buffer = new UtxoUpdateBuffer(utxo_trie, UtxoUpdateBuffer.EMPTY);
+    snowblossomlib.UtxoUpdateBuffer utxo_buffer = new snowblossomlib.UtxoUpdateBuffer(utxo_trie, snowblossomlib.UtxoUpdateBuffer.EMPTY);
     
     TransactionInput in = addUtxoToUseAtInput(utxo_buffer, keys, 100000L);
 
-    ChainHash utxo_root = utxo_buffer.commit();
+    snowblossomlib.ChainHash utxo_root = utxo_buffer.commit();
 
     TransactionOutput out = TransactionOutput.newBuilder()
       .setRecipientSpecHash(in.getSpecHash())
       .setValue(200000L)
       .build();
 
-    Transaction tx = TransactionUtil.createTransaction(ImmutableList.of(in,in), ImmutableList.of(out), keys);
+    Transaction tx = snowblossomlib.TransactionUtil.createTransaction(ImmutableList.of(in, in), ImmutableList.of(out), keys);
 
-    MemPool mem_pool = new MemPool(utxo_trie);
+    snowblossomlib.MemPool mem_pool = new snowblossomlib.MemPool(utxo_trie);
 
     mem_pool.rebuildPriorityMap(utxo_root);
 
@@ -215,22 +225,22 @@ public class MemPoolTest
   public void testSimpleChain() throws Exception
   {
     HashedTrie utxo_trie = newMemoryTrie();
-    KeyPair keys = KeyUtil.generateECCompressedKey();
+    KeyPair keys = snowblossomlib.KeyUtil.generateECCompressedKey();
 
-    UtxoUpdateBuffer utxo_buffer = new UtxoUpdateBuffer(utxo_trie, UtxoUpdateBuffer.EMPTY);
+    snowblossomlib.UtxoUpdateBuffer utxo_buffer = new snowblossomlib.UtxoUpdateBuffer(utxo_trie, snowblossomlib.UtxoUpdateBuffer.EMPTY);
     
     TransactionInput in_a = addUtxoToUseAtInput(utxo_buffer, keys, 100000L);
 
-    ChainHash utxo_root = utxo_buffer.commit();
+    snowblossomlib.ChainHash utxo_root = utxo_buffer.commit();
 
     TransactionOutput out_a = TransactionOutput.newBuilder()
       .setRecipientSpecHash(in_a.getSpecHash())
       .setValue(100000L)
       .build();
 
-    Transaction tx_a = TransactionUtil.createTransaction(ImmutableList.of(in_a), ImmutableList.of(out_a), keys);
+    Transaction tx_a = snowblossomlib.TransactionUtil.createTransaction(ImmutableList.of(in_a), ImmutableList.of(out_a), keys);
 
-    MemPool mem_pool = new MemPool(utxo_trie);
+    snowblossomlib.MemPool mem_pool = new snowblossomlib.MemPool(utxo_trie);
 
     mem_pool.rebuildPriorityMap(utxo_root);
 
@@ -251,7 +261,7 @@ public class MemPoolTest
       .setValue(100000L)
       .build();
 
-    Transaction tx_b = TransactionUtil.createTransaction(ImmutableList.of(in_b), ImmutableList.of(out_b), keys);
+    Transaction tx_b = snowblossomlib.TransactionUtil.createTransaction(ImmutableList.of(in_b), ImmutableList.of(out_b), keys);
 
     mem_pool.addTransaction(tx_b);
     
@@ -268,7 +278,7 @@ public class MemPoolTest
       .setValue(100000L)
       .build();
 
-    Transaction tx_c = TransactionUtil.createTransaction(ImmutableList.of(in_c), ImmutableList.of(out_c), keys);
+    Transaction tx_c = snowblossomlib.TransactionUtil.createTransaction(ImmutableList.of(in_c), ImmutableList.of(out_c), keys);
 
     mem_pool.addTransaction(tx_c);
     
@@ -282,29 +292,29 @@ public class MemPoolTest
     HashedTrie utxo_trie = newMemoryTrie();
     KeyPair keys = KeyUtil.generateECCompressedKey();
 
-    UtxoUpdateBuffer utxo_buffer = new UtxoUpdateBuffer(utxo_trie, UtxoUpdateBuffer.EMPTY);
+    snowblossomlib.UtxoUpdateBuffer utxo_buffer = new snowblossomlib.UtxoUpdateBuffer(utxo_trie, snowblossomlib.UtxoUpdateBuffer.EMPTY);
 
     Random rnd = new Random();
 
     TreeMap<Double, InputInfo> ready_inputs = new TreeMap<>();
-    AddressSpecHash address = null;
+    snowblossomlib.AddressSpecHash address = null;
 
     for(int i=0; i<100; i++)
     {
       TransactionInput in = addUtxoToUseAtInput(utxo_buffer, keys, 100000L);
 
-      System.out.println("Source tx: " + new ChainHash(in.getSrcTxId()));
+      System.out.println("Source tx: " + new snowblossomlib.ChainHash(in.getSrcTxId()));
       InputInfo ii = new InputInfo();
       ii.in = in;
       ii.value = 100000L;
       ready_inputs.put(rnd.nextDouble(), ii);
 
-      address = new AddressSpecHash(in.getSpecHash());
+      address = new snowblossomlib.AddressSpecHash(in.getSpecHash());
     }
     
-    ChainHash utxo_root = utxo_buffer.commit();
+    snowblossomlib.ChainHash utxo_root = utxo_buffer.commit();
 
-    MemPool mem_pool = new MemPool(utxo_trie);
+    snowblossomlib.MemPool mem_pool = new MemPool(utxo_trie);
     Assert.assertEquals(0, mem_pool.getTransactionsForBlock(utxo_root, 1048576).size());
 
     TimeRecord tr = new TimeRecord();
@@ -325,9 +335,9 @@ public class MemPoolTest
       System.out.println("Selected inputs: " + ia + " " + ib + " " + ic);
 
       long t3=System.nanoTime();
-      Transaction tx = TransactionUtil.createTransaction(ImmutableList.of(ia.in, ib.in, ic.in), ImmutableList.of(out,out,out), keys);
+      Transaction tx = TransactionUtil.createTransaction(ImmutableList.of(ia.in, ib.in, ic.in), ImmutableList.of(out, out, out), keys);
       TimeRecord.record(t3,"create_tx");
-      System.out.println("Intermediate transaction: " + new ChainHash(tx.getTxHash()));
+      System.out.println("Intermediate transaction: " + new snowblossomlib.ChainHash(tx.getTxHash()));
 
       long t2=System.nanoTime();
       mem_pool.addTransaction(tx);
@@ -341,7 +351,7 @@ public class MemPoolTest
           .setSrcTxId(tx.getTxHash())
           .setSrcTxOutIdx(j)
           .build();
-        System.out.println(String.format("Adding output %s:%d", new ChainHash(tx.getTxHash()).toString(), j));
+        System.out.println(String.format("Adding output %s:%d", new snowblossomlib.ChainHash(tx.getTxHash()).toString(), j));
 
         InputInfo ii = new InputInfo();
         ii.in = in;
@@ -367,19 +377,19 @@ public class MemPoolTest
 
     public String toString()
     {
-      return String.format("%s:%d - %d", new ChainHash(in.getSrcTxId()).toString(), in.getSrcTxOutIdx(), value);
+      return String.format("%s:%d - %d", new snowblossomlib.ChainHash(in.getSrcTxId()).toString(), in.getSrcTxOutIdx(), value);
     }
   }
 
   public static TransactionInput addUtxoToUseAtInput(UtxoUpdateBuffer utxo_buffer, KeyPair keys, long value)
   {
     Random rnd = new Random();
-    byte[] tx_id_buff = new byte[Globals.BLOCKCHAIN_HASH_LEN];
+    byte[] tx_id_buff = new byte[snowblossomlib.Globals.BLOCKCHAIN_HASH_LEN];
     rnd.nextBytes(tx_id_buff);
 
-    ChainHash tx_id = new ChainHash(tx_id_buff);
+    snowblossomlib.ChainHash tx_id = new ChainHash(tx_id_buff);
 
-    AddressSpec claim = AddressUtil.getSimpleSpecForKey(keys.getPublic(), SignatureUtil.SIG_TYPE_ECDSA_COMPRESSED);
+    AddressSpec claim = snowblossomlib.AddressUtil.getSimpleSpecForKey(keys.getPublic(), SignatureUtil.SIG_TYPE_ECDSA_COMPRESSED);
 
     AddressSpecHash addr = AddressUtil.getHashForSpec(claim);
 

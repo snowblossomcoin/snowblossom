@@ -6,6 +6,8 @@ import org.bouncycastle.jcajce.provider.asymmetric.ec.BCECPublicKey;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import snowblossomlib.Globals;
+import snowblossomlib.KeyUtil;
 
 import java.security.*;
 import java.security.spec.AlgorithmParameterSpec;
@@ -125,7 +127,7 @@ public class SignatureTest
     }
     System.out.println("secp256k1 prefix: " + Hex.encodeHexString(prefix));
 
-    Assert.assertEquals(Hex.encodeHexString(KeyUtil.EC_SECP256K1_PREFIX.toByteArray()),  Hex.encodeHexString(prefix));
+    Assert.assertEquals(Hex.encodeHexString(snowblossomlib.KeyUtil.EC_SECP256K1_PREFIX.toByteArray()), Hex.encodeHexString(prefix));
 
   }
   @Test

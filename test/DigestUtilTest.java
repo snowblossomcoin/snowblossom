@@ -4,6 +4,9 @@ import com.google.common.collect.ImmutableList;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import snowblossomlib.ChainHash;
+import snowblossomlib.DigestUtil;
+import snowblossomlib.Globals;
 
 import java.security.MessageDigest;
 import java.util.Random;
@@ -15,16 +18,16 @@ public class DigestUtilTest
   @BeforeClass
   public static void loadProvider()
   {
-    Globals.addCryptoProvider();
+    snowblossomlib.Globals.addCryptoProvider();
   }
 
 
   @Test
   public void testMerkleRootSingle()
   {
-    ChainHash a = getRandomHash();
+    snowblossomlib.ChainHash a = getRandomHash();
     
-    ChainHash result = DigestUtil.getMerkleRootForTxList(ImmutableList.of(a));
+    snowblossomlib.ChainHash result = snowblossomlib.DigestUtil.getMerkleRootForTxList(ImmutableList.of(a));
 
     Assert.assertEquals(a, result);
   }
@@ -32,12 +35,12 @@ public class DigestUtilTest
   @Test
   public void testMerkleRoot2()
   {
-    ChainHash a = getRandomHash();
-    ChainHash b = getRandomHash();
+    snowblossomlib.ChainHash a = getRandomHash();
+    snowblossomlib.ChainHash b = getRandomHash();
     
-    ChainHash result = DigestUtil.getMerkleRootForTxList(ImmutableList.of(a,b));
+    snowblossomlib.ChainHash result = snowblossomlib.DigestUtil.getMerkleRootForTxList(ImmutableList.of(a, b));
 
-    ChainHash ab = treeHash(a,b);
+    snowblossomlib.ChainHash ab = treeHash(a, b);
 
     Assert.assertEquals(ab, result);
   }
@@ -45,14 +48,14 @@ public class DigestUtilTest
   @Test
   public void testMerkleRoot3()
   {
-    ChainHash a = getRandomHash();
-    ChainHash b = getRandomHash();
-    ChainHash c = getRandomHash();
+    snowblossomlib.ChainHash a = getRandomHash();
+    snowblossomlib.ChainHash b = getRandomHash();
+    snowblossomlib.ChainHash c = getRandomHash();
     
-    ChainHash result = DigestUtil.getMerkleRootForTxList(ImmutableList.of(a,b,c));
+    snowblossomlib.ChainHash result = snowblossomlib.DigestUtil.getMerkleRootForTxList(ImmutableList.of(a, b, c));
 
-    ChainHash ab = treeHash(a,b);
-    ChainHash ab_c = treeHash(ab, c);
+    snowblossomlib.ChainHash ab = treeHash(a, b);
+    snowblossomlib.ChainHash ab_c = treeHash(ab, c);
 
     Assert.assertEquals(ab_c, result);
   }
@@ -60,56 +63,56 @@ public class DigestUtilTest
   @Test
   public void testMerkleRoot8()
   {
-    ChainHash a = getRandomHash();
-    ChainHash b = getRandomHash();
-    ChainHash c = getRandomHash();
-    ChainHash d = getRandomHash();
-    ChainHash e = getRandomHash();
-    ChainHash f = getRandomHash();
-    ChainHash g = getRandomHash();
-    ChainHash h = getRandomHash();
+    snowblossomlib.ChainHash a = getRandomHash();
+    snowblossomlib.ChainHash b = getRandomHash();
+    snowblossomlib.ChainHash c = getRandomHash();
+    snowblossomlib.ChainHash d = getRandomHash();
+    snowblossomlib.ChainHash e = getRandomHash();
+    snowblossomlib.ChainHash f = getRandomHash();
+    snowblossomlib.ChainHash g = getRandomHash();
+    snowblossomlib.ChainHash h = getRandomHash();
     
-    ChainHash result = DigestUtil.getMerkleRootForTxList(ImmutableList.of(a,b,c,d,e,f,g,h));
+    snowblossomlib.ChainHash result = snowblossomlib.DigestUtil.getMerkleRootForTxList(ImmutableList.of(a, b, c, d, e, f, g, h));
 
-    ChainHash ab = treeHash(a,b);
-    ChainHash cd = treeHash(c,d);
-    ChainHash ef = treeHash(e,f);
-    ChainHash gh = treeHash(g,h);
+    snowblossomlib.ChainHash ab = treeHash(a, b);
+    snowblossomlib.ChainHash cd = treeHash(c, d);
+    snowblossomlib.ChainHash ef = treeHash(e, f);
+    snowblossomlib.ChainHash gh = treeHash(g, h);
 
-    ChainHash abcd = treeHash(ab, cd);
-    ChainHash efgh = treeHash(ef, gh);
+    snowblossomlib.ChainHash abcd = treeHash(ab, cd);
+    snowblossomlib.ChainHash efgh = treeHash(ef, gh);
 
 
-    ChainHash abcdefgh = treeHash(abcd, efgh);
+    snowblossomlib.ChainHash abcdefgh = treeHash(abcd, efgh);
 
     Assert.assertEquals(abcdefgh, result);
   }
   @Test
   public void testMerkleRoot9()
   {
-    ChainHash a = getRandomHash();
-    ChainHash b = getRandomHash();
-    ChainHash c = getRandomHash();
-    ChainHash d = getRandomHash();
-    ChainHash e = getRandomHash();
-    ChainHash f = getRandomHash();
-    ChainHash g = getRandomHash();
-    ChainHash h = getRandomHash();
-    ChainHash i = getRandomHash();
+    snowblossomlib.ChainHash a = getRandomHash();
+    snowblossomlib.ChainHash b = getRandomHash();
+    snowblossomlib.ChainHash c = getRandomHash();
+    snowblossomlib.ChainHash d = getRandomHash();
+    snowblossomlib.ChainHash e = getRandomHash();
+    snowblossomlib.ChainHash f = getRandomHash();
+    snowblossomlib.ChainHash g = getRandomHash();
+    snowblossomlib.ChainHash h = getRandomHash();
+    snowblossomlib.ChainHash i = getRandomHash();
     
-    ChainHash result = DigestUtil.getMerkleRootForTxList(ImmutableList.of(a,b,c,d,e,f,g,h,i));
+    snowblossomlib.ChainHash result = snowblossomlib.DigestUtil.getMerkleRootForTxList(ImmutableList.of(a, b, c, d, e, f, g, h, i));
 
-    ChainHash ab = treeHash(a,b);
-    ChainHash cd = treeHash(c,d);
-    ChainHash ef = treeHash(e,f);
-    ChainHash gh = treeHash(g,h);
+    snowblossomlib.ChainHash ab = treeHash(a, b);
+    snowblossomlib.ChainHash cd = treeHash(c, d);
+    snowblossomlib.ChainHash ef = treeHash(e, f);
+    snowblossomlib.ChainHash gh = treeHash(g, h);
 
-    ChainHash abcd = treeHash(ab, cd);
-    ChainHash efgh = treeHash(ef, gh);
+    snowblossomlib.ChainHash abcd = treeHash(ab, cd);
+    snowblossomlib.ChainHash efgh = treeHash(ef, gh);
 
-    ChainHash abcdefgh = treeHash(abcd, efgh);
+    snowblossomlib.ChainHash abcdefgh = treeHash(abcd, efgh);
 
-    ChainHash r = treeHash(abcdefgh, i);
+    snowblossomlib.ChainHash r = treeHash(abcdefgh, i);
 
     Assert.assertEquals(r, result);
   }
@@ -121,22 +124,22 @@ public class DigestUtilTest
 
 
 
-  private ChainHash getRandomHash()
+  private snowblossomlib.ChainHash getRandomHash()
   {
     byte[] b = new byte[Globals.BLOCKCHAIN_HASH_LEN];
     rnd.nextBytes(b);
 
-    return new ChainHash(b);
+    return new snowblossomlib.ChainHash(b);
 
   }
 
-  private ChainHash treeHash(ChainHash a, ChainHash b)
+  private snowblossomlib.ChainHash treeHash(snowblossomlib.ChainHash a, snowblossomlib.ChainHash b)
   {
     MessageDigest md = DigestUtil.getMD();
     md.update(a.toByteArray());
     md.update(b.toByteArray());
 
-    ChainHash r = new ChainHash(md.digest());
+    snowblossomlib.ChainHash r = new ChainHash(md.digest());
 
     System.out.println("" +a + " + " + b + " -> " + r);
 

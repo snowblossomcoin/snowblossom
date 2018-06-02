@@ -6,6 +6,10 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import snowblossom.proto.SigSpec;
 import snowblossom.proto.WalletKeyPair;
+import snowblossomlib.ChainHash;
+import snowblossomlib.Globals;
+import snowblossomlib.KeyUtil;
+import snowblossomlib.SignatureUtil;
 
 import java.security.KeyPair;
 import java.security.PrivateKey;
@@ -22,20 +26,20 @@ public class KeyUtilTest
   @BeforeClass
   public static void loadProvider()
   {
-    Globals.addCryptoProvider();
+    snowblossomlib.Globals.addCryptoProvider();
   }
 
   @Test
   public void testCompressKeyEncoding()
 		throws Exception
   {
-    KeyPair pair = KeyUtil.generateECCompressedKey();
+    KeyPair pair = snowblossomlib.KeyUtil.generateECCompressedKey();
 
-		ByteString encoded = KeyUtil.getCompressedPublicKeyEncoding(pair.getPublic());
+		ByteString encoded = snowblossomlib.KeyUtil.getCompressedPublicKeyEncoding(pair.getPublic());
 
 		Assert.assertEquals(33, encoded.size());
 
-		PublicKey k = KeyUtil.convertCompressedECDSA(encoded);
+		PublicKey k = snowblossomlib.KeyUtil.convertCompressedECDSA(encoded);
 
 		Assert.assertEquals(k, pair.getPublic());
   }
@@ -44,12 +48,12 @@ public class KeyUtilTest
   public void testCompressPrivateKeyEncoding()
 		throws Exception
   {
-    KeyPair pair = KeyUtil.generateECCompressedKey();
+    KeyPair pair = snowblossomlib.KeyUtil.generateECCompressedKey();
 
 		ByteString encoded = ByteString.copyFrom(pair.getPrivate().getEncoded());
     System.out.println("Format: " + pair.getPrivate().getFormat());
 
-    PrivateKey k = KeyUtil.decodePrivateKey(encoded, "ECDSA");
+    PrivateKey k = snowblossomlib.KeyUtil.decodePrivateKey(encoded, "ECDSA");
 
 		Assert.assertEquals(k, pair.getPrivate());
   }
@@ -58,7 +62,7 @@ public class KeyUtilTest
   public void testStandardWallet()
     throws Exception
   {
-    WalletKeyPair wkp = KeyUtil.generateWalletStandardECKey();
+    WalletKeyPair wkp = snowblossomlib.KeyUtil.generateWalletStandardECKey();
 
     testKeyPair(wkp, "standard");
   }
@@ -67,9 +71,9 @@ public class KeyUtilTest
   public void testAllowedCurves()
     throws Exception
   {
-    for(String curve : SignatureUtil.ALLOWED_ECDSA_CURVES)
+    for(String curve : snowblossomlib.SignatureUtil.ALLOWED_ECDSA_CURVES)
     {
-      WalletKeyPair wkp = KeyUtil.generateWalletECKey(curve);
+      WalletKeyPair wkp = snowblossomlib.KeyUtil.generateWalletECKey(curve);
 
       testKeyPair(wkp, curve);
     }
@@ -86,7 +90,7 @@ public class KeyUtilTest
     curves.add("sect571r1");
     for(String curve : curves)
     {
-      WalletKeyPair wkp = KeyUtil.generateWalletECKey(curve);
+      WalletKeyPair wkp = snowblossomlib.KeyUtil.generateWalletECKey(curve);
 
       testKeyPair(wkp, curve);
     }
@@ -101,9 +105,9 @@ public class KeyUtilTest
     {
       logger.info("Generating key size: " + i);
 
-      WalletKeyPair wkp = KeyUtil.generateWalletRSAKey(i);
+      WalletKeyPair wkp = snowblossomlib.KeyUtil.generateWalletRSAKey(i);
 
-      logger.info(KeyUtil.decomposeASN1Encoded(wkp.getPublicKey()));
+      logger.info(snowblossomlib.KeyUtil.decomposeASN1Encoded(wkp.getPublicKey()));
 
       logger.info("Testing key size: " + i);
       testKeyPair(wkp, "RSA " + i);
@@ -116,9 +120,9 @@ public class KeyUtilTest
   {
       logger.info("Generating DSA");
 
-      WalletKeyPair wkp = KeyUtil.generateWalletDSAKey();
+      WalletKeyPair wkp = snowblossomlib.KeyUtil.generateWalletDSAKey();
 
-      logger.info(KeyUtil.decomposeASN1Encoded(wkp.getPublicKey()));
+      logger.info(snowblossomlib.KeyUtil.decomposeASN1Encoded(wkp.getPublicKey()));
 
       testKeyPair(wkp, "DSA");
   }
@@ -130,7 +134,7 @@ public class KeyUtilTest
     for(int i=0; i<=9; i++)
     {
       logger.info("Testing DSTU key size: " + i);
-      WalletKeyPair wkp = KeyUtil.generateWalletDSTU4145Key(i);
+      WalletKeyPair wkp = snowblossomlib.KeyUtil.generateWalletDSTU4145Key(i);
 
       logger.info(KeyUtil.decomposeASN1Encoded(wkp.getPublicKey()));
 
@@ -145,9 +149,9 @@ public class KeyUtilTest
     byte[] b = new byte[Globals.BLOCKCHAIN_HASH_LEN];
     rnd.nextBytes(b);
 
-    ChainHash hash = new ChainHash(b);
+    snowblossomlib.ChainHash hash = new ChainHash(b);
 
-    ByteString sig = SignatureUtil.sign(wkp, hash);
+    ByteString sig = snowblossomlib.SignatureUtil.sign(wkp, hash);
     SigSpec sig_spec = SigSpec.newBuilder()
       .setSignatureType(wkp.getSignatureType())
       .setPublicKey(wkp.getPublicKey())

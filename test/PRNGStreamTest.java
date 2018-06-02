@@ -4,14 +4,15 @@ import com.google.protobuf.ByteString;
 import org.apache.commons.codec.binary.Hex;
 import org.junit.Assert;
 import org.junit.Test;
+import snowblossomlib.PRNGStream;
 
 public class PRNGStreamTest
 {
   @Test
   public void testSeedStable()
   {
-    PRNGStream a = new PRNGStream("a");
-    PRNGStream b = new PRNGStream("a");
+    snowblossomlib.PRNGStream a = new snowblossomlib.PRNGStream("a");
+    snowblossomlib.PRNGStream b = new snowblossomlib.PRNGStream("a");
 
     byte[] a_bytes = new byte[1048576];
     byte[] b_bytes = new byte[1048576];
@@ -30,8 +31,8 @@ public class PRNGStreamTest
   @Test
   public void testSeedDiff()
   {
-    PRNGStream a = new PRNGStream("a");
-    PRNGStream b = new PRNGStream("b");
+    snowblossomlib.PRNGStream a = new snowblossomlib.PRNGStream("a");
+    snowblossomlib.PRNGStream b = new snowblossomlib.PRNGStream("b");
 
     byte[] a_bytes = new byte[1048576];
     byte[] b_bytes = new byte[1048576];
@@ -46,8 +47,8 @@ public class PRNGStreamTest
   @Test
   public void testMixMixDiff()
   {
-    PRNGStream a = new PRNGStream("aaa");
-    PRNGStream b = new PRNGStream("aaa");
+    snowblossomlib.PRNGStream a = new snowblossomlib.PRNGStream("aaa");
+    snowblossomlib.PRNGStream b = new snowblossomlib.PRNGStream("aaa");
 
     byte[] a_bytes = new byte[1048576];
     byte[] b_bytes = new byte[1048576];
@@ -76,8 +77,8 @@ public class PRNGStreamTest
   @Test
   public void testMixStable()
   {
-    PRNGStream a = new PRNGStream("aaa");
-    PRNGStream b = new PRNGStream("aaa");
+    snowblossomlib.PRNGStream a = new snowblossomlib.PRNGStream("aaa");
+    snowblossomlib.PRNGStream b = new snowblossomlib.PRNGStream("aaa");
 
     byte[] a_bytes = new byte[1048576];
     byte[] b_bytes = new byte[1048576];
@@ -107,8 +108,8 @@ public class PRNGStreamTest
   @Test
   public void testMixPreDiff()
   {
-    PRNGStream a = new PRNGStream("aaa");
-    PRNGStream b = new PRNGStream("bbb");
+    snowblossomlib.PRNGStream a = new snowblossomlib.PRNGStream("aaa");
+    snowblossomlib.PRNGStream b = new snowblossomlib.PRNGStream("bbb");
 
     byte[] a_bytes = new byte[1048576];
     byte[] b_bytes = new byte[1048576];
@@ -137,7 +138,7 @@ public class PRNGStreamTest
   public void testStable()
     throws Exception
   {
-    PRNGStream a = new PRNGStream("aaa");
+    snowblossomlib.PRNGStream a = new snowblossomlib.PRNGStream("aaa");
     byte[] a_bytes = new byte[64];
 
     a.nextBytes(a_bytes);
@@ -151,7 +152,7 @@ public class PRNGStreamTest
   public void testStableAfterMix()
     throws Exception
   {
-    PRNGStream a = new PRNGStream("aaa");
+    snowblossomlib.PRNGStream a = new PRNGStream("aaa");
 
     byte[] mix = new byte[8];
     mix[0]=0;

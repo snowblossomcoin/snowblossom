@@ -7,6 +7,10 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 import snowblossom.proto.SnowPowProof;
+import snowblossomlib.Globals;
+import snowblossomlib.SnowFall;
+import snowblossomlib.SnowMerkle;
+import snowblossomlib.SnowMerkleProof;
 
 import java.io.File;
 import java.security.MessageDigest;
@@ -28,19 +32,19 @@ public class SnowMerkleProofTest
     File snow = new File(tmp_dir, "test.snow");
 
 
-    new SnowFall(snow.getAbsolutePath(), seed, byte_len);
+    new snowblossomlib.SnowFall(snow.getAbsolutePath(), seed, byte_len);
 
-    ByteString root_hash = new SnowMerkle(
+    ByteString root_hash = new snowblossomlib.SnowMerkle(
       tmp_dir, "test", true).getRootHash();
 
-    SnowMerkleProof proofGen = new SnowMerkleProof(tmp_dir, "test");
+    snowblossomlib.SnowMerkleProof proofGen = new snowblossomlib.SnowMerkleProof(tmp_dir, "test");
     
     SnowPowProof proof = proofGen.getProof(location);
 
     Assert.assertEquals(location, proof.getWordIdx());
     System.out.println(proof);
     
-    Assert.assertTrue(SnowMerkleProof.checkProof(proof, root_hash, byte_len));
+    Assert.assertTrue(snowblossomlib.SnowMerkleProof.checkProof(proof, root_hash, byte_len));
 
 
   }
@@ -54,14 +58,14 @@ public class SnowMerkleProofTest
     File snow = new File(tmp_dir, "test.snow");
 
 
-    new SnowFall(snow.getAbsolutePath(), seed, byte_len);
+    new snowblossomlib.SnowFall(snow.getAbsolutePath(), seed, byte_len);
 
-    ByteString root_hash = new SnowMerkle(
+    ByteString root_hash = new snowblossomlib.SnowMerkle(
       tmp_dir, "test", true).getRootHash();
 
-    SnowMerkleProof proofGen = new SnowMerkleProof(tmp_dir, "test");
+    snowblossomlib.SnowMerkleProof proofGen = new snowblossomlib.SnowMerkleProof(tmp_dir, "test");
     
-    int words = (int) (byte_len / SnowMerkle.HASH_LEN_LONG);
+    int words = (int) (byte_len / snowblossomlib.SnowMerkle.HASH_LEN_LONG);
     Random rnd = new Random(byte_len);
 
     for(int i=0; i<count; i++)
@@ -72,7 +76,7 @@ public class SnowMerkleProofTest
 
       Assert.assertEquals(location, proof.getWordIdx());
     
-      Assert.assertTrue(SnowMerkleProof.checkProof(proof, root_hash, byte_len));
+      Assert.assertTrue(snowblossomlib.SnowMerkleProof.checkProof(proof, root_hash, byte_len));
     }
 
   }
@@ -93,9 +97,9 @@ public class SnowMerkleProofTest
 
     new SnowFall(snow.getAbsolutePath(), seed, byte_len);
 
-    ByteString root_hash = new SnowMerkle(tmp_dir, "test" ,true).getRootHash();
+    ByteString root_hash = new SnowMerkle(tmp_dir, "test" , true).getRootHash();
 
-    SnowMerkleProof proofGen = new SnowMerkleProof(tmp_dir, "test");
+    snowblossomlib.SnowMerkleProof proofGen = new snowblossomlib.SnowMerkleProof(tmp_dir, "test");
     
     SnowPowProof real_proof = proofGen.getProof(location);
 

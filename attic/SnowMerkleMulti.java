@@ -1,14 +1,14 @@
 package snowblossom;
 
 import java.security.MessageDigest;
-import java.io.BufferedInputStream;
-import java.io.FileInputStream;
-import java.io.DataInputStream;
 import java.io.RandomAccessFile;
 import java.nio.channels.FileChannel;
 import java.nio.ByteBuffer;
 
-import snowblossom.trie.HashUtils;
+import snowblossomlib.trie.HashUtils;
+import snowblossomlib.DaemonThreadFactory;
+import snowblossomlib.LRUCache;
+
 import java.security.Security;
 
 import java.util.concurrent.ThreadPoolExecutor;
@@ -55,9 +55,9 @@ public class SnowMerkleMulti
     md_local = new ThreadLocal<MessageDigest>();
 
 
-    exec=new ThreadPoolExecutor(THREADS, THREADS, 2, TimeUnit.DAYS, 
-    new SynchronousQueue<Runnable>(),
-    new DaemonThreadFactory("SnowMerkle"), new ThreadPoolExecutor.CallerRunsPolicy());
+    exec=new ThreadPoolExecutor(THREADS, THREADS, 2, TimeUnit.DAYS,
+                                new SynchronousQueue<Runnable>(),
+                                new DaemonThreadFactory("SnowMerkle"), new ThreadPoolExecutor.CallerRunsPolicy());
 
     long total_len = new java.io.File(file).length();
     if (total_len % HASH_LEN_LONG != 0) throw new RuntimeException("Impedence mismatch - " + total_len);
@@ -178,7 +178,7 @@ public class SnowMerkleMulti
 
   }
 
-  LRUCache<Integer, ByteBuffer> block_cache = new LRUCache<>(16);
+  snowblossomlib.LRUCache<Integer, ByteBuffer> block_cache = new LRUCache<>(16);
   HashMap<Integer, ByteBuffer> in_process_blocks = new HashMap<>();
 
   private byte[] getBlock(int block_num)

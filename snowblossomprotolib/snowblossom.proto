@@ -1,0 +1,284 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "snowblossom.proto";
+option java_outer_classname = "SnowBlossomProto";
+
+import "snowblossomprotolib/trie.proto";
+
+package snowblossom;
+
+// ---------------------------------------
+// THE REAL CORE OF THE CHAIN AND PROTOCOL
+// ---------------------------------------
+
+// Block hash = mix of all the things in the block header
+message Block {
+  BlockHeader header = 1;
+  repeated Transaction transactions = 2;
+}
+
+message SnowPowProof {
+  int64 word_idx = 1; //Index of word in snow field
+  repeated bytes merkle_component = 2; // List of hashes
+}
+
+// The POW works via the first elements here all mixed
+// to make a hash that decides which TXs to pull from previous
+// blocks to make the back_tx_hash.
+// Then all of it mixed to make the block hash, which has to be
+// less than the target hash.
+message BlockHeader {
+  int32 version = 1;
+  int32 block_height = 2;
+  bytes prev_block_hash = 3;
+  bytes merkle_root_hash = 4;
+  bytes utxo_root_hash = 5;
+  bytes nonce = 6; // should be exactly 12 bytes
+  int64 timestamp = 7;
+  bytes target = 8;
+  int32 snow_field = 9; // Number of which snow field is in use
+  bytes snow_hash = 10; // From POW function, becomes block hash
+  repeated SnowPowProof pow_proof = 11;
+}
+
+// TX Hash is hmac(sha256(inner_data), sha256(signature_data))
+message Transaction {
+  bytes tx_hash = 1;
+  // Expected to be a TransactionInner proto, but we carry it as bytes because
+  // we need it to have the same hash even after reserializing
+  bytes inner_data = 2; 
+
+  repeated SignatureEntry signatures = 3;
+}
+
+message TransactionInner {
+  int32 version = 1;
+  bool is_coinbase = 2;
+  CoinbaseExtras coinbase_extras = 3;
+  repeated TransactionInput inputs = 4;
+  repeated TransactionOutput outputs = 5;
+  
+  // Needed to claim an script_hash, this address spec
+  // must hash to the recipient_spec_hash claimed
+  // There must be a claim that matches the recipient_spec_hash for
+  // Each output spent in the inputs list of this transaction
+  //
+  // If multiple inputs need the same recipient_spec_hash, a single
+  // claim shall suffice for them
+  repeated AddressSpec claims = 6;
+  //TransactionRequirements requirements = 7;
+  int64 fee = 8;
+  bytes extra = 10; //Limited to 100 bytes, so short letters to grandma
+}
+
+message CoinbaseExtras {
+  int32 block_height = 1; // this of course in the block header as well, but this makes sure that each
+                          // coinbase is unique otherwise you can have multiple that hash to the same to great
+                          // sadness (the bitcoin block chain has many lessons)
+  bytes remarks = 2; //remarks from the miner for the good of the blockchain
+  repeated int32 motions_approved = 3;
+  repeated int32 motions_rejected = 4;
+}
+
+// If any of these are defined then
+// these things are required to be met for the transaction
+// to be confirmed
+message TransactionRequirements {
+  bytes required_block = 1;
+  bytes required_tx = 2;
+  int32 required_block_height = 3;
+  int64 required_time = 4;
+}
+
+message SignatureEntry {
+  int32 claim_idx = 1;
+  int32 key_idx = 2;
+  bytes signature = 3;
+}
+
+message TransactionInput {
+  bytes spec_hash = 1; // Do we really need this?  Can always pull it from tx out
+                       // if we have it, we can look up the utxo by spec_hash/tx_id/out_idx
+                       // otherwise we need a tx index, which isn't the end of the world
+  bytes src_tx_id = 2;
+  int32 src_tx_out_idx = 3;
+}
+
+message TransactionOutput {
+  int64 value = 1;
+  bytes recipient_spec_hash = 2;
+
+  // This could easily make an unspendable output if it refernces a block or tx
+  // that will never be in.  Use with care.
+  //TransactionRequirements requirements = 3;
+}
+
+// The hash of this will simply be the hash of:
+// required_signers (4 bytes)
+// number of sig_specs (4 bytes)
+// for each sig spec:
+//  -signature type (4 bytes)
+//  -size of key (4 bytes)
+//  -key data (matching size given)
+//
+message AddressSpec {
+  int32 required_signers = 1;
+  repeated SigSpec sig_specs = 2;
+}
+
+message SigSpec {
+  int32 signature_type = 1;
+  bytes public_key = 2;
+}
+
+// -------------------------------------------------
+// SERVICES AND MESSAGES (TO AND FROM CLIENTS/PEERS)
+// -------------------------------------------------
+
+service PeerService {
+  rpc SubscribePeering ( stream PeerMessage ) returns ( stream PeerMessage ) {}
+}
+
+service UserService {
+  rpc SubscribeBlockTemplate( SubscribeBlockTemplateRequest ) returns (stream Block) {}
+  rpc SubmitBlock ( Block ) returns ( SubmitReply ) {}
+  rpc SubmitTransaction ( Transaction ) returns ( SubmitReply ) {}
+  rpc GetUTXONode( GetUTXONodeRequest ) returns ( GetUTXONodeReply ) {}
+  rpc GetMempoolTransactionList ( RequestAddress ) returns ( TransactionHashList ) {}
+
+  rpc GetNodeStatus ( NullRequest ) returns ( NodeStatus ) {}
+  rpc GetBlock ( RequestBlock ) returns ( Block ) {}
+  rpc GetTransaction ( RequestTransaction ) returns ( Transaction ) {}
+  rpc GetBlockHeader ( RequestBlockHeader ) returns ( BlockHeader ) {}
+}
+
+message PeerMessage {
+  oneof z {
+    Transaction tx = 1;
+    PeerChainTip tip = 2;
+
+    RequestBlock req_block = 3;
+    Block block = 4;
+
+    RequestBlockHeader req_header = 5;
+    BlockHeader header = 6;
+  }
+}
+
+message PeerChainTip {
+  string network_name = 1;
+  BlockHeader header = 2;
+  repeated PeerInfo peers = 3;
+  string version = 4;
+}
+message PeerInfo {
+  string host = 1;
+  int32 port = 2;
+  int64 last_checked = 3;
+  int64 last_passed = 4;
+  int64 learned = 5;
+  string version = 6;
+  bytes node_id = 7;
+}
+
+message RequestBlock {
+  bytes block_hash = 2;
+}
+message RequestTransaction {
+  bytes tx_hash = 1;
+}
+message RequestBlockHeader {
+  int32 block_height = 1;
+}
+
+message SubmitReply {
+  bool success = 1;
+  string error_message = 2;
+}
+
+message SubscribeBlockTemplateRequest {
+  bytes pay_reward_to_spec_hash = 1;
+  int64 refresh_delay = 2; // time in ms to get updated block templates of the same block number
+  CoinbaseExtras extras = 3;
+}
+
+message GetUTXONodeRequest {
+  bytes prefix = 1;
+  bool include_proof = 2;
+  int32 max_results = 3;
+
+  // If specified, answer will use this specific utxo root as basis rather than current.
+  // Can be used to ask about about previous block or get a consistent view regardless of new
+  // blocks for a series of queries. Also, Series of Queries will be my new anti-folk acapella band.
+  bytes utxo_root_hash = 4;
+}
+
+message GetUTXONodeReply {
+  bytes utxo_root_hash = 1;  // Which root hash was used to create this answer
+
+  // if empty, then there is no node at or below the given prefix
+  // If there is not a node exactly at prefix, may start with a node under that prefix
+  // if 'max_results' is set, then there could be other noder under the prefix in the answer list as well.
+  // In no particular order.  If the limit isn't high enough and the caller wants a full view of the subtree under the node
+  // the caller will have to explore the returned nodes and ask about whichever ones have children that are not in this answer set.
+  //
+  // If the caller doesn't really give a crap, the caller can simply request with a high 'max_results'
+  repeated TrieNode answer = 2;
+
+  // The nodes that go from the top utxo root to the
+  // requested prefix or would if they prefix node existed
+  repeated TrieNode proof = 3;
+}
+
+message RequestAddress {
+  bytes address_spec_hash = 1;
+}
+message TransactionHashList {
+  repeated bytes tx_hashes = 1;
+}
+
+message NullRequest {
+
+}
+
+message NodeStatus {
+  int32 mem_pool_size = 1;
+  int32 connected_peers = 2;
+  BlockSummary head_summary = 3;
+  int32 estimated_nodes = 4;
+  string node_version = 5;
+  map<string, int32> version_map = 6;
+}
+
+// -------------------------------------------------------------------
+// LOCAL DATABASE THINGS - NOT PART OF PROTOCOL, NOT SENT OVER NETWORK
+// -------------------------------------------------------------------
+
+message BlockSummary {
+  string work_sum = 1;
+  int64 blocktime_average_ms = 2;
+  string target_average = 3;
+  int32 activated_field = 4;
+  
+  BlockHeader header = 5;
+  int64 total_transactions = 6;
+
+}
+
+message PeerList {
+  repeated PeerInfo peers = 1;
+}
+
+message WalletDatabase {
+  repeated WalletKeyPair keys = 1;
+  repeated AddressSpec addresses = 2;
+  repeated Transaction transactions = 3;
+}
+
+message WalletKeyPair
+{
+  int32 signature_type = 1;
+  bytes public_key = 2;
+  bytes private_key = 3;
+}

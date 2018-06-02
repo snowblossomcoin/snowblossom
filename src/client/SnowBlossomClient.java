@@ -6,11 +6,11 @@ import duckutil.ConfigFile;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 import org.junit.Assert;
-import snowblossom.*;
 import snowblossom.proto.*;
 import snowblossom.proto.UserServiceGrpc.UserServiceBlockingStub;
 import snowblossom.proto.UserServiceGrpc.UserServiceStub;
 import snowblossom.trie.proto.TrieNode;
+import snowblossomlib.TransactionUtil;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -30,7 +30,7 @@ public class SnowBlossomClient
 
   public static void main(String args[]) throws Exception
   {
-    Globals.addCryptoProvider();
+    snowblossomlib.Globals.addCryptoProvider();
 
     if (args.length < 1)
     {
@@ -40,7 +40,7 @@ public class SnowBlossomClient
 
     ConfigFile config = new ConfigFile(args[0]);
     
-    LogSetup.setup(config);
+    snowblossomlib.LogSetup.setup(config);
 
     SnowBlossomClient client = new SnowBlossomClient(config);
 
@@ -57,7 +57,7 @@ public class SnowBlossomClient
         }
         double val_snow = Double.parseDouble(args[2]);
 
-        long value = (long) (val_snow * Globals.SNOW_VALUE);
+        long value = (long) (val_snow * snowblossomlib.Globals.SNOW_VALUE);
         String to = args[3];
 
         DecimalFormat df = new DecimalFormat("0.000000");
@@ -103,7 +103,7 @@ public class SnowBlossomClient
   private final UserServiceStub asyncStub;
   private final UserServiceBlockingStub blockingStub;
 
-	private final NetworkParams params;
+	private final snowblossomlib.NetworkParams params;
 
   private File wallet_path;
   private WalletDatabase wallet_database;
@@ -115,7 +115,7 @@ public class SnowBlossomClient
     config.require("node_host");
 
     String host = config.get("node_host");
-    params = NetworkParams.loadFromConfig(config);
+    params = snowblossomlib.NetworkParams.loadFromConfig(config);
     int port = config.getIntWithDefault("node_port", params.getDefaultPort());
 
 		
@@ -136,12 +136,12 @@ public class SnowBlossomClient
   public void send(long value, String to)
     throws Exception
   {
-    AddressSpecHash to_hash = AddressUtil.getHashForAddress(params.getAddressPrefix(), to);
-    Transaction tx = TransactionUtil.makeTransaction(wallet_database, getAllSpendable(), to_hash, value, 0L);
+    snowblossomlib.AddressSpecHash to_hash = snowblossomlib.AddressUtil.getHashForAddress(params.getAddressPrefix(), to);
+    Transaction tx = snowblossomlib.TransactionUtil.makeTransaction(wallet_database, getAllSpendable(), to_hash, value, 0L);
 
-    logger.info("Transaction: " + new ChainHash(tx.getTxHash()) + " - " + tx.toByteString().size());
+    logger.info("Transaction: " + new snowblossomlib.ChainHash(tx.getTxHash()) + " - " + tx.toByteString().size());
 
-    TransactionUtil.prettyDisplayTx(tx, System.out, params);
+    snowblossomlib.TransactionUtil.prettyDisplayTx(tx, System.out, params);
 
     //logger.info(tx.toString());
 
@@ -217,16 +217,16 @@ public class SnowBlossomClient
 
     for(AddressSpec claim : wallet_database.getAddressesList())
     {
-      AddressSpecHash hash = AddressUtil.getHashForSpec(claim);
-      String address = AddressUtil.getAddressString(params.getAddressPrefix(), hash);
+      snowblossomlib.AddressSpecHash hash = snowblossomlib.AddressUtil.getHashForSpec(claim);
+      String address = snowblossomlib.AddressUtil.getAddressString(params.getAddressPrefix(), hash);
       System.out.print("Address: " + address + " - ");
       long value_confirmed = 0;
       long value_unconfirmed = 0;
       try
       {
-        List<TransactionBridge> bridges = getSpendable(hash);
+        List<snowblossomlib.TransactionBridge> bridges = getSpendable(hash);
 
-        for(TransactionBridge b : bridges)
+        for(snowblossomlib.TransactionBridge b : bridges)
         {
           
           if (b.unconfirmed)
@@ -251,8 +251,8 @@ public class SnowBlossomClient
 
         }
 
-        double val_conf_d = (double) value_confirmed / (double) Globals.SNOW_VALUE;
-        double val_unconf_d = (double) value_unconfirmed / (double) Globals.SNOW_VALUE;
+        double val_conf_d = (double) value_confirmed / (double) snowblossomlib.Globals.SNOW_VALUE;
+        double val_unconf_d = (double) value_unconfirmed / (double) snowblossomlib.Globals.SNOW_VALUE;
         System.out.println(String.format(" %s (%s pending) in %d outputs", 
           df.format(val_conf_d), df.format(val_unconf_d), bridges.size()));
 
@@ -265,25 +265,25 @@ public class SnowBlossomClient
       }
 
     }
-    double total_conf_d = (double) total_confirmed / (double) Globals.SNOW_VALUE;
-    double total_unconf_d = (double) total_unconfirmed / (double) Globals.SNOW_VALUE;
-    double total_spend_d = (double) total_spendable / Globals.SNOW_VALUE_D;
+    double total_conf_d = (double) total_confirmed / (double) snowblossomlib.Globals.SNOW_VALUE;
+    double total_unconf_d = (double) total_unconfirmed / (double) snowblossomlib.Globals.SNOW_VALUE;
+    double total_spend_d = (double) total_spendable / snowblossomlib.Globals.SNOW_VALUE_D;
     System.out.println(String.format("Total: %s (%s pending) (%s spendable)", df.format(total_conf_d), df.format(total_unconf_d),
       df.format(total_spend_d)));
   }
 
-  public List<TransactionBridge> getAllSpendable()
+  public List<snowblossomlib.TransactionBridge> getAllSpendable()
   {
-    LinkedList<TransactionBridge> all = new LinkedList<>();
+    LinkedList<snowblossomlib.TransactionBridge> all = new LinkedList<>();
     for(AddressSpec claim : wallet_database.getAddressesList())
     {
-      AddressSpecHash hash = AddressUtil.getHashForSpec(claim);
+      snowblossomlib.AddressSpecHash hash = snowblossomlib.AddressUtil.getHashForSpec(claim);
       all.addAll(getSpendable(hash));
     }
     return all;
   }
 
-  public List<TransactionBridge> getSpendable(AddressSpecHash addr)
+  public List<snowblossomlib.TransactionBridge> getSpendable(snowblossomlib.AddressSpecHash addr)
   {
 
     GetUTXONodeReply reply = blockingStub.getUTXONode( GetUTXONodeRequest.newBuilder()
@@ -291,13 +291,13 @@ public class SnowBlossomClient
       .setIncludeProof(true)
       .build());
 
-    HashMap<String, TransactionBridge> bridge_map=new HashMap<>();
+    HashMap<String, snowblossomlib.TransactionBridge> bridge_map=new HashMap<>();
 
     for(TrieNode node : reply.getAnswerList())
     {
       if (node.getIsLeaf())
       {
-        TransactionBridge b = new TransactionBridge(node);
+        snowblossomlib.TransactionBridge b = new snowblossomlib.TransactionBridge(node);
 
         bridge_map.put(b.getKeyString(), b);
       }
@@ -308,13 +308,13 @@ public class SnowBlossomClient
     {
       Transaction tx = blockingStub.getTransaction(RequestTransaction.newBuilder().setTxHash(tx_hash).build());
 
-      TransactionInner inner = TransactionUtil.getInner(tx);
+      TransactionInner inner = snowblossomlib.TransactionUtil.getInner(tx);
 
       for(TransactionInput in : inner.getInputsList())
       {
         if (addr.equals(in.getSpecHash()))
         {
-          TransactionBridge b_in = new TransactionBridge(in);
+          snowblossomlib.TransactionBridge b_in = new snowblossomlib.TransactionBridge(in);
           String key = b_in.getKeyString();
           if (bridge_map.containsKey(key))
           {
@@ -331,7 +331,7 @@ public class SnowBlossomClient
         TransactionOutput out = inner.getOutputs(o);
         if (addr.equals(out.getRecipientSpecHash()))
         {
-          TransactionBridge b_out = new TransactionBridge(out, o, new ChainHash(tx_hash));
+          snowblossomlib.TransactionBridge b_out = new snowblossomlib.TransactionBridge(out, o, new snowblossomlib.ChainHash(tx_hash));
           String key = b_out.getKeyString();
           b_out.unconfirmed=true;
 
@@ -352,7 +352,7 @@ public class SnowBlossomClient
     }
 
 
-    LinkedList<TransactionBridge> lst = new LinkedList<>();
+    LinkedList<snowblossomlib.TransactionBridge> lst = new LinkedList<>();
     lst.addAll(bridge_map.values());
     return lst;
 
@@ -368,9 +368,9 @@ public class SnowBlossomClient
   public void runLoadTest()
     throws Exception
   {
-    LinkedList<TransactionBridge> spendable = new LinkedList<>();
+    LinkedList<snowblossomlib.TransactionBridge> spendable = new LinkedList<>();
 
-    for(TransactionBridge br : getAllSpendable())
+    for(snowblossomlib.TransactionBridge br : getAllSpendable())
     {
       if (!br.spent) spendable.add(br);
     }
@@ -393,21 +393,21 @@ public class SnowBlossomClient
         long value = min_send + rnd.nextLong(send_delta);
 
         out_list.add( TransactionOutput.newBuilder()
-          .setRecipientSpecHash( TransactionUtil.getRandomChangeAddress(wallet_database).getBytes() )
+          .setRecipientSpecHash(snowblossomlib.TransactionUtil.getRandomChangeAddress(wallet_database).getBytes() )
           .setValue(value)
           .build());
         needed_value+=value;
       }
 
-      LinkedList<TransactionBridge> input_list = new LinkedList<>();
+      LinkedList<snowblossomlib.TransactionBridge> input_list = new LinkedList<>();
       while(needed_value > 0)
       {
-        TransactionBridge b = spendable.pop();
+        snowblossomlib.TransactionBridge b = spendable.pop();
         needed_value -= b.value;
         input_list.add(b);
       }
 
-      Transaction tx = TransactionUtil.makeTransaction(wallet_database, input_list, out_list, fee);
+      Transaction tx = snowblossomlib.TransactionUtil.makeTransaction(wallet_database, input_list, out_list, fee);
       if (tx == null)
       {
         logger.warning("Unable to make transaction");
@@ -415,14 +415,14 @@ public class SnowBlossomClient
       }
       TransactionInner inner = TransactionUtil.getInner(tx);
 
-      ChainHash tx_hash = new ChainHash(tx.getTxHash());
+      snowblossomlib.ChainHash tx_hash = new snowblossomlib.ChainHash(tx.getTxHash());
       for(int i=0; i<inner.getOutputsCount(); i++)
       {
-        TransactionBridge b = new TransactionBridge( inner.getOutputs(i), i, tx_hash);
+        snowblossomlib.TransactionBridge b = new snowblossomlib.TransactionBridge(inner.getOutputs(i), i, tx_hash);
         spendable.add(b);
       }
 
-      logger.info("Transaction: " + new ChainHash(tx.getTxHash()) + " - " + tx.toByteString().size());
+      logger.info("Transaction: " + new snowblossomlib.ChainHash(tx.getTxHash()) + " - " + tx.toByteString().size());
       //logger.info(tx.toString());
 
       boolean sent=false;

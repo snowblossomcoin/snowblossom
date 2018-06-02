@@ -8,11 +8,11 @@ import duckutil.TimeRecordAuto;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 import io.grpc.stub.StreamObserver;
-import snowblossom.*;
 import snowblossom.proto.*;
 import snowblossom.proto.UserServiceGrpc.UserServiceBlockingStub;
 import snowblossom.proto.UserServiceGrpc.UserServiceStub;
-import snowblossom.trie.HashUtils;
+import snowblossomlib.trie.HashUtils;
+import snowblossomlib.SnowMerkleProof;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -33,7 +33,7 @@ public class SnowBlossomMiner
 
   public static void main(String args[]) throws Exception
   {
-    Globals.addCryptoProvider();
+    snowblossomlib.Globals.addCryptoProvider();
     if (args.length != 1)
     {
       logger.log(Level.SEVERE, "Incorrect syntax. Syntax: SnowBlossomMiner <config_file>");
@@ -42,7 +42,7 @@ public class SnowBlossomMiner
 
     ConfigFile config = new ConfigFile(args[0]);
     
-    LogSetup.setup(config);
+    snowblossomlib.LogSetup.setup(config);
 
 
     SnowBlossomMiner miner = new SnowBlossomMiner(config); 
@@ -60,7 +60,7 @@ public class SnowBlossomMiner
   private UserServiceBlockingStub blockingStub;
 
   private final FieldScan field_scan;
-	private final NetworkParams params;
+	private final snowblossomlib.NetworkParams params;
 
   private AtomicLong op_count = new AtomicLong(0L);
   private long last_stats_time = System.currentTimeMillis();
@@ -78,7 +78,7 @@ public class SnowBlossomMiner
     config.require("snow_path");
     config.require("node_host");
     
-    params = NetworkParams.loadFromConfig(config);
+    params = snowblossomlib.NetworkParams.loadFromConfig(config);
 
     snow_path = new File(config.get("snow_path"));
 
@@ -127,7 +127,7 @@ public class SnowBlossomMiner
     asyncStub = UserServiceGrpc.newStub(channel);
     blockingStub = UserServiceGrpc.newBlockingStub(channel);
 
-    AddressSpecHash to_addr = getMineToAddress();
+    snowblossomlib.AddressSpecHash to_addr = getMineToAddress();
 
     CoinbaseExtras.Builder extras = CoinbaseExtras.newBuilder();
     if (config.isSet("remark"))
@@ -145,14 +145,14 @@ public class SnowBlossomMiner
 
   }
 
-  private AddressSpecHash getMineToAddress()
+  private snowblossomlib.AddressSpecHash getMineToAddress()
     throws Exception
   {
 
     if (config.isSet("mine_to_address"))
     {
       String address = config.get("mine_to_address");
-      AddressSpecHash to_addr = new AddressSpecHash(address, params);
+      snowblossomlib.AddressSpecHash to_addr = new snowblossomlib.AddressSpecHash(address, params);
       return to_addr;
     }
     if (config.isSet("mine_to_wallet"))
@@ -172,7 +172,7 @@ public class SnowBlossomMiner
       Collections.shuffle(specs);
 
       AddressSpec spec = specs.get(0);
-      AddressSpecHash to_addr = AddressUtil.getHashForSpec(spec);
+      snowblossomlib.AddressSpecHash to_addr = snowblossomlib.AddressUtil.getHashForSpec(spec);
       return to_addr;
     }
     return null;
@@ -198,9 +198,9 @@ public class SnowBlossomMiner
     String block_time_report ="";
     if (last_block_template != null)
     {
-      BigInteger target = BlockchainUtil.targetBytesToBigInteger(last_block_template.getHeader().getTarget());
+      BigInteger target = snowblossomlib.BlockchainUtil.targetBytesToBigInteger(last_block_template.getHeader().getTarget());
 
-      double diff = PowUtil.getDiffForTarget(target);
+      double diff = snowblossomlib.PowUtil.getDiffForTarget(target);
 
       double block_time_sec = Math.pow(2.0, diff) / rate;
       double hours = block_time_sec / 3600.0;
@@ -251,13 +251,13 @@ public class SnowBlossomMiner
   public class MinerThread extends Thread
   {
     Random rnd;
-    MessageDigest md = DigestUtil.getMD();
+    MessageDigest md = snowblossomlib.DigestUtil.getMD();
 
-    byte[] word_buff = new byte[SnowMerkle.HASH_LEN];
+    byte[] word_buff = new byte[snowblossomlib.SnowMerkle.HASH_LEN];
     ByteBuffer word_bb = ByteBuffer.wrap(word_buff);
-    SnowMerkleProof merkle_proof;
+    snowblossomlib.SnowMerkleProof merkle_proof;
     int proof_field;
-    byte[] nonce = new byte[Globals.NONCE_LENGTH];
+    byte[] nonce = new byte[snowblossomlib.Globals.NONCE_LENGTH];
 
     public MinerThread()
     {
@@ -290,7 +290,7 @@ public class SnowBlossomMiner
       }
 
       // TODO, modify headers to put snow field in
-      byte[] first_hash = PowUtil.hashHeaderBits(b.getHeader(), nonce, md);
+      byte[] first_hash = snowblossomlib.PowUtil.hashHeaderBits(b.getHeader(), nonce, md);
 
      
       /**
@@ -307,20 +307,20 @@ public class SnowBlossomMiner
 
       try(TimeRecordAuto tra = null)
       {
-        for(int pass=0; pass<Globals.POW_LOOK_PASSES; pass++)
+        for(int pass = 0; pass< snowblossomlib.Globals.POW_LOOK_PASSES; pass++)
         {
           long word_idx;
           word_bb.clear();
-          word_idx = PowUtil.getNextSnowFieldIndex(context, merkle_proof.getTotalWords(), md);
+          word_idx = snowblossomlib.PowUtil.getNextSnowFieldIndex(context, merkle_proof.getTotalWords(), md);
           merkle_proof.readWord(word_idx, word_bb);
-          context = PowUtil.getNextContext(context, word_buff, md);
+          context = snowblossomlib.PowUtil.getNextContext(context, word_buff, md);
         }
       }
 
 
       byte[] found_hash = context;
 
-      if (PowUtil.lessThanTarget(found_hash, b.getHeader().getTarget()))
+      if (snowblossomlib.PowUtil.lessThanTarget(found_hash, b.getHeader().getTarget()))
       {
         String str = HashUtils.getHexString(found_hash);
         logger.info("Found passable solution: " + str);
@@ -338,18 +338,18 @@ public class SnowBlossomMiner
       BlockHeader.Builder header = BlockHeader.newBuilder().mergeFrom( b.getHeader() );
       header.setNonce(ByteString.copyFrom(nonce));
       
-      byte[] first_hash = PowUtil.hashHeaderBits(b.getHeader(), nonce);
+      byte[] first_hash = snowblossomlib.PowUtil.hashHeaderBits(b.getHeader(), nonce);
       byte[] context = first_hash;
 
-      for(int pass=0; pass<Globals.POW_LOOK_PASSES; pass++)
+      for(int pass = 0; pass< snowblossomlib.Globals.POW_LOOK_PASSES; pass++)
       {
         word_bb.clear();
 
-        long word_idx = PowUtil.getNextSnowFieldIndex(context, merkle_proof.getTotalWords());
+        long word_idx = snowblossomlib.PowUtil.getNextSnowFieldIndex(context, merkle_proof.getTotalWords());
         merkle_proof.readWord(word_idx, word_bb);
         SnowPowProof proof = merkle_proof.getProof(word_idx);
         header.addPowProof(proof);
-        context = PowUtil.getNextContext(context, word_buff);
+        context = snowblossomlib.PowUtil.getNextContext(context, word_buff);
       }
 
       byte[] found_hash = context;

@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="libsnowblossomlib-hjar_2d1a011">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/../bazel-out/x64_windows-fastbuild/bin/libsnowblossomlib-hjar.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>
