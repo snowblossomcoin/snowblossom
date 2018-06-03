@@ -12,103 +12,7 @@
     <option name="dirty" value="true" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="78973dbe-d264-45c1-990e-0f217bd107f4" name="Default" comment="">
-      <change afterPath="$PROJECT_DIR$/.idea/uiDesigner.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../snowblossomlib.test/AllTests.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../snowblossomlib.test/BUILD" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../snowblossomlib/BUILD" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../snowblossomprotolib/BUILD" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../BUILD" beforeDir="false" afterPath="$PROJECT_DIR$/../BUILD" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../attic/SnowMerkleMulti.java" beforeDir="false" afterPath="$PROJECT_DIR$/../attic/SnowMerkleMulti.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../proto/snowblossom.proto" beforeDir="false" afterPath="$PROJECT_DIR$/../snowblossomprotolib/snowblossom.proto" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../proto/trie.proto" beforeDir="false" afterPath="$PROJECT_DIR$/../snowblossomprotolib/trie.proto" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../src/AddressSpecHash.java" beforeDir="false" afterPath="$PROJECT_DIR$/../snowblossomlib/AddressSpecHash.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../src/AddressUtil.java" beforeDir="false" afterPath="$PROJECT_DIR$/../snowblossomlib/AddressUtil.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../src/BlockForge.java" beforeDir="false" afterPath="$PROJECT_DIR$/../snowblossomlib/BlockForge.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../src/BlockIngestor.java" beforeDir="false" afterPath="$PROJECT_DIR$/../snowblossomlib/BlockIngestor.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../src/BlockchainUtil.java" beforeDir="false" afterPath="$PROJECT_DIR$/../snowblossomlib/BlockchainUtil.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../src/ChainHash.java" beforeDir="false" afterPath="$PROJECT_DIR$/../snowblossomlib/ChainHash.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../src/ChannelUtil.java" beforeDir="false" afterPath="$PROJECT_DIR$/../snowblossomlib/ChannelUtil.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../src/DaemonThreadFactory.java" beforeDir="false" afterPath="$PROJECT_DIR$/../snowblossomlib/DaemonThreadFactory.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../src/DigestUtil.java" beforeDir="false" afterPath="$PROJECT_DIR$/../snowblossomlib/DigestUtil.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../src/Duck32.java" beforeDir="false" afterPath="$PROJECT_DIR$/../snowblossomlib/Duck32.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../src/Globals.java" beforeDir="false" afterPath="$PROJECT_DIR$/../snowblossomlib/Globals.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../src/HexUtil.java" beforeDir="false" afterPath="$PROJECT_DIR$/../snowblossomlib/HexUtil.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../src/KeyUtil.java" beforeDir="false" afterPath="$PROJECT_DIR$/../snowblossomlib/KeyUtil.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../src/LRUCache.java" beforeDir="false" afterPath="$PROJECT_DIR$/../snowblossomlib/LRUCache.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../src/LogSetup.java" beforeDir="false" afterPath="$PROJECT_DIR$/../snowblossomlib/LogSetup.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../src/MemPool.java" beforeDir="false" afterPath="$PROJECT_DIR$/../snowblossomlib/MemPool.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../src/NetUtil.java" beforeDir="false" afterPath="$PROJECT_DIR$/../snowblossomlib/NetUtil.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../src/NetworkParams.java" beforeDir="false" afterPath="$PROJECT_DIR$/../snowblossomlib/NetworkParams.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../src/NetworkParamsProd.java" beforeDir="false" afterPath="$PROJECT_DIR$/../snowblossomlib/NetworkParamsProd.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../src/NetworkParamsRegtest.java" beforeDir="false" afterPath="$PROJECT_DIR$/../snowblossomlib/NetworkParamsRegtest.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../src/NetworkParamsTestnet.java" beforeDir="false" afterPath="$PROJECT_DIR$/../snowblossomlib/NetworkParamsTestnet.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../src/PRNGStream.java" beforeDir="false" afterPath="$PROJECT_DIR$/../snowblossomlib/PRNGStream.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../src/PeerClient.java" beforeDir="false" afterPath="$PROJECT_DIR$/../snowblossomlib/PeerClient.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../src/PeerLink.java" beforeDir="false" afterPath="$PROJECT_DIR$/../snowblossomlib/PeerLink.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../src/PeerUtil.java" beforeDir="false" afterPath="$PROJECT_DIR$/../snowblossomlib/PeerUtil.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../src/Peerage.java" beforeDir="false" afterPath="$PROJECT_DIR$/../snowblossomlib/Peerage.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../src/PowUtil.java" beforeDir="false" afterPath="$PROJECT_DIR$/../snowblossomlib/PowUtil.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../src/RunningAverage.java" beforeDir="false" afterPath="$PROJECT_DIR$/../snowblossomlib/RunningAverage.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../src/ShowAlgo.java" beforeDir="false" afterPath="$PROJECT_DIR$/../snowblossomlib/ShowAlgo.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../src/SignatureUtil.java" beforeDir="false" afterPath="$PROJECT_DIR$/../snowblossomlib/SignatureUtil.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../src/SnowBlossomNode.java" beforeDir="false" afterPath="$PROJECT_DIR$/../snowblossomlib/SnowBlossomNode.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../src/SnowFall.java" beforeDir="false" afterPath="$PROJECT_DIR$/../snowblossomlib/SnowFall.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../src/SnowFieldInfo.java" beforeDir="false" afterPath="$PROJECT_DIR$/../snowblossomlib/SnowFieldInfo.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../src/SnowMerkle.java" beforeDir="false" afterPath="$PROJECT_DIR$/../snowblossomlib/SnowMerkle.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../src/SnowMerkleProof.java" beforeDir="false" afterPath="$PROJECT_DIR$/../snowblossomlib/SnowMerkleProof.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../src/SnowPeerService.java" beforeDir="false" afterPath="$PROJECT_DIR$/../snowblossomlib/SnowPeerService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../src/SnowUserService.java" beforeDir="false" afterPath="$PROJECT_DIR$/../snowblossomlib/SnowUserService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../src/TimeWatcher.java" beforeDir="false" afterPath="$PROJECT_DIR$/../snowblossomlib/TimeWatcher.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../src/TransactionBridge.java" beforeDir="false" afterPath="$PROJECT_DIR$/../snowblossomlib/TransactionBridge.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../src/TransactionUtil.java" beforeDir="false" afterPath="$PROJECT_DIR$/../snowblossomlib/TransactionUtil.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../src/UtxoUpdateBuffer.java" beforeDir="false" afterPath="$PROJECT_DIR$/../snowblossomlib/UtxoUpdateBuffer.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../src/Validation.java" beforeDir="false" afterPath="$PROJECT_DIR$/../snowblossomlib/Validation.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../src/ValidationException.java" beforeDir="false" afterPath="$PROJECT_DIR$/../snowblossomlib/ValidationException.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../src/client/SnowBlossomClient.java" beforeDir="false" afterPath="$PROJECT_DIR$/../src/client/SnowBlossomClient.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../src/client/WalletUtil.java" beforeDir="false" afterPath="$PROJECT_DIR$/../src/client/WalletUtil.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../src/db/DB.java" beforeDir="false" afterPath="$PROJECT_DIR$/../snowblossomlib/db/DB.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../src/db/DBFace.java" beforeDir="false" afterPath="$PROJECT_DIR$/../snowblossomlib/db/DBFace.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../src/db/DBMap.java" beforeDir="false" afterPath="$PROJECT_DIR$/../snowblossomlib/db/DBMap.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../src/db/DBMapMutationSet.java" beforeDir="false" afterPath="$PROJECT_DIR$/../snowblossomlib/db/DBMapMutationSet.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../src/db/DBTooManyResultsException.java" beforeDir="false" afterPath="$PROJECT_DIR$/../snowblossomlib/db/DBTooManyResultsException.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../src/db/ProtoDBMap.java" beforeDir="false" afterPath="$PROJECT_DIR$/../snowblossomlib/db/ProtoDBMap.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../src/db/lobstack/LobstackDB.java" beforeDir="false" afterPath="$PROJECT_DIR$/../snowblossomlib/db/lobstack/LobstackDB.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../src/db/lobstack/LobstackDBMap.java" beforeDir="false" afterPath="$PROJECT_DIR$/../snowblossomlib/db/lobstack/LobstackDBMap.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../src/db/rocksdb/JRocksDB.java" beforeDir="false" afterPath="$PROJECT_DIR$/../snowblossomlib/db/rocksdb/JRocksDB.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../src/db/rocksdb/RocksDBMap.java" beforeDir="false" afterPath="$PROJECT_DIR$/../snowblossomlib/db/rocksdb/RocksDBMap.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../src/db/rocksdb/RocksDBMapMutationSet.java" beforeDir="false" afterPath="$PROJECT_DIR$/../snowblossomlib/db/rocksdb/RocksDBMapMutationSet.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../src/miner/AutoSnowFall.java" beforeDir="false" afterPath="$PROJECT_DIR$/../src/miner/AutoSnowFall.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../src/miner/FieldScan.java" beforeDir="false" afterPath="$PROJECT_DIR$/../src/miner/FieldScan.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../src/miner/SnowBlossomMiner.java" beforeDir="false" afterPath="$PROJECT_DIR$/../src/miner/SnowBlossomMiner.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../src/miner/Sweeper.java" beforeDir="false" afterPath="$PROJECT_DIR$/../src/miner/Sweeper.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../src/shackleton/Shackleton.java" beforeDir="false" afterPath="$PROJECT_DIR$/../src/shackleton/Shackleton.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../src/shackleton/WebServer.java" beforeDir="false" afterPath="$PROJECT_DIR$/../src/shackleton/WebServer.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../src/trie/ByteStringComparator.java" beforeDir="false" afterPath="$PROJECT_DIR$/../snowblossomlib/trie/ByteStringComparator.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../src/trie/HashUtils.java" beforeDir="false" afterPath="$PROJECT_DIR$/../snowblossomlib/trie/HashUtils.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../src/trie/HashedTrie.java" beforeDir="false" afterPath="$PROJECT_DIR$/../snowblossomlib/trie/HashedTrie.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../src/trie/TrieDB.java" beforeDir="false" afterPath="$PROJECT_DIR$/../snowblossomlib/trie/TrieDB.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../src/trie/TrieDBBuffered.java" beforeDir="false" afterPath="$PROJECT_DIR$/../snowblossomlib/trie/TrieDBBuffered.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../src/trie/TrieDBMap.java" beforeDir="false" afterPath="$PROJECT_DIR$/../snowblossomlib/trie/TrieDBMap.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../src/trie/TrieDBMem.java" beforeDir="false" afterPath="$PROJECT_DIR$/../snowblossomlib/trie/TrieDBMem.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../src/trie/TrieDBRocks.java" beforeDir="false" afterPath="$PROJECT_DIR$/../snowblossomlib/trie/TrieDBRocks.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../test/AddressUtilTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/../test/AddressUtilTest.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../test/BlockIngestorTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/../test/BlockIngestorTest.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../test/BlockchainUtilTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/../test/BlockchainUtilTest.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../test/DigestUtilTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/../test/DigestUtilTest.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../test/KeyUtilTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/../test/KeyUtilTest.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../test/MemPoolTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/../test/MemPoolTest.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../test/PRNGStreamTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/../test/PRNGStreamTest.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../test/PowUtilTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/../test/PowUtilTest.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../test/SignatureTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/../test/SignatureTest.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../test/SnowFallMerkleTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/../test/SnowFallMerkleTest.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../test/SnowMerkleProofTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/../test/SnowMerkleProofTest.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../test/SpoonTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/../test/SpoonTest.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../test/ValidationTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/../test/ValidationTest.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../test/WalletTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/../test/WalletTest.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../test/trie/TrieRocksTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/../snowblossomlib.test/trie/TrieRocksTest.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../test/trie/TrieTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/../snowblossomlib.test/trie/TrieTest.java" afterDir="false" />
-    </list>
+    <list default="true" id="78973dbe-d264-45c1-990e-0f217bd107f4" name="Default" comment="" />
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -312,7 +216,7 @@
             <path>
               <item name="snowblossom" type="b2602c69:ProjectViewProjectNode" />
               <item name="snowblossom" type="34d14456:WorkspaceRootNode" />
-              <item name="snowblossomprotolib" type="462c0819:PsiDirectoryNode" />
+              <item name="src" type="462c0819:PsiDirectoryNode" />
             </path>
           </expand>
           <select />
@@ -414,7 +318,7 @@
       <workItem from="1527966463365" duration="642000" />
       <workItem from="1527967730095" duration="1125000" />
       <workItem from="1527969008426" duration="396000" />
-      <workItem from="1527969429574" duration="6102000" />
+      <workItem from="1527969429574" duration="6767000" />
     </task>
     <task id="LOCAL-00001" summary="adding intellij support">
       <created>1527969730873</created>
@@ -451,11 +355,10 @@
     </history-entry>
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="8265000" />
+    <option name="totallyTimeSpent" value="8930000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="-8" y="-8" width="2576" height="1395" extended-state="6" />
-    <editor active="true" />
     <layout>
       <window_info anchor="right" id="Palette" order="3" />
       <window_info anchor="bottom" id="TODO" order="6" />
