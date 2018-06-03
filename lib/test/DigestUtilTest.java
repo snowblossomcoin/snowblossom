@@ -1,4 +1,4 @@
-package snowblossom;
+package lib.test;
 
 import com.google.common.collect.ImmutableList;
 import org.junit.Assert;

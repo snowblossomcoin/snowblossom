@@ -1,4 +1,4 @@
-package snowblossom;
+package systemtests.test;
 
 import com.google.common.collect.ImmutableList;
 import com.google.protobuf.ByteString;

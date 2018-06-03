@@ -1,4 +1,4 @@
-package snowblossom;
+package lib.test;
 
 import org.apache.commons.codec.binary.Hex;
 import org.bouncycastle.asn1.ASN1Encodable;

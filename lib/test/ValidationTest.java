@@ -1,4 +1,4 @@
-package snowblossom;
+package lib.test;
 
 import com.google.protobuf.ByteString;
 import org.junit.BeforeClass;
