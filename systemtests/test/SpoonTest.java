@@ -38,8 +38,7 @@ public class SpoonTest
    * than a unit test
    */
   @Test
-  public void spoonTest()
-    throws Exception
+  public void spoonTest() throws Exception
   {
     File snow_path = setupSnow();
 
@@ -62,27 +61,26 @@ public class SpoonTest
     testConsolidateFunds(node, client, key_pair, to_addr);
 
 
-    SnowBlossomNode node2 = startNode(port+1);
+    SnowBlossomNode node2 = startNode(port + 1);
     node2.getPeerage().connectPeer("localhost", port);
     testMinedBlocks(node2);
 
 
-		miner.stop();
+    miner.stop();
     Thread.sleep(500);
     node.stop();
     node2.stop();
   }
 
   @Test
-  public void networkReconsileTest()
-    throws Exception
+  public void networkReconsileTest() throws Exception
   {
     File snow_path = setupSnow();
 
     Random rnd = new Random();
     int port = 20000 + rnd.nextInt(30000);
     SnowBlossomNode node1 = startNode(port);
-    SnowBlossomNode node2 = startNode(port+1);
+    SnowBlossomNode node2 = startNode(port + 1);
     Thread.sleep(100);
 
     KeyPair key_pair = KeyUtil.generateECCompressedKey();
@@ -92,32 +90,31 @@ public class SpoonTest
     AddressSpecHash to_addr = AddressUtil.getHashForSpec(claim);
 
     SnowBlossomMiner miner1 = startMiner(port, to_addr, snow_path);
-    SnowBlossomMiner miner2 = startMiner(port+1, to_addr, snow_path);
+    SnowBlossomMiner miner2 = startMiner(port + 1, to_addr, snow_path);
 
     testMinedBlocks(node1);
     testMinedBlocks(node2);
 
     Assert.assertNotEquals(node1.getDB().getBlockHashAtHeight(2), node2.getDB().getBlockHashAtHeight(2));
 
-    
+
     node2.getPeerage().connectPeer("localhost", port);
 
     Thread.sleep(1000);
     Assert.assertEquals(node1.getDB().getBlockHashAtHeight(2), node2.getDB().getBlockHashAtHeight(2));
 
 
-		miner1.stop();
-		miner2.stop();
+    miner1.stop();
+    miner2.stop();
     Thread.sleep(500);
     node1.stop();
     node2.stop();
- 
+
   }
 
-  private void testMinedBlocks(SnowBlossomNode node)
-    throws Exception
+  private void testMinedBlocks(SnowBlossomNode node) throws Exception
   {
-    for(int i=0; i<15; i++)
+    for (int i = 0; i < 15; i++)
     {
       Thread.sleep(1000);
 
@@ -132,14 +129,13 @@ public class SpoonTest
     Assert.fail("Does not seem to be making blocks");
   }
 
-  private void waitForMoreBlocks(SnowBlossomNode node, int wait_for)
-    throws Exception
+  private void waitForMoreBlocks(SnowBlossomNode node, int wait_for) throws Exception
   {
     int start = node.getBlockIngestor().getHead().getHeader().getBlockHeight();
     int target = start + wait_for;
 
-    int height=start;
-    for(int i=0; i<15; i++)
+    int height = start;
+    for (int i = 0; i < 15; i++)
     {
       Thread.sleep(1000);
       height = node.getBlockIngestor().getHead().getHeader().getBlockHeight();
@@ -149,8 +145,7 @@ public class SpoonTest
 
   }
 
-  private void testConsolidateFunds(SnowBlossomNode node, SnowBlossomClient client, KeyPair key_pair, AddressSpecHash from_addr)
-    throws Exception
+  private void testConsolidateFunds(SnowBlossomNode node, SnowBlossomClient client, KeyPair key_pair, AddressSpecHash from_addr) throws Exception
   {
     List<TransactionBridge> funds = client.getSpendable(from_addr);
 
@@ -164,16 +159,13 @@ public class SpoonTest
 
     long value = 0;
     LinkedList<TransactionInput> in_list = new LinkedList<>();
-    for(TransactionBridge b : funds)
+    for (TransactionBridge b : funds)
     {
       value += b.value;
       in_list.add(b.in);
     }
 
-    TransactionOutput out = TransactionOutput.newBuilder()
-      .setRecipientSpecHash(to_addr.getBytes())
-      .setValue(value)
-      .build();
+    TransactionOutput out = TransactionOutput.newBuilder().setRecipientSpecHash(to_addr.getBytes()).setValue(value).build();
 
     Transaction tx = TransactionUtil.createTransaction(in_list, ImmutableList.of(out), key_pair);
 
@@ -188,21 +180,20 @@ public class SpoonTest
     Assert.assertEquals(value, b.value);
 
     System.out.println(tx);
- 
+
 
   }
 
-  private File setupSnow()
-    throws Exception
+  private File setupSnow() throws Exception
   {
     NetworkParams params = new NetworkParamsRegtest();
 
     String test_folder_base = test_folder.newFolder().getPath();
 
-    File snow_path = new File( test_folder.newFolder(), "snow");
-    
+    File snow_path = new File(test_folder.newFolder(), "snow");
 
-    for(int i=0; i<4; i++)
+
+    for (int i = 0; i < 4; i++)
     {
       SnowFieldInfo info = params.getSnowFieldInfo(i);
 
@@ -218,27 +209,25 @@ public class SpoonTest
       Assert.assertEquals(info.getMerkleRootHash(), root_hash);
     }
     return snow_path;
-    
+
   }
 
-  private SnowBlossomNode startNode(int port)
-    throws Exception
+  private SnowBlossomNode startNode(int port) throws Exception
   {
-    
+
     String test_folder_base = test_folder.newFolder().getPath();
 
     Map<String, String> config_map = new TreeMap<>();
     config_map.put("db_path", test_folder_base + "/db");
     config_map.put("db_type", "rocksdb");
     config_map.put("service_port", "" + port);
-    config_map.put("network","spoon");
-    
+    config_map.put("network", "spoon");
+
     return new SnowBlossomNode(new ConfigMem(config_map));
 
   }
 
-  private SnowBlossomMiner startMiner(int port, AddressSpecHash mine_to, File snow_path)
-    throws Exception
+  private SnowBlossomMiner startMiner(int port, AddressSpecHash mine_to, File snow_path) throws Exception
   {
     Map<String, String> config_map = new TreeMap<>();
     config_map.put("node_host", "localhost");
@@ -246,10 +235,10 @@ public class SpoonTest
     config_map.put("threads", "1");
     config_map.put("mine_to_address", mine_to.toAddressString(new NetworkParamsRegtest()));
     config_map.put("snow_path", snow_path.getPath());
-    config_map.put("network","spoon");
+    config_map.put("network", "spoon");
     if (port % 2 == 1)
     {
-      config_map.put("memfield","true");
+      config_map.put("memfield", "true");
     }
 
     return new SnowBlossomMiner(new ConfigMem(config_map));
@@ -257,18 +246,14 @@ public class SpoonTest
   }
 
 
-  private SnowBlossomClient startClient(int port)
-    throws Exception
+  private SnowBlossomClient startClient(int port) throws Exception
   {
     Map<String, String> config_map = new TreeMap<>();
     config_map.put("node_host", "localhost");
     config_map.put("node_port", "" + port);
-    config_map.put("network","spoon");
+    config_map.put("network", "spoon");
 
     return new SnowBlossomClient(new ConfigMem(config_map));
 
   }
-
-
-
 }

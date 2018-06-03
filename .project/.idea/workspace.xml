@@ -13,37 +13,7 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="78973dbe-d264-45c1-990e-0f217bd107f4" name="Default" comment="">
-      <change afterPath="$PROJECT_DIR$/../client/BUILD" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../client/test/AllTests.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../miner/test/AllTests.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../shackleton/test/AllTests.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../systemtests/BUILD" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../systemtests/test/AllTests.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../BUILD" beforeDir="false" afterPath="$PROJECT_DIR$/../BUILD" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../snowblossomlib/BUILD" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../src/client/SnowBlossomClient.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../src/client/WalletUtil.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../src/miner/AutoSnowFall.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../src/miner/FieldScan.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../src/miner/SnowBlossomMiner.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../src/miner/Sweeper.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../src/shackleton/Shackleton.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../src/shackleton/WebServer.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../test/AddressUtilTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/../lib/test/AddressUtilTest.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../test/BlockIngestorTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/../lib/test/BlockIngestorTest.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../test/BlockchainUtilTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/../lib/test/BlockchainUtilTest.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../test/DigestUtilTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/../lib/test/DigestUtilTest.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../test/KeyUtilTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/../lib/test/KeyUtilTest.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../test/MemPoolTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/../lib/test/MemPoolTest.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../test/PRNGStreamTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/../lib/test/PRNGStreamTest.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../test/PowUtilTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/../lib/test/PowUtilTest.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../test/SignatureTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/../lib/test/SignatureTest.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../test/SnowFallMerkleTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/../lib/test/SnowFallMerkleTest.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../test/SnowMerkleProofTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/../lib/test/SnowMerkleProofTest.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../test/SpoonTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/../systemtests/test/SpoonTest.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../test/ValidationTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/../lib/test/ValidationTest.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../test/WalletTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/../client/test/WalletTest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../systemtests/test/SpoonTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/../systemtests/test/SpoonTest.java" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
@@ -54,92 +24,89 @@
   </component>
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-      <file leaf-file-name="BUILD" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/../systemtests/BUILD">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="204">
-              <caret line="12" column="34" selection-start-line="12" selection-start-column="34" selection-end-line="12" selection-end-column="34" />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="AllTests.java" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/../lib/test/AllTests.java">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="391">
-              <caret line="27" column="2" selection-start-line="27" selection-start-column="2" selection-end-line="27" selection-end-column="2" />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="SpoonTest.java" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/../systemtests/test/SpoonTest.java">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="270">
-              <caret line="30" column="13" selection-start-line="30" selection-start-column="13" selection-end-line="30" selection-end-column="13" />
-              <folding>
-                <element signature="imports" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="AllTests.java" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/../systemtests/test/AllTests.java">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="170">
-              <caret line="10" column="13" selection-start-line="10" selection-start-column="13" selection-end-line="10" selection-end-column="13" />
-              <folding>
-                <element signature="imports" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="BUILD" pinned="false" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/../BUILD">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="170">
-              <caret line="10" lean-forward="true" selection-start-line="10" selection-end-line="10" />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="SnowBlossomClient.java" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/../client/src/SnowBlossomClient.java">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="442">
-              <caret line="26" column="13" selection-start-line="26" selection-start-column="13" selection-end-line="26" selection-end-column="13" />
-              <folding>
-                <element signature="imports" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="BUILD" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/../client/BUILD">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="170">
-              <caret line="10" column="19" selection-start-line="10" selection-start-column="19" selection-end-line="10" selection-end-column="19" />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="BUILD" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/../miner/BUILD">
+      <file leaf-file-name="BlockchainUtil.java" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/../lib/src/BlockchainUtil.java">
           <provider selected="true" editor-type-id="text-editor">
             <state relative-caret-position="136">
-              <caret line="8" column="22" selection-start-line="8" selection-start-column="22" selection-end-line="8" selection-end-column="22" />
+              <caret line="8" column="13" selection-start-line="8" selection-start-column="13" selection-end-line="8" selection-end-column="13" />
+              <folding>
+                <element signature="imports" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="AddressSpecHash.java" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/../lib/src/AddressSpecHash.java">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="34">
+              <caret line="2" column="10" selection-start-line="2" selection-start-column="7" selection-end-line="2" selection-end-column="10" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="PeerClient.java" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/../lib/src/PeerClient.java">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="34">
+              <caret line="2" column="9" selection-start-line="2" selection-start-column="7" selection-end-line="2" selection-end-column="9" />
             </state>
           </provider>
         </entry>
       </file>
       <file leaf-file-name="BUILD" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/../shackleton/BUILD">
+        <entry file="file://$PROJECT_DIR$/../protolib/BUILD">
+          <provider selected="true" editor-type-id="text-editor" />
+        </entry>
+      </file>
+      <file leaf-file-name="snowblossom.proto" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/../protolib/snowblossom.proto">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="119">
-              <caret line="7" column="18" selection-start-line="7" selection-start-column="18" selection-end-line="7" selection-end-column="18" />
+            <state relative-caret-position="-51" />
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="KeyUtilTest.java" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/../lib/test/KeyUtilTest.java">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="-969">
+              <caret line="21" column="13" selection-start-line="21" selection-start-column="13" selection-end-line="21" selection-end-column="13" />
+              <folding>
+                <element signature="imports" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="SpoonTest.java" pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/../systemtests/test/SpoonTest.java">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="4369">
+              <caret line="257" column="3" selection-start-line="257" selection-start-column="3" selection-end-line="257" selection-end-column="3" />
+              <folding>
+                <element signature="imports" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="BlockIngestor.java" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/../lib/src/BlockIngestor.java">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="374">
+              <caret line="22" column="13" selection-start-line="22" selection-start-column="13" selection-end-line="22" selection-end-column="13" />
+              <folding>
+                <element signature="imports" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="ChainHash.java" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/../lib/src/ChainHash.java">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="34">
+              <caret line="2" column="10" selection-start-line="2" selection-start-column="7" selection-end-line="2" selection-end-column="10" />
             </state>
           </provider>
         </entry>
@@ -234,6 +201,7 @@
         <option value="$PROJECT_DIR$/../systemtests/BUILD" />
         <option value="$PROJECT_DIR$/../lib/test/AllTests.java" />
         <option value="$PROJECT_DIR$/../BUILD" />
+        <option value="$PROJECT_DIR$/../systemtests/test/SpoonTest.java" />
       </list>
     </option>
   </component>
@@ -270,7 +238,18 @@
             <path>
               <item name="snowblossom" type="b2602c69:ProjectViewProjectNode" />
               <item name="snowblossom" type="34d14456:WorkspaceRootNode" />
-              <item name="miner" type="462c0819:PsiDirectoryNode" />
+              <item name="lib" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="snowblossom" type="b2602c69:ProjectViewProjectNode" />
+              <item name="snowblossom" type="34d14456:WorkspaceRootNode" />
+              <item name="lib" type="462c0819:PsiDirectoryNode" />
+              <item name="test" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="snowblossom" type="b2602c69:ProjectViewProjectNode" />
+              <item name="snowblossom" type="34d14456:WorkspaceRootNode" />
+              <item name="protolib" type="462c0819:PsiDirectoryNode" />
             </path>
             <path>
               <item name="snowblossom" type="b2602c69:ProjectViewProjectNode" />
@@ -403,7 +382,7 @@
       <workItem from="1527966463365" duration="642000" />
       <workItem from="1527967730095" duration="1125000" />
       <workItem from="1527969008426" duration="396000" />
-      <workItem from="1527969429574" duration="9877000" />
+      <workItem from="1527969429574" duration="10087000" />
     </task>
     <task id="LOCAL-00001" summary="adding intellij support">
       <created>1527969730873</created>
@@ -453,7 +432,7 @@
     </history-entry>
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="12040000" />
+    <option name="totallyTimeSpent" value="12250000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="-8" y="-8" width="2576" height="1395" extended-state="6" />
@@ -504,27 +483,6 @@
     <option name="LAST_COMMIT_MESSAGE" value="switching to lib/src, lib/test folder structure." />
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/../lib/src/trie/TrieDB.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="68">
-          <caret line="9" column="22" selection-start-line="9" selection-start-column="22" selection-end-line="9" selection-end-column="22" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/../lib/src/trie/TrieDBBuffered.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="85">
-          <caret line="8" column="13" selection-start-line="8" selection-start-column="13" selection-end-line="8" selection-end-column="13" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/../lib/src/trie/TrieDBMap.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="85">
-          <caret line="11" column="13" selection-start-line="11" selection-start-column="13" selection-end-line="11" selection-end-column="13" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/../lib/src/trie/TrieDBMem.java">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="85">
@@ -580,13 +538,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/../lib/src/AddressSpecHash.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="214">
-          <caret line="17" column="17" lean-forward="true" selection-start-line="17" selection-start-column="17" selection-end-line="17" selection-end-column="17" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/../lib/src/TransactionBridge.java">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="153">
@@ -615,16 +566,6 @@
           <folding>
             <element signature="e#1307#1308#0" expanded="true" />
             <element signature="e#1385#1386#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/../lib/src/BlockchainUtil.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="136">
-          <caret line="8" column="13" selection-start-line="8" selection-start-column="13" selection-end-line="8" selection-end-column="13" />
-          <folding>
-            <element signature="imports" expanded="true" />
           </folding>
         </state>
       </provider>
@@ -670,13 +611,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/../lib/src/BlockIngestor.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="1649">
-          <caret line="129" selection-start-line="129" selection-end-line="129" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/../lib/test/trie/TrieRocksTest.java">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="901">
@@ -691,13 +625,6 @@
           <folding>
             <element signature="imports" expanded="true" />
           </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/../lib/src/ChainHash.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="136">
-          <caret line="11" column="13" selection-start-line="11" selection-start-column="13" selection-end-line="11" selection-end-column="13" />
         </state>
       </provider>
     </entry>
@@ -736,16 +663,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="238">
           <caret line="14" column="13" selection-start-line="14" selection-start-column="13" selection-end-line="14" selection-end-column="13" />
-          <folding>
-            <element signature="imports" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/../lib/test/KeyUtilTest.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="270">
-          <caret line="21" column="13" selection-start-line="21" selection-start-column="13" selection-end-line="21" selection-end-column="13" />
           <folding>
             <element signature="imports" expanded="true" />
           </folding>
@@ -859,13 +776,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/../lib/BUILD">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="170">
-          <caret line="10" column="24" selection-start-line="10" selection-start-column="24" selection-end-line="10" selection-end-column="24" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/../client/BUILD">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="170">
@@ -911,20 +821,86 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/../systemtests/test/SpoonTest.java">
+    <entry file="file://$PROJECT_DIR$/../BUILD">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="270">
-          <caret line="30" column="13" selection-start-line="30" selection-start-column="13" selection-end-line="30" selection-end-column="13" />
+        <state relative-caret-position="170">
+          <caret line="10" lean-forward="true" selection-start-line="10" selection-end-line="10" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../lib/BUILD">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="170">
+          <caret line="10" column="24" selection-start-line="10" selection-start-column="24" selection-end-line="10" selection-end-column="24" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../lib/src/BlockIngestor.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="374">
+          <caret line="22" column="13" selection-start-line="22" selection-start-column="13" selection-end-line="22" selection-end-column="13" />
           <folding>
             <element signature="imports" expanded="true" />
           </folding>
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/../BUILD">
+    <entry file="file://$PROJECT_DIR$/../lib/src/ChainHash.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="170">
-          <caret line="10" lean-forward="true" selection-start-line="10" selection-end-line="10" />
+        <state relative-caret-position="34">
+          <caret line="2" column="10" selection-start-line="2" selection-start-column="7" selection-end-line="2" selection-end-column="10" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../lib/src/BlockchainUtil.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="136">
+          <caret line="8" column="13" selection-start-line="8" selection-start-column="13" selection-end-line="8" selection-end-column="13" />
+          <folding>
+            <element signature="imports" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../lib/src/AddressSpecHash.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="34">
+          <caret line="2" column="10" selection-start-line="2" selection-start-column="7" selection-end-line="2" selection-end-column="10" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../lib/src/PeerClient.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="34">
+          <caret line="2" column="9" selection-start-line="2" selection-start-column="7" selection-end-line="2" selection-end-column="9" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../protolib/BUILD">
+      <provider selected="true" editor-type-id="text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../protolib/snowblossom.proto">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-51" />
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../lib/test/KeyUtilTest.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-969">
+          <caret line="21" column="13" selection-start-line="21" selection-start-column="13" selection-end-line="21" selection-end-column="13" />
+          <folding>
+            <element signature="imports" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../systemtests/test/SpoonTest.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="4369">
+          <caret line="257" column="3" selection-start-line="257" selection-start-column="3" selection-end-line="257" selection-end-column="3" />
+          <folding>
+            <element signature="imports" expanded="true" />
+          </folding>
         </state>
       </provider>
     </entry>
