@@ -139,21 +139,38 @@ public class Peerage
   }
   public Map<String, Integer> getVersionMap()
   {
-    TreeMap<String, Integer> map = new TreeMap<>();
-    HashSet<ByteString> set = new HashSet<>();
+    HashMap<ByteString, String> ver_map = new HashMap<>();
     synchronized(peer_rumor_list)
     {
       for(PeerInfo info : peer_rumor_list.values())
       {
         String ver = info.getVersion();
-        if (!set.contains(info.getNodeId()))
+        ByteString node_id = info.getNodeId();
+        if (!ver_map.containsKey(node_id))
         {
-          set.add(info.getNodeId());
-        
-          if (!map.containsKey(ver)) map.put(ver, 0);
-
-          map.put(ver, map.get(ver) + 1);
+          ver_map.put(node_id, ver);
         }
+        else
+        {
+          String v2 = ver_map.get(node_id);
+          if (ver.compareTo(v2) > 0)
+          {
+            ver_map.put(node_id, ver);
+          }
+        }
+      }
+    }
+
+    TreeMap<String, Integer> map = new TreeMap<>();
+    for(String ver : ver_map.values())
+    {
+      if (!map.containsKey(ver))
+      {
+        map.put(ver, 0);
+      }
+      else
+      {
+        map.put(ver, map.get(ver) + 1);
       }
     }
 
