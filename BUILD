@@ -7,7 +7,7 @@ java_binary(
     "-Xmx1600M",
   ],
   runtime_deps = [
-    "//snowblossomlib:snowblossomlib",
+    "//lib:lib",
   ]
 )
 java_binary(
@@ -38,14 +38,14 @@ java_binary(
   name = "SnowFall",
   main_class = "snowblossom.SnowFall",
   runtime_deps = [
-    "//snowblossomlib:snowblossomlib",
+    "//lib:lib",
   ]
 )
 java_binary(
   name = "SnowMerkle",
   main_class = "snowblossom.SnowMerkle",
   runtime_deps = [
-    "//snowblossomlib:snowblossomlib",
+    "//lib:lib",
   ]
 )
 
@@ -53,7 +53,7 @@ java_binary(
   name = "ShowAlgo",
   main_class = "snowblossom.ShowAlgo",
   runtime_deps = [
-    "//snowblossomlib:snowblossomlib",
+    "//lib:lib",
   ]
 )
 
@@ -61,8 +61,8 @@ java_library(
   name = "minerlib",
   srcs = glob(["src/miner/*.java"]),
   deps = [
-    "//snowblossomprotolib:snowblossomprotolib",
-    "//snowblossomlib:snowblossomlib",
+    "//protolib:protolib",
+    "//lib:lib",
     "@junit_junit//jar",
     "@commons_codec//jar",
     "@bcprov//jar",
@@ -74,8 +74,8 @@ java_library(
   name = "shackletonlib",
   srcs = glob(["src/shackleton/*.java"]),
   deps = [
-    "//snowblossomprotolib:snowblossomprotolib",
-    "//snowblossomlib:snowblossomlib",
+    "//protolib:protolib",
+    "//lib:lib",
     "@junit_junit//jar",
     "@commons_codec//jar",
     "@bcprov//jar",
@@ -88,8 +88,8 @@ java_library(
   name = "clientlib",
   srcs = glob(["src/client/*.java"]),
   deps = [
-    "//snowblossomprotolib:snowblossomprotolib",
-    "//snowblossomlib:snowblossomlib",
+    "//protolib:protolib",
+    "//lib:lib",
     "@junit_junit//jar",
     "@commons_codec//jar",
     "@bcprov//jar",
@@ -104,7 +104,7 @@ java_test(
   size="small",
   deps = [
       "@junit_junit//jar",
-      "//snowblossomlib:snowblossomlib",
+      "//lib:lib",
       "@org_pubref_rules_protobuf//java:grpc_compiletime_deps",
       "@commons_codec//jar",
   ],
@@ -117,9 +117,9 @@ java_test(
   size="small",
   deps = [
       "@junit_junit//jar",
-      "//snowblossomlib:snowblossomlib",
+      "//lib:lib",
       "@commons_codec//jar",
-      "////snowblossomprotolib:snowblossomprotolib",
+      "//protolib:protolib",
   ],
 )
 
@@ -130,9 +130,9 @@ java_test(
   size="small",
   deps = [
       "@junit_junit//jar",
-      "//snowblossomlib:snowblossomlib",
+      "//lib:lib",
       "@commons_codec//jar",
-      "////snowblossomprotolib:snowblossomprotolib",
+      "//protolib:protolib",
   ],
 )
 java_test(
@@ -142,7 +142,7 @@ java_test(
   size="small",
   deps = [
       "@junit_junit//jar",
-      "//snowblossomlib:snowblossomlib",
+      "//lib:lib",
       "@commons_codec//jar",
       "@org_pubref_rules_protobuf//java:grpc_compiletime_deps",
   ],
@@ -155,9 +155,9 @@ java_test(
   size="small",
   deps = [
       "@junit_junit//jar",
-      "//snowblossomlib:snowblossomlib",
+      "//lib:lib",
       "@commons_codec//jar",
-      "////snowblossomprotolib:snowblossomprotolib",
+      "//protolib:protolib",
   ],
 )
 java_test(
@@ -167,9 +167,9 @@ java_test(
   size="small",
   deps = [
       "@junit_junit//jar",
-      "//snowblossomlib:snowblossomlib",
+      "//lib:lib",
       "@commons_codec//jar",
-      "////snowblossomprotolib:snowblossomprotolib",
+      "//protolib:protolib",
   ],
 )
 
@@ -180,7 +180,7 @@ java_test(
   size="medium",
   deps = [
       "@junit_junit//jar",
-      "//snowblossomlib:snowblossomlib",
+      "//lib:lib",
       "@commons_codec//jar",
       "@bcprov//jar",
   ],
@@ -193,8 +193,8 @@ java_test(
   size="large",
   deps = [
       "@junit_junit//jar",
-      "//snowblossomlib:snowblossomlib",
-      "//snowblossomprotolib:snowblossomprotolib",
+      "//lib:lib",
+      "//protolib:protolib",
       "@commons_codec//jar",
       "@bcprov//jar",
   ],
@@ -208,10 +208,10 @@ java_test(
   size="small",
   deps = [
       "@junit_junit//jar",
-      "//snowblossomlib:snowblossomlib",
+      "//lib:lib",
       "@commons_codec//jar",
       "@org_pubref_rules_protobuf//java:grpc_compiletime_deps",
-      "////snowblossomprotolib:snowblossomprotolib",
+      "//protolib:protolib",
   ],
 )
 java_test(
@@ -221,11 +221,11 @@ java_test(
   size="medium",
   deps = [
       "@junit_junit//jar",
-      "//snowblossomlib:snowblossomlib",
+      "//lib:lib",
       "@commons_codec//jar",
       "@org_pubref_rules_protobuf//java:grpc_compiletime_deps",
       "@duckutil//:duckutil_lib",
-      "//snowblossomprotolib:snowblossomprotolib",
+      "//protolib:protolib",
   ],
 )
 java_test(
@@ -235,10 +235,10 @@ java_test(
   size="medium",
   deps = [
       "@junit_junit//jar",
-      "//snowblossomlib:snowblossomlib",
+      "//lib:lib",
       "@commons_codec//jar",
       "@org_pubref_rules_protobuf//java:grpc_compiletime_deps",
-      "////snowblossomprotolib:snowblossomprotolib",
+      "//protolib:protolib",
   ],
 )
 
@@ -250,11 +250,11 @@ java_test(
   size="medium",
   deps = [
       "@junit_junit//jar",
-      "//snowblossomlib:snowblossomlib",
+      "//lib:lib",
       "@commons_codec//jar",
       "@org_pubref_rules_protobuf//java:grpc_compiletime_deps",
       "@duckutil//:duckutil_lib",
-      "//snowblossomprotolib:snowblossomprotolib",
+      "//protolib:protolib",
       ":minerlib",
       ":clientlib",
   ],
@@ -272,7 +272,7 @@ java_test(
   size="medium",
   deps = [
       "@junit_junit//jar",
-      "//snowblossomlib:snowblossomlib",
+      "//lib:lib",
       "@org_pubref_rules_protobuf//java:grpc_compiletime_deps",
       "@commons_codec//jar",
   ],
@@ -285,8 +285,8 @@ java_test(
   size="medium",
   deps = [
       "@junit_junit//jar",
-      "//snowblossomlib:snowblossomlib",
-      "//snowblossomprotolib:snowblossomprotolib",
+      "//lib:lib",
+      "//protolib:protolib",
       "@org_pubref_rules_protobuf//java:grpc_compiletime_deps",
       "@commons_codec//jar",
   ],

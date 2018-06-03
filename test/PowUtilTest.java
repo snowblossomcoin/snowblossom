@@ -4,11 +4,11 @@ import org.junit.Assert;
 import org.junit.Test;
 import snowblossom.proto.BlockHeader;
 import snowblossom.proto.BlockSummary;
-import snowblossomlib.BlockIngestor;
-import snowblossomlib.BlockchainUtil;
-import snowblossomlib.NetworkParams;
-import snowblossomlib.NetworkParamsRegtest;
-import snowblossomlib.PowUtil;
+import lib.src.BlockIngestor;
+import lib.src.BlockchainUtil;
+import lib.src.NetworkParams;
+import lib.src.NetworkParamsRegtest;
+import lib.src.PowUtil;
 
 import java.math.BigInteger;
 
@@ -19,9 +19,9 @@ public class PowUtilTest
   {
     BlockSummary bs = BlockSummary.newBuilder().build();
 
-    snowblossomlib.NetworkParams params = new snowblossomlib.NetworkParamsRegtest();
+    NetworkParams params = new NetworkParamsRegtest();
 
-    BigInteger target = snowblossomlib.PowUtil.calcNextTarget(bs, params, System.currentTimeMillis());
+    BigInteger target = PowUtil.calcNextTarget(bs, params, System.currentTimeMillis());
 
     Assert.assertEquals(params.getMaxTarget(), target);
     
@@ -31,7 +31,7 @@ public class PowUtilTest
   @Test
   public void testCalcNextTargetDecreasing()
   {
-    snowblossomlib.NetworkParams params = new snowblossomlib.NetworkParamsRegtest();
+    NetworkParams params = new NetworkParamsRegtest();
     long time = System.currentTimeMillis();
 
     BlockHeader prev_header = BlockHeader.newBuilder()
@@ -45,7 +45,7 @@ public class PowUtilTest
       .build();
 
 
-    BigInteger target = snowblossomlib.PowUtil.calcNextTarget(bs, params, System.currentTimeMillis());
+    BigInteger target = PowUtil.calcNextTarget(bs, params, System.currentTimeMillis());
 
     Assert.assertTrue(target.compareTo(params.getMaxTarget()) < 0);
 
@@ -54,7 +54,7 @@ public class PowUtilTest
   @Test
   public void testCalcNextTargetDecreasingFromAvg()
   {
-    snowblossomlib.NetworkParams params = new snowblossomlib.NetworkParamsRegtest();
+    NetworkParams params = new NetworkParamsRegtest();
     long time = System.currentTimeMillis();
 
     // block solved fast
@@ -70,7 +70,7 @@ public class PowUtilTest
       .setBlocktimeAverageMs(params.getBlockTimeTarget())
       .build();
 
-    BigInteger target = snowblossomlib.PowUtil.calcNextTarget(bs, params, System.currentTimeMillis());
+    BigInteger target = PowUtil.calcNextTarget(bs, params, System.currentTimeMillis());
 
     Assert.assertTrue(target.compareTo(average_target) < 0);
   }
@@ -78,7 +78,7 @@ public class PowUtilTest
   @Test
   public void testCalcNextTargetIncreasingFromAvg()
   {
-    snowblossomlib.NetworkParams params = new snowblossomlib.NetworkParamsRegtest();
+    NetworkParams params = new NetworkParamsRegtest();
     long time = System.currentTimeMillis();
   
     //block solved slow
@@ -95,7 +95,7 @@ public class PowUtilTest
       .build();
 
 
-    BigInteger target = snowblossomlib.PowUtil.calcNextTarget(bs, params, System.currentTimeMillis());
+    BigInteger target = PowUtil.calcNextTarget(bs, params, System.currentTimeMillis());
     System.out.println("Old: " + average_target + " new: " + target);
 
     Assert.assertTrue(target.compareTo(average_target) > 0);
@@ -116,9 +116,9 @@ public class PowUtilTest
     {
       long last_time = time;
       
-      target = snowblossomlib.PowUtil.calcNextTarget(bs, params, time);
+      target = PowUtil.calcNextTarget(bs, params, time);
 
-      double tdiff = snowblossomlib.PowUtil.getDiffForTarget(target);
+      double tdiff = PowUtil.getDiffForTarget(target);
       double work = Math.pow(2, tdiff);
       long solve_time =(long) (work / simulated_solve_rate);
 
@@ -126,11 +126,11 @@ public class PowUtilTest
       time = time + solve_time;
 
       BlockHeader header = BlockHeader.newBuilder()
-        .setTarget(snowblossomlib.BlockchainUtil.targetBigIntegerToBytes(target))
+        .setTarget(BlockchainUtil.targetBigIntegerToBytes(target))
         .setTimestamp(time)
         .build();
 
-      bs = snowblossomlib.BlockIngestor.getNewSummary(header, bs, params, 1L);
+      bs = BlockIngestor.getNewSummary(header, bs, params, 1L);
 
       Assert.assertEquals(time, bs.getHeader().getTimestamp());
 
@@ -148,7 +148,7 @@ public class PowUtilTest
     {
       long last_time = time;
       
-      target = snowblossomlib.PowUtil.calcNextTarget(bs, params, time);
+      target = PowUtil.calcNextTarget(bs, params, time);
 
       double tdiff = PowUtil.getDiffForTarget(target);
       double work = Math.pow(2, tdiff);

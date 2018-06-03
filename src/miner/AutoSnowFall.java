@@ -1,10 +1,10 @@
 package snowblossom.miner;
 
 import com.google.protobuf.ByteString;
-import snowblossomlib.NetworkParams;
-import snowblossomlib.SnowFall;
-import snowblossomlib.SnowFieldInfo;
-import snowblossomlib.SnowMerkle;
+import lib.src.NetworkParams;
+import lib.src.SnowFall;
+import lib.src.SnowFieldInfo;
+import lib.src.SnowMerkle;
 
 import java.io.File;
 import java.util.logging.Level;

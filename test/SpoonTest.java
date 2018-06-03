@@ -10,18 +10,18 @@ import org.junit.rules.TemporaryFolder;
 import snowblossom.client.SnowBlossomClient;
 import snowblossom.miner.SnowBlossomMiner;
 import snowblossom.proto.*;
-import snowblossomlib.AddressSpecHash;
-import snowblossomlib.AddressUtil;
-import snowblossomlib.KeyUtil;
-import snowblossomlib.NetworkParams;
-import snowblossomlib.NetworkParamsRegtest;
-import snowblossomlib.SignatureUtil;
-import snowblossomlib.SnowBlossomNode;
-import snowblossomlib.SnowFall;
-import snowblossomlib.SnowFieldInfo;
-import snowblossomlib.SnowMerkle;
-import snowblossomlib.TransactionBridge;
-import snowblossomlib.TransactionUtil;
+import lib.src.AddressSpecHash;
+import lib.src.AddressUtil;
+import lib.src.KeyUtil;
+import lib.src.NetworkParams;
+import lib.src.NetworkParamsRegtest;
+import lib.src.SignatureUtil;
+import lib.src.SnowBlossomNode;
+import lib.src.SnowFall;
+import lib.src.SnowFieldInfo;
+import lib.src.SnowMerkle;
+import lib.src.TransactionBridge;
+import lib.src.TransactionUtil;
 
 import java.io.File;
 import java.security.KeyPair;
@@ -45,14 +45,14 @@ public class SpoonTest
 
     Random rnd = new Random();
     int port = 20000 + rnd.nextInt(30000);
-    snowblossomlib.SnowBlossomNode node = startNode(port);
+    SnowBlossomNode node = startNode(port);
     Thread.sleep(100);
 
-    KeyPair key_pair = snowblossomlib.KeyUtil.generateECCompressedKey();
+    KeyPair key_pair = KeyUtil.generateECCompressedKey();
 
-    AddressSpec claim = snowblossomlib.AddressUtil.getSimpleSpecForKey(key_pair.getPublic(), snowblossomlib.SignatureUtil.SIG_TYPE_ECDSA_COMPRESSED);
+    AddressSpec claim = AddressUtil.getSimpleSpecForKey(key_pair.getPublic(), SignatureUtil.SIG_TYPE_ECDSA_COMPRESSED);
 
-    snowblossomlib.AddressSpecHash to_addr = snowblossomlib.AddressUtil.getHashForSpec(claim);
+    AddressSpecHash to_addr = AddressUtil.getHashForSpec(claim);
 
     SnowBlossomMiner miner = startMiner(port, to_addr, snow_path);
 
@@ -62,7 +62,7 @@ public class SpoonTest
     testConsolidateFunds(node, client, key_pair, to_addr);
 
 
-    snowblossomlib.SnowBlossomNode node2 = startNode(port+1);
+    SnowBlossomNode node2 = startNode(port+1);
     node2.getPeerage().connectPeer("localhost", port);
     testMinedBlocks(node2);
 
@@ -81,15 +81,15 @@ public class SpoonTest
 
     Random rnd = new Random();
     int port = 20000 + rnd.nextInt(30000);
-    snowblossomlib.SnowBlossomNode node1 = startNode(port);
-    snowblossomlib.SnowBlossomNode node2 = startNode(port+1);
+    SnowBlossomNode node1 = startNode(port);
+    SnowBlossomNode node2 = startNode(port+1);
     Thread.sleep(100);
 
-    KeyPair key_pair = snowblossomlib.KeyUtil.generateECCompressedKey();
+    KeyPair key_pair = KeyUtil.generateECCompressedKey();
 
-    AddressSpec claim = snowblossomlib.AddressUtil.getSimpleSpecForKey(key_pair.getPublic(), snowblossomlib.SignatureUtil.SIG_TYPE_ECDSA_COMPRESSED);
+    AddressSpec claim = AddressUtil.getSimpleSpecForKey(key_pair.getPublic(), SignatureUtil.SIG_TYPE_ECDSA_COMPRESSED);
 
-    snowblossomlib.AddressSpecHash to_addr = snowblossomlib.AddressUtil.getHashForSpec(claim);
+    AddressSpecHash to_addr = AddressUtil.getHashForSpec(claim);
 
     SnowBlossomMiner miner1 = startMiner(port, to_addr, snow_path);
     SnowBlossomMiner miner2 = startMiner(port+1, to_addr, snow_path);
@@ -114,7 +114,7 @@ public class SpoonTest
  
   }
 
-  private void testMinedBlocks(snowblossomlib.SnowBlossomNode node)
+  private void testMinedBlocks(SnowBlossomNode node)
     throws Exception
   {
     for(int i=0; i<15; i++)
@@ -132,7 +132,7 @@ public class SpoonTest
     Assert.fail("Does not seem to be making blocks");
   }
 
-  private void waitForMoreBlocks(snowblossomlib.SnowBlossomNode node, int wait_for)
+  private void waitForMoreBlocks(SnowBlossomNode node, int wait_for)
     throws Exception
   {
     int start = node.getBlockIngestor().getHead().getHeader().getBlockHeight();
@@ -149,22 +149,22 @@ public class SpoonTest
 
   }
 
-  private void testConsolidateFunds(snowblossomlib.SnowBlossomNode node, SnowBlossomClient client, KeyPair key_pair, snowblossomlib.AddressSpecHash from_addr)
+  private void testConsolidateFunds(SnowBlossomNode node, SnowBlossomClient client, KeyPair key_pair, AddressSpecHash from_addr)
     throws Exception
   {
-    List<snowblossomlib.TransactionBridge> funds = client.getSpendable(from_addr);
+    List<TransactionBridge> funds = client.getSpendable(from_addr);
 
     Assert.assertTrue(funds.size() > 3);
 
     KeyPair key_pair_to = KeyUtil.generateECCompressedKey();
 
-    AddressSpec claim = snowblossomlib.AddressUtil.getSimpleSpecForKey(key_pair_to.getPublic(), SignatureUtil.SIG_TYPE_ECDSA_COMPRESSED);
+    AddressSpec claim = AddressUtil.getSimpleSpecForKey(key_pair_to.getPublic(), SignatureUtil.SIG_TYPE_ECDSA_COMPRESSED);
 
-    snowblossomlib.AddressSpecHash to_addr = AddressUtil.getHashForSpec(claim);
+    AddressSpecHash to_addr = AddressUtil.getHashForSpec(claim);
 
     long value = 0;
     LinkedList<TransactionInput> in_list = new LinkedList<>();
-    for(snowblossomlib.TransactionBridge b : funds)
+    for(TransactionBridge b : funds)
     {
       value += b.value;
       in_list.add(b.in);
@@ -181,7 +181,7 @@ public class SpoonTest
 
     waitForMoreBlocks(node, 2);
 
-    List<snowblossomlib.TransactionBridge> new_funds = client.getSpendable(to_addr);
+    List<TransactionBridge> new_funds = client.getSpendable(to_addr);
     Assert.assertEquals(1, new_funds.size());
 
     TransactionBridge b = new_funds.get(0);
@@ -195,7 +195,7 @@ public class SpoonTest
   private File setupSnow()
     throws Exception
   {
-    NetworkParams params = new snowblossomlib.NetworkParamsRegtest();
+    NetworkParams params = new NetworkParamsRegtest();
 
     String test_folder_base = test_folder.newFolder().getPath();
 
@@ -221,7 +221,7 @@ public class SpoonTest
     
   }
 
-  private snowblossomlib.SnowBlossomNode startNode(int port)
+  private SnowBlossomNode startNode(int port)
     throws Exception
   {
     

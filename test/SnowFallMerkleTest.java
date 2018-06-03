@@ -6,8 +6,8 @@ import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
-import snowblossomlib.SnowFall;
-import snowblossomlib.SnowMerkle;
+import lib.src.SnowFall;
+import lib.src.SnowMerkle;
 
 import java.io.BufferedInputStream;
 import java.io.DataInputStream;
@@ -26,9 +26,9 @@ public class SnowFallMerkleTest
   {
     File tmp_dir = testFolder.newFolder();
 
-    new snowblossomlib.SnowFall(tmp_dir.getAbsolutePath() +"/test.snow", seed, mb_size * 1048576L);
+    new SnowFall(tmp_dir.getAbsolutePath() +"/test.snow", seed, mb_size * 1048576L);
 
-    String hash = new snowblossomlib.SnowMerkle(tmp_dir, "test", true).getRootHashStr();
+    String hash = new SnowMerkle(tmp_dir, "test", true).getRootHashStr();
 
     Assert.assertEquals(expected, hash);
     File deck = new File(tmp_dir, "test.deck.a");
@@ -41,16 +41,16 @@ public class SnowFallMerkleTest
     deck.renameTo(new File(tmp_dir, "snowdeck.snow"));
 
     // The deck file should have the exact same merkle root hash
-    String deckhash = new snowblossomlib.SnowMerkle(tmp_dir, "snowdeck", false).getRootHashStr();
+    String deckhash = new SnowMerkle(tmp_dir, "snowdeck", false).getRootHashStr();
     Assert.assertEquals(expected, deckhash);
 
-    if (snowblossomlib.SnowMerkle.getNumberOfDecks(mb_size * 1048576L / snowblossomlib.SnowMerkle.HASH_LEN_LONG) > 1)
+    if (SnowMerkle.getNumberOfDecks(mb_size * 1048576L / SnowMerkle.HASH_LEN_LONG) > 1)
     {
       File deckb = new File(tmp_dir, "test.deck.b");
       Assert.assertTrue(deckb.exists());
       deckb.renameTo(new File(tmp_dir, "snowdeckb.snow"));
 
-      String deckhashb = new snowblossomlib.SnowMerkle(tmp_dir, "snowdeckb", false).getRootHashStr();
+      String deckhashb = new SnowMerkle(tmp_dir, "snowdeckb", false).getRootHashStr();
       Assert.assertEquals(expected, deckhashb);
     }
     
@@ -90,7 +90,7 @@ public class SnowFallMerkleTest
 
     DataInputStream in = new DataInputStream(new BufferedInputStream(new FileInputStream(f),1048576));
 
-    byte[] buff = new byte[snowblossomlib.SnowFall.PAGESIZE];
+    byte[] buff = new byte[SnowFall.PAGESIZE];
 
     long total_len = f.length();
 
@@ -123,8 +123,8 @@ public class SnowFallMerkleTest
   @Test
   public void testDeckCountRegular()
   {
-    Assert.assertEquals(1, snowblossomlib.SnowMerkle.getNumberOfDecks(4096));
-    Assert.assertEquals(3, snowblossomlib.SnowMerkle.getNumberOfDecks(4096L * 4096L * 4096L));
+    Assert.assertEquals(1, SnowMerkle.getNumberOfDecks(4096));
+    Assert.assertEquals(3, SnowMerkle.getNumberOfDecks(4096L * 4096L * 4096L));
     Assert.assertEquals(3, SnowMerkle.getNumberOfDecks(4096L * 4096L * 4096L * 2L));
 
   }

@@ -5,9 +5,9 @@ import java.io.RandomAccessFile;
 import java.nio.channels.FileChannel;
 import java.nio.ByteBuffer;
 
-import snowblossomlib.trie.HashUtils;
-import snowblossomlib.DaemonThreadFactory;
-import snowblossomlib.LRUCache;
+import lib.src.trie.HashUtils;
+import lib.src.DaemonThreadFactory;
+import lib.src.LRUCache;
 
 import java.security.Security;
 
@@ -178,7 +178,7 @@ public class SnowMerkleMulti
 
   }
 
-  snowblossomlib.LRUCache<Integer, ByteBuffer> block_cache = new LRUCache<>(16);
+  LRUCache<Integer, ByteBuffer> block_cache = new LRUCache<>(16);
   HashMap<Integer, ByteBuffer> in_process_blocks = new HashMap<>();
 
   private byte[] getBlock(int block_num)

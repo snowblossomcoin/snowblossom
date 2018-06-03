@@ -4,10 +4,10 @@ import org.junit.Assert;
 import org.junit.Test;
 import snowblossom.proto.BlockHeader;
 import snowblossom.proto.BlockSummary;
-import snowblossomlib.BlockIngestor;
-import snowblossomlib.BlockchainUtil;
-import snowblossomlib.NetworkParams;
-import snowblossomlib.NetworkParamsTestnet;
+import lib.src.BlockIngestor;
+import lib.src.BlockchainUtil;
+import lib.src.NetworkParams;
+import lib.src.NetworkParamsTestnet;
 
 import java.math.BigInteger;
 
@@ -17,10 +17,10 @@ public class BlockIngestorTest
   @Test
   public void testFirstBlockSummary()
   {
-    snowblossomlib.NetworkParams params = new snowblossomlib.NetworkParamsTestnet();
+    NetworkParams params = new NetworkParamsTestnet();
 
 		BlockHeader header = BlockHeader.newBuilder()
-      .setTarget(snowblossomlib.BlockchainUtil.targetBigIntegerToBytes(params.getMaxTarget() ))
+      .setTarget(BlockchainUtil.targetBigIntegerToBytes(params.getMaxTarget() ))
       .setTimestamp(System.currentTimeMillis())
       .build();
 
@@ -28,7 +28,7 @@ public class BlockIngestorTest
       prev_summary = BlockSummary.newBuilder().build();
     System.out.println(prev_summary);
 
-		BlockSummary s = snowblossomlib.BlockIngestor.getNewSummary(header, prev_summary, params, 1L);
+		BlockSummary s = BlockIngestor.getNewSummary(header, prev_summary, params, 1L);
 
     Assert.assertNotNull(s.getHeader());
     Assert.assertEquals("1024", s.getWorkSum());

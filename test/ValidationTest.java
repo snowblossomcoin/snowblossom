@@ -4,14 +4,14 @@ import com.google.protobuf.ByteString;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import snowblossom.proto.*;
-import snowblossomlib.AddressSpecHash;
-import snowblossomlib.AddressUtil;
-import snowblossomlib.DigestUtil;
-import snowblossomlib.Globals;
-import snowblossomlib.KeyUtil;
-import snowblossomlib.SignatureUtil;
-import snowblossomlib.Validation;
-import snowblossomlib.ValidationException;
+import lib.src.AddressSpecHash;
+import lib.src.AddressUtil;
+import lib.src.DigestUtil;
+import lib.src.Globals;
+import lib.src.KeyUtil;
+import lib.src.SignatureUtil;
+import lib.src.Validation;
+import lib.src.ValidationException;
 
 import java.security.KeyPair;
 import java.security.MessageDigest;
@@ -24,53 +24,53 @@ public class ValidationTest
   @BeforeClass
   public static void loadProvider()
   {
-    snowblossomlib.Globals.addCryptoProvider();
+    Globals.addCryptoProvider();
   }
 
-  @Test(expected = snowblossomlib.ValidationException.class)
+  @Test(expected = ValidationException.class)
   public void testAddrSpecEmptyString()
     throws Exception
   {
     byte[] empty=new byte[0];
     ByteString bs = ByteString.copyFrom(empty);
 
-    snowblossomlib.Validation.validateAddressSpecHash(bs, "empty");
+    Validation.validateAddressSpecHash(bs, "empty");
   }
 
-  @Test(expected = snowblossomlib.ValidationException.class)
+  @Test(expected = ValidationException.class)
   public void testAddrSpecShortString()
     throws Exception
   {
     byte[] b=new byte[12];
     ByteString bs = ByteString.copyFrom(b);
 
-    snowblossomlib.Validation.validateAddressSpecHash(bs, "short");
+    Validation.validateAddressSpecHash(bs, "short");
   }
   @Test(expected = ValidationException.class)
   public void testAddrSpecNullString()
     throws Exception
   {
-    snowblossomlib.Validation.validateAddressSpecHash(null, "short");
+    Validation.validateAddressSpecHash(null, "short");
   }
 
   @Test
   public void testAddrSpecCorrectString()
     throws Exception
   {
-    byte[] b=new byte[snowblossomlib.Globals.ADDRESS_SPEC_HASH_LEN];
+    byte[] b=new byte[Globals.ADDRESS_SPEC_HASH_LEN];
     ByteString bs = ByteString.copyFrom(b);
 
-    snowblossomlib.Validation.validateAddressSpecHash(bs, "correct");
+    Validation.validateAddressSpecHash(bs, "correct");
   }
  
   @Test
   public void testChainHashCorrectString()
     throws Exception
   {
-    byte[] b=new byte[snowblossomlib.Globals.BLOCKCHAIN_HASH_LEN];
+    byte[] b=new byte[Globals.BLOCKCHAIN_HASH_LEN];
     ByteString bs = ByteString.copyFrom(b);
 
-    snowblossomlib.Validation.validateChainHash(bs, "correct");
+    Validation.validateChainHash(bs, "correct");
   }
 
   private Random rnd = new Random();
@@ -79,7 +79,7 @@ public class ValidationTest
   public void testCoinbaseTx()
     throws Exception
   {
-    MessageDigest md_bc = snowblossomlib.DigestUtil.getMD();
+    MessageDigest md_bc = DigestUtil.getMD();
     Transaction.Builder tx = Transaction.newBuilder();
     
     TransactionInner.Builder inner = TransactionInner.newBuilder();
@@ -94,7 +94,7 @@ public class ValidationTest
       .addMotionsRejected(91)
       .build() );
 
-    byte[] addr = new byte[snowblossomlib.Globals.ADDRESS_SPEC_HASH_LEN];
+    byte[] addr = new byte[Globals.ADDRESS_SPEC_HASH_LEN];
     rnd.nextBytes(addr);
 
     inner.addOutputs( TransactionOutput.newBuilder()
@@ -106,7 +106,7 @@ public class ValidationTest
     tx.setInnerData(inner_data);
     tx.setTxHash(ByteString.copyFrom(md_bc.digest(inner_data.toByteArray())));
 
-    snowblossomlib.Validation.checkTransactionBasics(tx.build(), true);
+    Validation.checkTransactionBasics(tx.build(), true);
 
   }
 
@@ -114,13 +114,13 @@ public class ValidationTest
   public void testBasicTx()
     throws Exception
   {
-    MessageDigest md_bc = snowblossomlib.DigestUtil.getMD();
+    MessageDigest md_bc = DigestUtil.getMD();
     Transaction.Builder tx = Transaction.newBuilder();
     
     TransactionInner.Builder inner = TransactionInner.newBuilder();
     inner.setVersion(1);
 
-    byte[] to_addr = new byte[snowblossomlib.Globals.ADDRESS_SPEC_HASH_LEN];
+    byte[] to_addr = new byte[Globals.ADDRESS_SPEC_HASH_LEN];
     rnd.nextBytes(to_addr);
 
     KeyPair key_pair = KeyUtil.generateECCompressedKey();

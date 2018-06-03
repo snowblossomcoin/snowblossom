@@ -1,6 +1,6 @@
 package snowblossom.miner;
 
-import snowblossomlib.SnowMerkleProof;
+import lib.src.SnowMerkleProof;
 import snowblossom.proto.Block;
 
 import java.nio.ByteBuffer;
