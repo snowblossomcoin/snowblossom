@@ -126,6 +126,19 @@ public class BlockIngestor
       try(TimeRecordAuto tra_tx = TimeRecord.openAuto("BlockIngestor.blockSave"))
       {
         db.getBlockMap().put( blockhash.getBytes(), blk);
+
+
+        // THIS IS SUPER IMPORTANT!!!!
+        // the summary being saved in the summary map acts as a signal that
+        // - this block is fully stored
+        //   - we have the utxo saved
+        //   - we have the block itself saved
+        //   - if we are using tx_index, we have the transactions saved
+        // - the previous block summary is also saved, which by induction means
+        //   that we have every block from this one all the way back to block 0
+        // In short, after the summary is written, things can depend on this being
+        // a valid and correct block that goes all the way back to block 0.
+        // It might not be in the main chain, but it can be counted on to be valid chain
         db.getBlockSummaryMap().put( blockhash.getBytes(), summary);
       }
 
