@@ -20,7 +20,7 @@ public class Peerage
 {
   public static final long REFRESH_LEARN_TIME = 4L * 3600L * 1000L; //4hr
   public static final long SAVE_PEER_TIME = 300L * 1000L; //5min
-  public static final long PEER_EXPIRE_TIME = 1L * 86400L * 1000L; // 1 days
+  public static final long PEER_EXPIRE_TIME = 16L * 86400L * 1000L; // 16 days
 
   private static final Logger logger = Logger.getLogger("snowblossom.peering");
 
@@ -48,7 +48,7 @@ public class Peerage
         PeerList db_peer_list = PeerList.parseFrom(peer_data);
         for(PeerInfo info : db_peer_list.getPeersList())
         {
-          learnPeer(info);
+          learnPeer(info, true);
         }
         logger.info(String.format("Loaded %d peers from database", peer_rumor_list.size()));
         logger.info("Peers: " + peer_rumor_list.keySet());
@@ -254,7 +254,14 @@ public class Peerage
 
   public void learnPeer(PeerInfo info)
   {
-    if (info.getLearned() + PEER_EXPIRE_TIME < System.currentTimeMillis()) return;
+    learnPeer(info, false);
+  }
+  public void learnPeer(PeerInfo info, boolean override_expiration)
+  {
+    if (!override_expiration)
+    {
+      if (info.getLearned() + PEER_EXPIRE_TIME < System.currentTimeMillis()) return;
+    }
     if (info.getNodeId().size() > Globals.MAX_NODE_ID_SIZE) return; 
 
     synchronized(peer_rumor_list)
@@ -292,7 +299,7 @@ public class Peerage
         {
           connectToPeers();
           Thread.sleep(10000);
-          runPrune();
+          pruneLinks();
           sendAllTips();
 
           if (last_learn_time + REFRESH_LEARN_TIME < System.currentTimeMillis())
@@ -327,6 +334,7 @@ public class Peerage
       logger.log(Level.FINEST, String.format("Connected to %d, desired %d", connected, desired));
       if (desired <= connected)
       {
+        pruneExpiredPeers();
         return;
       }
 
@@ -361,7 +369,7 @@ public class Peerage
 
     }
 
-    private void runPrune()
+    private void pruneLinks()
     {
       for(PeerLink link : getLinkList())
       {
@@ -372,6 +380,29 @@ public class Peerage
             links.remove(link.getLinkId());
           }
         }
+      }
+    }
+    public void pruneExpiredPeers()
+    {
+      synchronized(peer_rumor_list)
+      {
+        HashSet<String> to_remove = new HashSet<>();
+        for(Map.Entry<String, PeerInfo> me : peer_rumor_list.entrySet())
+        {
+          PeerInfo info = me.getValue();
+
+          if (info.getLearned() + PEER_EXPIRE_TIME < System.currentTimeMillis())
+          {
+            to_remove.add(me.getKey());
+          }
+        
+        }
+
+        for(String key : to_remove)
+        {
+          peer_rumor_list.remove(key);
+        }
+
       }
     }
   }
