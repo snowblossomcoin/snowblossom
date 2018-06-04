@@ -1,6 +1,6 @@
-package lib.src.db;
+package snowblossom.lib.db;
 
-import lib.src.ChainHash;
+import snowblossom.lib.ChainHash;
 import snowblossom.proto.Block;
 import snowblossom.proto.BlockSummary;
 import snowblossom.proto.Transaction;

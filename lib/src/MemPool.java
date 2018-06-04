@@ -1,4 +1,4 @@
-package lib.src;
+package snowblossom.lib;
 
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableList;
@@ -11,7 +11,7 @@ import snowblossom.proto.Transaction;
 import snowblossom.proto.TransactionInner;
 import snowblossom.proto.TransactionInput;
 import snowblossom.proto.TransactionOutput;
-import lib.src.trie.HashedTrie;
+import snowblossom.lib.trie.HashedTrie;
 
 import java.util.*;
 import java.util.logging.Level;

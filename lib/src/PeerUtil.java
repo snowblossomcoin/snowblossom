@@ -1,4 +1,4 @@
-package lib.src;
+package snowblossom.lib;
 
 import org.junit.Assert;
 import snowblossom.proto.PeerInfo;

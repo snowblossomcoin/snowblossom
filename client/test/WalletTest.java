@@ -5,13 +5,13 @@ import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import snowblossom.proto.*;
-import lib.src.AddressSpecHash;
-import lib.src.AddressUtil;
-import lib.src.Globals;
-import lib.src.KeyUtil;
-import lib.src.TransactionBridge;
-import lib.src.TransactionUtil;
-import lib.src.Validation;
+import snowblossom.lib.AddressSpecHash;
+import snowblossom.lib.AddressUtil;
+import snowblossom.lib.Globals;
+import snowblossom.lib.KeyUtil;
+import snowblossom.lib.TransactionBridge;
+import snowblossom.lib.TransactionUtil;
+import snowblossom.lib.Validation;
 
 
 public class WalletTest

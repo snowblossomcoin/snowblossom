@@ -1,4 +1,4 @@
-package lib.src.trie;
+package snowblossom.lib.trie;
 
 import com.google.common.collect.ImmutableList;
 import com.google.protobuf.ByteString;

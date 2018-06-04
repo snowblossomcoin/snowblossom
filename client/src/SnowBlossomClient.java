@@ -5,7 +5,7 @@ import duckutil.Config;
 import duckutil.ConfigFile;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
-import lib.src.*;
+import snowblossom.lib.*;
 import org.junit.Assert;
 import snowblossom.proto.*;
 import snowblossom.proto.UserServiceGrpc.UserServiceBlockingStub;

@@ -1,4 +1,4 @@
-package lib.src;
+package snowblossom.lib;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.protobuf.ByteString;

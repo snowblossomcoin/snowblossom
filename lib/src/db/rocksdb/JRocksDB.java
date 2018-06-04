@@ -1,9 +1,9 @@
-package lib.src.db.rocksdb;
+package snowblossom.lib.db.rocksdb;
 
 import duckutil.Config;
-import lib.src.db.DB;
-import lib.src.db.DBMap;
-import lib.src.db.DBMapMutationSet;
+import snowblossom.lib.db.DB;
+import snowblossom.lib.db.DBMap;
+import snowblossom.lib.db.DBMapMutationSet;
 import org.rocksdb.FlushOptions;
 import org.rocksdb.Options;
 import org.rocksdb.RocksDB;

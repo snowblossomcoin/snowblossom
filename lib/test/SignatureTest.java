@@ -6,8 +6,8 @@ import org.bouncycastle.jcajce.provider.asymmetric.ec.BCECPublicKey;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import lib.src.Globals;
-import lib.src.KeyUtil;
+import snowblossom.lib.Globals;
+import snowblossom.lib.KeyUtil;
 
 import java.security.*;
 import java.security.spec.AlgorithmParameterSpec;

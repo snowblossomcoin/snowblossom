@@ -1,4 +1,4 @@
-package lib.src;
+package snowblossom.lib;
 
 import java.math.BigInteger;
 import java.util.LinkedList;

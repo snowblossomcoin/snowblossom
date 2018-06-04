@@ -1,4 +1,4 @@
-package lib.src;
+package snowblossom.lib;
 
 public class ValidationException extends Exception
 {

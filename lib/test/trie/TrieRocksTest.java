@@ -4,9 +4,9 @@ import com.google.common.collect.ImmutableList;
 import com.google.protobuf.ByteString;
 import org.junit.*;
 import org.junit.rules.TemporaryFolder;
-import lib.src.trie.HashUtils;
-import lib.src.trie.HashedTrie;
-import lib.src.trie.TrieDBRocks;
+import snowblossom.lib.trie.HashUtils;
+import snowblossom.lib.trie.HashedTrie;
+import snowblossom.lib.trie.TrieDBRocks;
 
 import java.io.File;
 import java.util.HashMap;

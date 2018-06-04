@@ -1,4 +1,4 @@
-package lib.src;
+package snowblossom.lib;
 
 import java.util.concurrent.ThreadFactory;
 

@@ -1,14 +1,14 @@
-package lib.src;
+package snowblossom.lib;
 
 import com.google.protobuf.ByteString;
 import duckutil.TimeRecord;
 import duckutil.TimeRecordAuto;
-import lib.src.db.DB;
+import snowblossom.lib.db.DB;
 import snowblossom.proto.Block;
 import snowblossom.proto.BlockHeader;
 import snowblossom.proto.BlockSummary;
 import snowblossom.proto.Transaction;
-import lib.src.trie.HashUtils;
+import snowblossom.lib.trie.HashUtils;
 
 import java.io.FileOutputStream;
 import java.io.PrintStream;

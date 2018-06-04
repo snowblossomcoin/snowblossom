@@ -3,7 +3,7 @@ package lib.test;
 import com.google.protobuf.ByteString;
 import org.junit.Assert;
 import org.junit.Test;
-import lib.src.BlockchainUtil;
+import snowblossom.lib.BlockchainUtil;
 
 import java.math.BigInteger;
 import java.util.Random;

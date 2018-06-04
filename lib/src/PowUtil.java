@@ -1,4 +1,4 @@
-package lib.src;
+package snowblossom.lib;
 
 import com.google.protobuf.ByteString;
 import duckutil.TimeRecord;
@@ -6,8 +6,8 @@ import duckutil.TimeRecordAuto;
 import org.junit.Assert;
 import snowblossom.proto.BlockHeader;
 import snowblossom.proto.BlockSummary;
-import lib.src.trie.ByteStringComparator;
-import lib.src.trie.HashUtils;
+import snowblossom.lib.trie.ByteStringComparator;
+import snowblossom.lib.trie.HashUtils;
 
 import java.math.BigInteger;
 import java.nio.ByteBuffer;

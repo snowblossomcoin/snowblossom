@@ -1,9 +1,9 @@
-package lib.src.db;
+package snowblossom.lib.db;
 
 import com.google.protobuf.ByteString;
 import duckutil.Config;
-import lib.src.ChainHash;
-import lib.src.DaemonThreadFactory;
+import snowblossom.lib.ChainHash;
+import snowblossom.lib.DaemonThreadFactory;
 import snowblossom.proto.Block;
 import snowblossom.proto.BlockSummary;
 import snowblossom.proto.Transaction;

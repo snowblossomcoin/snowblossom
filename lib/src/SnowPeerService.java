@@ -1,4 +1,4 @@
-package lib.src;
+package snowblossom.lib;
 
 import io.grpc.stub.StreamObserver;
 import snowblossom.proto.PeerMessage;

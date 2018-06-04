@@ -1,4 +1,4 @@
-package lib.src;
+package snowblossom.lib;
 
 import io.grpc.ManagedChannel;
 import io.grpc.stub.StreamObserver;

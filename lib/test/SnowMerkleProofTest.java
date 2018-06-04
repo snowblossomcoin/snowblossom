@@ -7,10 +7,10 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 import snowblossom.proto.SnowPowProof;
-import lib.src.Globals;
-import lib.src.SnowFall;
-import lib.src.SnowMerkle;
-import lib.src.SnowMerkleProof;
+import snowblossom.lib.Globals;
+import snowblossom.lib.SnowFall;
+import snowblossom.lib.SnowMerkle;
+import snowblossom.lib.SnowMerkleProof;
 
 import java.io.File;
 import java.security.MessageDigest;

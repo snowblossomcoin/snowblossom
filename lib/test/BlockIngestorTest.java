@@ -4,10 +4,10 @@ import org.junit.Assert;
 import org.junit.Test;
 import snowblossom.proto.BlockHeader;
 import snowblossom.proto.BlockSummary;
-import lib.src.BlockIngestor;
-import lib.src.BlockchainUtil;
-import lib.src.NetworkParams;
-import lib.src.NetworkParamsTestnet;
+import snowblossom.lib.BlockIngestor;
+import snowblossom.lib.BlockchainUtil;
+import snowblossom.lib.NetworkParams;
+import snowblossom.lib.NetworkParamsTestnet;
 
 import java.math.BigInteger;
 
