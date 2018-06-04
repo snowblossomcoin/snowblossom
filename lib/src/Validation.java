@@ -6,6 +6,7 @@ import duckutil.TimeRecord;
 import duckutil.TimeRecordAuto;
 import org.junit.Assert;
 import snowblossom.proto.*;
+import snowblossom.lib.trie.HashedTrie;
 
 import java.math.BigInteger;
 import java.security.MessageDigest;
@@ -127,13 +128,13 @@ public class Validation
 
   }
 
-  public static void deepBlockValidation(SnowBlossomNode node, Block blk, BlockSummary prev_summary)
+  public static void deepBlockValidation(NetworkParams params, HashedTrie utxo_hashed_trie, Block blk, BlockSummary prev_summary)
     throws ValidationException
   {
     try(TimeRecordAuto tra_blk = TimeRecord.openAuto("Validation.deepBlockValidation"))
     {
       //Check expected target
-      BigInteger expected_target = PowUtil.calcNextTarget(prev_summary, node.getParams(), blk.getHeader().getTimestamp());
+      BigInteger expected_target = PowUtil.calcNextTarget(prev_summary, params, blk.getHeader().getTimestamp());
       ByteString expected_target_bytes = BlockchainUtil.targetBigIntegerToBytes(expected_target);
 
       if (!blk.getHeader().getTarget().equals(expected_target_bytes))
@@ -201,13 +202,13 @@ public class Validation
       }
       if (blk.getHeader().getBlockHeight() == 0)
       {
-        if (!coinbase_inner.getCoinbaseExtras().getRemarks().startsWith( node.getParams().getBlockZeroRemark()))
+        if (!coinbase_inner.getCoinbaseExtras().getRemarks().startsWith( params.getBlockZeroRemark()))
         {
           throw new ValidationException("Block zero remark must start with defined remark");
         }
       }
 
-      UtxoUpdateBuffer utxo_buffer = new UtxoUpdateBuffer(node.getUtxoHashedTrie(), 
+      UtxoUpdateBuffer utxo_buffer = new UtxoUpdateBuffer(utxo_hashed_trie, 
         new ChainHash(prev_summary.getHeader().getUtxoRootHash()));
       long fee_sum = 0L;
 
@@ -216,7 +217,7 @@ public class Validation
         fee_sum += deepTransactionCheck(tx, utxo_buffer);
       }
 
-      long reward = PowUtil.getBlockReward(node.getParams(), blk.getHeader().getBlockHeight());
+      long reward = PowUtil.getBlockReward(params, blk.getHeader().getBlockHeight());
       long coinbase_sum = fee_sum + reward;
 
       long coinbase_spent = 0L;

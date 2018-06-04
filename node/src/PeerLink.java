@@ -1,8 +1,9 @@
-package snowblossom.lib;
+package snowblossom.node;
 
 import io.grpc.ManagedChannel;
 import io.grpc.stub.StreamObserver;
 import snowblossom.proto.*;
+import snowblossom.lib.*;
 
 import java.util.Random;
 import java.util.TreeMap;

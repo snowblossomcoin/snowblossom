@@ -1,11 +1,11 @@
 java_binary(
   name = "SnowBlossomNode",
-  main_class = "snowblossom.lib.SnowBlossomNode",
+  main_class = "snowblossom.node.SnowBlossomNode",
   jvm_flags = [ 
     "-Xmx1600M",
   ],
   runtime_deps = [
-    "//lib:lib",
+    "//node",
   ]
 )
 
@@ -34,14 +34,14 @@ java_binary(
 
 java_binary(
   name = "SnowFall",
-  main_class = "snowblossom.SnowFall",
+  main_class = "snowblossom.lib.SnowFall",
   runtime_deps = [
     "//lib:lib",
   ]
 )
 java_binary(
   name = "SnowMerkle",
-  main_class = "snowblossom.SnowMerkle",
+  main_class = "snowblossom.lib..SnowMerkle",
   runtime_deps = [
     "//lib:lib",
   ]
@@ -49,7 +49,7 @@ java_binary(
 
 java_binary(
   name = "ShowAlgo",
-  main_class = "snowblossom.ShowAlgo",
+  main_class = "snowblossom.lib.ShowAlgo",
   runtime_deps = [
     "//lib:lib",
   ]

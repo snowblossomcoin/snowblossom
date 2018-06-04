@@ -16,7 +16,7 @@ import snowblossom.lib.KeyUtil;
 import snowblossom.lib.NetworkParams;
 import snowblossom.lib.NetworkParamsRegtest;
 import snowblossom.lib.SignatureUtil;
-import snowblossom.lib.SnowBlossomNode;
+import snowblossom.node.SnowBlossomNode;
 import snowblossom.lib.SnowFall;
 import snowblossom.lib.SnowFieldInfo;
 import snowblossom.lib.SnowMerkle;

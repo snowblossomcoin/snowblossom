@@ -1,9 +1,10 @@
-package snowblossom.lib;
+package snowblossom.node;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.protobuf.ByteString;
 import snowblossom.proto.*;
+import snowblossom.lib.*;
 
 import java.net.InetAddress;
 import java.util.*;
@@ -146,6 +147,7 @@ public class Peerage
       {
         String ver = info.getVersion();
         ByteString node_id = info.getNodeId();
+
         if (!ver_map.containsKey(node_id))
         {
           ver_map.put(node_id, ver);
@@ -168,10 +170,7 @@ public class Peerage
       {
         map.put(ver, 0);
       }
-      else
-      {
-        map.put(ver, map.get(ver) + 1);
-      }
+      map.put(ver, map.get(ver) + 1);
     }
 
     return map;

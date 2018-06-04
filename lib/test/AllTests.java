@@ -15,10 +15,8 @@ import lib.test.trie.TrieTest;
   // root
   AddressUtilTest.class,
   BlockchainUtilTest.class,
-  BlockIngestorTest.class,
   DigestUtilTest.class,
   KeyUtilTest.class,
-  MemPoolTest.class,
   PowUtilTest.class,
   PRNGStreamTest.class,
   SignatureTest.class,

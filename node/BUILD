@@ -21,5 +21,8 @@ java_test(
     srcs = glob(["test/**/*.java", "test/*.java"]),
     deps = [
 		    "//node:node",
+        "//lib:lib",
+        "//protolib:protolib",
+        "@duckutil//:duckutil_lib",
     ]
 )

@@ -1,4 +1,4 @@
-package node.test;
+package shackleton.test;
 
 import org.junit.Test;
 

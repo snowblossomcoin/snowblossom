@@ -1,4 +1,4 @@
-package snowblossom.lib;
+package snowblossom.node;
 
 import duckutil.Config;
 import duckutil.ConfigFile;
@@ -9,6 +9,7 @@ import snowblossom.lib.trie.HashedTrie;
 import snowblossom.lib.trie.TrieDBMap;
 import snowblossom.lib.db.lobstack.LobstackDB;
 import snowblossom.lib.db.rocksdb.JRocksDB;
+import snowblossom.lib.*;
 
 import java.util.logging.Level;
 import java.util.logging.Logger;

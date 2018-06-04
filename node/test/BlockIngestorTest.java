@@ -1,10 +1,10 @@
-package lib.test;
+package node.test;
 
 import org.junit.Assert;
 import org.junit.Test;
 import snowblossom.proto.BlockHeader;
 import snowblossom.proto.BlockSummary;
-import snowblossom.lib.BlockIngestor;
+import snowblossom.node.BlockIngestor;
 import snowblossom.lib.BlockchainUtil;
 import snowblossom.lib.NetworkParams;
 import snowblossom.lib.NetworkParamsTestnet;
@@ -28,7 +28,7 @@ public class BlockIngestorTest
       prev_summary = BlockSummary.newBuilder().build();
     System.out.println(prev_summary);
 
-		BlockSummary s = BlockIngestor.getNewSummary(header, prev_summary, params, 1L);
+		BlockSummary s = BlockchainUtil.getNewSummary(header, prev_summary, params, 1L);
 
     Assert.assertNotNull(s.getHeader());
     Assert.assertEquals("1024", s.getWorkSum());
@@ -65,7 +65,7 @@ public class BlockIngestorTest
         .build();
     System.out.println(prev_summary);
 
-		BlockSummary s = BlockIngestor.getNewSummary(header, prev_summary, params, 1L);
+		BlockSummary s = BlockchainUtil.getNewSummary(header, prev_summary, params, 1L);
 
     BigInteger expected_target = params.getMaxTarget().multiply(BigInteger.valueOf(990L)).add(using_target.multiply(BigInteger.valueOf(10L))).divide(BigInteger.valueOf(1000L));
     long expected_time = (params.getBlockTimeTarget() * 990L + using_time * 10L) / 1000L;

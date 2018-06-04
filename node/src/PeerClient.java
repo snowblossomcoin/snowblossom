@@ -1,4 +1,4 @@
-package snowblossom.lib;
+package snowblossom.node;
 
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
@@ -7,6 +7,7 @@ import snowblossom.proto.PeerInfo;
 import snowblossom.proto.PeerMessage;
 import snowblossom.proto.PeerServiceGrpc;
 import snowblossom.proto.PeerServiceGrpc.PeerServiceStub;
+import snowblossom.lib.*;
 
 
 public class PeerClient

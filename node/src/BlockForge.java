@@ -1,7 +1,8 @@
-package snowblossom.lib;
+package snowblossom.node;
 
 import com.google.protobuf.ByteString;
 import snowblossom.proto.*;
+import snowblossom.lib.*;
 import snowblossom.lib.trie.HashUtils;
 
 import java.math.BigInteger;
