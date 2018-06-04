@@ -2,8 +2,8 @@ package snowblossom.client;
 
 import com.google.common.collect.ImmutableList;
 import duckutil.Config;
-import lib.src.AddressUtil;
-import lib.src.KeyUtil;
+import snowblossom.lib.AddressUtil;
+import snowblossom.lib.KeyUtil;
 import snowblossom.proto.AddressSpec;
 import snowblossom.proto.WalletDatabase;
 import snowblossom.proto.WalletKeyPair;

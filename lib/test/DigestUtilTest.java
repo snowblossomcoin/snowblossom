@@ -4,9 +4,9 @@ import com.google.common.collect.ImmutableList;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import lib.src.ChainHash;
-import lib.src.DigestUtil;
-import lib.src.Globals;
+import snowblossom.lib.ChainHash;
+import snowblossom.lib.DigestUtil;
+import snowblossom.lib.Globals;
 
 import java.security.MessageDigest;
 import java.util.Random;

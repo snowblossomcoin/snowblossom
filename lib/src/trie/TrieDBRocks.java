@@ -1,4 +1,4 @@
-package lib.src.trie;
+package snowblossom.lib.trie;
 
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;

@@ -4,7 +4,7 @@ import com.google.protobuf.ByteString;
 import org.apache.commons.codec.binary.Hex;
 import org.junit.Assert;
 import org.junit.Test;
-import lib.src.PRNGStream;
+import snowblossom.lib.PRNGStream;
 
 public class PRNGStreamTest
 {

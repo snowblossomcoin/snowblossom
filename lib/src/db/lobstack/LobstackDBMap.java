@@ -1,9 +1,9 @@
-package lib.src.db.lobstack;
+package snowblossom.lib.db.lobstack;
 
 import com.google.protobuf.ByteString;
-import lib.src.db.DBMap;
+import snowblossom.lib.db.DBMap;
 import lobstack.Lobstack;
-import lib.src.HexUtil;
+import snowblossom.lib.HexUtil;
 
 import java.nio.ByteBuffer;
 import java.util.HashMap;

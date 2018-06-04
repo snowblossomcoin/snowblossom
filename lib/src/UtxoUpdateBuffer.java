@@ -1,10 +1,10 @@
-package lib.src;
+package snowblossom.lib;
 
 import com.google.protobuf.ByteString;
 import snowblossom.proto.TransactionInput;
 import snowblossom.proto.TransactionOutput;
-import lib.src.trie.HashUtils;
-import lib.src.trie.HashedTrie;
+import snowblossom.lib.trie.HashUtils;
+import snowblossom.lib.trie.HashedTrie;
 
 import java.nio.ByteBuffer;
 import java.util.HashMap;

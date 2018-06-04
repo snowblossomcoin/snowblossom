@@ -6,8 +6,8 @@ import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
-import lib.src.SnowFall;
-import lib.src.SnowMerkle;
+import snowblossom.lib.SnowFall;
+import snowblossom.lib.SnowMerkle;
 
 import java.io.BufferedInputStream;
 import java.io.DataInputStream;

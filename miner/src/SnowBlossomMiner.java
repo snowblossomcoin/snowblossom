@@ -8,12 +8,12 @@ import duckutil.TimeRecordAuto;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 import io.grpc.stub.StreamObserver;
-import lib.src.*;
+import snowblossom.lib.*;
 import snowblossom.proto.*;
 import snowblossom.proto.UserServiceGrpc.UserServiceBlockingStub;
 import snowblossom.proto.UserServiceGrpc.UserServiceStub;
-import lib.src.trie.HashUtils;
-import lib.src.SnowMerkleProof;
+import snowblossom.lib.trie.HashUtils;
+import snowblossom.lib.SnowMerkleProof;
 
 import java.io.File;
 import java.io.FileInputStream;

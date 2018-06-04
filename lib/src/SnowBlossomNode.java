@@ -1,14 +1,14 @@
-package lib.src;
+package snowblossom.lib;
 
 import duckutil.Config;
 import duckutil.ConfigFile;
 import io.grpc.Server;
 import io.grpc.ServerBuilder;
-import lib.src.db.DB;
-import lib.src.trie.HashedTrie;
-import lib.src.trie.TrieDBMap;
-import lib.src.db.lobstack.LobstackDB;
-import lib.src.db.rocksdb.JRocksDB;
+import snowblossom.lib.db.DB;
+import snowblossom.lib.trie.HashedTrie;
+import snowblossom.lib.trie.TrieDBMap;
+import snowblossom.lib.db.lobstack.LobstackDB;
+import snowblossom.lib.db.rocksdb.JRocksDB;
 
 import java.util.logging.Level;
 import java.util.logging.Logger;

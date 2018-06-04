@@ -1,11 +1,11 @@
-package lib.src.db;
+package snowblossom.lib.db;
 
 
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.Message;
 import com.google.protobuf.Parser;
-import lib.src.trie.ByteStringComparator;
+import snowblossom.lib.trie.ByteStringComparator;
 
 import java.util.Map;
 import java.util.TreeMap;

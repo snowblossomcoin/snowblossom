@@ -1,5 +1,5 @@
 
-package lib.src.db;
+package snowblossom.lib.db;
 
 public class DBTooManyResultsException extends RuntimeException
 {

@@ -1,4 +1,4 @@
-package lib.src;
+package snowblossom.lib;
 
 import java.security.Provider;
 import java.security.Security;

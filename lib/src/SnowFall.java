@@ -1,4 +1,4 @@
-package lib.src;
+package snowblossom.lib;
 
 import java.io.RandomAccessFile;
 import java.math.BigInteger;

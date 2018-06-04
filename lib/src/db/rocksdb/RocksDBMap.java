@@ -1,7 +1,7 @@
-package lib.src.db.rocksdb;
+package snowblossom.lib.db.rocksdb;
 
 import com.google.protobuf.ByteString;
-import lib.src.db.DBMap;
+import snowblossom.lib.db.DBMap;
 import org.rocksdb.RocksDB;
 import org.rocksdb.RocksDBException;
 import org.rocksdb.WriteBatch;

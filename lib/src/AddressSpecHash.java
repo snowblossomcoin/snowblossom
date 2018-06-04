@@ -1,9 +1,9 @@
-package lib.src;
+package snowblossom.lib;
 
 import com.google.protobuf.ByteString;
 import org.junit.Assert;
-import lib.src.trie.ByteStringComparator;
-import lib.src.trie.HashUtils;
+import snowblossom.lib.trie.ByteStringComparator;
+import snowblossom.lib.trie.HashUtils;
 
 /**
  * Represents a basic hash that could be anything on

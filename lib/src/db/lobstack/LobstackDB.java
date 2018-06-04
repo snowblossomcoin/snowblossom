@@ -1,9 +1,9 @@
-package lib.src.db.lobstack;
+package snowblossom.lib.db.lobstack;
 
 import duckutil.Config;
-import lib.src.db.DB;
-import lib.src.db.DBMap;
-import lib.src.db.DBMapMutationSet;
+import snowblossom.lib.db.DB;
+import snowblossom.lib.db.DBMap;
+import snowblossom.lib.db.DBMapMutationSet;
 import lobstack.Lobstack;
 
 import java.io.File;

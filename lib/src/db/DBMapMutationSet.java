@@ -1,4 +1,4 @@
-package lib.src.db;
+package snowblossom.lib.db;
 
 import com.google.protobuf.ByteString;
 import duckutil.TimeRecord;

@@ -4,9 +4,9 @@ import com.google.common.collect.ImmutableList;
 import com.google.protobuf.ByteString;
 import org.junit.Assert;
 import org.junit.Test;
-import lib.src.trie.HashUtils;
-import lib.src.trie.HashedTrie;
-import lib.src.trie.TrieDBMem;
+import snowblossom.lib.trie.HashUtils;
+import snowblossom.lib.trie.HashedTrie;
+import snowblossom.lib.trie.TrieDBMem;
 
 import java.util.ArrayList;
 import java.util.HashMap;

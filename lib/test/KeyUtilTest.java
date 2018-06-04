@@ -6,10 +6,10 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import snowblossom.proto.SigSpec;
 import snowblossom.proto.WalletKeyPair;
-import lib.src.ChainHash;
-import lib.src.Globals;
-import lib.src.KeyUtil;
-import lib.src.SignatureUtil;
+import snowblossom.lib.ChainHash;
+import snowblossom.lib.Globals;
+import snowblossom.lib.KeyUtil;
+import snowblossom.lib.SignatureUtil;
 
 import java.security.KeyPair;
 import java.security.PrivateKey;

@@ -4,7 +4,7 @@ import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
 import duckutil.Config;
-import lib.src.*;
+import snowblossom.lib.*;
 import snowblossom.proto.*;
 
 import java.io.ByteArrayOutputStream;

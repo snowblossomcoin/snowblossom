@@ -1,4 +1,4 @@
-package lib.src;
+package snowblossom.lib;
 
 import org.apache.commons.math3.random.AbstractWell;
 import org.apache.commons.math3.random.Well44497b;

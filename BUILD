@@ -1,6 +1,6 @@
 java_binary(
   name = "SnowBlossomNode",
-  main_class = "lib.src.SnowBlossomNode",
+  main_class = "snowblossom.lib.SnowBlossomNode",
   jvm_flags = [ 
     "-Xmx1600M",
   ],
