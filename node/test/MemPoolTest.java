@@ -1,4 +1,4 @@
-package lib.test;
+package node.test;
 
 import com.google.common.collect.ImmutableList;
 import duckutil.TimeRecord;
@@ -16,7 +16,7 @@ import snowblossom.lib.AddressUtil;
 import snowblossom.lib.ChainHash;
 import snowblossom.lib.Globals;
 import snowblossom.lib.KeyUtil;
-import snowblossom.lib.MemPool;
+import snowblossom.node.MemPool;
 import snowblossom.lib.SignatureUtil;
 import snowblossom.lib.TransactionUtil;
 import snowblossom.lib.UtxoUpdateBuffer;

@@ -8,6 +8,7 @@ java_test(
         "//lib:lib",
         "//protolib:protolib",
         "//miner:miner",
+        "//node",
         "//client:client",
         "//shackleton:shackleton",
         "@duckutil//:duckutil_lib"

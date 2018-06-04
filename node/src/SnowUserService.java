@@ -1,8 +1,9 @@
-package snowblossom.lib;
+package snowblossom.node;
 
 import com.google.protobuf.ByteString;
 import io.grpc.stub.StreamObserver;
 import snowblossom.proto.*;
+import snowblossom.lib.*;
 import snowblossom.trie.proto.TrieNode;
 
 import java.util.LinkedList;

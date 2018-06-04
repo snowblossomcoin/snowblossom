@@ -1,9 +1,10 @@
-package snowblossom.lib;
+package snowblossom.node;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.protobuf.ByteString;
 import snowblossom.proto.*;
+import snowblossom.lib.*;
 
 import java.net.InetAddress;
 import java.util.*;

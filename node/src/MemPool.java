@@ -1,4 +1,4 @@
-package snowblossom.lib;
+package snowblossom.node;
 
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableList;
@@ -7,6 +7,7 @@ import com.google.common.collect.TreeMultimap;
 import com.google.protobuf.ByteString;
 import duckutil.TimeRecord;
 import org.junit.Assert;
+import snowblossom.lib.*;
 import snowblossom.proto.Transaction;
 import snowblossom.proto.TransactionInner;
 import snowblossom.proto.TransactionInput;

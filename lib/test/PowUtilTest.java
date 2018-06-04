@@ -2,9 +2,7 @@ package lib.test;
 
 import org.junit.Assert;
 import org.junit.Test;
-import snowblossom.proto.BlockHeader;
-import snowblossom.proto.BlockSummary;
-import snowblossom.lib.BlockIngestor;
+import snowblossom.proto.*;
 import snowblossom.lib.BlockchainUtil;
 import snowblossom.lib.NetworkParams;
 import snowblossom.lib.NetworkParamsRegtest;
@@ -130,7 +128,7 @@ public class PowUtilTest
         .setTimestamp(time)
         .build();
 
-      bs = BlockIngestor.getNewSummary(header, bs, params, 1L);
+      bs = BlockchainUtil.getNewSummary(header, bs, params, 1L);
 
       Assert.assertEquals(time, bs.getHeader().getTimestamp());
 
@@ -162,7 +160,7 @@ public class PowUtilTest
         .setTimestamp(time)
         .build();
 
-      bs = BlockIngestor.getNewSummary(header, bs, params, 1L);
+      bs = BlockchainUtil.getNewSummary(header, bs, params, 1L);
 
       Assert.assertEquals(time, bs.getHeader().getTimestamp());
 

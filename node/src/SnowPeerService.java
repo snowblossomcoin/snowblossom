@@ -1,10 +1,11 @@
-package snowblossom.lib;
+package snowblossom.node;
 
 import io.grpc.stub.StreamObserver;
 import snowblossom.proto.PeerMessage;
 import snowblossom.proto.PeerServiceGrpc;
 
 import java.util.logging.Logger;
+import snowblossom.lib.*;
 
 
 public class SnowPeerService extends PeerServiceGrpc.PeerServiceImplBase
