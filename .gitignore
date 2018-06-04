@@ -1,1 +1,3 @@
 bazel-*
+.metadata/
+.project/.idea/workspace.xml
