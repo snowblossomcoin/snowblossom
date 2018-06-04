@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="libprotolib-hjar_c5857708">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/../bazel-out/x64_windows-fastbuild/bin/protolib/libprotolib-hjar.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>
