@@ -19,7 +19,7 @@ java_library(
 
 java_test(
     name = "gclient.test",
-    test_class = "client.test.AllTests",
+    test_class = "gclient.test.AllTests",
     srcs = glob(["test/**/*.java", "test/*.java"]),
     deps = [
 		    "//gclient:gclient",

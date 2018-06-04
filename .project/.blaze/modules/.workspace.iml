@@ -14,11 +14,11 @@
       <sourceFolder url="file://$MODULE_DIR$/../../../wallet/test" isTestSource="true" packagePrefix="wallet.test" />
       <sourceFolder url="file://$MODULE_DIR$/../../../systemtests/test" isTestSource="true" packagePrefix="systemtests.test" />
       <sourceFolder url="file://$MODULE_DIR$/../../../shackleton/test" isTestSource="true" packagePrefix="shackleton.test" />
-      <sourceFolder url="file://$MODULE_DIR$/../../../node/test" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/../../../node/test" isTestSource="true" packagePrefix="node.test" />
       <sourceFolder url="file://$MODULE_DIR$/../../../node/src" isTestSource="false" packagePrefix="snowblossom.node" />
       <sourceFolder url="file://$MODULE_DIR$/../../../miner/test" isTestSource="true" packagePrefix="miner.test" />
       <sourceFolder url="file://$MODULE_DIR$/../../../lib/test" isTestSource="true" packagePrefix="lib.test" />
-      <sourceFolder url="file://$MODULE_DIR$/../../../gclient/test" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/../../../gclient/test" isTestSource="true" packagePrefix="gclient.test" />
       <sourceFolder url="file://$MODULE_DIR$/../../../client/test" isTestSource="true" packagePrefix="client.test" />
       <excludeFolder url="file://$MODULE_DIR$/../../../bazel-bin" />
       <excludeFolder url="file://$MODULE_DIR$/../../../bazel-genfiles" />
