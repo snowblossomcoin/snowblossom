@@ -291,7 +291,7 @@ public class SnowBlossomMiner
 
       /**
        * This is a windows specific improvement since windows likes separete file descriptors
-       * per thread.
+       *  per thread.
        */
       if ((merkle_proof == null) || (proof_field != b.getHeader().getSnowField()))
       {
@@ -386,11 +386,8 @@ public class SnowBlossomMiner
           {
           }
         }
-
       }
-
     }
-
   }
 
   public class BlockTemplateEater implements StreamObserver<Block>

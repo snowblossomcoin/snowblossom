@@ -39,7 +39,7 @@ public class SnowBlossomClient
     }
 
     ConfigFile config = new ConfigFile(args[0]);
-    
+
     LogSetup.setup(config);
 
     SnowBlossomClient client = new SnowBlossomClient(config);
@@ -91,7 +91,7 @@ public class SnowBlossomClient
       {
         client.runLoadTest();
       }
-      else 
+      else
       {
         logger.log(Level.SEVERE, String.format("Unknown command %s.  Try 'send'", command));
         System.exit(-1);
@@ -118,7 +118,7 @@ public class SnowBlossomClient
     params = NetworkParams.loadFromConfig(config);
     int port = config.getIntWithDefault("node_port", params.getDefaultPort());
 
-		
+
     ManagedChannel channel = ManagedChannelBuilder.forAddress(host, port).usePlaintext(true).build();
 
     asyncStub = UserServiceGrpc.newStub(channel);
@@ -215,6 +215,7 @@ public class SnowBlossomClient
     long total_spendable = 0;
     DecimalFormat df = new DecimalFormat("0.000000");
 
+    Throwable logException = null;
     for(AddressSpec claim : wallet_database.getAddressesList())
     {
       AddressSpecHash hash = AddressUtil.getHashForSpec(claim);
@@ -228,7 +229,7 @@ public class SnowBlossomClient
 
         for(TransactionBridge b : bridges)
         {
-          
+
           if (b.unconfirmed)
           {
             if (!b.spent)
@@ -253,7 +254,7 @@ public class SnowBlossomClient
 
         double val_conf_d = (double) value_confirmed / (double) Globals.SNOW_VALUE;
         double val_unconf_d = (double) value_unconfirmed / (double) Globals.SNOW_VALUE;
-        System.out.println(String.format(" %s (%s pending) in %d outputs", 
+        System.out.println(String.format(" %s (%s pending) in %d outputs",
           df.format(val_conf_d), df.format(val_unconf_d), bridges.size()));
 
         total_confirmed += value_confirmed;
@@ -261,9 +262,15 @@ public class SnowBlossomClient
       }
       catch(Throwable e)
       {
+        logException = e;
         System.out.println(e);
       }
 
+    }
+    if (logException != null)
+    {
+      System.out.println("Last exception stacktrace:");
+      logException.printStackTrace(System.out);
     }
     double total_conf_d = (double) total_confirmed / (double) Globals.SNOW_VALUE;
     double total_unconf_d = (double) total_unconfirmed / (double) Globals.SNOW_VALUE;
@@ -453,8 +460,6 @@ public class SnowBlossomClient
       {
         return;
       }
-
     }
-    
   }
 }
