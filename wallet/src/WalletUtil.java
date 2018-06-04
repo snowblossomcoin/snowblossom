@@ -1,4 +1,4 @@
-package snowblossom.client;
+package wallet.src;
 
 import com.google.common.collect.ImmutableList;
 import duckutil.Config;

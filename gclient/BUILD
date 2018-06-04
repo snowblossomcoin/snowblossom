@@ -1,7 +1,7 @@
 package(default_visibility = ["//visibility:public"])
 
 java_library(
-  name = "client",
+  name = "gclient",
   srcs = glob(["src/**/*.java", "src/*.java"]),
   deps = [
     "//protolib:protolib",
@@ -18,11 +18,11 @@ java_library(
 )
 
 java_test(
-    name = "client.test",
+    name = "gclient.test",
     test_class = "client.test.AllTests",
     srcs = glob(["test/**/*.java", "test/*.java"]),
     deps = [
-		    "//client:client",
+		    "//gclient:gclient",
         "//lib:lib",
         "//protolib:protolib",
         "//wallet:wallet"

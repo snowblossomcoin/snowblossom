@@ -5,19 +5,21 @@
     <content url="file://$MODULE_DIR$/../../..">
       <sourceFolder url="file://$MODULE_DIR$/../../.." isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/../../../client/src" isTestSource="false" packagePrefix="snowblossom.client" />
-      <sourceFolder url="file://$MODULE_DIR$/../../../client/test" isTestSource="false" packagePrefix="client.test" />
-      <sourceFolder url="file://$MODULE_DIR$/../../../lib/src" isTestSource="false" packagePrefix="lib.src" />
-      <sourceFolder url="file://$MODULE_DIR$/../../../lib/src/db" isTestSource="false" packagePrefix="lib.src.db" />
-      <sourceFolder url="file://$MODULE_DIR$/../../../lib/src/db/lobstack" isTestSource="false" packagePrefix="lib.src.db.lobstack" />
-      <sourceFolder url="file://$MODULE_DIR$/../../../lib/src/db/rocksdb" isTestSource="false" packagePrefix="lib.src.db.rocksdb" />
-      <sourceFolder url="file://$MODULE_DIR$/../../../lib/src/trie" isTestSource="false" packagePrefix="lib.src.trie" />
-      <sourceFolder url="file://$MODULE_DIR$/../../../lib/test" isTestSource="false" packagePrefix="lib.test" />
+      <sourceFolder url="file://$MODULE_DIR$/../../../lib/src" isTestSource="false" packagePrefix="snowblossom.lib" />
       <sourceFolder url="file://$MODULE_DIR$/../../../lib/test/trie" isTestSource="false" packagePrefix="lib.test.trie" />
       <sourceFolder url="file://$MODULE_DIR$/../../../miner/src" isTestSource="false" packagePrefix="snowblossom.miner" />
-      <sourceFolder url="file://$MODULE_DIR$/../../../miner/test" isTestSource="false" packagePrefix="miner.test" />
       <sourceFolder url="file://$MODULE_DIR$/../../../shackleton/src" isTestSource="false" packagePrefix="snowblossom.shackleton" />
-      <sourceFolder url="file://$MODULE_DIR$/../../../shackleton/test" isTestSource="false" packagePrefix="shackleton.test" />
-      <sourceFolder url="file://$MODULE_DIR$/../../../systemtests/test" isTestSource="false" packagePrefix="systemtests.test" />
+      <sourceFolder url="file://$MODULE_DIR$/../../../gclient/src" isTestSource="false" packagePrefix="snowblossom.gclient" />
+      <sourceFolder url="file://$MODULE_DIR$/../../../wallet/src" isTestSource="false" packagePrefix="snowblossom.wallet" />
+      <sourceFolder url="file://$MODULE_DIR$/../../../wallet/test" isTestSource="true" packagePrefix="wallet.test" />
+      <sourceFolder url="file://$MODULE_DIR$/../../../systemtests/test" isTestSource="true" packagePrefix="systemtests.test" />
+      <sourceFolder url="file://$MODULE_DIR$/../../../shackleton/test" isTestSource="true" packagePrefix="shackleton.test" />
+      <sourceFolder url="file://$MODULE_DIR$/../../../node/test" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/../../../node/src" isTestSource="false" packagePrefix="snowblossom.node" />
+      <sourceFolder url="file://$MODULE_DIR$/../../../miner/test" isTestSource="true" packagePrefix="miner.test" />
+      <sourceFolder url="file://$MODULE_DIR$/../../../lib/test" isTestSource="true" packagePrefix="lib.test" />
+      <sourceFolder url="file://$MODULE_DIR$/../../../gclient/test" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/../../../client/test" isTestSource="true" packagePrefix="client.test" />
       <excludeFolder url="file://$MODULE_DIR$/../../../bazel-bin" />
       <excludeFolder url="file://$MODULE_DIR$/../../../bazel-genfiles" />
       <excludeFolder url="file://$MODULE_DIR$/../../../bazel-out" />

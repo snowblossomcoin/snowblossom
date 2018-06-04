@@ -1,4 +1,4 @@
-package client.test;
+package wallet.test;
 
 import com.google.common.collect.ImmutableList;
 import org.junit.Assert;

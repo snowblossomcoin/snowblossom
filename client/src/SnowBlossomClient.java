@@ -11,6 +11,7 @@ import snowblossom.proto.*;
 import snowblossom.proto.UserServiceGrpc.UserServiceBlockingStub;
 import snowblossom.proto.UserServiceGrpc.UserServiceStub;
 import snowblossom.trie.proto.TrieNode;
+import wallet.src.WalletUtil;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -67,19 +68,19 @@ public class SnowBlossomClient
       }
       else if (command.equals("monitor"))
       {
-        while(true)
+        while (true)
         {
           Thread.sleep(60000);
           try
           {
             if (client == null)
             {
-               client = new SnowBlossomClient(config);
+              client = new SnowBlossomClient(config);
             }
             client.showBalances();
 
           }
-          catch(Throwable t)
+          catch (Throwable t)
           {
             t.printStackTrace();
             client = null;
@@ -103,7 +104,7 @@ public class SnowBlossomClient
   private final UserServiceStub asyncStub;
   private final UserServiceBlockingStub blockingStub;
 
-	private final NetworkParams params;
+  private final NetworkParams params;
 
   private File wallet_path;
   private WalletDatabase wallet_database;
@@ -195,7 +196,7 @@ public class SnowBlossomClient
 
     //if (db_file_tmp.renameTo(db_file))
     //{
-      logger.log(Level.INFO, String.format("Save to file %s completed", db_file.getPath()));
+    logger.log(Level.INFO, String.format("Save to file %s completed", db_file.getPath()));
     //} 
     /*else
     {
@@ -216,7 +217,7 @@ public class SnowBlossomClient
     DecimalFormat df = new DecimalFormat("0.000000");
 
     Throwable logException = null;
-    for(AddressSpec claim : wallet_database.getAddressesList())
+    for (AddressSpec claim : wallet_database.getAddressesList())
     {
       AddressSpecHash hash = AddressUtil.getHashForSpec(claim);
       String address = AddressUtil.getAddressString(params.getAddressPrefix(), hash);
@@ -227,7 +228,7 @@ public class SnowBlossomClient
       {
         List<TransactionBridge> bridges = getSpendable(hash);
 
-        for(TransactionBridge b : bridges)
+        for (TransactionBridge b : bridges)
         {
 
           if (b.unconfirmed)
@@ -255,12 +256,12 @@ public class SnowBlossomClient
         double val_conf_d = (double) value_confirmed / (double) Globals.SNOW_VALUE;
         double val_unconf_d = (double) value_unconfirmed / (double) Globals.SNOW_VALUE;
         System.out.println(String.format(" %s (%s pending) in %d outputs",
-          df.format(val_conf_d), df.format(val_unconf_d), bridges.size()));
+                                         df.format(val_conf_d), df.format(val_unconf_d), bridges.size()));
 
         total_confirmed += value_confirmed;
         total_unconfirmed += value_unconfirmed;
       }
-      catch(Throwable e)
+      catch (Throwable e)
       {
         logException = e;
         System.out.println(e);
@@ -276,13 +277,13 @@ public class SnowBlossomClient
     double total_unconf_d = (double) total_unconfirmed / (double) Globals.SNOW_VALUE;
     double total_spend_d = (double) total_spendable / Globals.SNOW_VALUE_D;
     System.out.println(String.format("Total: %s (%s pending) (%s spendable)", df.format(total_conf_d), df.format(total_unconf_d),
-      df.format(total_spend_d)));
+                                     df.format(total_spend_d)));
   }
 
   public List<TransactionBridge> getAllSpendable()
   {
     LinkedList<TransactionBridge> all = new LinkedList<>();
-    for(AddressSpec claim : wallet_database.getAddressesList())
+    for (AddressSpec claim : wallet_database.getAddressesList())
     {
       AddressSpecHash hash = AddressUtil.getHashForSpec(claim);
       all.addAll(getSpendable(hash));
@@ -293,14 +294,14 @@ public class SnowBlossomClient
   public List<TransactionBridge> getSpendable(AddressSpecHash addr)
   {
 
-    GetUTXONodeReply reply = blockingStub.getUTXONode( GetUTXONodeRequest.newBuilder()
-      .setPrefix(addr.getBytes())
-      .setIncludeProof(true)
-      .build());
+    GetUTXONodeReply reply = blockingStub.getUTXONode(GetUTXONodeRequest.newBuilder()
+                                                                        .setPrefix(addr.getBytes())
+                                                                        .setIncludeProof(true)
+                                                                        .build());
 
-    HashMap<String, TransactionBridge> bridge_map=new HashMap<>();
+    HashMap<String, TransactionBridge> bridge_map = new HashMap<>();
 
-    for(TrieNode node : reply.getAnswerList())
+    for (TrieNode node : reply.getAnswerList())
     {
       if (node.getIsLeaf())
       {
@@ -310,14 +311,14 @@ public class SnowBlossomClient
       }
     }
 
-    for(ByteString tx_hash : blockingStub.getMempoolTransactionList(
+    for (ByteString tx_hash : blockingStub.getMempoolTransactionList(
       RequestAddress.newBuilder().setAddressSpecHash(addr.getBytes()).build()).getTxHashesList())
     {
       Transaction tx = blockingStub.getTransaction(RequestTransaction.newBuilder().setTxHash(tx_hash).build());
 
       TransactionInner inner = TransactionUtil.getInner(tx);
 
-      for(TransactionInput in : inner.getInputsList())
+      for (TransactionInput in : inner.getInputsList())
       {
         if (addr.equals(in.getSpecHash()))
         {
@@ -325,7 +326,7 @@ public class SnowBlossomClient
           String key = b_in.getKeyString();
           if (bridge_map.containsKey(key))
           {
-            bridge_map.get(key).spent=true;
+            bridge_map.get(key).spent = true;
           }
           else
           {
@@ -333,20 +334,20 @@ public class SnowBlossomClient
           }
         }
       }
-      for(int o=0; o<inner.getOutputsCount(); o++)
+      for (int o = 0; o < inner.getOutputsCount(); o++)
       {
         TransactionOutput out = inner.getOutputs(o);
         if (addr.equals(out.getRecipientSpecHash()))
         {
           TransactionBridge b_out = new TransactionBridge(out, o, new ChainHash(tx_hash));
           String key = b_out.getKeyString();
-          b_out.unconfirmed=true;
+          b_out.unconfirmed = true;
 
           if (bridge_map.containsKey(key))
           {
             if (bridge_map.get(key).spent)
             {
-              b_out.spent=true;
+              b_out.spent = true;
             }
           }
           bridge_map.put(key, b_out);
@@ -377,37 +378,37 @@ public class SnowBlossomClient
   {
     LinkedList<TransactionBridge> spendable = new LinkedList<>();
 
-    for(TransactionBridge br : getAllSpendable())
+    for (TransactionBridge br : getAllSpendable())
     {
       if (!br.spent) spendable.add(br);
     }
     Collections.shuffle(spendable);
-    long min_send =  50000L;
+    long min_send = 50000L;
     long max_send = 500000L;
     long send_delta = max_send - min_send;
     SplittableRandom rnd = new SplittableRandom();
     int output_count = 2;
 
-    while(true)
+    while (true)
     {
       //Collections.shuffle(spendable);
 
       LinkedList<TransactionOutput> out_list = new LinkedList<>();
       long fee = rnd.nextLong(500);
       long needed_value = fee;
-      for(int i=0; i< output_count; i++)
+      for (int i = 0; i < output_count; i++)
       {
         long value = min_send + rnd.nextLong(send_delta);
 
-        out_list.add( TransactionOutput.newBuilder()
-          .setRecipientSpecHash(TransactionUtil.getRandomChangeAddress(wallet_database).getBytes() )
-          .setValue(value)
-          .build());
-        needed_value+=value;
+        out_list.add(TransactionOutput.newBuilder()
+                                      .setRecipientSpecHash(TransactionUtil.getRandomChangeAddress(wallet_database).getBytes())
+                                      .setValue(value)
+                                      .build());
+        needed_value += value;
       }
 
       LinkedList<TransactionBridge> input_list = new LinkedList<>();
-      while(needed_value > 0)
+      while (needed_value > 0)
       {
         TransactionBridge b = spendable.pop();
         needed_value -= b.value;
@@ -423,7 +424,7 @@ public class SnowBlossomClient
       TransactionInner inner = TransactionUtil.getInner(tx);
 
       ChainHash tx_hash = new ChainHash(tx.getTxHash());
-      for(int i=0; i<inner.getOutputsCount(); i++)
+      for (int i = 0; i < inner.getOutputsCount(); i++)
       {
         TransactionBridge b = new TransactionBridge(inner.getOutputs(i), i, tx_hash);
         spendable.add(b);
@@ -432,13 +433,13 @@ public class SnowBlossomClient
       logger.info("Transaction: " + new ChainHash(tx.getTxHash()) + " - " + tx.toByteString().size());
       //logger.info(tx.toString());
 
-      boolean sent=false;
-      while(!sent)
+      boolean sent = false;
+      while (!sent)
       {
         SubmitReply reply = blockingStub.submitTransaction(tx);
         if (reply.getSuccess())
         {
-          sent=true;
+          sent = true;
         }
         else
         {

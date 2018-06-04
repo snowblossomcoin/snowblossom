@@ -1,12 +1,12 @@
-package client.test;
+package wallet.test;
 
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 import org.junit.runners.Suite.SuiteClasses;
-import wallet.test.WalletTest;
 
 @RunWith(Suite.class)
 @SuiteClasses({
+  WalletTest.class
 })
 public class AllTests
 {}

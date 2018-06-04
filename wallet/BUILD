@@ -1,12 +1,11 @@
 package(default_visibility = ["//visibility:public"])
 
 java_library(
-  name = "client",
+  name = "wallet",
   srcs = glob(["src/**/*.java", "src/*.java"]),
   deps = [
     "//protolib:protolib",
     "//lib:lib",
-    "//wallet:wallet",
     "@commons_codec//jar",
     "@commons_math3//jar",
     "@bcprov//jar",
@@ -18,13 +17,12 @@ java_library(
 )
 
 java_test(
-    name = "client.test",
-    test_class = "client.test.AllTests",
+    name = "wallet.test",
+    test_class = "wallet.test.AllTests",
     srcs = glob(["test/**/*.java", "test/*.java"]),
     deps = [
-		    "//client:client",
+		    ":wallet",
         "//lib:lib",
         "//protolib:protolib",
-        "//wallet:wallet"
     ]
 )
