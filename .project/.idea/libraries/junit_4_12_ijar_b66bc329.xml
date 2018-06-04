@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="junit-4.12-ijar_b66bc329">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/../bazel-out/x64_windows-fastbuild/genfiles/external/junit_junit/jar/_ijar/jar/external/junit_junit/jar/junit-4.12-ijar.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

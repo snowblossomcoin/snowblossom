@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="libminer-hjar_ed92cef4">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/../bazel-out/x64_windows-fastbuild/bin/miner/libminer-hjar.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

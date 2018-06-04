@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="TestRunner_deploy_e889a6a1">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/../external/bazel_tools/tools/jdk/TestRunner_deploy.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

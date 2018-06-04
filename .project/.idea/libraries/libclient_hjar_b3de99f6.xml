@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="libclient-hjar_b3de99f6">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/../bazel-out/x64_windows-fastbuild/bin/client/libclient-hjar.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

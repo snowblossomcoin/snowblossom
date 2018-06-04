@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="rocksdbjni-5.11.3-ijar_b055ca27">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/../bazel-out/x64_windows-fastbuild/genfiles/external/org_rocksdb_rocksdbjni/jar/_ijar/jar/external/org_rocksdb_rocksdbjni/jar/rocksdbjni-5.11.3-ijar.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>
