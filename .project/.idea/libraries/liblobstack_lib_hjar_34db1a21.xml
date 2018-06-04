@@ -1,7 +1,7 @@
 <component name="libraryTable">
   <library name="liblobstack_lib-hjar_34db1a21">
     <CLASSES>
-      <root url="jar://$PROJECT_DIR$/../bazel-out/x64_windows-fastbuild/bin/external/duckutil/liblobstack_lib-hjar.jar!/" />
+      <root url="jar://$USER_HOME$/_bazel_tboone/g3hvk_g9/execroot/__main__/bazel-out/x64_windows-fastbuild/bin/external/duckutil/liblobstack_lib-hjar.jar!/" />
     </CLASSES>
     <JAVADOC />
     <SOURCES />

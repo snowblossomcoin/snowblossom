@@ -16,6 +16,7 @@ java_binary(
     "//miner:miner",
   ]
 )
+
 java_binary(
   name = "Shackleton",
   main_class = "snowblossom.shackleton.Shackleton",
@@ -29,6 +30,14 @@ java_binary(
   main_class = "snowblossom.client.SnowBlossomClient",
   runtime_deps = [
     "//client:client",
+  ]
+)
+
+java_binary(
+  name = "SnowBlossomGuiClient",
+  main_class = "snowblossom.gclient.Client",
+  runtime_deps = [
+    "//gclient:gclient",
   ]
 )
 
