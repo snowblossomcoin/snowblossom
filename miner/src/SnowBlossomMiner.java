@@ -42,13 +42,13 @@ public class SnowBlossomMiner
     }
 
     ConfigFile config = new ConfigFile(args[0]);
-    
+
     LogSetup.setup(config);
 
 
-    SnowBlossomMiner miner = new SnowBlossomMiner(config); 
-    
-    while(true)
+    SnowBlossomMiner miner = new SnowBlossomMiner(config);
+
+    while (true)
     {
       Thread.sleep(15000);
       miner.printStats();
@@ -61,7 +61,7 @@ public class SnowBlossomMiner
   private UserServiceBlockingStub blockingStub;
 
   private final FieldScan field_scan;
-	private final NetworkParams params;
+  private final NetworkParams params;
 
   private AtomicLong op_count = new AtomicLong(0L);
   private long last_stats_time = System.currentTimeMillis();
@@ -78,7 +78,7 @@ public class SnowBlossomMiner
 
     config.require("snow_path");
     config.require("node_host");
-    
+
     params = NetworkParams.loadFromConfig(config);
 
     snow_path = new File(config.get("snow_path"));
@@ -99,11 +99,11 @@ public class SnowBlossomMiner
 
     int threads = config.getIntWithDefault("threads", 8);
     logger.info("Starting " + threads + " threads");
-    
+
     field_scan = new FieldScan(snow_path, params, config);
     subscribe();
 
-    for(int i=0; i<threads; i++)
+    for (int i = 0; i < threads; i++)
     {
       new MinerThread().start();
     }
@@ -112,13 +112,12 @@ public class SnowBlossomMiner
 
   private ManagedChannel channel;
 
-  private void subscribe()
-    throws Exception
+  private void subscribe() throws Exception
   {
     if (channel != null)
     {
       channel.shutdownNow();
-      channel=null;
+      channel = null;
     }
 
     String host = config.get("node_host");
@@ -136,18 +135,13 @@ public class SnowBlossomMiner
       extras.setRemarks(ByteString.copyFrom(config.get("remark").getBytes()));
     }
 
-    asyncStub.subscribeBlockTemplate(
-      SubscribeBlockTemplateRequest.newBuilder()
-        .setPayRewardToSpecHash(to_addr.getBytes())
-        .setExtras(extras.build())
-        .build(), 
-        new BlockTemplateEater());
-    logger.info("Subscribed to blocks");  
+    asyncStub.subscribeBlockTemplate(SubscribeBlockTemplateRequest.newBuilder().setPayRewardToSpecHash(to_addr.getBytes()).setExtras(extras.build()).build(),
+                                     new BlockTemplateEater());
+    logger.info("Subscribed to blocks");
 
   }
 
-  private AddressSpecHash getMineToAddress()
-    throws Exception
+  private AddressSpecHash getMineToAddress() throws Exception
   {
 
     if (config.isSet("mine_to_address"))
@@ -181,9 +175,10 @@ public class SnowBlossomMiner
 
   public void stop()
   {
-    terminate=true;
+    terminate = true;
   }
-  private volatile boolean terminate=false;
+
+  private volatile boolean terminate = false;
 
   public void printStats()
   {
@@ -194,9 +189,9 @@ public class SnowBlossomMiner
     double time_sec = time_ms / 1000.0;
     double rate = count / time_sec;
 
-    DecimalFormat df=new DecimalFormat("0.000");
+    DecimalFormat df = new DecimalFormat("0.000");
 
-    String block_time_report ="";
+    String block_time_report = "";
     if (last_block_template != null)
     {
       BigInteger target = BlockchainUtil.targetBytesToBigInteger(last_block_template.getHeader().getTarget());
@@ -209,7 +204,7 @@ public class SnowBlossomMiner
     }
 
 
-    logger.info(String.format("Mining rate: %s/sec %s", df.format(rate),block_time_report));
+    logger.info(String.format("Mining rate: %s/sec %s", df.format(rate), block_time_report));
 
     last_stats_time = now;
 
@@ -220,7 +215,7 @@ public class SnowBlossomMiner
       {
         subscribe();
       }
-      catch(Throwable t)
+      catch (Throwable t)
       {
         logger.info("Exception in subscribe: " + t);
       }
@@ -228,14 +223,14 @@ public class SnowBlossomMiner
 
     if (config.getBoolean("display_timerecord"))
     {
-        
+
       TimeRecord old = time_record;
 
       time_record = new TimeRecord();
       TimeRecord.setSharedRecord(time_record);
 
       old.printReport(System.out);
-      
+
     }
   }
 
@@ -273,7 +268,7 @@ public class SnowBlossomMiner
       Block b = last_block_template;
       if (b == null)
       {
-        try(TimeRecordAuto tra = TimeRecord.openAuto("MinerThread.nullBlockSleep"))
+        try (TimeRecordAuto tra = TimeRecord.openAuto("MinerThread.nullBlockSleep"))
         {
           Thread.sleep(100);
           return;
@@ -285,7 +280,7 @@ public class SnowBlossomMiner
         last_block_template = null;
       }
 
-      try(TimeRecordAuto tra = TimeRecord.openAuto("MinerThread.rndNonce"))
+      try (TimeRecordAuto tra = TimeRecord.openAuto("MinerThread.rndNonce"))
       {
         rnd.nextBytes(nonce);
       }
@@ -293,7 +288,7 @@ public class SnowBlossomMiner
       // TODO, modify headers to put snow field in
       byte[] first_hash = PowUtil.hashHeaderBits(b.getHeader(), nonce, md);
 
-     
+
       /**
        * This is a windows specific improvement since windows likes separete file descriptors
        * per thread.
@@ -306,9 +301,9 @@ public class SnowBlossomMiner
 
       byte[] context = first_hash;
 
-      try(TimeRecordAuto tra = null)
+      try (TimeRecordAuto tra = null)
       {
-        for(int pass = 0; pass< Globals.POW_LOOK_PASSES; pass++)
+        for (int pass = 0; pass < Globals.POW_LOOK_PASSES; pass++)
         {
           long word_idx;
           word_bb.clear();
@@ -331,18 +326,17 @@ public class SnowBlossomMiner
       op_count.getAndIncrement();
     }
 
-    private void buildBlock(Block b, byte[] nonce, SnowMerkleProof merkle_proof)
-      throws Exception
+    private void buildBlock(Block b, byte[] nonce, SnowMerkleProof merkle_proof) throws Exception
     {
       Block.Builder bb = Block.newBuilder().mergeFrom(b);
 
-      BlockHeader.Builder header = BlockHeader.newBuilder().mergeFrom( b.getHeader() );
+      BlockHeader.Builder header = BlockHeader.newBuilder().mergeFrom(b.getHeader());
       header.setNonce(ByteString.copyFrom(nonce));
-      
+
       byte[] first_hash = PowUtil.hashHeaderBits(b.getHeader(), nonce);
       byte[] context = first_hash;
 
-      for(int pass = 0; pass< Globals.POW_LOOK_PASSES; pass++)
+      for (int pass = 0; pass < Globals.POW_LOOK_PASSES; pass++)
       {
         word_bb.clear();
 
@@ -366,52 +360,55 @@ public class SnowBlossomMiner
     }
 
 
-
     public void run()
     {
-      while(!terminate)
+      while (!terminate)
       {
-        boolean err=false;
-        try(TimeRecordAuto tra = TimeRecord.openAuto("MinerThread.runPass"))
+        boolean err = false;
+        try (TimeRecordAuto tra = TimeRecord.openAuto("MinerThread.runPass"))
         {
           runPass();
         }
-        catch(Throwable t)
+        catch (Throwable t)
         {
-          err=true;
+          err = true;
           logger.warning("Error: " + t);
         }
 
         if (err)
         {
 
-          try(TimeRecordAuto tra = TimeRecord.openAuto("MinerThread.errorSleep"))
+          try (TimeRecordAuto tra = TimeRecord.openAuto("MinerThread.errorSleep"))
           {
             Thread.sleep(5000);
           }
-          catch(Throwable t){}
+          catch (Throwable t)
+          {
+          }
         }
 
       }
 
     }
-  
+
   }
 
   public class BlockTemplateEater implements StreamObserver<Block>
   {
-    public void onCompleted(){}
-    public void onError(Throwable t){}
+    public void onCompleted() {}
+
+    public void onError(Throwable t) {}
+
     public void onNext(Block b)
     {
-      logger.info("Got block template: height:" + b.getHeader().getBlockHeight() + " transactions:"  + b.getTransactionsCount() );
+      logger.info("Got block template: height:" + b.getHeader().getBlockHeight() + " transactions:" + b.getTransactionsCount());
 
 
       int min_field = b.getHeader().getSnowField();
 
-      
-      logger.info("Required field: " + min_field + " - " + params.getSnowFieldInfo(min_field).getName() );
-      
+
+      logger.info("Required field: " + min_field + " - " + params.getSnowFieldInfo(min_field).getName());
+
       int selected_field = -1;
 
       try
@@ -421,9 +418,9 @@ public class SnowBlossomMiner
 
         try
         {
-          field_scan.selectField(min_field+1);
+          field_scan.selectField(min_field + 1);
         }
-        catch(Throwable t)
+        catch (Throwable t)
         {
           logger.log(Level.WARNING, "When the next snow storm occurs, we will be unable to mine.  No higher fields working.");
         }
@@ -439,14 +436,11 @@ public class SnowBlossomMiner
 
         last_block_template = bb.build();
       }
-      catch(Throwable t)
+      catch (Throwable t)
       {
-        logger.info("Work block load error: " +t.toString());
+        logger.info("Work block load error: " + t.toString());
         last_block_template = null;
       }
     }
-
   }
-
-
 }
