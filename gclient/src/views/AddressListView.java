@@ -21,11 +21,11 @@ import java.util.List;
 
 public class AddressListView extends JPanel
 {
-  private JScrollPane scroller;
-  private JList<AddressInfo> list;
-  private AddressListModel listModel;
-  private File walletFile;
-  private ConfigFile config;
+  private final JScrollPane scroller;
+  private final JList<AddressInfo> list;
+  private final AddressListModel listModel;
+  private final File walletFile;
+  private final ConfigFile config;
   private UserServiceGrpc.UserServiceStub asyncStub;
   private UserServiceGrpc.UserServiceBlockingStub blockingStub;
 
@@ -37,8 +37,9 @@ public class AddressListView extends JPanel
     scroller = new JScrollPane(list);
     this.add(scroller);
     listModel = new AddressListModel();
-    list.setModel(listModel);
     //refreshAddresses();
+    list.setModel(listModel);
+    list.setSelectionMode(DefaultListSelectionModel.SINGLE_SELECTION);
     list.setCellRenderer(new AddressInfoCellRender());
   }
 
@@ -241,6 +242,8 @@ public class AddressListView extends JPanel
         System.out.println("adding to model: " + a);
         addElement(a);
       }
+      //this.fireContentsChanged(this, 0, getSize() - 1);
+      list.ensureIndexIsVisible(getSize()-1);
     }
   }
 
@@ -266,6 +269,7 @@ public class AddressListView extends JPanel
       JLabel renderer = (JLabel) super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
       if (value != null) {
         renderer.setText(String.valueOf(value));
+        System.out.println("set renderer text");
       }
       return renderer;
     }
