@@ -153,6 +153,33 @@ public class SnowBlossomNode
     utxo_hashed_trie = new HashedTrie(new TrieDBMap(db.getUtxoNodeMap()),Globals.UTXO_KEY_LEN ,true);
   }
 
+  public boolean areWeSynced()
+  {
+    // Regtest network doesn't have this check for single instance networks
+    if (params.getNetworkName().equals("spoon")) return true;
+
+    int height = 0;
+    int seen_height = 0;
+    if (peerage.getConnectedPeerCount() == 0)
+    {
+      return false;
+    }
+    if (getBlockIngestor().getHead() != null)
+    {
+      height = getBlockIngestor().getHead().getHeader().getBlockHeight();
+    }
+    if (peerage.getHighestSeenHeader() != null)
+    {
+      seen_height = getPeerage().getHighestSeenHeader().getBlockHeight();
+    }
+
+    int diff = Math.abs(seen_height - height);
+    if (diff < 10) return true; //whatever
+
+    return false;
+
+
+  }
 
   public Config getConfig(){return config;}
   public DB getDB(){return db;}

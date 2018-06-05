@@ -14,6 +14,15 @@ import java.util.*;
 
 public class Validation
 {
+  public static void checkBlockHeaderBasics(NetworkParams params, BlockHeader header)
+    throws ValidationException
+  {
+    Block blk = Block.newBuilder().setHeader(header).build();
+
+    checkBlockBasics(params, blk, false);
+
+  }
+
   /**
    * Check the things about a block that can be checked without the database
    */

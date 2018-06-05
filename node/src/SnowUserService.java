@@ -53,8 +53,15 @@ public class SnowUserService extends UserServiceGrpc.UserServiceImplBase
 
   protected void sendBlock(BlockSubscriberInfo info)
   {
-    Block block = node.getBlockForge().getBlockTemplate(info.mine_to, info.extras);
-    info.sink.onNext(block);
+    if (node.areWeSynced())
+    {
+      Block block = node.getBlockForge().getBlockTemplate(info.mine_to, info.extras);
+      info.sink.onNext(block);
+    }
+    else
+    {
+      logger.log(Level.WARNING, "We are not yet synced, refusing to send block template to miner");
+    }
   }
 
   /**

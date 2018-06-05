@@ -23,7 +23,6 @@ import java.util.logging.Logger;
  */
 public class BlockIngestor
 {
-
   private static final Logger logger = Logger.getLogger("snowblossom.blockchain");
   private SnowBlossomNode node;
   private DB db;
@@ -39,7 +38,6 @@ public class BlockIngestor
   private TimeRecord time_record;
 
   private boolean tx_index=false;
-
 
   public BlockIngestor(SnowBlossomNode node)
     throws Exception
@@ -210,7 +208,6 @@ public class BlockIngestor
         return;
       }
     }
-    
   }
 
   public BlockSummary getHead()

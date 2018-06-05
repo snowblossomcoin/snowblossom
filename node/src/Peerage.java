@@ -33,6 +33,8 @@ public class Peerage
 
   private ImmutableSet<String> self_peer_names;
   private ImmutableList<PeerInfo> self_peer_info;
+
+  private volatile BlockHeader highest_seen_header;
   
   public Peerage(SnowBlossomNode node)
   {
@@ -138,6 +140,7 @@ public class Peerage
     return set.size();
 
   }
+
   public Map<String, Integer> getVersionMap()
   {
     HashMap<ByteString, String> ver_map = new HashMap<>();
@@ -182,6 +185,20 @@ public class Peerage
     {
       return ImmutableList.copyOf(links.values());
     }
+  }
+
+  public void setHighestHeader(BlockHeader header)
+  {
+    if (highest_seen_header == null) highest_seen_header = header;
+
+    if (highest_seen_header.getBlockHeight() < header.getBlockHeight())
+    {
+      highest_seen_header = header;
+    }
+  }
+  public BlockHeader getHighestSeenHeader()
+  {
+    return highest_seen_header;
   }
 
   public void sendAllTips()
