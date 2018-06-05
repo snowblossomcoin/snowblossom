@@ -163,10 +163,11 @@ public class SnowBlossomClient
     else
     {
       logger.log(Level.WARNING, String.format("File %s does not exist, creating new wallet", db_file.getPath()));
-      wallet_database = WalletUtil.makeNewDatabase(config);
+      String keyMode = config.getWithDefault("key_mode", WalletUtil.MODE_STANDARD).toLowerCase();
+      int keyCount = config.getIntWithDefault("key_count", 8);
+      wallet_database = WalletUtil.makeNewDatabase(keyCount, keyMode);
       saveWallet();
     }
-
   }
 
   public void saveWallet()

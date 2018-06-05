@@ -1,7 +1,7 @@
 <component name="libraryTable">
   <library name="grpc-stub-1.12.0-ijar_db090a05">
     <CLASSES>
-      <root url="jar://$USER_HOME$/_bazel_tboone/g3hvk_g9/execroot/__main__/bazel-out/x64_windows-fastbuild/genfiles/external/org_pubref_rules_protobuf/java/_ijar/grpc_compiletime_deps/external/io_grpc_grpc_stub/jar/grpc-stub-1.12.0-ijar.jar!/" />
+      <root url="jar://$PROJECT_DIR$/../bazel-out/x64_windows-fastbuild/genfiles/external/org_pubref_rules_protobuf/java/_ijar/grpc_compiletime_deps/external/io_grpc_grpc_stub/jar/grpc-stub-1.12.0-ijar.jar!/" />
     </CLASSES>
     <JAVADOC />
     <SOURCES />

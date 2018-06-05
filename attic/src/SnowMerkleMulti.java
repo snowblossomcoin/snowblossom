@@ -1,13 +1,13 @@
-package snowblossom;
+package attic.src;
 
 import java.security.MessageDigest;
 import java.io.RandomAccessFile;
 import java.nio.channels.FileChannel;
 import java.nio.ByteBuffer;
 
-import lib.src.trie.HashUtils;
-import lib.src.DaemonThreadFactory;
-import lib.src.LRUCache;
+import snowblossom.lib.trie.HashUtils;
+import snowblossom.lib.DaemonThreadFactory;
+import snowblossom.lib.LRUCache;
 
 import java.security.Security;
 

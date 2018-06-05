@@ -1,7 +1,7 @@
 <component name="libraryTable">
   <library name="protobuf-java-3.5.1-ijar_666df028">
     <CLASSES>
-      <root url="jar://$USER_HOME$/_bazel_tboone/g3hvk_g9/execroot/__main__/bazel-out/x64_windows-fastbuild/genfiles/external/org_pubref_rules_protobuf/java/_ijar/grpc_compiletime_deps/external/com_google_protobuf_protobuf_java/jar/protobuf-java-3.5.1-ijar.jar!/" />
+      <root url="jar://$PROJECT_DIR$/../bazel-out/x64_windows-fastbuild/genfiles/external/org_pubref_rules_protobuf/java/_ijar/grpc_compiletime_deps/external/com_google_protobuf_protobuf_java/jar/protobuf-java-3.5.1-ijar.jar!/" />
     </CLASSES>
     <JAVADOC />
     <SOURCES />
