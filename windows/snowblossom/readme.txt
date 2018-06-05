@@ -1,6 +1,6 @@
 ## Download Self-contained Zip file
 
-[snow-win-mainnet-launch.zip](https://snowblossom.org/releases/snow-win-mainnet-launch.zip)
+[Windows Releases](https://snowblossom.org/releases/windows/index.html)
 
 Extract that file.
 
@@ -17,6 +17,12 @@ Put the resulting files in the "snow" directory created by extracting the zip fi
 
 * Run node.bat  
 * That will start up a terminal window, leave that running.
+
+If you see errors about "snowblossom.db.rocksdb.JRocksDB" then in your node.conf set:
+
+  db_type=lobstack
+
+  Issue is discussed here: https://github.com/snowblossomcoin/snowblossom/issues/32
 
 ## Start Client
 
