@@ -56,8 +56,8 @@ public class SnowBlossomNode
   {
     this.config = config;
 
-
     config.require("db_type");
+    logger.info(String.format("Starting SnowBlossomNode version %s", Globals.VERSION));
 
     setupParams();
     loadDB();

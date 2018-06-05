@@ -112,6 +112,7 @@ public class SnowBlossomClient
   public SnowBlossomClient(Config config) throws Exception
   {
     this.config = config;
+    logger.info(String.format("Starting SnowBlossomClient version %s", Globals.VERSION));
     config.require("node_host");
 
     String host = config.get("node_host");

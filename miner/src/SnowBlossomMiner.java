@@ -75,6 +75,7 @@ public class SnowBlossomMiner
   public SnowBlossomMiner(Config config) throws Exception
   {
     this.config = config;
+    logger.info(String.format("Starting SnowBlossomMiner version %s", Globals.VERSION));
 
     config.require("snow_path");
     config.require("node_host");

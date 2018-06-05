@@ -54,7 +54,7 @@ public class Peerage
           learnPeer(info, true);
         }
         logger.info(String.format("Loaded %d peers from database", peer_rumor_list.size()));
-        logger.info("Peers: " + peer_rumor_list.keySet());
+        logger.log(Level.FINER, "Peers: " + peer_rumor_list.keySet());
       }
       catch(Exception e)
       {
