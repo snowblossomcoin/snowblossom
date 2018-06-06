@@ -19,10 +19,8 @@ message GetWorkRequest {
 }
 
 message WorkUnit {
-	bytes header_part = 1;
-  bytes nonce_start = 2;
-  int64 work_id = 3;
-  bytes target = 4;
+  BlockHeader header = 1;
+  int64 work_id = 2;
 }
 
 message WorkSubmitRequest {
