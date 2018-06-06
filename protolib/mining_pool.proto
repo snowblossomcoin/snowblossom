@@ -1,0 +1,35 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "snowblossom.mining.proto";
+option java_outer_classname = "SnowBlossomMiningProto";
+
+import "protolib/snowblossom.proto";
+
+package snowblossom;
+
+service MiningPoolService {
+  rpc GetWork ( GetWorkRequest ) returns (stream WorkUnit) {}
+  rpc SubmitWork ( WorkSubmitRequest ) returns ( SubmitReply ) {}
+}
+
+message GetWorkRequest {
+  string client_id = 1;
+  string pay_to_address = 2;
+}
+
+message WorkUnit {
+	bytes header_part = 1;
+  bytes nonce_start = 2;
+  int64 work_id = 3;
+  bytes target = 4;
+}
+
+message WorkSubmitRequest {
+	bytes nonce = 1;
+  int64 work_id = 2;
+  int32 snow_field = 3;
+  repeated SnowPowProof pow_proof = 4;
+}
+
+
