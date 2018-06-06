@@ -1,4 +1,4 @@
 
-java -jar SnowBlossomMiner_deploy.jar miner.conf
+start /B /LOW java -jar SnowBlossomMiner_deploy.jar miner.conf
 pause
 
