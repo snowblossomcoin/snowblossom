@@ -39,9 +39,8 @@ public class SnowUserService extends UserServiceGrpc.UserServiceImplBase
   public void subscribeBlockTemplate(SubscribeBlockTemplateRequest req, StreamObserver<Block> responseObserver)
   {
     logger.info("Subscribe block template called");
-    AddressSpecHash pay_to = new AddressSpecHash(req.getPayRewardToSpecHash());
 
-    BlockSubscriberInfo info = new BlockSubscriberInfo(pay_to, req.getExtras(), responseObserver);
+    BlockSubscriberInfo info = new BlockSubscriberInfo(req, responseObserver);
 
     synchronized(block_subscribers)
     {
@@ -55,7 +54,7 @@ public class SnowUserService extends UserServiceGrpc.UserServiceImplBase
   {
     if (node.areWeSynced())
     {
-      Block block = node.getBlockForge().getBlockTemplate(info.mine_to, info.extras);
+      Block block = node.getBlockForge().getBlockTemplate(info.req);
       info.sink.onNext(block);
     }
     else
@@ -278,15 +277,13 @@ public class SnowUserService extends UserServiceGrpc.UserServiceImplBase
 
   class BlockSubscriberInfo
   {
-    final AddressSpecHash mine_to;
-    final CoinbaseExtras extras;
+    final SubscribeBlockTemplateRequest req;
     final StreamObserver<Block> sink;
 
-    public BlockSubscriberInfo(AddressSpecHash mine_to, CoinbaseExtras extras, StreamObserver<Block> sink)
+    public BlockSubscriberInfo(SubscribeBlockTemplateRequest req, StreamObserver<Block> sink)
     {
-      this.mine_to = mine_to;
+      this.req = req;
       this.sink = sink;
-      this.extras = extras;
     }
   }
 
