@@ -31,6 +31,7 @@ import java.util.Random;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.TreeMap;
 
 public class MrPlow
 {
@@ -56,6 +57,7 @@ public class MrPlow
     {
       Thread.sleep(15000);
       miner.printStats();
+      miner.subscribe();
     }
   }
 
@@ -73,6 +75,8 @@ public class MrPlow
   private TimeRecord time_record;
   private MiningPoolServiceAgent agent;
 
+  private ShareManager share_manager;
+
   public MrPlow(Config config) throws Exception
   {
     this.config = config;
@@ -80,7 +84,8 @@ public class MrPlow
 
     config.require("node_host");
     config.require("pool_address");
-
+    config.require("pool_fee");
+    
     params = NetworkParams.loadFromConfig(config);
 
     if (config.getBoolean("display_timerecord"))
@@ -89,10 +94,23 @@ public class MrPlow
       TimeRecord.setSharedRecord(time_record);
     }
 
-    subscribe();
 
     int port = config.getIntWithDefault("mining_pool_port",23380);
     agent = new MiningPoolServiceAgent(this);
+
+    double pool_fee = config.getDouble("pool_fee");
+    double duck_fee = config.getDoubleWithDefault("pay_the_duck", 0.0);
+
+    TreeMap<String, Double> fixed_fee_map = new TreeMap<>();
+    fixed_fee_map.put( AddressUtil.getAddressString(params.getAddressPrefix(), getPoolAddress()), pool_fee );
+    if (duck_fee > 0.0)
+    {
+      fixed_fee_map.put( "snow:crqls8qkumwg353sfgf5kw2lw2snpmhy450nqezr", duck_fee);
+    }
+
+    share_manager = new ShareManager(fixed_fee_map);
+
+    subscribe();
 
     Server s = ServerBuilder
       .forPort(port)
@@ -119,15 +137,16 @@ public class MrPlow
     asyncStub = UserServiceGrpc.newStub(channel);
     blockingStub = UserServiceGrpc.newBlockingStub(channel);
 
-    AddressSpecHash to_addr = getPoolAddress();
-
     CoinbaseExtras.Builder extras = CoinbaseExtras.newBuilder();
     if (config.isSet("remark"))
     {
       extras.setRemarks(ByteString.copyFrom(config.get("remark").getBytes()));
     }
 
-    asyncStub.subscribeBlockTemplate(SubscribeBlockTemplateRequest.newBuilder().setPayRewardToSpecHash(to_addr.getBytes()).setExtras(extras.build()).build(),
+    asyncStub.subscribeBlockTemplate(
+      SubscribeBlockTemplateRequest.newBuilder()
+        .putAllPayRatios( share_manager.getPayRatios() )
+        .setExtras(extras.build()).build(),
                                      new BlockTemplateEater());
     logger.info("Subscribed to blocks");
 
@@ -151,6 +170,7 @@ public class MrPlow
   public NetworkParams getParams() {return params;}
 
   public UserServiceBlockingStub getBlockingStub(){return blockingStub;}
+  public ShareManager getShareManager(){return share_manager;}
 
   public void printStats()
   {
