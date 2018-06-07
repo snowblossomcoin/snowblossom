@@ -20,14 +20,20 @@ message GetWorkRequest {
 
 message WorkUnit {
   BlockHeader header = 1;
-  int64 work_id = 2;
+  int32 work_id = 2;
+  bytes report_target = 3;
 }
 
 message WorkSubmitRequest {
-	bytes nonce = 1;
-  int64 work_id = 2;
-  int32 snow_field = 3;
-  repeated SnowPowProof pow_proof = 4;
+  BlockHeader header = 1;
+  int32 work_id = 2;
 }
 
+message PPLNSState {
+  repeated ShareEntry share_entries = 1;
+}
 
+message ShareEntry {
+  string address = 1;
+  int64 share_count = 2;
+}

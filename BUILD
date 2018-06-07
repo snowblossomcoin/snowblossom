@@ -17,6 +17,25 @@ java_binary(
   ]
 )
 java_binary(
+  name = "PoolMiner",
+  main_class = "snowblossom.miner.PoolMiner",
+  runtime_deps = [
+    "//miner:miner",
+  ]
+)
+java_binary(
+  name = "MrPlow",
+  main_class = "snowblossom.miner.MrPlow",
+  runtime_deps = [
+    "//miner:miner",
+  ]
+)
+
+
+
+
+
+java_binary(
   name = "Shackleton",
   main_class = "snowblossom.shackleton.Shackleton",
   runtime_deps = [

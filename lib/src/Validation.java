@@ -14,19 +14,19 @@ import java.util.*;
 
 public class Validation
 {
-  public static void checkBlockHeaderBasics(NetworkParams params, BlockHeader header)
+  public static void checkBlockHeaderBasics(NetworkParams params, BlockHeader header, boolean ignore_target)
     throws ValidationException
   {
     Block blk = Block.newBuilder().setHeader(header).build();
 
-    checkBlockBasics(params, blk, false);
+    checkBlockBasics(params, blk, false, ignore_target);
 
   }
 
   /**
    * Check the things about a block that can be checked without the database
    */
-  public static void checkBlockBasics(NetworkParams params, Block blk, boolean require_transactions)
+  public static void checkBlockBasics(NetworkParams params, Block blk, boolean require_transactions, boolean ignore_target)
     throws ValidationException
   {
     try(TimeRecordAuto tra_blk = TimeRecord.openAuto("Validation.checkBlockBasics"))
@@ -100,9 +100,12 @@ public class Validation
         throw new ValidationException("POW Hash does not match");
       }
 
-      if (!PowUtil.lessThanTarget(context, header.getTarget()))
+      if (!ignore_target)
       {
-        throw new ValidationException("Hash not less than target");
+        if (!PowUtil.lessThanTarget(context, header.getTarget()))
+        {
+          throw new ValidationException("Hash not less than target");
+        }
       }
       
       //if we has transactions, make sure the each validate and merkle to merkle_root_hash
