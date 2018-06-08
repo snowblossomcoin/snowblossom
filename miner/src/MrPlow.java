@@ -10,10 +10,14 @@ import io.grpc.ManagedChannelBuilder;
 import io.grpc.stub.StreamObserver;
 import snowblossom.lib.*;
 import snowblossom.proto.*;
+import snowblossom.mining.proto.*;
 import snowblossom.proto.UserServiceGrpc.UserServiceBlockingStub;
 import snowblossom.proto.UserServiceGrpc.UserServiceStub;
 import snowblossom.lib.trie.HashUtils;
 import snowblossom.lib.SnowMerkleProof;
+import snowblossom.lib.db.DB;
+import snowblossom.lib.db.lobstack.LobstackDB;
+import snowblossom.lib.db.rocksdb.JRocksDB;
 
 import io.grpc.Server;
 import io.grpc.ServerBuilder;
@@ -58,10 +62,11 @@ public class MrPlow
 
     while (true)
     {
-      Thread.sleep(15000);
+      Thread.sleep(20000);
       miner.printStats();
       miner.prune();
-     miner.subscribe();
+      miner.subscribe();
+      miner.saveState();
 
     }
   }
@@ -81,6 +86,7 @@ public class MrPlow
   private MiningPoolServiceAgent agent;
 
   private ShareManager share_manager;
+	private DB db;
 
   public MrPlow(Config config) throws Exception
   {
@@ -90,6 +96,8 @@ public class MrPlow
     config.require("node_host");
     config.require("pool_address");
     config.require("pool_fee");
+    config.require("db_type");
+    config.require("db_path");
     
     params = NetworkParams.loadFromConfig(config);
 
@@ -112,8 +120,20 @@ public class MrPlow
     {
       fixed_fee_map.put( "snow:crqls8qkumwg353sfgf5kw2lw2snpmhy450nqezr", duck_fee);
     }
+		loadDB();
 
-    share_manager = new ShareManager(fixed_fee_map);
+		PPLNSState pplns_state = null;
+		try
+		{
+      pplns_state = PPLNSState.parseFrom(db.getSpecialMap().get("pplns_state"));
+      logger.info(String.format("Loaded PPLNS state with %d entries", pplns_state.getShareEntriesCount()));
+		}
+    catch(Throwable t)
+    {
+      logger.log(Level.WARNING, "Unable to load PPLNS state, starting fresh:" + t);
+    }
+
+    share_manager = new ShareManager(fixed_fee_map, pplns_state);
 
     subscribe();
 
@@ -124,7 +144,34 @@ public class MrPlow
 
     s.start();
   }
+  private void loadDB()
+    throws Exception
+  {
+    String db_type = config.get("db_type");
 
+    if(db_type.equals("rocksdb"))
+    {
+      db = new JRocksDB(config);
+    }
+    else if (db_type.equals("lobstack"))
+    {
+      db = new LobstackDB(config);
+    }
+    else
+    {
+      logger.log(Level.SEVERE, String.format("Unknown db_type: %s", db_type));
+      throw new RuntimeException("Unable to load DB");
+    }
+
+    db.open();
+
+  }
+
+  private void saveState()
+  {
+    PPLNSState state = share_manager.getState();
+    db.getSpecialMap().put("pplns_state", state.toByteString());
+  }
   private ManagedChannel channel;
 
   public void recordHashes(long n)

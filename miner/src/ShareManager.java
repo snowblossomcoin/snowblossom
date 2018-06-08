@@ -8,6 +8,7 @@ import com.google.protobuf.ByteString;
 import com.google.common.collect.ImmutableMap;
 
 import snowblossom.mining.proto.ShareEntry;
+import snowblossom.mining.proto.PPLNSState;
 
 
 public class ShareManager
@@ -19,7 +20,19 @@ public class ShareManager
 
   public ShareManager(Map<String, Double> fixed_percentages)
   {
+    this(fixed_percentages, null);
+  }
+  public ShareManager(Map<String, Double> fixed_percentages, PPLNSState prev_state)
+  {
     this.fixed_percentages = ImmutableMap.copyOf(fixed_percentages);
+
+    if (prev_state != null)
+    {
+      for(ShareEntry e : prev_state.getShareEntriesList())
+      {
+        record(e.getAddress(), e.getShareCount());
+      }
+    }
 
   }
 
@@ -59,6 +72,10 @@ public class ShareManager
       total_shares -= shares;
 
     }
+  }
+  public synchronized PPLNSState getState()
+  {
+    return PPLNSState.newBuilder().addAllShareEntries(share_queue).build();
   }
 
   public synchronized Map<String, Double> getPayRatios()

@@ -407,14 +407,11 @@ public class PoolMiner
 
       int min_field = wu.getHeader().getSnowField();
 
-      logger.info("Required field: " + min_field + " - " + params.getSnowFieldInfo(min_field).getName());
-
       int selected_field = -1;
 
       try
       {
         selected_field = field_scan.selectField(min_field);
-        logger.info("Using field: " + selected_field + " - " + params.getSnowFieldInfo(selected_field).getName());
 
         try
         {
