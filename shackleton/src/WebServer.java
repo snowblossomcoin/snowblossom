@@ -11,8 +11,12 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.net.InetSocketAddress;
+import java.net.URLDecoder;
 import java.text.DecimalFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.Map;
+import java.util.TimeZone;
 
 public class WebServer
 {
@@ -54,12 +58,17 @@ public class WebServer
       {
         int eq = query.indexOf("=");
         String search = query.substring(eq+1);
+
+        search = URLDecoder.decode(search.replace('+', ' '), "UTF-8").trim();
+
+        // case: main page
         if (search.length() == 0)
         {
           displayStatus(out);
           return;
         }
 
+        // case: display block
         if (search.length()== Globals.BLOCKCHAIN_HASH_LEN*2)
         {
           ChainHash hash = null;
@@ -93,13 +102,15 @@ public class WebServer
             catch(Throwable e){}
           }
         }
+        // case: address
         if (address != null)
         {
           displayAddress(out, address);
           return;
         }
 
-
+        // case: unknown
+        displayUnexpectedStatus(out);
       }
       else
       {
@@ -107,6 +118,11 @@ public class WebServer
       }
 
     }
+  }
+
+  private void displayUnexpectedStatus(PrintStream out)
+  {
+    out.println("<div>Invalid search</div>");
   }
 
   private void displayStatus(PrintStream out)
@@ -159,7 +175,7 @@ public class WebServer
     out.println("<h2>Recent Blocks</h2>");
     int min = Math.max(0, header.getBlockHeight()-75);
     out.println("<table border='0' cellspacing='0'>");
-    out.println("<thead><tr><th>Height</th><th>Hash</th><th>Tx</th><th>Size</th><th>Miner</th></tr></thead>");
+    out.println("<thead><tr><th>Height</th><th>Hash</th><th>Tx</th><th>Size</th><th>Miner</th><th>Timestamp</th></tr></thead>");
     for(int h=header.getBlockHeight(); h>=min; h--)
     {
       BlockHeader blk_head = shackleton.getStub().getBlockHeader(RequestBlockHeader.newBuilder().setBlockHeight(h).build());
@@ -200,12 +216,15 @@ public class WebServer
       miner = miner_addr + " - " + remark;
     }
 
-    
+    SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm");
+    sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
 
-    String s = String.format("<tr><td>%d</td><td>%s %s</td><td>%d</td><td>%d</td><td>%s</td></tr>", 
+    Date resultdate = new Date(blk.getHeader().getTimestamp());
+
+    String s = String.format("<tr><td>%d</td><td>%s %s</td><td>%d</td><td>%d</td><td>%s</td><td>%s</td></tr>",
         blk.getHeader().getBlockHeight(), 
         hash.toString(), link,
-        tx_count, size, miner);
+        tx_count, size, miner, sdf.format(resultdate) + " UTC");
 
     synchronized(block_summary_lines)
     {
@@ -252,7 +271,11 @@ public class WebServer
       out.println("height: " + header.getBlockHeight());
       out.println("prev_block_hash: " + new ChainHash(header.getPrevBlockHash()));
       out.println("utxo_root_hash: " + new ChainHash(header.getUtxoRootHash()));
-      out.println("timestamp: " + header.getTimestamp());
+
+      SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm");
+      sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
+      Date resultdate = new Date(header.getTimestamp());
+      out.println("timestamp: " + header.getTimestamp() + " :: " + sdf.format(resultdate) + " UTC");
       out.println("snow_field: " + header.getSnowField());
       out.println("size: " + blk.toByteString().size());
       out.println();

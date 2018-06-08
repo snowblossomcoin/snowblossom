@@ -6,15 +6,17 @@
       <sourceFolder url="file://$MODULE_DIR$/../../.." isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/../../../client/src" isTestSource="false" packagePrefix="snowblossom.client" />
       <sourceFolder url="file://$MODULE_DIR$/../../../client/test" isTestSource="false" packagePrefix="client.test" />
-      <sourceFolder url="file://$MODULE_DIR$/../../../lib/src" isTestSource="false" packagePrefix="lib.src" />
-      <sourceFolder url="file://$MODULE_DIR$/../../../lib/src/db" isTestSource="false" packagePrefix="lib.src.db" />
-      <sourceFolder url="file://$MODULE_DIR$/../../../lib/src/db/lobstack" isTestSource="false" packagePrefix="lib.src.db.lobstack" />
-      <sourceFolder url="file://$MODULE_DIR$/../../../lib/src/db/rocksdb" isTestSource="false" packagePrefix="lib.src.db.rocksdb" />
-      <sourceFolder url="file://$MODULE_DIR$/../../../lib/src/trie" isTestSource="false" packagePrefix="lib.src.trie" />
+      <sourceFolder url="file://$MODULE_DIR$/../../../lib/src" isTestSource="false" packagePrefix="snowblossom.lib" />
+      <sourceFolder url="file://$MODULE_DIR$/../../../lib/src/db" isTestSource="false" packagePrefix="snowblossom.lib.db" />
+      <sourceFolder url="file://$MODULE_DIR$/../../../lib/src/db/lobstack" isTestSource="false" packagePrefix="snowblossom.lib.db.lobstack" />
+      <sourceFolder url="file://$MODULE_DIR$/../../../lib/src/db/rocksdb" isTestSource="false" packagePrefix="snowblossom.lib.db.rocksdb" />
+      <sourceFolder url="file://$MODULE_DIR$/../../../lib/src/trie" isTestSource="false" packagePrefix="snowblossom.lib.trie" />
       <sourceFolder url="file://$MODULE_DIR$/../../../lib/test" isTestSource="false" packagePrefix="lib.test" />
       <sourceFolder url="file://$MODULE_DIR$/../../../lib/test/trie" isTestSource="false" packagePrefix="lib.test.trie" />
       <sourceFolder url="file://$MODULE_DIR$/../../../miner/src" isTestSource="false" packagePrefix="snowblossom.miner" />
       <sourceFolder url="file://$MODULE_DIR$/../../../miner/test" isTestSource="false" packagePrefix="miner.test" />
+      <sourceFolder url="file://$MODULE_DIR$/../../../node/src" isTestSource="false" packagePrefix="snowblossom.node" />
+      <sourceFolder url="file://$MODULE_DIR$/../../../node/test" isTestSource="false" packagePrefix="node.test" />
       <sourceFolder url="file://$MODULE_DIR$/../../../shackleton/src" isTestSource="false" packagePrefix="snowblossom.shackleton" />
       <sourceFolder url="file://$MODULE_DIR$/../../../shackleton/test" isTestSource="false" packagePrefix="shackleton.test" />
       <sourceFolder url="file://$MODULE_DIR$/../../../systemtests/test" isTestSource="false" packagePrefix="systemtests.test" />
@@ -29,6 +31,7 @@
     <orderEntry type="library" name="error_prone_annotations-2.1.2-ijar_a2ad6d75" level="project" />
     <orderEntry type="library" name="liblib-hjar_21ca43a" level="project" />
     <orderEntry type="library" name="commons-math3-3.6.1-ijar_985bb5c9" level="project" />
+    <orderEntry type="library" name="libnode-hjar_4178e2ed" level="project" />
     <orderEntry type="library" name="grpc-stub-1.12.0-ijar_db090a05" level="project" />
     <orderEntry type="library" name="libprotolib-hjar_c5857708" level="project" />
     <orderEntry type="library" name="junit-4.12-ijar_b66bc329" level="project" />
