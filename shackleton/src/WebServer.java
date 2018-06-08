@@ -11,6 +11,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.net.InetSocketAddress;
+import java.net.URLDecoder;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -58,7 +59,7 @@ public class WebServer
         int eq = query.indexOf("=");
         String search = query.substring(eq+1);
 
-        search = search.trim();
+        search = URLDecoder.decode(search.replace('+', ' '), "UTF-8").trim();
 
         // case: main page
         if (search.length() == 0)
