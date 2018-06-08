@@ -36,6 +36,9 @@ import java.util.TreeMap;
 public class MrPlow
 {
   private static final Logger logger = Logger.getLogger("snowblossom.miner");
+  
+  public static final int MIN_DIFF=22;
+  public static final int BACK_BLOCKS=5; // Roughly how many blocks back to keep shares for PPLNS
 
   public static void main(String args[]) throws Exception
   {
@@ -57,7 +60,9 @@ public class MrPlow
     {
       Thread.sleep(15000);
       miner.printStats();
-      miner.subscribe();
+      miner.prune();
+     miner.subscribe();
+
     }
   }
 
@@ -122,6 +127,21 @@ public class MrPlow
 
   private ManagedChannel channel;
 
+  public void recordHashes(long n)
+  {
+    op_count.addAndGet(n);
+  }
+  private void prune()
+  {
+      Block b = last_block_template;
+      if (b!=null)
+      {
+        double diff_delta = PowUtil.getDiffForTarget(BlockchainUtil.targetBytesToBigInteger(b.getHeader().getTarget())) - MIN_DIFF;
+
+        long shares_to_keep = Math.round( Math.pow(2, diff_delta) * BACK_BLOCKS);
+        share_manager.prune(shares_to_keep);
+      }
+  }
   private void subscribe() throws Exception
   {
     if (channel != null)
@@ -154,7 +174,6 @@ public class MrPlow
 
   private AddressSpecHash getPoolAddress() throws Exception
   {
-
       String address = config.get("pool_address");
       AddressSpecHash to_addr = new AddressSpecHash(address, params);
       return to_addr;

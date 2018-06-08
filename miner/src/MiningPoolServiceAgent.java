@@ -30,6 +30,7 @@ public class MiningPoolServiceAgent extends MiningPoolServiceGrpc.MiningPoolServ
   private Block last_block;
   private HashMap<Integer, WorkInfo> pending_work = new HashMap<>();
 
+
   public MiningPoolServiceAgent(MrPlow plow)
   {
     this.plow = plow;
@@ -140,7 +141,7 @@ public class MiningPoolServiceAgent extends MiningPoolServiceGrpc.MiningPoolServ
       .setNonce(ByteString.copyFrom(nonce))
       .build();
 
-    ByteString target = BlockchainUtil.targetBigIntegerToBytes(BlockchainUtil.getTargetForDiff(22));
+    ByteString target = BlockchainUtil.targetBigIntegerToBytes(BlockchainUtil.getTargetForDiff(MrPlow.MIN_DIFF));
 
     WorkUnit wu = WorkUnit.newBuilder()
       .setHeader(header)
@@ -235,6 +236,7 @@ public class MiningPoolServiceAgent extends MiningPoolServiceGrpc.MiningPoolServ
   {
     logger.info(String.format("Share recorded for %s - %d", info.req.getPayToAddress(), shares));
     plow.getShareManager().record(info.req.getPayToAddress(), shares);
+    plow.recordHashes(1L << MrPlow.MIN_DIFF);
   }
 }
 

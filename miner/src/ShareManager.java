@@ -37,6 +37,29 @@ public class ShareManager
     }
     total_shares += shares;
   }
+  public synchronized void prune(long keep)
+  {
+    while(total_shares > keep)
+    {
+      ShareEntry e = share_queue.pollFirst();
+      String address = e.getAddress();
+      long map_shares = share_map.get(address);
+      long shares = e.getShareCount();
+      map_shares -= shares;
+
+      if (map_shares == 0)
+      {
+        share_map.remove(address);
+      }
+      else
+      {
+        share_map.put(address, map_shares);
+      }
+
+      total_shares -= shares;
+
+    }
+  }
 
   public synchronized Map<String, Double> getPayRatios()
   {
