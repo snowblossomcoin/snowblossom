@@ -54,12 +54,15 @@ public class WebServer
       {
         int eq = query.indexOf("=");
         String search = query.substring(eq+1);
+
+        // case: main page
         if (search.length() == 0)
         {
           displayStatus(out);
           return;
         }
 
+        // case: display block
         if (search.length()== Globals.BLOCKCHAIN_HASH_LEN*2)
         {
           ChainHash hash = null;
@@ -93,13 +96,15 @@ public class WebServer
             catch(Throwable e){}
           }
         }
+        // case: address
         if (address != null)
         {
           displayAddress(out, address);
           return;
         }
 
-
+        // case: unknown
+        displayUnexpectedStatus(out);
       }
       else
       {
@@ -107,6 +112,11 @@ public class WebServer
       }
 
     }
+  }
+
+  private void displayUnexpectedStatus(PrintStream out)
+  {
+    out.println("<div>Invalid search</div>");
   }
 
   private void displayStatus(PrintStream out)
