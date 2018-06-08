@@ -27,7 +27,7 @@ public class AddressPage
   {
 
   }
-/*
+
   long loadConfirmed = 0;
   long valueUnconfirmed = 0;
 
@@ -81,14 +81,11 @@ public class AddressPage
   public List<TransactionBridge> getSpendable(AddressSpecHash addr)
   {
 
-    GetUTXONodeReply reply = shackleton.getStub().getUTXONode(GetUTXONodeRequest.newBuilder()
-                                                                        .setPrefix(addr.getBytes())
-                                                                        .setIncludeProof(true)
-                                                                        .build());
+    GetUTXONodeReply reply = shackleton.getStub().getUTXONode(GetUTXONodeRequest.newBuilder().setPrefix(addr.getBytes()).setIncludeProof(true).build());
 
-    HashMap<String, TransactionBridge> bridge_map=new HashMap<>();
+    HashMap<String, TransactionBridge> bridge_map = new HashMap<>();
 
-    for(TrieNode node : reply.getAnswerList())
+    for (TrieNode node : reply.getAnswerList())
     {
       if (node.getIsLeaf())
       {
@@ -98,14 +95,13 @@ public class AddressPage
       }
     }
 
-    for(ByteString tx_hash : blockingStub.getMempoolTransactionList(
-      RequestAddress.newBuilder().setAddressSpecHash(addr.getBytes()).build()).getTxHashesList())
+    for (ByteString tx_hash : blockingStub.getMempoolTransactionList(RequestAddress.newBuilder().setAddressSpecHash(addr.getBytes()).build()).getTxHashesList())
     {
       Transaction tx = blockingStub.getTransaction(RequestTransaction.newBuilder().setTxHash(tx_hash).build());
 
       TransactionInner inner = TransactionUtil.getInner(tx);
 
-      for(TransactionInput in : inner.getInputsList())
+      for (TransactionInput in : inner.getInputsList())
       {
         if (addr.equals(in.getSpecHash()))
         {
@@ -113,7 +109,7 @@ public class AddressPage
           String key = b_in.getKeyString();
           if (bridge_map.containsKey(key))
           {
-            bridge_map.get(key).spent=true;
+            bridge_map.get(key).spent = true;
           }
           else
           {
@@ -121,20 +117,20 @@ public class AddressPage
           }
         }
       }
-      for(int o=0; o<inner.getOutputsCount(); o++)
+      for (int o = 0; o < inner.getOutputsCount(); o++)
       {
         TransactionOutput out = inner.getOutputs(o);
         if (addr.equals(out.getRecipientSpecHash()))
         {
           TransactionBridge b_out = new TransactionBridge(out, o, new ChainHash(tx_hash));
           String key = b_out.getKeyString();
-          b_out.unconfirmed=true;
+          b_out.unconfirmed = true;
 
           if (bridge_map.containsKey(key))
           {
             if (bridge_map.get(key).spent)
             {
-              b_out.spent=true;
+              b_out.spent = true;
             }
           }
           bridge_map.put(key, b_out);
@@ -152,5 +148,4 @@ public class AddressPage
     return lst;
 
   }
-  */
 }

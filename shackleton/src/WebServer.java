@@ -15,6 +15,7 @@ import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Map;
+import java.util.TimeZone;
 
 public class WebServer
 {
@@ -213,12 +214,14 @@ public class WebServer
     }
 
     SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm");
+    sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
+
     Date resultdate = new Date(blk.getHeader().getTimestamp());
 
     String s = String.format("<tr><td>%d</td><td>%s %s</td><td>%d</td><td>%d</td><td>%s</td><td>%s</td></tr>",
         blk.getHeader().getBlockHeight(), 
         hash.toString(), link,
-        tx_count, size, miner, sdf.format(resultdate));
+        tx_count, size, miner, sdf.format(resultdate) + " UTC");
 
     synchronized(block_summary_lines)
     {
@@ -267,8 +270,9 @@ public class WebServer
       out.println("utxo_root_hash: " + new ChainHash(header.getUtxoRootHash()));
 
       SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm");
+      sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
       Date resultdate = new Date(header.getTimestamp());
-      out.println("timestamp: " + header.getTimestamp() + " - " + sdf.format(resultdate));
+      out.println("timestamp: " + header.getTimestamp() + " :: " + sdf.format(resultdate) + " UTC");
       out.println("snow_field: " + header.getSnowField());
       out.println("size: " + blk.toByteString().size());
       out.println();
