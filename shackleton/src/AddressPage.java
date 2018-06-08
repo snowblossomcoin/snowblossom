@@ -6,6 +6,7 @@ import snowblossom.proto.*;
 import snowblossom.trie.proto.TrieNode;
 
 import java.io.PrintStream;
+import java.text.DecimalFormat;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -15,6 +16,7 @@ public class AddressPage
   private final PrintStream out;
   private final AddressSpecHash address;
   private final Shackleton shackleton;
+  private final DecimalFormat df = new DecimalFormat("0.000000");
 
   public AddressPage(PrintStream out, AddressSpecHash address, Shackleton shackleton)
   {
@@ -25,56 +27,54 @@ public class AddressPage
 
   public void render()
   {
+    out.println("<p>Address: " + AddressUtil.getAddressString(shackleton.getParams().getAddressPrefix(), address) + "</p>");
+    loadData();
 
+    double val_conf_d = (double) valueConfirmed / (double) Globals.SNOW_VALUE;
+    double val_unconf_d = (double) valueUnconfirmed / (double) Globals.SNOW_VALUE;
+    out.println(String.format("<p>%s (%s pending) in %d outputs</p>", df.format(val_conf_d), df.format(val_unconf_d), totalOutputs));
   }
-/*
-  long loadConfirmed = 0;
+
+  long valueConfirmed = 0;
   long valueUnconfirmed = 0;
+  long totalSpendable = 0;
+  long totalOutputs;
+  List<TransactionBridge> bridges;
 
   private void loadData()
   {
 
     try
     {
-      List<TransactionBridge> bridges = getSpendable(hash);
-
-      for(TransactionBridge b : bridges)
+      bridges = getSpendable(address);
+      for (TransactionBridge b : bridges)
       {
 
         if (b.unconfirmed)
         {
           if (!b.spent)
           {
-            value_unconfirmed += b.value;
+            valueUnconfirmed += b.value;
           }
         }
         else //confirmed
         {
-          value_confirmed += b.value;
+          valueConfirmed += b.value;
           if (b.spent)
           {
-            value_unconfirmed -= b.value;
+            valueUnconfirmed -= b.value;
           }
         }
         if (!b.spent)
         {
-          total_spendable += b.value;
+          totalSpendable += b.value;
         }
-
+        totalOutputs++;
       }
-
-      double val_conf_d = (double) value_confirmed / (double) Globals.SNOW_VALUE;
-      double val_unconf_d = (double) value_unconfirmed / (double) Globals.SNOW_VALUE;
-      System.out.println(String.format(" %s (%s pending) in %d outputs",
-                                       df.format(val_conf_d), df.format(val_unconf_d), bridges.size()));
-
-      total_confirmed += value_confirmed;
-      total_unconfirmed += value_unconfirmed;
     }
-    catch(Throwable e)
+    catch (Throwable e)
     {
-      logException = e;
-      System.out.println(e);
+      e.printStackTrace(out);
     }
   }
 
@@ -95,9 +95,9 @@ public class AddressPage
       }
     }
 
-    for (ByteString tx_hash : blockingStub.getMempoolTransactionList(RequestAddress.newBuilder().setAddressSpecHash(addr.getBytes()).build()).getTxHashesList())
+    for (ByteString tx_hash : shackleton.getStub().getMempoolTransactionList(RequestAddress.newBuilder().setAddressSpecHash(addr.getBytes()).build()).getTxHashesList())
     {
-      Transaction tx = blockingStub.getTransaction(RequestTransaction.newBuilder().setTxHash(tx_hash).build());
+      Transaction tx = shackleton.getStub().getTransaction(RequestTransaction.newBuilder().setTxHash(tx_hash).build());
 
       TransactionInner inner = TransactionUtil.getInner(tx);
 
@@ -147,5 +147,5 @@ public class AddressPage
     lst.addAll(bridge_map.values());
     return lst;
 
-  }*/
+  }
 }
