@@ -259,7 +259,7 @@ public class WebServer
   private void displayAddress(PrintStream out, AddressSpecHash address)
   {
     NetworkParams params = shackleton.getParams();
-    out.println("Address: " + AddressUtil.getAddressString(params.getAddressPrefix(), address));
+    new AddressPage(out, address, shackleton).render();
   }
 
   private void displayBlock(PrintStream out, Block blk)
