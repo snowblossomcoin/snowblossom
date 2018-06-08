@@ -27,7 +27,7 @@ public class AddressPage
   {
 
   }
-
+/*
   long loadConfirmed = 0;
   long valueUnconfirmed = 0;
 
@@ -147,5 +147,5 @@ public class AddressPage
     lst.addAll(bridge_map.values());
     return lst;
 
-  }
+  }*/
 }
