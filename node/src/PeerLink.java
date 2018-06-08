@@ -124,7 +124,7 @@ public class PeerLink implements StreamObserver<PeerMessage>
         BlockHeader header = tip.getHeader();
         if (header.getSnowHash().size() > 0)
         {
-          Validation.checkBlockHeaderBasics(node.getParams(), header);
+          Validation.checkBlockHeaderBasics(node.getParams(), header, false);
           considerBlockHeader(header);
           node.getPeerage().setHighestHeader(header);
         }
@@ -191,7 +191,7 @@ public class PeerLink implements StreamObserver<PeerMessage>
       {
         // We got a header, probably one we asked for
         BlockHeader header = msg.getHeader();
-        Validation.checkBlockHeaderBasics(node.getParams(), header);
+        Validation.checkBlockHeaderBasics(node.getParams(), header, false);
         considerBlockHeader(header);
       }
     }

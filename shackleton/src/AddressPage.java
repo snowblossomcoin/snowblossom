@@ -112,7 +112,6 @@ public class AddressPage
     for (ByteString tx_hash : shackleton.getStub().getMempoolTransactionList(RequestAddress.newBuilder().setAddressSpecHash(addr.getBytes()).build()).getTxHashesList())
     {
       Transaction tx = shackleton.getStub().getTransaction(RequestTransaction.newBuilder().setTxHash(tx_hash).build());
-
       TransactionInner inner = TransactionUtil.getInner(tx);
 
       for (TransactionInput in : inner.getInputsList())
@@ -148,15 +147,9 @@ public class AddressPage
             }
           }
           bridge_map.put(key, b_out);
-
         }
-
       }
-
-
     }
-
-
     LinkedList<TransactionBridge> lst = new LinkedList<>();
     lst.addAll(bridge_map.values());
     return lst;

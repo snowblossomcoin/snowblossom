@@ -6,7 +6,7 @@ import org.junit.runners.Suite.SuiteClasses;
 
 @RunWith(Suite.class)
 @SuiteClasses({
-  EmptyTest.class
+  ShareManagerTest.class
 })
 public class AllTests
 {}

@@ -73,7 +73,7 @@ public class BlockIngestor
     ChainHash blockhash;
     try(TimeRecordAuto tra_blk = TimeRecord.openAuto("BlockIngestor.ingestBlock"))
     {
-      Validation.checkBlockBasics(node.getParams(), blk, true);
+      Validation.checkBlockBasics(node.getParams(), blk, true, false);
 
       blockhash = new ChainHash(blk.getHeader().getSnowHash());
 

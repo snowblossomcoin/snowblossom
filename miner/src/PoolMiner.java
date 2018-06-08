@@ -198,13 +198,13 @@ public class PoolMiner
     String block_time_report = "";
     if (last_work_unit != null)
     {
-      BigInteger target = BlockchainUtil.targetBytesToBigInteger(last_work_unit.getHeader().getTarget());
+      BigInteger target = BlockchainUtil.targetBytesToBigInteger(last_work_unit.getReportTarget());
 
       double diff = PowUtil.getDiffForTarget(target);
 
       double block_time_sec = Math.pow(2.0, diff) / rate;
-      double hours = block_time_sec / 3600.0;
-      block_time_report = String.format("- at this rate %s hours per block", df.format(hours));
+      double min = block_time_sec / 60.0;
+      block_time_report = String.format("- at this rate %s minutes per share", df.format(min));
     }
 
 
@@ -319,7 +319,7 @@ public class PoolMiner
 
       byte[] found_hash = context;
 
-      if (PowUtil.lessThanTarget(found_hash, wu.getHeader().getTarget()))
+      if (PowUtil.lessThanTarget(found_hash, wu.getReportTarget()))
       {
         String str = HashUtils.getHexString(found_hash);
         logger.info("Found passable solution: " + str);
@@ -334,11 +334,11 @@ public class PoolMiner
       byte[] first_hash = PowUtil.hashHeaderBits(wu.getHeader(), nonce);
       byte[] context = first_hash;
 
-      WorkSubmitRequest.Builder req = WorkSubmitRequest.newBuilder();
 
-      req.setNonce(ByteString.copyFrom(nonce));
-      req.setWorkId(wu.getWorkId());
-      req.setSnowField(wu.getHeader().getSnowField());
+      BlockHeader.Builder header = BlockHeader.newBuilder();
+      header.mergeFrom(wu.getHeader());
+      header.setNonce(ByteString.copyFrom(nonce));
+
 
       for (int pass = 0; pass < Globals.POW_LOOK_PASSES; pass++)
       {
@@ -347,12 +347,17 @@ public class PoolMiner
         long word_idx = PowUtil.getNextSnowFieldIndex(context, merkle_proof.getTotalWords());
         merkle_proof.readWord(word_idx, word_bb);
         SnowPowProof proof = merkle_proof.getProof(word_idx);
-        req.addPowProof(proof);
+        header.addPowProof(proof);
         context = PowUtil.getNextContext(context, word_buff);
       }
 
       byte[] found_hash = context;
 
+      header.setSnowHash(ByteString.copyFrom(found_hash));
+
+      WorkSubmitRequest.Builder req = WorkSubmitRequest.newBuilder();
+      req.setWorkId(wu.getWorkId());
+      req.setHeader(header.build());
       
       SubmitReply reply = blockingStub.submitWork( req.build());
       
@@ -402,14 +407,11 @@ public class PoolMiner
 
       int min_field = wu.getHeader().getSnowField();
 
-      logger.info("Required field: " + min_field + " - " + params.getSnowFieldInfo(min_field).getName());
-
       int selected_field = -1;
 
       try
       {
         selected_field = field_scan.selectField(min_field);
-        logger.info("Using field: " + selected_field + " - " + params.getSnowFieldInfo(selected_field).getName());
 
         try
         {
