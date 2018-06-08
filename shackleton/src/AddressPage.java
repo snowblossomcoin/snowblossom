@@ -33,6 +33,20 @@ public class AddressPage
     double val_conf_d = (double) valueConfirmed / (double) Globals.SNOW_VALUE;
     double val_unconf_d = (double) valueUnconfirmed / (double) Globals.SNOW_VALUE;
     out.println(String.format("<p>%s (%s pending) in %d outputs</p>", df.format(val_conf_d), df.format(val_unconf_d), totalOutputs));
+/*
+    out.println("<table>");
+    out.println(" <thead>");
+    out.println("   <th></th>");
+    out.println(" </thead>");
+    out.println(" <tbody>");
+    for (TransactionBridge bridge : bridges)
+    {
+      out.println(bridge.in.getSrcTxId()
+    }
+    out.println(" </tbody>");
+    out.println("</table>");
+
+*/
   }
 
   long valueConfirmed = 0;
