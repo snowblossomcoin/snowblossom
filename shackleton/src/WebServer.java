@@ -58,6 +58,8 @@ public class WebServer
         int eq = query.indexOf("=");
         String search = query.substring(eq+1);
 
+        search = search.trim();
+
         // case: main page
         if (search.length() == 0)
         {
