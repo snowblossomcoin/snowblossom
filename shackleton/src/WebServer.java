@@ -337,6 +337,7 @@ public class WebServer
       out.println("<head>");
       out.println("<title>Snowblossom " + params.getNetworkName() + "</title>");
       out.println("<link rel='stylesheet' type='text/css' href='https://snowblossom.org/style-fixed.css' />");
+      out.println("<link REL='SHORTCUT ICON' href='https://snowblossom.org/snow-icon.png' />");
       out.println("</head>");
       out.println("<body>");
       out.print("<a href='/'>House</a>");
