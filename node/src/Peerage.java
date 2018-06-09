@@ -408,7 +408,7 @@ public class Peerage
         {
           int idx = rnd.nextInt(options.size());
           PeerInfo pi = options.get(idx);
-          logger.log(Level.FINE, String.format("Selected peer: " + PeerUtil.getString(pi) + " " + pi));
+          logger.log(Level.FINE, "Selected peer: " + PeerUtil.getString(pi) + " " + pi);
           new PeerClient(node, pi);
         }
       }
