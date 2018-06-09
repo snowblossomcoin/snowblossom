@@ -29,6 +29,8 @@ public class PeerLink implements StreamObserver<PeerMessage>
   private boolean server_side;
   private String link_id;
   private long last_received_message_time;
+  private boolean got_first_tip = false;
+  private PeerInfo peer_info; //only set when we are client
 
   private TreeMap<Integer, ChainHash> peer_block_map = new TreeMap<Integer, ChainHash>();
 
@@ -42,12 +44,13 @@ public class PeerLink implements StreamObserver<PeerMessage>
 
   }
 
-  public PeerLink(SnowBlossomNode node, String link_id)
+  public PeerLink(SnowBlossomNode node, String link_id, PeerInfo info)
   {
     this.node = node;
     server_side=false;
 
     this.link_id = link_id;
+    this.peer_info = info;
     last_received_message_time = System.currentTimeMillis();
   }
 
@@ -120,6 +123,18 @@ public class PeerLink implements StreamObserver<PeerMessage>
           close();
           return;
         }
+        node.getPeerage().reportTip();
+
+        // When we first get a tip from a node we connected to
+        // update the peer info showing the success in getting a tip
+        if ((!got_first_tip) && (peer_info != null))
+        {
+          logger.log(Level.FINE, "Saving last passed");
+          got_first_tip=true;
+          PeerInfo pi = PeerInfo.newBuilder().mergeFrom(peer_info).setLastPassed(System.currentTimeMillis()).build();
+          node.getPeerage().learnPeer(pi);
+        }
+        
 
         BlockHeader header = tip.getHeader();
         if (header.getSnowHash().size() > 0)

@@ -21,7 +21,7 @@ public class PeerClient
 
     PeerServiceStub asyncStub = PeerServiceGrpc.newStub(channel);
 
-    PeerLink link = new PeerLink(node, PeerUtil.getString(info));
+    PeerLink link = new PeerLink(node, PeerUtil.getString(info), info);
     StreamObserver<PeerMessage> sink = asyncStub.subscribePeering(link);
     link.setSink(sink);
     link.setChannel(channel);

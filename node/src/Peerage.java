@@ -20,7 +20,7 @@ import java.util.logging.Logger;
 public class Peerage
 {
   public static final long REFRESH_LEARN_TIME = 4L * 3600L * 1000L; //4hr
-  public static final long SAVE_PEER_TIME = 300L * 1000L; //5min
+  public static final long SAVE_PEER_TIME = 60L * 1000L; //1min
   public static final long PEER_EXPIRE_TIME = 16L * 86400L * 1000L; // 16 days
 
   private static final Logger logger = Logger.getLogger("snowblossom.peering");
@@ -293,6 +293,17 @@ public class Peerage
         peer_rumor_list.put(name, info);
       }
     }
+  }
+
+  private volatile boolean gotFirstTip=false;
+  public void reportTip()
+  {
+    if (!gotFirstTip)
+    {
+      gotFirstTip=true;
+      logger.info("Got first tip from a remote peer");
+
+    }
 
   }
 
@@ -347,40 +358,59 @@ public class Peerage
     {
       int connected = getLinkList().size();
       int desired = node.getConfig().getIntWithDefault("peer_count", 8);
-      logger.log(Level.FINEST, String.format("Connected to %d, desired %d", connected, desired));
+      logger.log(Level.FINE, String.format("Connected to %d, desired %d", connected, desired));
       if (desired <= connected)
       {
         pruneExpiredPeers();
         return;
       }
 
-      logger.log(Level.FINEST, "Looking for more peers to connect to");
-      TreeSet<String> exclude_set = new TreeSet<>();
-      exclude_set.addAll(self_peer_names);
-      synchronized(links)
+      for(int att = 0; att < desired - connected; att++)
       {
-        exclude_set.addAll(links.keySet());
-      }
+        
 
-      ArrayList<PeerInfo> options = new ArrayList<>();
-      synchronized(peer_rumor_list)
-      {
-        for(PeerInfo i : peer_rumor_list.values())
+        logger.log(Level.FINEST, "Looking for more peers to connect to");
+        TreeSet<String> exclude_set = new TreeSet<>();
+        exclude_set.addAll(self_peer_names);
+        synchronized(links)
         {
-          if (!exclude_set.contains(PeerUtil.getString(i)))
+          exclude_set.addAll(links.keySet());
+        }
+
+        ArrayList<PeerInfo> options = new ArrayList<>();
+        ArrayList<PeerInfo> reserve_options = new ArrayList<>();
+        synchronized(peer_rumor_list)
+        {
+          for(PeerInfo i : peer_rumor_list.values())
           {
-            options.add(i);
+            if (!exclude_set.contains(PeerUtil.getString(i)))
+            {
+              // If we aren't connected to many, use only those that has passed before
+              if ((connected >= 2) || (i.getLastPassed() > 0))
+              {
+                options.add(i);
+              }
+              else
+              {
+                reserve_options.add(i);
+              }
+            }
           }
-        } 
-      }
-      logger.log(Level.FINEST, String.format("There are %d peer options", options.size()));
-      Random rnd = new Random();
-      if (options.size() > 0)
-      {
-        int idx = rnd.nextInt(options.size());
-        PeerInfo pi = options.get(idx);
-        logger.log(Level.FINEST, String.format("Selected peer: " + PeerUtil.getString(pi)));
-        new PeerClient(node, pi);
+        }
+        if (options.size() == 0)
+        {
+          logger.log(Level.FINER, "Moving in reserve options");
+          options.addAll(reserve_options);
+        }
+        logger.log(Level.FINEST, String.format("There are %d peer options", options.size()));
+        Random rnd = new Random();
+        if (options.size() > 0)
+        {
+          int idx = rnd.nextInt(options.size());
+          PeerInfo pi = options.get(idx);
+          logger.log(Level.FINE, String.format("Selected peer: " + PeerUtil.getString(pi) + " " + pi));
+          new PeerClient(node, pi);
+        }
       }
 
     }
