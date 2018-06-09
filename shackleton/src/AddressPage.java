@@ -47,18 +47,34 @@ public class AddressPage
     out.println("   <th></th>");
     out.println(" </thead>");
     out.println(" <tbody>");
+    Throwable renderException = null;
     for (TransactionAndUtxos tAndU : data.transactionsAndUtxos)
     {
-      renderTransactionAndUtxos(tAndU);
+      try
+      {
+        renderTransactionAndUtxos(tAndU);
+      }
+      catch (Throwable e)
+      {
+        renderException = e;
+      }
     }
     out.println(" </tbody>");
     out.println("</table>");
-
+    if (renderException != null)
+    {
+      renderException.printStackTrace(out);
+    }
   }
 
   private void renderTransactionAndUtxos(TransactionAndUtxos t)
   {
-    ChainHash tx_hash = new ChainHash(t.transaction.getTxHash());
+    ChainHash tx_hash = null;
+    if (t.transaction.getTxHash().size() > 0)
+    {
+      tx_hash = new ChainHash(t.transaction.getTxHash());
+    }
+
     TransactionInner inner = TransactionUtil.getInner(t.transaction);
 
     BlockHeader blk = null;
@@ -72,7 +88,7 @@ public class AddressPage
     out.println("<tr>");
 
     out.println("<td>");
-    out.println(tx_hash.toString());
+    if (tx_hash != null) out.println(tx_hash.toString());
     out.println("</td>");
 
     out.println("<td>");
