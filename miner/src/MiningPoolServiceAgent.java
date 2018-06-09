@@ -266,7 +266,7 @@ public class MiningPoolServiceAgent extends MiningPoolServiceGrpc.MiningPoolServ
 
   public void recordShare(MinerInfo info, long shares, long hashes)
   {
-    logger.info(String.format("Share recorded for %s - %d", info.req.getPayToAddress(), shares));
+    logger.info(String.format("Share recorded for %s - (%d shares) (%d hashes)", info.req.getPayToAddress(), shares, hashes));
     plow.getShareManager().record(info.req.getPayToAddress(), shares);
     plow.recordHashes(hashes);
   }
