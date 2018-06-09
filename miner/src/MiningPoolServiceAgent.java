@@ -103,7 +103,14 @@ public class MiningPoolServiceAgent extends MiningPoolServiceGrpc.MiningPoolServ
 
       Validation.checkBlockHeaderBasics( plow.getParams(), formed_header, true );
 
-      recordShare(wi.miner_info, 1L);
+      long shares = 1;
+      int diff_delta = wi.work_diff - MrPlow.MIN_DIFF;
+      shares = 1L << diff_delta;
+      long hashes = 1L << wi.work_diff;
+
+      recordShare(wi.miner_info, shares, hashes);
+
+      wi.miner_info.reportShare();
 
       if (PowUtil.lessThanTarget(formed_header.getSnowHash().toByteArray(), formed_header.getTarget()))
       {
@@ -141,7 +148,7 @@ public class MiningPoolServiceAgent extends MiningPoolServiceGrpc.MiningPoolServ
       .setNonce(ByteString.copyFrom(nonce))
       .build();
 
-    ByteString target = BlockchainUtil.targetBigIntegerToBytes(BlockchainUtil.getTargetForDiff(MrPlow.MIN_DIFF));
+    ByteString target = BlockchainUtil.targetBigIntegerToBytes(BlockchainUtil.getTargetForDiff(info.working_diff));
 
     WorkUnit wu = WorkUnit.newBuilder()
       .setHeader(header)
@@ -149,7 +156,7 @@ public class MiningPoolServiceAgent extends MiningPoolServiceGrpc.MiningPoolServ
       .setReportTarget(target)
       .build();
 
-    WorkInfo wi = new WorkInfo(wu, info, blk);
+    WorkInfo wi = new WorkInfo(wu, info, blk, info.working_diff);
 
     synchronized(pending_work)
     {
@@ -204,11 +211,34 @@ public class MiningPoolServiceAgent extends MiningPoolServiceGrpc.MiningPoolServ
   {
     public final GetWorkRequest req;
     public final StreamObserver<WorkUnit> observer;
+    public int working_diff = MrPlow.MIN_DIFF;
+
+    public LinkedList<Long> share_times = new LinkedList<>();
+
 
     public MinerInfo(GetWorkRequest req, StreamObserver<WorkUnit> observer)
     {
       this.req = req;
       this.observer = observer;
+    }
+
+    public void reportShare()
+    {
+      synchronized(share_times)
+      {
+        share_times.add(System.currentTimeMillis());
+        long expire = System.currentTimeMillis() - 60000L;
+        while((share_times.size() >0) && (share_times.peek() < expire))
+        {
+          share_times.poll();
+        }
+        if (share_times.size() >= 3)
+        {
+          working_diff++;
+          share_times.clear();
+        }
+
+      }
 
     }
 
@@ -219,24 +249,26 @@ public class MiningPoolServiceAgent extends MiningPoolServiceGrpc.MiningPoolServ
     public final WorkUnit wu;
     public final MinerInfo miner_info;
     public final Block blk;
+    public final int work_diff;
 
     public HashSet<ByteString> used_nonces=new HashSet<>();
 
-    public WorkInfo(WorkUnit wu, MinerInfo miner_info, Block blk)
+    public WorkInfo(WorkUnit wu, MinerInfo miner_info, Block blk, int work_diff)
     {
       this.wu = wu;
       this.miner_info = miner_info;
       this.blk = blk;
+      this.work_diff = work_diff;
     }
 
   }
 
 
-  public void recordShare(MinerInfo info, long shares)
+  public void recordShare(MinerInfo info, long shares, long hashes)
   {
     logger.info(String.format("Share recorded for %s - %d", info.req.getPayToAddress(), shares));
     plow.getShareManager().record(info.req.getPayToAddress(), shares);
-    plow.recordHashes(1L << MrPlow.MIN_DIFF);
+    plow.recordHashes(hashes);
   }
 }
 

@@ -204,7 +204,7 @@ public class PoolMiner
 
       double block_time_sec = Math.pow(2.0, diff) / rate;
       double min = block_time_sec / 60.0;
-      block_time_report = String.format("- at this rate %s minutes per share", df.format(min));
+      block_time_report = String.format("- at this rate %s minutes per share (diff %s)", df.format(min), df.format(diff));
     }
 
 
