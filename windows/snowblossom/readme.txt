@@ -31,9 +31,16 @@ If you see errors about "snowblossom.db.rocksdb.JRocksDB" then in your node.conf
 
 ## Start Miner
 
-* Run miner.bat
+* Run miner-solo.bat
 * This will use your local node for information to mine.  When it is working properly it will display a hash rate
 that looks like:
   ** INFO: Mining rate: 46110.5/sec
 * When it finds a block, the client display should soon update with the block value.
+
+## Pooled Mining (what you probably want)
+
+* Pick a pool from https://github.com/snowblossomcoin/snowblossom/wiki/9.-Mining-Pools
+* Edit miner.conf and put in the pool_host you want to use
+* Run miner-pool.bat
+
 
