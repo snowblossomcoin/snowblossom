@@ -14,7 +14,6 @@ import snowblossom.mining.proto.*;
 import snowblossom.mining.proto.MiningPoolServiceGrpc.MiningPoolServiceStub;
 import snowblossom.mining.proto.MiningPoolServiceGrpc.MiningPoolServiceBlockingStub;
 import snowblossom.lib.trie.HashUtils;
-import snowblossom.lib.SnowMerkleProof;
 
 import java.io.File;
 import java.io.FileInputStream;

@@ -13,7 +13,6 @@ import snowblossom.proto.*;
 import snowblossom.proto.UserServiceGrpc.UserServiceBlockingStub;
 import snowblossom.proto.UserServiceGrpc.UserServiceStub;
 import snowblossom.lib.trie.HashUtils;
-import snowblossom.lib.SnowMerkleProof;
 
 import java.io.File;
 import java.io.FileInputStream;

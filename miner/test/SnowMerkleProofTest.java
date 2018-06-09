@@ -1,4 +1,4 @@
-package lib.test;
+package miner.test;
 
 
 import com.google.protobuf.ByteString;
@@ -6,11 +6,12 @@ import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
+import snowblossom.lib.Validation;
 import snowblossom.proto.SnowPowProof;
 import snowblossom.lib.Globals;
 import snowblossom.lib.SnowFall;
 import snowblossom.lib.SnowMerkle;
-import snowblossom.lib.SnowMerkleProof;
+import snowblossom.miner.SnowMerkleProof;
 
 import java.io.File;
 import java.security.MessageDigest;
@@ -44,7 +45,7 @@ public class SnowMerkleProofTest
     Assert.assertEquals(location, proof.getWordIdx());
     System.out.println(proof);
     
-    Assert.assertTrue(SnowMerkleProof.checkProof(proof, root_hash, byte_len));
+    Assert.assertTrue(Validation.checkProof(proof, root_hash, byte_len));
 
 
   }
@@ -76,7 +77,7 @@ public class SnowMerkleProofTest
 
       Assert.assertEquals(location, proof.getWordIdx());
     
-      Assert.assertTrue(SnowMerkleProof.checkProof(proof, root_hash, byte_len));
+      Assert.assertTrue(Validation.checkProof(proof, root_hash, byte_len));
     }
 
   }
@@ -115,7 +116,7 @@ public class SnowMerkleProofTest
     fiends.push(ByteString.copyFrom(md.digest()));
     fake_proof.addAllMerkleComponent(fiends);
 
-    Assert.assertFalse(SnowMerkleProof.checkProof(fake_proof.build(), root_hash, byte_len));
+    Assert.assertFalse(Validation.checkProof(fake_proof.build(), root_hash, byte_len));
 
   }
 

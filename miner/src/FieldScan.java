@@ -4,7 +4,7 @@ import com.google.common.collect.ImmutableSortedMap;
 import duckutil.Config;
 import snowblossom.lib.NetworkParams;
 import snowblossom.lib.SnowFieldInfo;
-import snowblossom.lib.SnowMerkleProof;
+import snowblossom.lib.Validation;
 import snowblossom.proto.SnowPowProof;
 
 import java.io.File;
@@ -49,7 +49,16 @@ public class FieldScan
       {
         try
         {
-          SnowMerkleProof proof = new SnowMerkleProof(field_folder, name, config.getBoolean("memfield"));
+          double precacheGig = config.getDoubleWithDefault("memfield_precache_gb", 0);
+          boolean memfield = config.getBoolean("memfield");
+          long precache = 0;
+          if (precacheGig > 0.01)
+          {
+            memfield = false;
+            precache = (long)(precacheGig * 1024.0 * 1024.0 * 1024.0);
+          }
+          System.out.println("creating field: " + field_folder + " memfield=" + memfield + ", precache=" + precache);
+          SnowMerkleProof proof = new SnowMerkleProof(field_folder, name, memfield, precache);
 
           for(int i = 0; i<16; i++)
           {
@@ -93,7 +102,7 @@ public class FieldScan
 
     SnowFieldInfo info = params.getSnowFieldInfo(field_number);
 
-    if (!SnowMerkleProof.checkProof(p, info.getMerkleRootHash(), info.getLength() ))
+    if (!Validation.checkProof(p, info.getMerkleRootHash(), info.getLength() ))
     {
       throw new RuntimeException("proof check failed");
     }
@@ -147,7 +156,7 @@ public class FieldScan
       return null;
     }
 
-    if (config.getBoolean("memfield"))
+    if (config.getBoolean("memfield") || config.getDoubleWithDefault("memfield_precache_gb", 0) > 0)
     {
       return getFieldProof(f);
     }
@@ -157,5 +166,4 @@ public class FieldScan
 
     return new SnowMerkleProof(field_folder, name);
   }
-
 }
