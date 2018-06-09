@@ -8,10 +8,8 @@ import snowblossom.trie.proto.TrieNode;
 import java.io.PrintStream;
 import java.nio.ByteBuffer;
 import java.text.DecimalFormat;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
+import java.text.SimpleDateFormat;
+import java.util.*;
 
 public class AddressPage
 {
@@ -27,57 +25,116 @@ public class AddressPage
     this.shackleton = shackleton;
   }
 
+  private String formatFlakeValue(long value)
+  {
+    double v = (double) value / (double) Globals.SNOW_VALUE;
+    return String.format("%s", df.format(v));
+  }
+
   public void render()
   {
     out.println("<p>Address: " + AddressUtil.getAddressString(shackleton.getParams().getAddressPrefix(), address) + "</p>");
-    loadData();
+    AddressData data = getAddressData(address);
 
-    double val_conf_d = (double) valueConfirmed / (double) Globals.SNOW_VALUE;
-    double val_unconf_d = (double) valueUnconfirmed / (double) Globals.SNOW_VALUE;
-    out.println(String.format("<p>%s (%s pending) in %d outputs</p>", df.format(val_conf_d), df.format(val_unconf_d), totalOutputs));
+    double val_conf_d = (double) data.valueConfirmed / (double) Globals.SNOW_VALUE;
+    double val_unconf_d = (double) data.valueUnconfirmed / (double) Globals.SNOW_VALUE;
+    out.println(String.format("<p>%s (%s pending) in %d outputs</p>", df.format(val_conf_d), df.format(val_unconf_d), data.totalOutputs));
 
+    out.println("<h2>Unspend Transaction Outputs</h2>");
+    out.println("(does not include unconfirmed)");
     out.println("<table>");
     out.println(" <thead>");
     out.println("   <th></th>");
     out.println(" </thead>");
     out.println(" <tbody>");
-    for (TransactionBridge bridge : bridges)
+    for (TransactionAndUtxos tAndU : data.transactionsAndUtxos)
     {
-      renderTransactionBridge(bridge);
-      //out.println(bridge.in.getSrcTxId()
+      renderTransactionAndUtxos(tAndU);
     }
     out.println(" </tbody>");
     out.println("</table>");
 
   }
 
-  private void renderTransactionBridge(TransactionBridge bridge)
+  private void renderTransactionAndUtxos(TransactionAndUtxos t)
   {
+    ChainHash tx_hash = new ChainHash(t.transaction.getTxHash());
+    TransactionInner inner = TransactionUtil.getInner(t.transaction);
+
+    BlockHeader blk = null;
+    if (inner.hasCoinbaseExtras())
+    {
+      int blockHeight = inner.getCoinbaseExtras().getBlockHeight();
+      blk = shackleton.getStub().getBlockHeader(RequestBlockHeader.newBuilder().setBlockHeight(blockHeight).build());
+    }
+
+
     out.println("<tr>");
 
     out.println("<td>");
-    out.println(bridge.in.getSrcTxId())
-    Block blk = shackleton.getStub().getBlock( RequestBlock.newBuilder().setBlockHash(bridge.in.getSrcTxId()).build());
-    out.println(
+    out.println(tx_hash.toString());
+    out.println("</td>");
+
+    out.println("<td>");
+    if (blk != null)
+    {
+      out.println(inner.getIsCoinbase());
+    }
+    out.println("</td>");
+
+    out.println("<td>");
+    if (blk != null)
+    {
+      SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm");
+      sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
+      Date resultDate = new Date(blk.getTimestamp());
+      out.println(sdf.format(resultDate));
+    }
+    out.println("</td>");
+
+    out.println("<td>");
+    if (blk != null)
+    {
+      out.println(blk.getBlockHeight());
+    }
+    out.println("</td>");
+
+    out.println("<td>");
+    if (blk != null)
+    {
+      for (TransactionBridge bridge : t.utxos)
+      {
+        out.println("<div>");
+        out.println(formatFlakeValue(bridge.value));
+        if (bridge.spent) out.println(" (spent)");
+        out.println("</div>");
+      }
+      out.println(blk.getBlockHeight());
+    }
     out.println("</td>");
 
     out.println("</tr>");
   }
 
-  long valueConfirmed = 0;
-  long valueUnconfirmed = 0;
-  long totalSpendable = 0;
-  long totalOutputs;
-  List<TransactionBridge> bridges;
-  List<Transaction> transactions = new ArrayList<Transaction>();
-
-  private void loadData()
+  private class AddressData
   {
+    private List<TransactionAndUtxos> transactionsAndUtxos;
+    private List<TransactionBridge> spendable;
 
-    try
+    private AddressData(List<TransactionAndUtxos> transactionsAndUtxos, List<TransactionBridge> spendable)
     {
-      bridges = getSpendable(address);
-      for (TransactionBridge b : bridges)
+      this.transactionsAndUtxos = transactionsAndUtxos;
+      this.spendable = spendable;
+    }
+
+    long valueConfirmed = 0;
+    long valueUnconfirmed = 0;
+    long totalSpendable = 0;
+    long totalOutputs = 0;
+
+    private void calculateValues()
+    {
+      for (TransactionBridge b : spendable)
       {
 
         if (b.unconfirmed)
@@ -102,18 +159,27 @@ public class AddressPage
         totalOutputs++;
       }
     }
-    catch (Throwable e)
+  }
+
+  private class TransactionAndUtxos
+  {
+    private final Transaction transaction;
+    private final List<TransactionBridge> utxos;
+
+    private TransactionAndUtxos(Transaction transaction)
     {
-      e.printStackTrace(out);
+      this.transaction = transaction;
+      utxos = new ArrayList<>();
     }
   }
 
-  public List<TransactionBridge> getSpendable(AddressSpecHash addr)
+  private AddressData getAddressData(AddressSpecHash addr)
   {
-
     // first get all the unpent outputs and and put them into a hashmap by input transaction hash.
+    // also save them into the transaction and utxo list.
     GetUTXONodeReply reply = shackleton.getStub().getUTXONode(GetUTXONodeRequest.newBuilder().setPrefix(addr.getBytes()).setIncludeProof(true).build());
     HashMap<String, TransactionBridge> bridge_map = new HashMap<>();
+    HashMap<String, TransactionAndUtxos> transaction_map = new HashMap<>();
     for (TrieNode node : reply.getAnswerList())
     {
       if (node.getIsLeaf())
@@ -125,15 +191,22 @@ public class AddressPage
         byte[] txid = new byte[Globals.BLOCKCHAIN_HASH_LEN];
 
         Transaction tx = shackleton.getStub().getTransaction( RequestTransaction.newBuilder().setTxHash(ByteString.copyFrom(txid)).build());
-        if (tx.getInnerData().size() > 0)
+        TransactionAndUtxos tAndU;
+        if (!transaction_map.containsKey(tx.getTxHash().toString()))
         {
-          transactions.add(tx);
+          tAndU = new TransactionAndUtxos(tx);
+          transaction_map.put(tx.getTxHash().toString(), tAndU);
         }
-
+        else
+        {
+          tAndU = transaction_map.get(tx.getTxHash().toString());
+        }
         TransactionBridge b = new TransactionBridge(node);
+        tAndU.utxos.add(b);
         bridge_map.put(b.getKeyString(), b);
       }
     }
+
 
     // get all the transactions in the mempool for this address
     for (ByteString tx_hash : shackleton.getStub().getMempoolTransactionList(RequestAddress.newBuilder().setAddressSpecHash(addr.getBytes()).build()).getTxHashesList())
@@ -184,9 +257,15 @@ public class AddressPage
         }
       }
     }
+
     LinkedList<TransactionBridge> lst = new LinkedList<>();
     lst.addAll(bridge_map.values());
-    return lst;
 
+    LinkedList<TransactionAndUtxos> lst2 = new LinkedList<>();
+    lst2.addAll(transaction_map.values());
+
+    AddressData ad = new AddressData(lst2, lst);
+    ad.calculateValues();
+    return ad;
   }
 }
