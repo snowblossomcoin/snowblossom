@@ -177,15 +177,15 @@ public class PowUtil
 
   public static long getBlockReward(NetworkParams params, int block_height)
   {
-    // half every 2 years
+    // half every year
     long blocks_per_day = 86400 / (params.getBlockTimeTarget() / 1000);
-    int blocks_per_two_years = (int)blocks_per_day * 365;
+    int blocks_per_year = (int)blocks_per_day * 365;
 
     long reward = 50000000;
     int n = block_height;
-    while(n >= blocks_per_two_years)
+    while(n >= blocks_per_year)
     {
-      n -= blocks_per_two_years;
+      n -= blocks_per_year;
       reward = reward / 2;
     }
     return reward;
