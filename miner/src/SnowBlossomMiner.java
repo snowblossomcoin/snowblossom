@@ -27,6 +27,7 @@ import java.util.Random;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.List;
 
 public class SnowBlossomMiner
 {
@@ -135,6 +136,24 @@ public class SnowBlossomMiner
     {
       extras.setRemarks(ByteString.copyFrom(config.get("remark").getBytes()));
     }
+    if (config.isSet("vote_yes"))
+    {
+      List<String> lst = config.getList("vote_yes");
+      for(String s : lst)
+      {
+        extras.addMotionsApproved( Integer.parseInt(s));
+      }
+    }
+    if (config.isSet("vote_no"))
+    {
+      List<String> lst = config.getList("vote_no");
+      for(String s : lst)
+      {
+        extras.addMotionsRejected( Integer.parseInt(s));
+      }
+    }
+
+
 
     asyncStub.subscribeBlockTemplate(SubscribeBlockTemplateRequest.newBuilder().setPayRewardToSpecHash(to_addr.getBytes()).setExtras(extras.build()).build(),
                                      new BlockTemplateEater());
