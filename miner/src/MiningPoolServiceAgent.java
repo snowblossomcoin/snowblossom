@@ -185,6 +185,9 @@ public class MiningPoolServiceAgent extends MiningPoolServiceGrpc.MiningPoolServ
     synchronized(miner_list)
     {
       LinkedList<MinerInfo> keep_list = new LinkedList<MinerInfo>();
+      int send_count = miner_list.size();
+      int keep_count = 0;
+      int drop_count = 0;
 
       for(MinerInfo mi : miner_list)
       {
@@ -192,16 +195,20 @@ public class MiningPoolServiceAgent extends MiningPoolServiceGrpc.MiningPoolServ
         {
           sendWork(mi, blk);
           keep_list.add(mi);
+          keep_count++;
         }
         catch(Throwable t)
         {
-          logger.info("Error in send work: " + t);
+          drop_count++;
+          //logger.info("Error in send work: " + t);
         } 
 
       }
 
       miner_list.clear();
       miner_list.addAll(keep_list);
+
+      logger.info(String.format("Send new work to %d workers.  Keeping %d, Dropping %d", send_count, keep_count, drop_count));
 
     }
 
