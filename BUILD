@@ -60,7 +60,7 @@ java_binary(
 )
 java_binary(
   name = "SnowMerkle",
-  main_class = "snowblossom.lib..SnowMerkle",
+  main_class = "snowblossom.lib.SnowMerkle",
   runtime_deps = [
     "//lib:lib",
   ]
