@@ -71,7 +71,7 @@ public class Validation
       //check pow proofs
       for(SnowPowProof proof : proofs)
       {
-        if (!SnowMerkleProof.checkProof(proof, field_info.getMerkleRootHash(), field_info.getLength()))
+        if (!checkProof(proof, field_info.getMerkleRootHash(), field_info.getLength()))
         {
           throw new ValidationException("POW Merkle Proof does not compute");
         }
@@ -138,6 +138,74 @@ public class Validation
       }
     }
 
+  }
+
+  public static boolean checkProof(SnowPowProof proof, ByteString expected_merkle_root, long snow_field_size)
+  {
+    long target_index = proof.getWordIdx();
+    long word_count = snow_field_size / SnowMerkle.HASH_LEN_LONG;
+    if (target_index < 0) return false;
+    if (target_index >= word_count) return false;
+
+    MessageDigest md;
+    try
+    {
+      md = MessageDigest.getInstance(Globals.SNOW_MERKLE_HASH_ALGO);
+    }
+    catch(java.security.NoSuchAlgorithmException e)
+    {
+      throw new RuntimeException( e );
+    }
+
+    LinkedList<ByteString> stack = new LinkedList<>();
+    stack.addAll(proof.getMerkleComponentList());
+
+    ByteString current_hash = stack.poll();
+    if (current_hash == null) return false;
+
+    long start = target_index;
+    long end = target_index;
+    long dist = 1;
+
+    // To visualize this, take the recursive getInnerProof() below
+    // and do it backwards
+    while ((stack.size() > 0) && (end <= word_count))
+    {
+      dist *= 2;
+      start = start - (start % dist);
+      end = start + dist;
+      long mid = (start + end) / 2;
+
+      ByteString left = null;
+      ByteString right = null;
+      if (target_index < mid)
+      {
+        left = current_hash;
+        right = stack.poll();
+      }
+      else
+      {
+        left = stack.poll();
+        right = current_hash;
+      }
+
+      md.update(left.toByteArray());
+      md.update(right.toByteArray());
+
+      byte[] hash = md.digest();
+      current_hash = ByteString.copyFrom(hash);
+
+    }
+
+    // We expect to end with our sublist being the entire file
+    // so we check to avoid someone passing off an intermediate node
+    // as a merkle tree member
+    if (start != 0) return false;
+    if (end != word_count) return false;
+
+    if (current_hash.equals(expected_merkle_root)) return true;
+
+    return false;
   }
 
   public static void deepBlockValidation(NetworkParams params, HashedTrie utxo_hashed_trie, Block blk, BlockSummary prev_summary)
