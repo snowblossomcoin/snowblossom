@@ -48,18 +48,9 @@ public class MrPlow
 
     LogSetup.setup(config);
 
-
     MrPlow miner = new MrPlow(config);
 
-    while (true)
-    {
-      Thread.sleep(20000);
-      miner.printStats();
-      miner.prune();
-      miner.subscribe();
-      miner.saveState();
-
-    }
+    miner.loop();
   }
 
   private volatile Block last_block_template;
@@ -157,6 +148,35 @@ public class MrPlow
     }
 
     db.open();
+
+  }
+
+  private void loop()
+    throws Exception
+  {
+    long last_report = System.currentTimeMillis();
+
+    while (true)
+    {
+      Thread.sleep(20000);
+      printStats();
+      prune();
+      subscribe();
+      saveState();
+
+      if (config.isSet("report_path"))
+      {
+      if (last_report + 60000L < System.currentTimeMillis())
+      {
+        report_manager.writeReport(config.get("report_path"));
+
+        last_report = System.currentTimeMillis();
+      }
+      }
+     
+
+    }
+
 
   }
 
@@ -272,6 +292,8 @@ public class MrPlow
       double hours = block_time_sec / 3600.0;
       block_time_report = String.format("- at this rate %s hours per block", df.format(hours));
     }
+
+    logger.info(String.format("Mining rate: %s", report_manager.getTotalRate().getReport(df)));
 
     logger.info(String.format("Mining rate: %s/sec %s", df.format(rate), block_time_report));
 
