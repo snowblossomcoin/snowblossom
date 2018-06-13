@@ -88,6 +88,7 @@ public class MrPlow
 
   private ShareManager share_manager;
 	private DB db;
+  private ReportManager report_manager;
 
   public MrPlow(Config config) throws Exception
   {
@@ -135,6 +136,7 @@ public class MrPlow
     }
 
     share_manager = new ShareManager(fixed_fee_map, pplns_state);
+    report_manager = new ReportManager();
 
     subscribe();
 
@@ -256,6 +258,7 @@ public class MrPlow
 
   public UserServiceBlockingStub getBlockingStub(){return blockingStub;}
   public ShareManager getShareManager(){return share_manager;}
+  public ReportManager getReportManager(){return report_manager;}
 
   public void printStats()
   {
