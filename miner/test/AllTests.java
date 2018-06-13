@@ -6,7 +6,8 @@ import org.junit.runners.Suite.SuiteClasses;
 
 @RunWith(Suite.class)
 @SuiteClasses({
-  ShareManagerTest.class
+  ShareManagerTest.class,
+  SnowMerkleProofTest.class
 })
 public class AllTests
 {}

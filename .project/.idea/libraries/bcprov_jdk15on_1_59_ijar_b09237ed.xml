@@ -1,7 +1,7 @@
 <component name="libraryTable">
   <library name="bcprov-jdk15on-1.59-ijar_b09237ed">
     <CLASSES>
-      <root url="jar://$PROJECT_DIR$/../bazel-out/x64_windows-fastbuild/genfiles/external/bcprov/jar/_ijar/jar/external/bcprov/jar/bcprov-jdk15on-1.59-ijar.jar!/" />
+      <root url="jar://$USER_HOME$/_bazel_thboo/qegdutd6/execroot/__main__/bazel-out/x64_windows-fastbuild/genfiles/external/bcprov/jar/_ijar/jar/external/bcprov/jar/bcprov-jdk15on-1.59-ijar.jar!/" />
     </CLASSES>
     <JAVADOC />
     <SOURCES />

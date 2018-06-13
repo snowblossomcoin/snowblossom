@@ -21,7 +21,6 @@ import lib.test.trie.TrieTest;
   PRNGStreamTest.class,
   SignatureTest.class,
   SnowFallMerkleTest.class,
-  SnowMerkleProofTest.class,
   ValidationTest.class
 })
 public class AllTests {}

@@ -1,7 +1,7 @@
 <component name="libraryTable">
   <library name="commons-codec-1.11-ijar_e5b02ca9">
     <CLASSES>
-      <root url="jar://$PROJECT_DIR$/../bazel-out/x64_windows-fastbuild/genfiles/external/commons_codec/jar/_ijar/jar/external/commons_codec/jar/commons-codec-1.11-ijar.jar!/" />
+      <root url="jar://$USER_HOME$/_bazel_thboo/qegdutd6/execroot/__main__/bazel-out/x64_windows-fastbuild/genfiles/external/commons_codec/jar/_ijar/jar/external/commons_codec/jar/commons-codec-1.11-ijar.jar!/" />
     </CLASSES>
     <JAVADOC />
     <SOURCES />

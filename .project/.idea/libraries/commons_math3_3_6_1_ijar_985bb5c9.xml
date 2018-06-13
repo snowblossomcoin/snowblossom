@@ -1,7 +1,7 @@
 <component name="libraryTable">
   <library name="commons-math3-3.6.1-ijar_985bb5c9">
     <CLASSES>
-      <root url="jar://$PROJECT_DIR$/../bazel-out/x64_windows-fastbuild/genfiles/external/commons_math3/jar/_ijar/jar/external/commons_math3/jar/commons-math3-3.6.1-ijar.jar!/" />
+      <root url="jar://$USER_HOME$/_bazel_thboo/qegdutd6/execroot/__main__/bazel-out/x64_windows-fastbuild/genfiles/external/commons_math3/jar/_ijar/jar/external/commons_math3/jar/commons-math3-3.6.1-ijar.jar!/" />
     </CLASSES>
     <JAVADOC />
     <SOURCES />
