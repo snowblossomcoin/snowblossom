@@ -145,7 +145,10 @@ public class PeerLink implements StreamObserver<PeerMessage>
         }
         for(PeerInfo pi : tip.getPeersList())
         {
-          node.getPeerage().learnPeer(pi);
+          if (PeerUtil.isSane(pi))
+          {
+            node.getPeerage().learnPeer(pi);
+          }
         }
       }
       else if (msg.hasReqBlock())

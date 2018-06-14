@@ -6,6 +6,7 @@ import snowblossom.proto.*;
 import snowblossom.lib.BlockchainUtil;
 import snowblossom.lib.NetworkParams;
 import snowblossom.lib.NetworkParamsRegtest;
+import snowblossom.lib.NetworkParamsProd;
 import snowblossom.lib.PowUtil;
 
 import java.math.BigInteger;
@@ -176,6 +177,22 @@ public class PowUtilTest
 
     //Assert.fail();
 
+  }
+
+
+  @Test
+  public void testReward()
+  {
+    NetworkParams params = new NetworkParamsProd();
+    int n = 4 * 365 * 144;
+    long reward = 50000000;
+
+    for(int b=1; b<10; b++)
+    {
+      Assert.assertEquals(reward, PowUtil.getBlockReward(params, n*b - 1));
+      reward /= 2;
+      Assert.assertEquals(reward, PowUtil.getBlockReward(params, n*b));
+    }
   }
 
 

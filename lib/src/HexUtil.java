@@ -45,6 +45,7 @@ public class HexUtil
       if (z == '-') u = z;
       if (z == '_') u = z;
       if (z == '.') u = z;
+      if (z == ':') u = z;
       if (Character.isDigit(z)) u = z;
       if (Character.isLetter(z)) u = z;
       sb.append(u);
