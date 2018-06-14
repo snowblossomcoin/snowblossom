@@ -80,7 +80,7 @@ public class WebServer
           catch(Throwable e){}
           if (hash != null)
           {
-            displayHash(out, hash);
+            displayBlock(out, hash);
             return;
           }
         }
@@ -233,7 +233,7 @@ public class WebServer
     return s;
   }
 
-  private void displayHash(PrintStream out, ChainHash hash)
+  private void displayBlock(PrintStream out, ChainHash hash)
     throws ValidationException
   {
     Block blk = shackleton.getStub().getBlock( RequestBlock.newBuilder().setBlockHash(hash.getBytes()).build());
@@ -265,6 +265,7 @@ public class WebServer
   private void displayBlock(PrintStream out, Block blk)
     throws ValidationException
   {
+    System.out.println("displayBlock");
       BlockHeader header = blk.getHeader();
       out.println("<pre>");
       out.println("hash: " + new ChainHash(header.getSnowHash()));
@@ -279,15 +280,47 @@ public class WebServer
       out.println("snow_field: " + header.getSnowField());
       out.println("size: " + blk.toByteString().size());
       out.println();
-
-      out.flush();
-
+/*
+      System.out.println("iterating transactions");
       for(Transaction tx : blk.getTransactionsList())
       {
+        System.out.println("  tx: " + tx);
+        TransactionInner inner = TransactionUtil.getInner(tx);
+        System.out.println("  inner: " + inner);
+        if (inner != null && inner.getIsCoinbase() && inner.hasCoinbaseExtras())
+        {
+          CoinbaseExtras extras = inner.getCoinbaseExtras();
+          System.out.println("    extras: " + extras);
+          if (extras != null && extras.getMotionsApprovedCount() > 0)
+          {
+            for (int p : extras.getMotionsApprovedList())
+            {
+              System.out.println("motion approved [" + p + "]");
+              out.println("motion approved [" + p + "]");
+            }
+          }
+          if (extras != null && extras.getMotionsRejectedCount() > 0)
+          {
+            for (int p : extras.getMotionsRejectedList())
+            {
+              System.out.println("motion opposed [" + p + "]");
+              out.println("motion opposed [" + p + "]");
+            }
+          }
+          out.println();
+          break;
+        }
+      }
+      System.out.println("done iterating transactions");
+*/ 
+      for(Transaction tx : blk.getTransactionsList())
+      {
+        System.out.println("tx :" + tx);
         TransactionUtil.prettyDisplayTx(tx, out, shackleton.getParams());
         out.println();
       }
       out.println("</pre>");
+    System.out.println("done display block");
   }
 
   private void displayTransaction(PrintStream out, Transaction tx)
