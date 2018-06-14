@@ -5,6 +5,7 @@ import duckutil.Config;
 import duckutil.ConfigFile;
 import duckutil.TimeRecord;
 import duckutil.TimeRecordAuto;
+import duckutil.RateReporter;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 import io.grpc.stub.StreamObserver;
@@ -69,6 +70,7 @@ public class PoolMiner
   private File snow_path;
 
   private TimeRecord time_record;
+  private RateReporter rate_report=new RateReporter();
 
   public PoolMiner(Config config) throws Exception
   {
@@ -186,7 +188,9 @@ public class PoolMiner
   public void printStats()
   {
     long now = System.currentTimeMillis();
-    double count = op_count.getAndSet(0L);
+    long count_long = op_count.getAndSet(0L);
+    double count = count_long;
+    rate_report.record(count_long);
 
     double time_ms = now - last_stats_time;
     double time_sec = time_ms / 1000.0;
@@ -207,7 +211,8 @@ public class PoolMiner
     }
 
 
-    logger.info(String.format("Mining rate: %s/sec %s", df.format(rate), block_time_report));
+    logger.info(String.format("15 Second mining rate: %s/sec %s", df.format(rate), block_time_report));
+    logger.info(rate_report.getReportShort(df));
 
     last_stats_time = now;
 
