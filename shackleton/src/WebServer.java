@@ -152,6 +152,7 @@ public class WebServer
 
 
 
+
     double avg_diff = PowUtil.getDiffForTarget(BlockchainUtil.readInteger(summary.getTargetAverage()));
     double target_diff = PowUtil.getDiffForTarget(BlockchainUtil.targetBytesToBigInteger(header.getTarget()));
     double block_time_sec = summary.getBlocktimeAverageMs() / 1000.0 ;
@@ -169,6 +170,11 @@ public class WebServer
       out.println("  " + version + " - " + count);
     }
 
+    out.println("</pre>");
+
+    out.println("<h2>Vote Status</h2>");
+    out.println("<pre>");
+    shackleton.getVoteTracker().getVotingReport(node_status, out);
     out.println("</pre>");
 
 

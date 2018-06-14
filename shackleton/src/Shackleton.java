@@ -44,6 +44,8 @@ public class Shackleton
   private UserServiceBlockingStub blockingStub;
   private NetworkParams params;
 
+  private VoteTracker vote_tracker;
+
   public Shackleton(Config config)
     throws Exception
   {
@@ -63,6 +65,9 @@ public class Shackleton
     
     web_server.start();
 
+    vote_tracker=new VoteTracker(this);
+    vote_tracker.start();
+
   }
 
   public UserServiceBlockingStub getStub()
@@ -74,5 +79,6 @@ public class Shackleton
   {
     return params;
   }
+  public VoteTracker getVoteTracker(){return vote_tracker;}
 
 }
