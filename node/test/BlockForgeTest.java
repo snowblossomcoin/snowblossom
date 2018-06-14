@@ -43,7 +43,7 @@ public class BlockForgeTest
 
     for(int i=0; i<1000; i++)
     {
-      int count = rnd.nextInt(50) + 1;
+      int count = rnd.nextInt(50) + 2;
       SubscribeBlockTemplateRequest.Builder req = 
       SubscribeBlockTemplateRequest.newBuilder();
 
