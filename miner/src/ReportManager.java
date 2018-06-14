@@ -49,11 +49,11 @@ public class ReportManager
     PrintStream out = new PrintStream(new FileOutputStream( tmppath ));
 
     DecimalFormat df = new DecimalFormat("0.0");
-    out.println("Total: " + total.getReport(df));
+    out.println("Total: " + total.getReportLong(df));
 
     for(Map.Entry<String, RateReporter> me : rate_map.entrySet())
     {
-      out.println(me.getKey() + " " + me.getValue().getReport(df));
+      out.println(me.getKey() + " " + me.getValue().getReportLong(df));
     }
 
 

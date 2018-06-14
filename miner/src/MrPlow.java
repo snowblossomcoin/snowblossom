@@ -293,7 +293,7 @@ public class MrPlow
       block_time_report = String.format("- at this rate %s hours per block", df.format(hours));
     }
 
-    logger.info(String.format("Mining rate: %s", report_manager.getTotalRate().getReport(df)));
+    logger.info(String.format("Mining rate: %s", report_manager.getTotalRate().getReportLong(df)));
 
     logger.info(String.format("Mining rate: %s/sec %s", df.format(rate), block_time_report));
 
