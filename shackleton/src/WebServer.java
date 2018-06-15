@@ -3,6 +3,7 @@ package snowblossom.shackleton;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
+import com.sun.org.apache.xerces.internal.impl.xpath.regex.RegularExpression;
 import duckutil.Config;
 import snowblossom.lib.*;
 import snowblossom.proto.*;
@@ -14,9 +15,12 @@ import java.net.InetSocketAddress;
 import java.net.URLDecoder;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.Map;
 import java.util.TimeZone;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class WebServer
 {
@@ -52,12 +56,15 @@ public class WebServer
     public void innerHandle(HttpExchange t, PrintStream out)
       throws Exception
     {
+      ArrayList<String> contentType = new ArrayList<>();
+      contentType.add("text/html");
+      t.getResponseHeaders().put("content-type", contentType);
       NetworkParams params = shackleton.getParams();
       String query = t.getRequestURI().getQuery();
       if ((query != null) && (query.startsWith("search=")))
       {
         int eq = query.indexOf("=");
-        String search = query.substring(eq+1);
+        String search = query.substring(eq + 1);
 
         search = URLDecoder.decode(search.replace('+', ' '), "UTF-8").trim();
 
@@ -65,6 +72,20 @@ public class WebServer
         if (search.length() == 0)
         {
           displayStatus(out);
+          return;
+        }
+
+        Pattern regex = Pattern.compile("sep(\\d+)(\\s*\\((\\d+)\\))?");
+        Matcher m = regex.matcher(search);
+        if (m.matches())
+        {
+          int motion  = Integer.parseInt(m.group(1));
+          int lookback = 1000;
+          if (m.groupCount() > 2 && m.group(3) != null && m.group(3).length() > 0)
+          {
+            lookback = Integer.parseInt(m.group(3));
+          }
+          new VotingPage(out, shackleton, motion, lookback).render();
           return;
         }
 
@@ -116,7 +137,6 @@ public class WebServer
       {
         displayStatus(out);
       }
-
     }
   }
 
@@ -265,7 +285,6 @@ public class WebServer
   private void displayBlock(PrintStream out, Block blk)
     throws ValidationException
   {
-    System.out.println("displayBlock");
       BlockHeader header = blk.getHeader();
       out.println("<pre>");
       out.println("hash: " + new ChainHash(header.getSnowHash()));
@@ -280,22 +299,17 @@ public class WebServer
       out.println("snow_field: " + header.getSnowField());
       out.println("size: " + blk.toByteString().size());
       out.println();
-/*
-      System.out.println("iterating transactions");
+
       for(Transaction tx : blk.getTransactionsList())
       {
-        System.out.println("  tx: " + tx);
         TransactionInner inner = TransactionUtil.getInner(tx);
-        System.out.println("  inner: " + inner);
         if (inner != null && inner.getIsCoinbase() && inner.hasCoinbaseExtras())
         {
           CoinbaseExtras extras = inner.getCoinbaseExtras();
-          System.out.println("    extras: " + extras);
           if (extras != null && extras.getMotionsApprovedCount() > 0)
           {
             for (int p : extras.getMotionsApprovedList())
             {
-              System.out.println("motion approved [" + p + "]");
               out.println("motion approved [" + p + "]");
             }
           }
@@ -303,7 +317,6 @@ public class WebServer
           {
             for (int p : extras.getMotionsRejectedList())
             {
-              System.out.println("motion opposed [" + p + "]");
               out.println("motion opposed [" + p + "]");
             }
           }
@@ -311,16 +324,13 @@ public class WebServer
           break;
         }
       }
-      System.out.println("done iterating transactions");
-*/ 
+
       for(Transaction tx : blk.getTransactionsList())
       {
-        System.out.println("tx :" + tx);
         TransactionUtil.prettyDisplayTx(tx, out, shackleton.getParams());
         out.println();
       }
       out.println("</pre>");
-    System.out.println("done display block");
   }
 
   private void displayTransaction(PrintStream out, Transaction tx)
