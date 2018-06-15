@@ -2,3 +2,4 @@ bazel-*
 .metadata/
 .project/
 .project-data-dir/
+example/deployment/snowblossom-*
