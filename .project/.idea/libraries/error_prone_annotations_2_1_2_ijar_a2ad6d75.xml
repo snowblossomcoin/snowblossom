@@ -1,9 +1,0 @@
-<component name="libraryTable">
-  <library name="error_prone_annotations-2.1.2-ijar_a2ad6d75">
-    <CLASSES>
-      <root url="jar://$USER_HOME$/_bazel_thboo/qegdutd6/execroot/__main__/bazel-out/x64_windows-fastbuild/genfiles/external/org_pubref_rules_protobuf/java/_ijar/grpc_compiletime_deps/external/com_google_errorprone_error_prone_annotations/jar/error_prone_annotations-2.1.2-ijar.jar!/" />
-    </CLASSES>
-    <JAVADOC />
-    <SOURCES />
-  </library>
-</component>
