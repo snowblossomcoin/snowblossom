@@ -1,0 +1,11 @@
+[Unit]
+Description=Snowblossom Miner
+After=network.target
+
+[Service]
+User=snowblossom
+WorkingDirectory=/var/snowblossom
+ExecStart=/var/snowblossom/miner.sh
+
+[Install]
+WantedBy=multi-user.target
