@@ -25,6 +25,9 @@ copy_common () {
 	cp ../../bazel-bin/SnowBlossomMiner_deploy.jar "$1"/
 	cp ../../bazel-bin/PoolMiner_deploy.jar "$1"/
 	mkdir -p "$1/configs"
+	
+	# make logs directory
+	mkdir -p "$1/logs"
 
 	# just copy configs
 	#cp -r configs "$1"/
