@@ -16,8 +16,14 @@ public class LogSetup
 
     if (config.isSet("log_config_file"))
     {
-      LogManager.getLogManager().readConfiguration(new FileInputStream(config.get("log_config_file")));
-
+      try
+      {
+        LogManager.getLogManager().readConfiguration(new FileInputStream(config.get("log_config_file")));
+      }
+      catch (Exception e)
+      {
+        System.out.println("FAILED TO INITIALIZE LOGGING: " + e);
+      }
     }
     //LogManager.getLogManager().getLogger(Logger.GLOBAL_LOGGER_NAME).setLevel(Level.WARNING);
     //LogManager.getLogManager().getLogger("").setLevel(Level.WARNING);
