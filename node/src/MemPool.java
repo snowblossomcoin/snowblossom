@@ -63,7 +63,7 @@ public class MemPool
 
   private HashedTrie utxo_hashed_trie;
 
-  public static int MEM_POOL_MAX=10000;
+  public static int MEM_POOL_MAX = 10000;
 
   private Object tickle_trigger = new Object();
 
@@ -120,14 +120,14 @@ public class MemPool
     TreeMultimap<Double, TXCluster> priority_map_copy = TreeMultimap.<Double, TXCluster>create();
     priority_map_copy.putAll(priority_map);
 
-    while(priority_map_copy.size() > 0)
+    while (priority_map_copy.size() > 0)
     {
       Collection<TXCluster> list = priority_map_copy.asMap().pollLastEntry().getValue();
-      for(TXCluster cluster : list)
+      for (TXCluster cluster : list)
       {
         if (size + cluster.total_size <= max_size)
         {
-          for(Transaction tx : cluster.tx_list)
+          for (Transaction tx : cluster.tx_list)
           {
             ChainHash tx_hash = new ChainHash(tx.getTxHash());
             if (!included_txs.contains(tx_hash))
@@ -137,7 +137,7 @@ public class MemPool
               size += tx.toByteString().size();
             }
           }
-          
+
         }
       }
     }
@@ -148,10 +148,9 @@ public class MemPool
   /**
    * @return true iff this seems to be a new and valid tx
    */
-  public synchronized boolean addTransaction(Transaction tx)
-    throws ValidationException
+  public synchronized boolean addTransaction(Transaction tx) throws ValidationException
   {
-    long t1= System.nanoTime();
+    long t1 = System.nanoTime();
     Validation.checkTransactionBasics(tx, false);
     TimeRecord.record(t1, "tx_validation");
     ChainHash tx_hash = new ChainHash(tx.getTxHash());
@@ -163,15 +162,15 @@ public class MemPool
     }
 
     TransactionMempoolInfo info = new TransactionMempoolInfo(tx);
-    
+
     TransactionInner inner = info.inner;
     TreeSet<String> used_outputs = new TreeSet<>();
     TimeRecord.record(t1, "mempool:p1");
 
-    long t3=System.nanoTime();
-    for(TransactionInput in : inner.getInputsList())
+    long t3 = System.nanoTime();
+    for (TransactionInput in : inner.getInputsList())
     {
-      String key = HexUtil.getHexString( in.getSrcTxId() ) + ":" + in.getSrcTxOutIdx();
+      String key = HexUtil.getHexString(in.getSrcTxId()) + ":" + in.getSrcTxOutIdx();
       used_outputs.add(key);
 
       if (claimed_outputs.containsKey(key))
@@ -186,34 +185,34 @@ public class MemPool
 
     if (utxo_for_pri_map != null)
     {
-      long t2=System.nanoTime();
+      long t2 = System.nanoTime();
       TXCluster cluster = buildTXCluster(tx);
       TimeRecord.record(t2, "mempool:build_cluster");
       if (cluster == null)
       {
         throw new ValidationException("Unable to find a tx cluster that makes this work");
       }
-      double ratio = (double)cluster.total_fee / (double)cluster.total_size;
+      double ratio = (double) cluster.total_fee / (double) cluster.total_size;
 
       //Random rnd = new Random();
       //ratio = ratio * 1e9 + rnd.nextDouble();
-      long t4=System.nanoTime();
+      long t4 = System.nanoTime();
       priority_map.put(ratio, cluster);
       TimeRecord.record(t4, "mempool:primapput");
 
 
     }
     TimeRecord.record(t1, "mempool:p2");
-    
+
     known_transactions.put(tx_hash, info);
 
-    for(AddressSpecHash spec_hash : info.involved_addresses)
+    for (AddressSpecHash spec_hash : info.involved_addresses)
     {
       address_tx_map.put(spec_hash, tx_hash);
     }
 
     // Claim outputs used by inputs
-    for(String key : used_outputs)
+    for (String key : used_outputs)
     {
       claimed_outputs.put(key, tx_hash);
     }
@@ -231,7 +230,7 @@ public class MemPool
 
     LinkedList<ChainHash> remove_list = new LinkedList<>();
 
-    for(TransactionMempoolInfo info : known_transactions.values())
+    for (TransactionMempoolInfo info : known_transactions.values())
     {
       Transaction tx = info.tx;
       TXCluster cluster;
@@ -239,7 +238,7 @@ public class MemPool
       {
         cluster = buildTXCluster(tx);
       }
-      catch(ValidationException e)
+      catch (ValidationException e)
       {
         cluster = null;
       }
@@ -248,31 +247,31 @@ public class MemPool
       {
         remove_list.add(new ChainHash(tx.getTxHash()));
         TransactionInner inner = TransactionUtil.getInner(tx);
-        for(TransactionInput in : inner.getInputsList())
+        for (TransactionInput in : inner.getInputsList())
         {
-          String key = HexUtil.getHexString( in.getSrcTxId() ) + ":" + in.getSrcTxOutIdx();
+          String key = HexUtil.getHexString(in.getSrcTxId()) + ":" + in.getSrcTxOutIdx();
           claimed_outputs.remove(key);
         }
       }
       else
       {
-        double ratio = (double)cluster.total_fee / (double)cluster.total_size;
+        double ratio = (double) cluster.total_fee / (double) cluster.total_size;
         priority_map.put(ratio, cluster);
       }
     }
-    logger.log(Level.INFO, String.format("Removing %d transactions from mempool", remove_list.size())); 
+    logger.log(Level.INFO, String.format("Removing %d transactions from mempool", remove_list.size()));
 
-    for(ChainHash h : remove_list)
+    for (ChainHash h : remove_list)
     {
       TransactionMempoolInfo info = known_transactions.remove(h);
 
-      for(AddressSpecHash spec_hash : info.involved_addresses)
+      for (AddressSpecHash spec_hash : info.involved_addresses)
       {
         address_tx_map.remove(spec_hash, h);
       }
 
     }
-    logger.log(Level.INFO, String.format("Remaining in mempool: %d",  known_transactions.size()));
+    logger.log(Level.INFO, String.format("Remaining in mempool: %d", known_transactions.size()));
 
   }
 
@@ -280,17 +279,16 @@ public class MemPool
   {
     ChainHash tx_id = new ChainHash(tx.getTxHash());
     TransactionInner inner = TransactionUtil.getInner(tx);
-    for(TransactionInput in : inner.getInputsList())
+    for (TransactionInput in : inner.getInputsList())
     {
       depends_on_map.put(tx_id, new ChainHash(in.getSrcTxId()));
       needed_inputs.add(in);
     }
   }
 
-  private static LinkedList<Transaction> getOrderdTxList(HashMap<ChainHash, Transaction> working_map,
-    HashMultimap<ChainHash, ChainHash> depends_on_map, ChainHash target_tx)
+  private static LinkedList<Transaction> getOrderdTxList(HashMap<ChainHash, Transaction> working_map, HashMultimap<ChainHash, ChainHash> depends_on_map, ChainHash target_tx)
   {
-    HashMap<ChainHash, Integer> level_map=new HashMap<>();
+    HashMap<ChainHash, Integer> level_map = new HashMap<>();
 
     populateLevelMap(working_map, depends_on_map, level_map, target_tx, 0);
 
@@ -298,13 +296,13 @@ public class MemPool
 
     TreeMultimap<Integer, ChainHash> ordered_tree = TreeMultimap.<Integer, ChainHash>create();
 
-    for(Map.Entry<ChainHash, Integer> me : level_map.entrySet())
+    for (Map.Entry<ChainHash, Integer> me : level_map.entrySet())
     {
       ordered_tree.put(me.getValue(), me.getKey());
     }
 
     LinkedList<Transaction> return_list = new LinkedList<Transaction>();
-    for(Map.Entry<Integer, ChainHash> me : ordered_tree.entries())
+    for (Map.Entry<Integer, ChainHash> me : ordered_tree.entries())
     {
       return_list.add(working_map.get(me.getValue()));
     }
@@ -315,10 +313,7 @@ public class MemPool
     return return_list;
   }
 
-  private static void populateLevelMap(HashMap<ChainHash, Transaction> working_map,
-        HashMultimap<ChainHash, ChainHash> depends_on_map, 
-        HashMap<ChainHash, Integer> level_map, 
-        ChainHash tx, int level)
+  private static void populateLevelMap(HashMap<ChainHash, Transaction> working_map, HashMultimap<ChainHash, ChainHash> depends_on_map, HashMap<ChainHash, Integer> level_map, ChainHash tx, int level)
   {
     if (!working_map.containsKey(tx)) return;
 
@@ -328,11 +323,12 @@ public class MemPool
     }
     level_map.put(tx, level);
 
-    for(ChainHash sub : depends_on_map.get(tx))
+    for (ChainHash sub : depends_on_map.get(tx))
     {
-      populateLevelMap( working_map, depends_on_map, level_map, sub, level-1);
+      populateLevelMap(working_map, depends_on_map, level_map, sub, level - 1);
     }
   }
+
   /**
    * Attemped to build an ordered list of transactions
    * that can confirm.  In the simple case, it is just
@@ -343,12 +339,11 @@ public class MemPool
    * Probably need to actually build the graph and do graph
    * theory things.
    */
-  private TXCluster buildTXCluster(Transaction target_tx)
-    throws ValidationException
+  private TXCluster buildTXCluster(Transaction target_tx) throws ValidationException
   {
     HashMap<ChainHash, Transaction> working_map = new HashMap<>();
 
-    HashMultimap<ChainHash, ChainHash> depends_on_map=HashMultimap.<ChainHash,ChainHash>create();
+    HashMultimap<ChainHash, ChainHash> depends_on_map = HashMultimap.<ChainHash, ChainHash>create();
 
     LinkedList<TransactionInput> needed_inputs = new LinkedList<>();
 
@@ -358,7 +353,7 @@ public class MemPool
     long t1;
 
 
-    while(needed_inputs.size()>0)
+    while (needed_inputs.size() > 0)
     {
       TransactionInput in = needed_inputs.pop();
       ChainHash needed_tx = new ChainHash(in.getSrcTxId());
@@ -366,14 +361,14 @@ public class MemPool
       {
 
         ByteString key = UtxoUpdateBuffer.getKey(in);
-        t1=System.nanoTime();
+        t1 = System.nanoTime();
         ByteString matching_output = utxo_hashed_trie.getLeafData(utxo_for_pri_map.getBytes(), key);
         TimeRecord.record(t1, "utxo_lookup");
         if (matching_output == null)
         {
           if (known_transactions.containsKey(needed_tx))
           {
-            t1=System.nanoTime();
+            t1 = System.nanoTime();
             Transaction found_tx = known_transactions.get(needed_tx).tx;
 
             working_map.put(needed_tx, found_tx);
@@ -393,15 +388,15 @@ public class MemPool
 
     t1 = System.nanoTime();
     LinkedList<Transaction> ordered_list = getOrderdTxList(working_map, depends_on_map, new ChainHash(target_tx.getTxHash()));
-    TimeRecord.record( t1, "get_order");
+    TimeRecord.record(t1, "get_order");
 
     t1 = System.nanoTime();
     UtxoUpdateBuffer test_buffer = new UtxoUpdateBuffer(utxo_hashed_trie, utxo_for_pri_map);
-    for(Transaction t : ordered_list)
+    for (Transaction t : ordered_list)
     {
       Validation.deepTransactionCheck(t, test_buffer);
     }
-    TimeRecord.record( t1, "utxo_sim");
+    TimeRecord.record(t1, "utxo_sim");
 
 
     return new TXCluster(ordered_list);
@@ -409,11 +404,11 @@ public class MemPool
   }
 
 
-  /** 
+  /**
    * A list of transactions which depend on each other.
    * The list should be ordered such that if they are added in the same order
    * that would be valid for a block.
-   *
+   * <p>
    * Putting them in a cluster allows them to be considered as a bundle for the purpose of fee priority.
    * Allows for child pays for parent fee style.
    */
@@ -428,7 +423,7 @@ public class MemPool
     {
       tx_list = ImmutableList.copyOf(tx_in_list);
 
-      for(Transaction t : tx_in_list)
+      for (Transaction t : tx_in_list)
       {
         total_size += t.toByteString().size();
 
@@ -437,22 +432,20 @@ public class MemPool
       }
       rnd_val = "" + new Random().nextDouble();
     }
-   
+
     //Don't care about ordering, just want something
     public int compareTo(TXCluster o)
     {
       return rnd_val.compareTo(o.rnd_val);
-
     }
-
-
   }
 
   private ChainHash tickle_hash = null;
+
   public void tickleBlocks(ChainHash utxo_root_hash)
   {
     tickle_hash = utxo_root_hash;
-    synchronized(tickle_trigger)
+    synchronized (tickle_trigger)
     {
       tickle_trigger.notifyAll();
     }
@@ -475,22 +468,22 @@ public class MemPool
 
     public void run()
     {
-      while(true)
+      while (true)
       {
         try
         {
-          synchronized(tickle_trigger)
+          synchronized (tickle_trigger)
           {
             tickle_trigger.wait(1000);
           }
-					if (tickle_hash != null)
-					{
-						rebuildPriorityMap(tickle_hash);
+          if (tickle_hash != null)
+          {
+            rebuildPriorityMap(tickle_hash);
             tickle_hash = null;
           }
           else
           {
-            if (peerage!=null)
+            if (peerage != null)
             {
               TransactionMempoolInfo info = getRandomPoolTransaction();
               if (info != null)
@@ -502,7 +495,7 @@ public class MemPool
           }
 
         }
-        catch(Throwable t)
+        catch (Throwable t)
         {
           logger.log(Level.INFO, "Tickle error: " + t);
         }
@@ -510,7 +503,7 @@ public class MemPool
     }
 
   }
- 
+
   public class TransactionMempoolInfo
   {
     public final Transaction tx;
@@ -521,14 +514,14 @@ public class MemPool
     {
       this.tx = tx;
 
-      HashSet<AddressSpecHash> add_set=new HashSet<>();
+      HashSet<AddressSpecHash> add_set = new HashSet<>();
       inner = TransactionUtil.getInner(tx);
 
-      for(TransactionInput in : inner.getInputsList())
+      for (TransactionInput in : inner.getInputsList())
       {
         add_set.add(new AddressSpecHash(in.getSpecHash()));
       }
-      for(TransactionOutput out : inner.getOutputsList())
+      for (TransactionOutput out : inner.getOutputsList())
       {
         add_set.add(new AddressSpecHash(out.getRecipientSpecHash()));
       }
