@@ -27,8 +27,5 @@ public class PeerClient
     link.setChannel(channel);
 
     node.getPeerage().register(link);
-
   }
-
-
 }

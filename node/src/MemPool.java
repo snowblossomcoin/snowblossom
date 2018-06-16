@@ -529,7 +529,5 @@ public class MemPool
       involved_addresses = ImmutableSet.copyOf(add_set);
 
     }
-
-
   }
 }
