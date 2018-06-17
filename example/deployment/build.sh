@@ -16,29 +16,21 @@ bazel build \
 	:PoolMiner_deploy.jar
 
 version=`git describe`
+name="snowblossom-$version"
 
 cd -
-
-copy_common () {
-	cp ../../bazel-bin/SnowBlossomNode_deploy.jar "$1"/
-	cp ../../bazel-bin/SnowBlossomClient_deploy.jar "$1"/
-	cp ../../bazel-bin/SnowBlossomMiner_deploy.jar "$1"/
-	cp ../../bazel-bin/PoolMiner_deploy.jar "$1"/
-	mkdir -p "$1/configs"
-	
-	# make logs directory
-	mkdir -p "$1/logs"
-
-	# just copy configs
-	#cp -r configs "$1"/
-	# OR
-	# convert line endings to make easily windows editable -_-;
-	for i in configs/*; do awk 'sub("$", "\r")' "$i" > "$1/$i"; done
-}
-
-name="snowblossom-$version"
 cp -r "snowblossom" "$name"
-copy_common "$name"
+cp ../../bazel-bin/SnowBlossomNode_deploy.jar "$name"/
+cp ../../bazel-bin/SnowBlossomClient_deploy.jar "$name"/
+cp ../../bazel-bin/SnowBlossomMiner_deploy.jar "$name"/
+cp ../../bazel-bin/PoolMiner_deploy.jar "$name"/
+cp -R configs "$name"/
+mkdir "$name/logs"
+
+# convert line endings to make easily windows editable -_-;
+for i in "$name/configs"/*; do sed -i 's/\n$/\n\r$/' "$i"; done
+for i in "$name"/*.bat; do sed -i 's/\n$/\n\r$/' "$i"; done
+
 zip -r -9 "$name.zip" "$name"
-tar -czf "$name.tar.gz" "$name"
+#tar -czf "$name.tar.gz" "$name"
 rm -r "$name"
