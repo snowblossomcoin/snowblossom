@@ -238,7 +238,7 @@ public class SnowMerkleProof
       misses++;
       if (diskProof != null)
       {
-        diskProof.get().readWord(word_index, bb, 0);
+        diskProof.get().readWord(word_index, bb, Globals.POW_LOOK_PASSES);
         return true;
       }
       //byte[] buff = new byte[SnowMerkle.HASH_LEN];
