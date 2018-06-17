@@ -316,7 +316,7 @@ public class PoolMiner
           long word_idx;
           word_bb.clear();
           word_idx = PowUtil.getNextSnowFieldIndex(context, merkle_proof.getTotalWords(), md);
-          merkle_proof.readWord(word_idx, word_bb);
+          if (!merkle_proof.readWord(word_idx, word_bb)) { return;}
           context = PowUtil.getNextContext(context, word_buff, md);
         }
       }

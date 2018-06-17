@@ -154,7 +154,7 @@ public class SnowMerkleProof
   long nextReportMillis = System.currentTimeMillis();
   long reportInterval = 1 * 1000;
   long maxReportInterval = 5 * 1000;
-  public void readWord(long word_index, ByteBuffer bb) throws java.io.IOException
+  public boolean readWord(long word_index, ByteBuffer bb) throws java.io.IOException
   {
     if (bytes_to_precache > 0)
     {
@@ -221,10 +221,11 @@ public class SnowMerkleProof
           }
         }
         bb.put(mem_buff[mem_block_index], off_in_block, SnowMerkle.HASH_LEN);
-        return;
+        return true;
 
       }
-      misses++;
+      return false;
+      /*misses++;
       if (diskProof != null)
       {
         diskProof.get().readWord(word_index, bb);
@@ -235,6 +236,7 @@ public class SnowMerkleProof
       ChannelUtil.readFully(snow_file_channel, bb, word_pos);
 
       //return buff;
+      */
     }
   }
 
