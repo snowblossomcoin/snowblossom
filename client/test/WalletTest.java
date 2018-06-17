@@ -1,6 +1,7 @@
 package client.test;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -12,8 +13,10 @@ import snowblossom.lib.KeyUtil;
 import snowblossom.lib.TransactionBridge;
 import snowblossom.lib.TransactionUtil;
 import snowblossom.lib.Validation;
+import snowblossom.client.WalletUtil;
+import duckutil.ConfigMem;
 
-
+import com.google.protobuf.ByteString;
 public class WalletTest
 {
 
@@ -114,9 +117,23 @@ public class WalletTest
     Validation.checkTransactionBasics(tx, false);
 
     Assert.assertEquals(2, tx.getSignaturesCount());
-
-
-
   }
 
+  @Test
+  public void testWalletSerialize()
+    throws Exception
+  {
+    ConfigMem config = new ConfigMem(ImmutableMap.of());
+
+    WalletDatabase.Builder builder = WalletDatabase.newBuilder();
+    WalletUtil.genNewKey(builder, config); 
+
+    WalletDatabase a = builder.build();
+
+    ByteString str = a.toByteString();
+
+    WalletDatabase b = WalletDatabase.parseFrom(str);
+
+    Assert.assertEquals(a,b);
+  }
 }

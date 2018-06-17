@@ -24,5 +24,6 @@ java_test(
 		    "//client:client",
         "//lib:lib",
         "//protolib:protolib",
+        "@duckutil//:duckutil_lib",
     ]
 )
