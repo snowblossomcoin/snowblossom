@@ -259,7 +259,7 @@ public class MemPool
         priority_map.put(ratio, cluster);
       }
     }
-    logger.log(Level.INFO, String.format("Removing %d transactions from mempool", remove_list.size()));
+    logger.log(Level.FINER, String.format("Removing %d transactions from mempool", remove_list.size()));
 
     for (ChainHash h : remove_list)
     {
@@ -271,7 +271,7 @@ public class MemPool
       }
 
     }
-    logger.log(Level.INFO, String.format("Remaining in mempool: %d", known_transactions.size()));
+    logger.log(Level.FINER, String.format("Remaining in mempool: %d", known_transactions.size()));
 
   }
 

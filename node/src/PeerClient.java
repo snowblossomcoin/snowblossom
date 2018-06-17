@@ -36,5 +36,6 @@ public class PeerClient
     {
       link.close();
     }
+    node.getPeerage().register(link);
   }
 }
