@@ -2,6 +2,7 @@ package snowblossom.miner;
 
 import com.google.common.collect.ImmutableSortedMap;
 import duckutil.Config;
+import snowblossom.lib.Globals;
 import snowblossom.lib.NetworkParams;
 import snowblossom.lib.SnowFieldInfo;
 import snowblossom.lib.Validation;
@@ -50,7 +51,7 @@ public class FieldScan
         try
         {
           double precacheGig = config.getDoubleWithDefault("memfield_precache_gb", 0);
-          int minDepthToDisk = config.getIntWithDefault("min_depth_to_disk", 6);
+          int minDepthToDisk = config.getIntWithDefault("min_depth_to_disk", Globals.POW_LOOK_PASSES);
           boolean memfield = config.getBoolean("memfield");
           long precache = 0;
           if (precacheGig > 0.01)
