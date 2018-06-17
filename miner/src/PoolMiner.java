@@ -316,7 +316,7 @@ public class PoolMiner
           long word_idx;
           word_bb.clear();
           word_idx = PowUtil.getNextSnowFieldIndex(context, merkle_proof.getTotalWords(), md);
-          if (!merkle_proof.readWord(word_idx, word_bb)) { return;}
+          if (!merkle_proof.readWord(word_idx, word_bb, pass)) { return;}
           context = PowUtil.getNextContext(context, word_buff, md);
         }
       }
@@ -349,7 +349,7 @@ public class PoolMiner
         word_bb.clear();
 
         long word_idx = PowUtil.getNextSnowFieldIndex(context, merkle_proof.getTotalWords());
-        merkle_proof.readWord(word_idx, word_bb);
+        merkle_proof.readWord(word_idx, word_bb, pass);
         SnowPowProof proof = merkle_proof.getProof(word_idx);
         header.addPowProof(proof);
         context = PowUtil.getNextContext(context, word_buff);

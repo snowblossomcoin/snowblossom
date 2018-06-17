@@ -50,6 +50,7 @@ public class FieldScan
         try
         {
           double precacheGig = config.getDoubleWithDefault("memfield_precache_gb", 0);
+          int minDepthToDisk = config.getIntWithDefault("min_depth_to_disk", 6);
           boolean memfield = config.getBoolean("memfield");
           long precache = 0;
           if (precacheGig > 0.01)
@@ -57,8 +58,8 @@ public class FieldScan
             memfield = false;
             precache = (long)(precacheGig * 1024.0 * 1024.0 * 1024.0);
           }
-          System.out.println("creating field: " + field_folder + " memfield=" + memfield + ", precache=" + precache);
-          SnowMerkleProof proof = new SnowMerkleProof(field_folder, name, memfield, precache);
+          logger.info("creating field: " + field_folder + " memfield=" + memfield + ", precache=" + precache + ", minDepthToDisk=" + minDepthToDisk);
+          SnowMerkleProof proof = new SnowMerkleProof(field_folder, name, memfield, precache, minDepthToDisk);
 
           for(int i = 0; i<16; i++)
           {

@@ -37,21 +37,22 @@ public class SnowMerkleProof
   private long bytes_to_precache = 0;
   private byte[][] mem_buff;
   public static final int MEM_BLOCK = 1024 * 1024;
+  private int minDepthToDisk;
 
   private final ThreadLocal<SnowMerkleProof> diskProof;
 
   public SnowMerkleProof(File path, String base) throws java.io.IOException
   {
-    this(path, base, false, 0);
+    this(path, base, false, 0, 6);
   }
 
   /**
    * Only needed by miners
    */
-  public SnowMerkleProof(File path, String base, boolean memcache, long bytesToPreCache) throws java.io.IOException
+  public SnowMerkleProof(File path, String base, boolean memcache, long bytesToPreCache, int minDepthToDisk) throws java.io.IOException
   {
     this.memcache = memcache;
-
+    this.minDepthToDisk = minDepthToDisk;
     snow_file = new RandomAccessFile(new File(path, base + ".snow"), "r");
     snow_file_channel = snow_file.getChannel();
 
@@ -154,7 +155,16 @@ public class SnowMerkleProof
   long nextReportMillis = System.currentTimeMillis();
   long reportInterval = 1 * 1000;
   long maxReportInterval = 5 * 1000;
-  public boolean readWord(long word_index, ByteBuffer bb) throws java.io.IOException
+
+  /**
+   * Reads a 16 byte section of the snowfield
+   * @param word_index which 16 byte section to read
+   * @param bb a buffer to put the 16 bytes into
+   * @param currentDepth a number 0-5 which represents which read into the snowfield it is for the POW algorithm.
+   * @return true if the word was read, false if it wasn't (aka, too shallow, not precached).
+   * @throws java.io.IOException
+   */
+  public boolean readWord(long word_index, ByteBuffer bb, int currentDepth) throws java.io.IOException
   {
     if (bytes_to_precache > 0)
     {
@@ -222,21 +232,21 @@ public class SnowMerkleProof
         }
         bb.put(mem_buff[mem_block_index], off_in_block, SnowMerkle.HASH_LEN);
         return true;
-
       }
-      return false;
-      /*misses++;
+
+      if (minDepthToDisk > currentDepth) return false;
+      misses++;
       if (diskProof != null)
       {
-        diskProof.get().readWord(word_index, bb);
-        return;
+        diskProof.get().readWord(word_index, bb, 0);
+        return true;
       }
       //byte[] buff = new byte[SnowMerkle.HASH_LEN];
       //ByteBuffer bb = ByteBuffer.wrap(buff);
       ChannelUtil.readFully(snow_file_channel, bb, word_pos);
-
+      return true;
       //return buff;
-      */
+
     }
   }
 
