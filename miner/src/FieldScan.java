@@ -51,7 +51,7 @@ public class FieldScan
         try
         {
           double precacheGig = config.getDoubleWithDefault("memfield_precache_gb", 0);
-          int minDepthToDisk = config.getIntWithDefault("min_depth_to_disk", Globals.POW_LOOK_PASSES);
+          int minDepthToDisk = config.getIntWithDefault("min_depth_to_disk", 0);
           boolean memfield = config.getBoolean("memfield");
           long precache = 0;
           if (precacheGig > 0.01)
