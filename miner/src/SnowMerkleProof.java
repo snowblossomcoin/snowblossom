@@ -150,12 +150,6 @@ public class SnowMerkleProof
 
   }
 
-  long hits = 0;
-  long misses = 0;
-  long nextReportMillis = System.currentTimeMillis();
-  long reportInterval = 1 * 1000;
-  long maxReportInterval = 5 * 1000;
-
   /**
    * Reads a 16 byte section of the snowfield
    * @param word_index which 16 byte section to read
@@ -179,7 +173,7 @@ public class SnowMerkleProof
             if (i % 1000 == 0)
             {
               int percentage = (int) ((100L * i) / blocksToPrecache);
-              logger.info("pre-caching snowfield: loaded " + (i / 1000) + " gb of " + (blocksToPrecache/1000) + " (" + percentage + "%)");
+              logger.info("pre-caching snowfield: loaded " + (i / 1000) + " gb of " + (blocksToPrecache / 1000) + " (" + percentage + "%)");
             }
             byte[] block_data = new byte[MEM_BLOCK];
             long file_offset = i * (long) MEM_BLOCK;
@@ -191,63 +185,36 @@ public class SnowMerkleProof
       }
     }
 
-    /*
-    if (bytes_to_precache == -1)
-    {
-      if ((hits + misses) % 1024 == 0)
-      {
-        if (System.currentTimeMillis() > nextReportMillis)
-        {
-          double h = hits;
-          double m = misses;
-          double t = h + m;
-          double rate = h / t;
-          logger.info("memory snowfield hitrate: " + rate);
-          hits = 0;
-          misses = 0;
-          nextReportMillis = System.currentTimeMillis() + reportInterval;
-          reportInterval = Math.min((long)(reportInterval * 1.5), maxReportInterval);
-        }
-      }
-    }
-*/
-    //try (TimeRecordAuto tra = TimeRecord.openAuto("SnowMerkleProof.readWord"))
-    {
-      long word_pos = word_index * SnowMerkle.HASH_LEN_LONG;
-      int mem_block_index = (int) (word_pos / MEM_BLOCK);
-      if (mem_buff != null && mem_block_index < mem_buff.length)
-      {
-        hits++;
-        int off_in_block = (int) (word_pos % MEM_BLOCK);
-        if (mem_buff[mem_block_index] == null)
-        {
-          Assert.assertEquals(0, bytes_to_precache);
-          //try (TimeRecordAuto tra2 = TimeRecord.openAuto("SnowMerkleProof.readBlock"))
-          {
-            byte[] block_data = new byte[MEM_BLOCK];
-            long file_offset = (long) mem_block_index * (long) MEM_BLOCK;
-            ChannelUtil.readFully(snow_file_channel, ByteBuffer.wrap(block_data), file_offset);
-            mem_buff[mem_block_index] = block_data;
-          }
-        }
-        bb.put(mem_buff[mem_block_index], off_in_block, SnowMerkle.HASH_LEN);
-        return true;
-      }
 
-      if (minDepthToDisk > currentDepth) return false;
-      misses++;
-      if (diskProof != null)
+    long word_pos = word_index * SnowMerkle.HASH_LEN_LONG;
+    int mem_block_index = (int) (word_pos / MEM_BLOCK);
+    if (mem_buff != null && mem_block_index < mem_buff.length)
+    {
+      int off_in_block = (int) (word_pos % MEM_BLOCK);
+      if (mem_buff[mem_block_index] == null)
       {
-        diskProof.get().readWord(word_index, bb, Globals.POW_LOOK_PASSES);
-        return true;
+        Assert.assertEquals(0, bytes_to_precache);
+        //try (TimeRecordAuto tra2 = TimeRecord.openAuto("SnowMerkleProof.readBlock"))
+        {
+          byte[] block_data = new byte[MEM_BLOCK];
+          long file_offset = (long) mem_block_index * (long) MEM_BLOCK;
+          ChannelUtil.readFully(snow_file_channel, ByteBuffer.wrap(block_data), file_offset);
+          mem_buff[mem_block_index] = block_data;
+        }
       }
-      //byte[] buff = new byte[SnowMerkle.HASH_LEN];
-      //ByteBuffer bb = ByteBuffer.wrap(buff);
-      ChannelUtil.readFully(snow_file_channel, bb, word_pos);
+      bb.put(mem_buff[mem_block_index], off_in_block, SnowMerkle.HASH_LEN);
       return true;
-      //return buff;
-
     }
+
+    if (bytes_to_precache == -1 && minDepthToDisk > currentDepth) return false;
+    if (diskProof != null)
+    {
+      diskProof.get().readWord(word_index, bb, Globals.POW_LOOK_PASSES);
+      return true;
+    }
+
+    ChannelUtil.readFully(snow_file_channel, bb, word_pos);
+    return true;
   }
 
   /**
