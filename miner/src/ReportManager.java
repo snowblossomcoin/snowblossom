@@ -9,6 +9,7 @@ import java.io.File;
 import java.util.logging.Logger;
 import java.util.logging.Level;
 import java.util.Map;
+import java.util.TreeSet;
 
 public class ReportManager
 {
@@ -56,7 +57,7 @@ public class ReportManager
       {
         if (me.getValue().isZero())
         {
-          to_remove(add.me.getKey());
+          to_remove.add(me.getKey());
         }
         else
         {
@@ -64,7 +65,7 @@ public class ReportManager
         }
       }
 
-      for(Stirng k : to_remove)
+      for(String k : to_remove)
       {
         rate_map.remove(k);
       }
