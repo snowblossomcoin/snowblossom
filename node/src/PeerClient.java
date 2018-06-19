@@ -19,13 +19,23 @@ public class PeerClient
       .usePlaintext(true)
       .build();
 
-    PeerServiceStub asyncStub = PeerServiceGrpc.newStub(channel);
+    PeerLink link = null;
 
-    PeerLink link = new PeerLink(node, PeerUtil.getString(info), info);
-    StreamObserver<PeerMessage> sink = asyncStub.subscribePeering(link);
-    link.setSink(sink);
-    link.setChannel(channel);
+    try
+    {
 
+      PeerServiceStub asyncStub = PeerServiceGrpc.newStub(channel);
+
+      link = new PeerLink(node, PeerUtil.getString(info), info);
+      StreamObserver<PeerMessage> sink = asyncStub.subscribePeering(link);
+      link.setSink(sink);
+      link.setChannel(channel);
+
+    }
+    catch(Throwable t)
+    {
+      link.close();
+    }
     node.getPeerage().register(link);
   }
 }

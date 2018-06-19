@@ -421,20 +421,20 @@ public class SnowBlossomMiner
 
     public void onNext(Block b)
     {
-      logger.info("Got block template: height:" + b.getHeader().getBlockHeight() + " transactions:" + b.getTransactionsCount());
+      logger.finer("Got block template: height:" + b.getHeader().getBlockHeight() + " transactions:" + b.getTransactionsCount());
 
 
       int min_field = b.getHeader().getSnowField();
 
 
-      logger.info("Required field: " + min_field + " - " + params.getSnowFieldInfo(min_field).getName());
+      logger.finer("Required field: " + min_field + " - " + params.getSnowFieldInfo(min_field).getName());
 
       int selected_field = -1;
 
       try
       {
         selected_field = field_scan.selectField(min_field);
-        logger.info("Using field: " + selected_field + " - " + params.getSnowFieldInfo(selected_field).getName());
+        logger.finer("Using field: " + selected_field + " - " + params.getSnowFieldInfo(selected_field).getName());
 
         try
         {

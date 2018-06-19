@@ -36,7 +36,7 @@ java_binary(
 
 
 java_binary(
-  name = "Shackleton",
+  name = "ShackletonExplorer",
   main_class = "snowblossom.shackleton.Shackleton",
   runtime_deps = [
     "//shackleton:shackleton",
