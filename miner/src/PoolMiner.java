@@ -72,6 +72,10 @@ public class PoolMiner
   private TimeRecord time_record;
   private RateReporter rate_report=new RateReporter();
 
+  private AtomicLong share_submit_count = new AtomicLong(0L);
+  private AtomicLong share_reject_count = new AtomicLong(0L);
+  private AtomicLong share_block_count = new AtomicLong(0L);
+
   public PoolMiner(Config config) throws Exception
   {
     this.config = config;
@@ -238,8 +242,9 @@ public class PoolMiner
       TimeRecord.setSharedRecord(time_record);
 
       old.printReport(System.out);
-
     }
+
+    logger.info(String.format("Shares: %d (rejected %d) (blocks %d)", share_submit_count.get(), share_reject_count.get(), share_block_count.get()));
   }
 
   public WorkUnit getWorkUnit()
@@ -365,7 +370,16 @@ public class PoolMiner
       
       SubmitReply reply = blockingStub.submitWork( req.build());
       
+      if (PowUtil.lessThanTarget(found_hash, header.getTarget()))
+      {
+        share_block_count.getAndIncrement();
+      }
       logger.info("Work submit: " + reply);
+      share_submit_count.getAndIncrement();
+      if (!reply.getSuccess())
+      {
+        share_reject_count.getAndIncrement();
+      }
 
     }
 
@@ -417,14 +431,14 @@ public class PoolMiner
       {
         selected_field = field_scan.selectField(min_field);
 
-        try
+        /*try
         {
           field_scan.selectField(min_field + 1);
         }
         catch (Throwable t)
         {
           logger.log(Level.WARNING, "When the next snow storm occurs, we will be unable to mine.  No higher fields working.");
-        }
+        }*/
 
         // write selected field into block template 
 
