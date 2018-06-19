@@ -14,6 +14,7 @@ import java.nio.ByteBuffer;
 import java.security.MessageDigest;
 import java.text.DecimalFormat;
 import java.util.logging.Logger;
+import java.util.logging.Level;
 
 public class PowUtil
 {
@@ -146,7 +147,7 @@ public class PowUtil
       prev_target_average.multiply(scale_bi).divide(thousand) );
     //long new_target = prev_summary.getTargetAverage() + prev_summary.getTargetAverage() * scale / 1000;
 
-    logger.info(String.format("Delta_t: %d (%d) scale: %d",averaged_delta_t, target_delta_t, scale));
+    logger.log(Level.FINE, String.format("Delta_t: %d (%d) scale: %d",averaged_delta_t, target_delta_t, scale));
 
     ByteBuffer bb = ByteBuffer.allocate(8);
 
@@ -157,7 +158,7 @@ public class PowUtil
     double diff = getDiffForTarget(new_target);
     double avg_diff = getDiffForTarget( prev_target_average );
     DecimalFormat df = new DecimalFormat("0.000");
-    logger.info(String.format("New target: %s, %s, (avg %s)", 
+    logger.log(Level.FINE,String.format("New target: %s, %s, (avg %s)", 
       HashUtils.getHexString(new_target_display), 
       df.format(diff),
       df.format(avg_diff)));

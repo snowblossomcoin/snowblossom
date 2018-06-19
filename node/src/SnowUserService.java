@@ -38,7 +38,7 @@ public class SnowUserService extends UserServiceGrpc.UserServiceImplBase
   @Override
   public void subscribeBlockTemplate(SubscribeBlockTemplateRequest req, StreamObserver<Block> responseObserver)
   {
-    logger.info("Subscribe block template called");
+    logger.log(Level.FINE, "Subscribe block template called");
 
     BlockSubscriberInfo info = new BlockSubscriberInfo(req, responseObserver);
 

@@ -224,7 +224,7 @@ public class MemPool
 
   public synchronized void rebuildPriorityMap(ChainHash new_utxo_root)
   {
-    logger.log(Level.INFO, String.format("Mempool.rebuildPriorityMap(%s)", new_utxo_root));
+    logger.log(Level.FINE, String.format("Mempool.rebuildPriorityMap(%s)", new_utxo_root));
     utxo_for_pri_map = new_utxo_root;
     priority_map.clear();
 
