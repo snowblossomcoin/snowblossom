@@ -395,6 +395,7 @@ public class SnowBlossomClient
 
       LinkedList<TransactionOutput> out_list = new LinkedList<>();
       long fee = rnd.nextLong(500);
+      fee = 0;
       long needed_value = fee;
       for(int i=0; i< output_count; i++)
       {

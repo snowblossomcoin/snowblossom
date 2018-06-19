@@ -45,22 +45,35 @@ public class ReportManager
     try
     {
 
-    String tmppath = path + ".tmp";
-    PrintStream out = new PrintStream(new FileOutputStream( tmppath ));
+      String tmppath = path + ".tmp";
+      PrintStream out = new PrintStream(new FileOutputStream( tmppath ));
 
-    DecimalFormat df = new DecimalFormat("0.0");
-    out.println("Total: " + total.getReportLong(df));
+      DecimalFormat df = new DecimalFormat("0.0");
+      out.println("Total: " + total.getReportLong(df));
 
-    for(Map.Entry<String, RateReporter> me : rate_map.entrySet())
-    {
-      out.println(me.getKey() + " " + me.getValue().getReportLong(df));
-    }
+      TreeSet<String> to_remove = new TreeSet<>();
+      for(Map.Entry<String, RateReporter> me : rate_map.entrySet())
+      {
+        if (me.getValue().isZero())
+        {
+          to_remove(add.me.getKey());
+        }
+        else
+        {
+          out.println(me.getKey() + " " + me.getValue().getReportLong(df));
+        }
+      }
+
+      for(Stirng k : to_remove)
+      {
+        rate_map.remove(k);
+      }
 
 
-    out.flush();
-    out.close();
+      out.flush();
+      out.close();
 
-    new File(tmppath).renameTo(new File(path));
+      new File(tmppath).renameTo(new File(path));
     }
     catch(Exception e)
     {
