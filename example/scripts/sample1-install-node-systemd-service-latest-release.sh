@@ -28,11 +28,9 @@ wget -N "$release"
 unzip "$release_file"
 mv -n "$release_name"/* ./
 
-# install systemd service
-ln -sf "$snowblossom_home/systemd/snowblossom-node.service" /etc/systemd/system/
-systemctl daemon-reload
+# install systemd service and
 # automatically start at boot
-systemctl enable snowblossom-node.service
+systemctl enable "$snowblossom_home/systemd/snowblossom-node.service"
 # (re)start
 systemctl restart snowblossom-node.service
 

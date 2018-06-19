@@ -28,14 +28,11 @@ wget -N "$release"
 unzip "$release_file" -d ./
 mv -n "$release_name"/* ./
 
-# install systemd service
-#cp "$snowblossom_home/systemd/snowblossom-miner.service" /etc/systemd/system/
-ln -sf "$snowblossom_home/systemd/snowblossom-miner.service" /etc/systemd/system/
-systemctl daemon-reload
+# install systemd service and
 # automatically start at boot
-systemctl enable snowblossom-miner.service
+systemctl enable "$snowblossom_home/systemd/snowblossom-node.service" 
 # (re)start
-systemctl restart snowblossom-miner.service
+systemctl restart snowblossom-node.service
 
 echo "Done!"
 echo "You can manage the systemd service normally with:"
