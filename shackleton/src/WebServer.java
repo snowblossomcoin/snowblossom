@@ -341,7 +341,7 @@ public class WebServer
       NetworkParams params = shackleton.getParams();
       out.println("<html>");
       out.println("<head>");
-      out.println("<title>Snowblossom " + params.getNetworkName() + "</title>");
+      out.println("<title>" + params.getNetworkName() + " explorer</title>");
       out.println("<link rel='stylesheet' type='text/css' href='https://snowblossom.org/style-fixed.css' />");
       out.println("<link REL='SHORTCUT ICON' href='https://snowblossom.org/snow-icon.png' />");
       out.println("</head>");
