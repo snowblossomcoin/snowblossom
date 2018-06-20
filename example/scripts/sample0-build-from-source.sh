@@ -19,6 +19,7 @@ apt-get -yq install git openjdk-8-jdk bazel git
 # download
 mkdir -p $snowblossom_home
 cd "$snowblossom_home"
+rm -rf source
 git clone "https://github.com/snowblossomcoin/snowblossom.git" source
 
 # build
@@ -27,10 +28,10 @@ bazel build :all
 
 # setup simple helpful run scrips?
 cd "$snowblossom_home"
-cp source/example/configs ./
-echo "#!/bin/bash\nsource/bazel-bin/SnowBlossomNode configs/node.conf" > node.sh
-echo "#!/bin/bash\nsource/bazel-bin/SnowBlossomClient configs/client.conf $1 $2 $3" > client.sh
-echo "#!/bin/bash\nsource/bazel-bin/SnowBlossomClient configs/miner.conf" > miner.sh
+cp -r source/example/configs ./
+echo -e "#!/bin/bash\nsource/bazel-bin/SnowBlossomNode configs/node.conf" > node.sh
+echo -e "#!/bin/bash\nsource/bazel-bin/SnowBlossomClient configs/client.conf \$1 \$2 \$3" > client.sh
+echo -e "#!/bin/bash\nsource/bazel-bin/SnowBlossomClient configs/miner.conf" > miner.sh
 
 echo "Done."
 echo "You can manually run:  node.sh,  client.sh,  miner.sh"
