@@ -149,11 +149,17 @@ public class SnowMerkleProof
 
   }
 
+  public boolean isPreCaching()
+  {
+    return isPrecaching;
+  }
+
   long hits = 0;
   long misses = 0;
   long nextReportMillis = System.currentTimeMillis();
   long reportInterval = 1 * 1000;
   long maxReportInterval = 5 * 1000;
+  boolean isPrecaching = false;
   public void readWord(long word_index, ByteBuffer bb) throws java.io.IOException
   {
     if (bytes_to_precache > 0)
@@ -162,6 +168,7 @@ public class SnowMerkleProof
       {
         if (bytes_to_precache > 0)
         {
+          isPrecaching = true;
           mem_buff = new byte[(int) (bytes_to_precache / MEM_BLOCK)][];
           int blocksToPrecache = (int) (bytes_to_precache / MEM_BLOCK);
           for (int i = 0; i < blocksToPrecache; i++)
@@ -176,6 +183,7 @@ public class SnowMerkleProof
             ChannelUtil.readFully(snow_file_channel, ByteBuffer.wrap(block_data), file_offset);
             mem_buff[i] = block_data;
           }
+          isPrecaching = false;
         }
         bytes_to_precache = -1;
       }

@@ -25,12 +25,14 @@ public class FieldScan
 
   private volatile AutoSnowFall auto_snow;
   private Config config;
+  private final double precacheGig;
 
   public FieldScan(File path, NetworkParams params, Config config)
   {
     this.path = path;
     this.params = params;
     this.config = config;
+    precacheGig = config.getDoubleWithDefault("memfield_precache_gb", 0);
     scan(true);
   }
 
@@ -49,7 +51,6 @@ public class FieldScan
       {
         try
         {
-          double precacheGig = config.getDoubleWithDefault("memfield_precache_gb", 0);
           boolean memfield = config.getBoolean("memfield");
           long precache = 0;
           if (precacheGig > 0.01)
@@ -57,7 +58,7 @@ public class FieldScan
             memfield = false;
             precache = (long)(precacheGig * 1024.0 * 1024.0 * 1024.0);
           }
-          System.out.println("creating field: " + field_folder + " memfield=" + memfield + ", precache=" + precache);
+          logger.info("creating field: " + field_folder + " memfield=" + memfield + ", precache=" + precache);
           SnowMerkleProof proof = new SnowMerkleProof(field_folder, name, memfield, precache);
 
           for(int i = 0; i<16; i++)
@@ -106,6 +107,16 @@ public class FieldScan
     {
       throw new RuntimeException("proof check failed");
     }
+  }
+
+  public boolean isPreCaching()
+  {
+    if (precacheGig<= 0.001) { return false;}
+    for (SnowMerkleProof field : availible_fields.values())
+    {
+      if (field.isPreCaching()) return true;
+    }
+    return false;
   }
 
   public synchronized int selectField(int min_field)

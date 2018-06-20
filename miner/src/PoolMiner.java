@@ -18,6 +18,7 @@ import snowblossom.lib.trie.HashUtils;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.InvalidObjectException;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.security.MessageDigest;
@@ -117,6 +118,8 @@ public class PoolMiner
 
   private ManagedChannel channel;
 
+  int nextHostIndex = 0;
+
   private void subscribe() throws Exception
   {
     if (channel != null)
@@ -127,6 +130,26 @@ public class PoolMiner
 
     String host = config.get("pool_host");
     int port = config.getIntWithDefault("pool_port", 23380);
+
+    String[] hosts = host.split(";|,");
+
+    host = hosts[nextHostIndex];
+    nextHostIndex = (nextHostIndex + 1) % hosts.length;
+    String[] hostParts = host.split(":");
+    if (hostParts.length == 1)
+    {
+      //fine
+    }
+    else if (hostParts.length == 2)
+    {
+      host = hostParts[0];
+      port = Integer.parseInt(hostParts[1]);
+    }
+    else
+    {
+      throw new InvalidObjectException("pool_host must be in format: <hostname>(:<port>)?(;<hostname>(:<port>)?)*");
+    }
+    logger.info(String.format("connecting to pool %s on port %s", host, port));
     channel = ManagedChannelBuilder.forAddress(host, port).usePlaintext(true).build();
 
     asyncStub = MiningPoolServiceGrpc.newStub(channel);
@@ -222,14 +245,21 @@ public class PoolMiner
 
     if (count == 0)
     {
-      logger.info("we seem to be stalled, reconnecting to node");
-      try
+      if (field_scan.isPreCaching())
       {
-        subscribe();
+        logger.info("precaching still ongoing, not reconnecting to node");
       }
-      catch (Throwable t)
+      else
       {
-        logger.info("Exception in subscribe: " + t);
+        logger.info("we seem to be stalled, reconnecting to node");
+        try
+        {
+          subscribe();
+        }
+        catch (Throwable t)
+        {
+          logger.info("Exception in subscribe: " + t);
+        }
       }
     }
 
