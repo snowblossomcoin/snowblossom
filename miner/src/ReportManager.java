@@ -3,7 +3,7 @@ package snowblossom.miner;
 import java.util.TreeMap;
 import duckutil.RateReporter;
 import java.text.DecimalFormat;
-import java.io.FileOutputStream;
+import duckutil.AtomicFileOutputStream;
 import java.io.PrintStream;
 import java.io.File;
 import java.util.logging.Logger;
@@ -46,8 +46,7 @@ public class ReportManager
     try
     {
 
-      String tmppath = path + ".tmp";
-      PrintStream out = new PrintStream(new FileOutputStream( tmppath ));
+      PrintStream out = new PrintStream(new AtomicFileOutputStream( path ));
 
       DecimalFormat df = new DecimalFormat("0.0");
       out.println("Total: " + total.getReportLong(df));
@@ -70,11 +69,8 @@ public class ReportManager
         rate_map.remove(k);
       }
 
-
       out.flush();
       out.close();
-
-      new File(tmppath).renameTo(new File(path));
     }
     catch(Exception e)
     {
