@@ -32,6 +32,13 @@ cp -r source/example/configs ./
 echo -e "#!/bin/bash\nsource/bazel-bin/SnowBlossomNode configs/node.conf" > node.sh
 echo -e "#!/bin/bash\nsource/bazel-bin/SnowBlossomClient configs/client.conf \$1 \$2 \$3" > client.sh
 echo -e "#!/bin/bash\nsource/bazel-bin/SnowBlossomClient configs/miner.conf" > miner.sh
+mkdir "logs"
 
-echo "Done."
-echo "You can manually run:  node.sh,  client.sh,  miner.sh"
+cat <<EOF
+Done.
+You can manually run with:  node.sh,  client.sh,  miner.sh
+or you can setup systemd services with:
+    systemctl link /var/snowblossom/example/systemd/snowblossom-node.service
+    systemctl link /var/snowblossom/example/systemd/snowblossom-miner.service
+    systemctl link /var/snowblossom/example/systemd/snowblossom-pool.service
+EOF

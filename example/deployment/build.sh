@@ -25,7 +25,6 @@ cp ../../bazel-bin/SnowBlossomClient_deploy.jar "$name"/
 cp ../../bazel-bin/SnowBlossomMiner_deploy.jar "$name"/
 cp ../../bazel-bin/PoolMiner_deploy.jar "$name"/
 cp -R configs "$name"/
-mkdir "$name/logs"
 
 # convert line endings to make easily windows editable -_-;
 for i in "$name/configs"/*; do sed -i 's/\n$/\n\r$/' "$i"; done
