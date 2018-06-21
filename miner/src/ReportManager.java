@@ -3,12 +3,13 @@ package snowblossom.miner;
 import java.util.TreeMap;
 import duckutil.RateReporter;
 import java.text.DecimalFormat;
-import java.io.FileOutputStream;
+import duckutil.AtomicFileOutputStream;
 import java.io.PrintStream;
 import java.io.File;
 import java.util.logging.Logger;
 import java.util.logging.Level;
 import java.util.Map;
+import java.util.TreeSet;
 
 public class ReportManager
 {
@@ -45,22 +46,31 @@ public class ReportManager
     try
     {
 
-    String tmppath = path + ".tmp";
-    PrintStream out = new PrintStream(new FileOutputStream( tmppath ));
+      PrintStream out = new PrintStream(new AtomicFileOutputStream( path ));
 
-    DecimalFormat df = new DecimalFormat("0.0");
-    out.println("Total: " + total.getReportLong(df));
+      DecimalFormat df = new DecimalFormat("0.0");
+      out.println("Total: " + total.getReportLong(df));
 
-    for(Map.Entry<String, RateReporter> me : rate_map.entrySet())
-    {
-      out.println(me.getKey() + " " + me.getValue().getReportLong(df));
-    }
+      TreeSet<String> to_remove = new TreeSet<>();
+      for(Map.Entry<String, RateReporter> me : rate_map.entrySet())
+      {
+        if (me.getValue().isZero())
+        {
+          to_remove.add(me.getKey());
+        }
+        else
+        {
+          out.println(me.getKey() + " " + me.getValue().getReportLong(df));
+        }
+      }
 
+      for(String k : to_remove)
+      {
+        rate_map.remove(k);
+      }
 
-    out.flush();
-    out.close();
-
-    new File(tmppath).renameTo(new File(path));
+      out.flush();
+      out.close();
     }
     catch(Exception e)
     {
