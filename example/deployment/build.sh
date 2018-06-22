@@ -27,8 +27,8 @@ cp ../../bazel-bin/PoolMiner_deploy.jar "$name"/
 cp -R configs "$name"/
 
 # convert line endings to make easily windows editable -_-;
-for i in "$name/configs"/*; do sed -i 's/\n$/\n\r$/' "$i"; done
-for i in "$name"/*.bat; do sed -i 's/\n$/\n\r$/' "$i"; done
+for i in "$name/configs"/*; do sed -i 's/(?<=\r)$/\r$/' "$i"; done
+for i in "$name"/*.bat; do sed -i 's/(?<=\r)$/\r$/' "$i"; done
 
 zip -r -9 "$name.zip" "$name"
 #tar -czf "$name.tar.gz" "$name"
