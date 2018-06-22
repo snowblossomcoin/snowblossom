@@ -30,6 +30,11 @@ public class MiningPoolServiceAgent extends MiningPoolServiceGrpc.MiningPoolServ
   private Block last_block;
   private HashMap<Integer, WorkInfo> pending_work = new HashMap<>();
 
+  // Basically read this as if there are SHARES_IN_VIEW_FOR_RETARGET
+  // inside a single SHARE_VIEW_WINDOW, then move the miner up one difficulty
+  // So as it is set, if a miner gets 6 shares inside of 2 minutes, move them up.
+  public static final long SHARE_VIEW_WINDOW = 120000L;
+  public static final int SHARES_IN_VIEW_FOR_RETARGET = 6;
 
   public MiningPoolServiceAgent(MrPlow plow)
   {
@@ -234,12 +239,12 @@ public class MiningPoolServiceAgent extends MiningPoolServiceGrpc.MiningPoolServ
       synchronized(share_times)
       {
         share_times.add(System.currentTimeMillis());
-        long expire = System.currentTimeMillis() - 60000L;
-        while((share_times.size() >0) && (share_times.peek() < expire))
+        long expire = System.currentTimeMillis() - SHARE_VIEW_WINDOW;
+        while((share_times.size() > 0) && (share_times.peek() < expire))
         {
           share_times.poll();
         }
-        if (share_times.size() >= 3)
+        if (share_times.size() >= SHARES_IN_VIEW_FOR_RETARGET)
         {
           working_diff++;
           share_times.clear();
