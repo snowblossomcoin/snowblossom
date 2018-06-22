@@ -43,6 +43,7 @@ public class PeerUtil
     if (a.getPort() <= 0) return false;
     if (a.getPort() > 65535) return false;
     if (!HexUtil.getSafeString(a.getHost()).equals(a.getHost())) return false;
+    if (!HexUtil.getSafeString(a.getVersion()).equals(a.getVersion())) return false;
 
     if (a.getNodeId().size() > Globals.MAX_NODE_ID_SIZE) return false;
 

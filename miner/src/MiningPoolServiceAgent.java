@@ -30,7 +30,6 @@ public class MiningPoolServiceAgent extends MiningPoolServiceGrpc.MiningPoolServ
   private Block last_block;
   private HashMap<Integer, WorkInfo> pending_work = new HashMap<>();
 
-
   public MiningPoolServiceAgent(MrPlow plow)
   {
     this.plow = plow;
@@ -234,12 +233,12 @@ public class MiningPoolServiceAgent extends MiningPoolServiceGrpc.MiningPoolServ
       synchronized(share_times)
       {
         share_times.add(System.currentTimeMillis());
-        long expire = System.currentTimeMillis() - 60000L;
-        while((share_times.size() >0) && (share_times.peek() < expire))
+        long expire = System.currentTimeMillis() - MrPlow.SHARE_VIEW_WINDOW;
+        while((share_times.size() > 0) && (share_times.peek() < expire))
         {
           share_times.poll();
         }
-        if (share_times.size() >= 3)
+        if (share_times.size() >= MrPlow.SHARES_IN_VIEW_FOR_RETARGET)
         {
           working_diff++;
           share_times.clear();

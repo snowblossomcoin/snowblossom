@@ -5,6 +5,8 @@ import com.google.common.collect.ImmutableSet;
 import com.google.protobuf.ByteString;
 import snowblossom.proto.*;
 import snowblossom.lib.*;
+import duckutil.AtomicFileOutputStream;
+import java.io.PrintStream;
 
 import java.net.InetAddress;
 import java.util.*;
@@ -19,9 +21,10 @@ import java.util.logging.Logger;
  */
 public class Peerage
 {
-  public static final long REFRESH_LEARN_TIME = 4L * 3600L * 1000L; //4hr
-  public static final long SAVE_PEER_TIME = 60L * 1000L; //1min
-  public static final long PEER_EXPIRE_TIME = 16L * 86400L * 1000L; // 16 days
+  public static final long REFRESH_LEARN_TIME = 3600L * 1000L; // 1hr
+  public static final long SAVE_PEER_TIME = 60L * 1000L; // 1min
+  public static final long PEER_EXPIRE_TIME = 3L * 86400L * 1000L; // 3 days
+  public static final long RANDOM_CLOSE_TIME = 3600L * 1000L; // 1hr
 
   private static final Logger logger = Logger.getLogger("snowblossom.peering");
 
@@ -35,6 +38,7 @@ public class Peerage
   private ImmutableList<PeerInfo> self_peer_info;
 
   private volatile BlockHeader highest_seen_header;
+  private long last_random_close = System.currentTimeMillis();
   
   public Peerage(SnowBlossomNode node)
   {
@@ -54,6 +58,20 @@ public class Peerage
           learnPeer(info, true);
         }
         logger.info(String.format("Loaded %d peers from database", peer_rumor_list.size()));
+
+        if (node.getConfig().isSet("peer_log"))
+        {
+          String log_path = node.getConfig().get("peer_log");
+          PrintStream peer_out = new PrintStream(new AtomicFileOutputStream(log_path));
+          for(PeerInfo info : db_peer_list.getPeersList())
+          {
+            peer_out.println(info.toString());
+          }
+
+          peer_out.close();
+        }
+
+        
         logger.log(Level.FINER, "Peers: " + peer_rumor_list.keySet());
       }
       catch(Exception e)
@@ -94,26 +112,22 @@ public class Peerage
     {
       tip.setHeader(summary.getHeader());
     }
-    TreeMap<Double, PeerInfo> peer_map = new TreeMap<>();
-    Random rnd = new Random();
+
+    LinkedList<PeerInfo> shuffled_peer_list = new LinkedList<>();
+
     synchronized(peer_rumor_list)
     {
-      for(PeerInfo pi : peer_rumor_list.values())
-      {
-        peer_map.put(rnd.nextDouble(), pi);
-      }
+      shuffled_peer_list.addAll(peer_rumor_list.values());
     }
+    Collections.shuffle(shuffled_peer_list);
 
     if (self_peer_info != null)
     {
       tip.addAllPeers(self_peer_info);
     }
-    for(int i=0; i<4; i++)
+    for(int i=0; i<10; i++)
     {
-      if (peer_map.size() > 0)
-      {
-        tip.addPeers(peer_map.pollFirstEntry().getValue());
-      }
+      tip.addPeers(shuffled_peer_list.poll());
     }
    
     return tip.build();
@@ -251,12 +265,14 @@ public class Peerage
         {
           String address = ia.getHostAddress();
 
+          // Make this seed peer entry as just about to expire
+          // so when we learn the gossip one from the real peer, that takes precedence
           PeerInfo pi = PeerInfo.newBuilder()
             .setHost(address)
             .setPort(node.getParams().getDefaultPort())
-            .setLearned(System.currentTimeMillis())
+            .setLearned(System.currentTimeMillis() - PEER_EXPIRE_TIME + REFRESH_LEARN_TIME)
             .build();
-          learnPeer(pi);
+          learnPeer(pi, true);
 
         }
       }
@@ -362,6 +378,18 @@ public class Peerage
       if (desired <= connected)
       {
         pruneExpiredPeers();
+        if (last_random_close + RANDOM_CLOSE_TIME < System.currentTimeMillis())
+        {
+          LinkedList<PeerLink> lst = new LinkedList<PeerLink>();
+          lst.addAll(getLinkList());
+          Collections.shuffle(lst);
+          if (lst.size() > 0)
+          {
+            logger.log(Level.FINE, "Closing a random link ");
+            lst.poll().close();
+          }
+          last_random_close = System.currentTimeMillis();
+        }
         return;
       }
 

@@ -35,6 +35,12 @@ public class MrPlow
   public static final int MIN_DIFF=22;
   public static final int BACK_BLOCKS=5; // Roughly how many blocks back to keep shares for PPLNS
 
+  // Basically read this as if there are SHARES_IN_VIEW_FOR_RETARGET
+  // inside a single SHARE_VIEW_WINDOW, then move the miner up one difficulty
+  // So as it is set, if a miner gets 6 shares inside of 2 minutes, move them up.
+  public static final long SHARE_VIEW_WINDOW = 120000L;
+  public static final int SHARES_IN_VIEW_FOR_RETARGET = 6;
+
   public static void main(String args[]) throws Exception
   {
     Globals.addCryptoProvider();
