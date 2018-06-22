@@ -57,7 +57,14 @@ public class BlockchainUtil
 
     // So a block at max target is 'slice' number of work units
     // A block at half the target (harder) is twice the number of slices.
+
     BigInteger work_in_block = params.getMaxTarget().multiply(slice).divide(target);
+
+    // SIP2 - work is multipled by 4^activated_field.  That way, a higher field
+    // takes precedence.
+    BigInteger field_multipler = BigInteger.ONE.shiftLeft(prev_summary.getActivatedField() * 2);
+    work_in_block = work_in_block.multiply(field_multipler);
+
     BigInteger prev_work_sum = BlockchainUtil.readInteger(prev_summary.getWorkSum());
 
     bs.setTotalTransactions( prev_summary.getTotalTransactions() + tx_count );
