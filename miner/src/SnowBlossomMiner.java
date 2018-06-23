@@ -327,7 +327,7 @@ public class SnowBlossomMiner
           long word_idx;
           word_bb.clear();
           word_idx = PowUtil.getNextSnowFieldIndex(context, merkle_proof.getTotalWords(), md);
-          merkle_proof.readWord(word_idx, word_bb);
+          merkle_proof.readWord(word_idx, word_bb, pass);
           context = PowUtil.getNextContext(context, word_buff, md);
         }
       }
@@ -360,7 +360,11 @@ public class SnowBlossomMiner
         word_bb.clear();
 
         long word_idx = PowUtil.getNextSnowFieldIndex(context, merkle_proof.getTotalWords());
-        merkle_proof.readWord(word_idx, word_bb);
+        boolean gotData = merkle_proof.readWord(word_idx, word_bb, pass);
+        if (!gotData)
+        {
+          logger.log(Level.SEVERE, "readWord returned false on pass " + pass);
+        }
         SnowPowProof proof = merkle_proof.getProof(word_idx);
         header.addPowProof(proof);
         context = PowUtil.getNextContext(context, word_buff);

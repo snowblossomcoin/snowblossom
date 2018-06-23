@@ -37,21 +37,22 @@ public class SnowMerkleProof
   private long bytes_to_precache = 0;
   private byte[][] mem_buff;
   public static final int MEM_BLOCK = 1024 * 1024;
+  private int minDepthToDisk;
 
   private final ThreadLocal<SnowMerkleProof> diskProof;
 
   public SnowMerkleProof(File path, String base) throws java.io.IOException
   {
-    this(path, base, false, 0);
+    this(path, base, false, 0, 6);
   }
 
   /**
    * Only needed by miners
    */
-  public SnowMerkleProof(File path, String base, boolean memcache, long bytesToPreCache) throws java.io.IOException
+  public SnowMerkleProof(File path, String base, boolean memcache, long bytesToPreCache, int minDepthToDisk) throws java.io.IOException
   {
     this.memcache = memcache;
-
+    this.minDepthToDisk = minDepthToDisk;
     snow_file = new RandomAccessFile(new File(path, base + ".snow"), "r");
     snow_file_channel = snow_file.getChannel();
 
@@ -149,12 +150,15 @@ public class SnowMerkleProof
 
   }
 
-  long hits = 0;
-  long misses = 0;
-  long nextReportMillis = System.currentTimeMillis();
-  long reportInterval = 1 * 1000;
-  long maxReportInterval = 5 * 1000;
-  public void readWord(long word_index, ByteBuffer bb) throws java.io.IOException
+  /**
+   * Reads a 16 byte section of the snowfield
+   * @param word_index which 16 byte section to read
+   * @param bb a buffer to put the 16 bytes into
+   * @param currentDepth a number 0-5 which represents which read into the snowfield it is for the POW algorithm.
+   * @return true if the word was read, false if it wasn't (aka, too shallow, not precached).
+   * @throws java.io.IOException
+   */
+  public boolean readWord(long word_index, ByteBuffer bb, int currentDepth) throws java.io.IOException
   {
     if (bytes_to_precache > 0)
     {
@@ -169,7 +173,7 @@ public class SnowMerkleProof
             if (i % 1000 == 0)
             {
               int percentage = (int) ((100L * i) / blocksToPrecache);
-              logger.info("pre-caching snowfield: loaded " + (i / 1000) + " gb of " + (blocksToPrecache/1000) + " (" + percentage + "%)");
+              logger.info("pre-caching snowfield: loaded " + (i / 1000) + " gb of " + (blocksToPrecache / 1000) + " (" + percentage + "%)");
             }
             byte[] block_data = new byte[MEM_BLOCK];
             long file_offset = i * (long) MEM_BLOCK;
@@ -181,61 +185,36 @@ public class SnowMerkleProof
       }
     }
 
-    /*
-    if (bytes_to_precache == -1)
+
+    long word_pos = word_index * SnowMerkle.HASH_LEN_LONG;
+    int mem_block_index = (int) (word_pos / MEM_BLOCK);
+    if (mem_buff != null && mem_block_index < mem_buff.length)
     {
-      if ((hits + misses) % 1024 == 0)
+      int off_in_block = (int) (word_pos % MEM_BLOCK);
+      if (mem_buff[mem_block_index] == null)
       {
-        if (System.currentTimeMillis() > nextReportMillis)
+        Assert.assertEquals(0, bytes_to_precache);
+        //try (TimeRecordAuto tra2 = TimeRecord.openAuto("SnowMerkleProof.readBlock"))
         {
-          double h = hits;
-          double m = misses;
-          double t = h + m;
-          double rate = h / t;
-          logger.info("memory snowfield hitrate: " + rate);
-          hits = 0;
-          misses = 0;
-          nextReportMillis = System.currentTimeMillis() + reportInterval;
-          reportInterval = Math.min((long)(reportInterval * 1.5), maxReportInterval);
+          byte[] block_data = new byte[MEM_BLOCK];
+          long file_offset = (long) mem_block_index * (long) MEM_BLOCK;
+          ChannelUtil.readFully(snow_file_channel, ByteBuffer.wrap(block_data), file_offset);
+          mem_buff[mem_block_index] = block_data;
         }
       }
+      bb.put(mem_buff[mem_block_index], off_in_block, SnowMerkle.HASH_LEN);
+      return true;
     }
-*/
-    //try (TimeRecordAuto tra = TimeRecord.openAuto("SnowMerkleProof.readWord"))
+
+    if (bytes_to_precache == -1 && minDepthToDisk > currentDepth) return false;
+    if (diskProof != null)
     {
-      long word_pos = word_index * SnowMerkle.HASH_LEN_LONG;
-      int mem_block_index = (int) (word_pos / MEM_BLOCK);
-      if (mem_buff != null && mem_block_index < mem_buff.length)
-      {
-        hits++;
-        int off_in_block = (int) (word_pos % MEM_BLOCK);
-        if (mem_buff[mem_block_index] == null)
-        {
-          Assert.assertEquals(0, bytes_to_precache);
-          //try (TimeRecordAuto tra2 = TimeRecord.openAuto("SnowMerkleProof.readBlock"))
-          {
-            byte[] block_data = new byte[MEM_BLOCK];
-            long file_offset = (long) mem_block_index * (long) MEM_BLOCK;
-            ChannelUtil.readFully(snow_file_channel, ByteBuffer.wrap(block_data), file_offset);
-            mem_buff[mem_block_index] = block_data;
-          }
-        }
-        bb.put(mem_buff[mem_block_index], off_in_block, SnowMerkle.HASH_LEN);
-        return;
-
-      }
-      misses++;
-      if (diskProof != null)
-      {
-        diskProof.get().readWord(word_index, bb);
-        return;
-      }
-      //byte[] buff = new byte[SnowMerkle.HASH_LEN];
-      //ByteBuffer bb = ByteBuffer.wrap(buff);
-      ChannelUtil.readFully(snow_file_channel, bb, word_pos);
-
-      //return buff;
+      diskProof.get().readWord(word_index, bb, Globals.POW_LOOK_PASSES);
+      return true;
     }
+
+    ChannelUtil.readFully(snow_file_channel, bb, word_pos);
+    return true;
   }
 
   /**
