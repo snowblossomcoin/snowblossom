@@ -39,6 +39,7 @@ public class BlockIngestor
   private TimeRecord time_record;
 
   private boolean tx_index=false;
+  private boolean addr_index=false;
 
   public BlockIngestor(SnowBlossomNode node)
     throws Exception
@@ -63,6 +64,7 @@ public class BlockIngestor
     }
 
     tx_index = node.getConfig().getBoolean("tx_index");
+    addr_index = node.getConfig().getBoolean("addr_index");
 
   }
 
@@ -119,6 +121,13 @@ public class BlockIngestor
             tx_map.put(tx.getTxHash(), tx);
           }
           db.getTransactionMap().putAll(tx_map);
+        }
+      }
+      if (addr_index)
+      {
+        try(TimeRecordAuto tra_tx = TimeRecord.openAuto("BlockIngestor.saveAddrHist"))
+        {
+          AddressHistoryUtil.saveAddressHistory(blk, db);
         }
       }
 

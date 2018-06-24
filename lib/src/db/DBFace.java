@@ -10,6 +10,7 @@ public interface DBFace
   public ProtoDBMap<Block> getBlockMap();
   public ProtoDBMap<BlockSummary> getBlockSummaryMap();
   public ProtoDBMap<Transaction> getTransactionMap();
+  public DBMapMutationSet getAddressHistoryMap();
 
   public DBMap getUtxoNodeMap();
 

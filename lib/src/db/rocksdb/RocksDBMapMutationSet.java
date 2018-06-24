@@ -1,14 +1,19 @@
 package snowblossom.lib.db.rocksdb;
 
 import com.google.protobuf.ByteString;
+import com.google.common.collect.TreeMultimap;
 import snowblossom.lib.db.DBMapMutationSet;
 import snowblossom.lib.db.DBTooManyResultsException;
 import org.rocksdb.RocksDB;
 import org.rocksdb.RocksDBException;
+import org.rocksdb.WriteBatch;
 import org.rocksdb.RocksIterator;
 
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
+import java.util.LinkedList;
+import java.util.List;
 
 public class RocksDBMapMutationSet extends DBMapMutationSet
 {
@@ -79,6 +84,29 @@ public class RocksDBMapMutationSet extends DBMapMutationSet
   }
 
   @Override
+  public void addAll(TreeMultimap<ByteString, ByteString> map)
+  {
+    try
+    {
+      WriteBatch batch = new WriteBatch();
+      byte b[]=new byte[0];
+
+      for(Map.Entry<ByteString, ByteString> me : map.entries())
+      {
+        ByteString w = getDBKey(me.getKey(), me.getValue());
+        batch.put(w.toByteArray(), b);
+      }
+
+      db.write(jdb.getWriteOption(), batch);
+    }
+    catch(RocksDBException e)
+    {
+      throw new RuntimeException(e);
+    }
+
+  }
+
+  @Override
   public void remove(ByteString key, ByteString value)
   {
 		try
@@ -93,11 +121,11 @@ public class RocksDBMapMutationSet extends DBMapMutationSet
   }
 
   @Override
-  public Set<ByteString> getSet(ByteString key, int max_reply)
+  public List<ByteString> getSet(ByteString key, int max_reply)
   {
 		ByteString dbKey = getDBKey(key);
 
-    HashSet<ByteString> set = new HashSet<>();
+    LinkedList<ByteString> set = new LinkedList<>();
     int count = 0;
     RocksIterator it = db.newIterator();
 
