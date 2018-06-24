@@ -16,8 +16,13 @@ wget -qO - https://bazel.build/bazel-release.pub.gpg | apt-key add -
 apt-get update
 apt-get -yq install git openjdk-8-jdk bazel git
 
+# create a dedicated user, if doesn't exist
+id -u snowblossom &>/dev/null || useradd --home-dir "$snowblossom_home" --create-home --system snowblossom
+
+# build as user
+su - snowblossom <<EOF
+
 # download
-mkdir -p $snowblossom_home
 cd "$snowblossom_home"
 rm -rf source
 git clone "https://github.com/snowblossomcoin/snowblossom.git" source
@@ -29,16 +34,18 @@ bazel build :all
 # setup simple helpful run scrips?
 cd "$snowblossom_home"
 cp -r source/example/configs ./
-echo -e "#!/bin/bash\nsource/bazel-bin/SnowBlossomNode configs/node.conf" > node.sh
-echo -e "#!/bin/bash\nsource/bazel-bin/SnowBlossomClient configs/client.conf \$1 \$2 \$3" > client.sh
-echo -e "#!/bin/bash\nsource/bazel-bin/SnowBlossomClient configs/miner.conf" > miner.sh
-mkdir "logs"
+echo '#!/bin/bash\nsource/bazel-bin/SnowBlossomNode configs/node.conf' > node.sh
+echo '#!/bin/bash\nsource/bazel-bin/SnowBlossomClient configs/client.conf \$1 \$2 \$3' > client.sh
+echo '#!/bin/bash\nsource/bazel-bin/SnowBlossomClient configs/miner.conf' > miner.sh
+chmod +x *.sh
+mkdir -p "logs"
+EOF
 
 cat <<EOF
 Done.
 You can manually run with:  node.sh,  client.sh,  miner.sh
 or you can setup systemd services with:
-    systemctl link /var/snowblossom/example/systemd/snowblossom-node.service
-    systemctl link /var/snowblossom/example/systemd/snowblossom-miner.service
-    systemctl link /var/snowblossom/example/systemd/snowblossom-pool.service
+    systemctl link /var/snowblossom/source/example/systemd/snowblossom-node.service
+    systemctl link /var/snowblossom/source/example/systemd/snowblossom-miner.service
+    systemctl link /var/snowblossom/source/example/systemd/snowblossom-pool.service
 EOF
