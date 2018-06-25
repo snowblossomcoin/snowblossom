@@ -10,6 +10,7 @@ import java.text.DecimalFormat;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Collections;
 
 public class AddressPage
 {
@@ -32,7 +33,24 @@ public class AddressPage
 
     double val_conf_d = (double) valueConfirmed / (double) Globals.SNOW_VALUE;
     double val_unconf_d = (double) valueUnconfirmed / (double) Globals.SNOW_VALUE;
+    out.println("<H2>Balance</H2>");
     out.println(String.format("<p>%s (%s pending) in %d outputs</p>", df.format(val_conf_d), df.format(val_unconf_d), totalOutputs));
+
+    out.println("<H2>History</H2>");
+
+    LinkedList<HistoryEntry> entries = new LinkedList<>();
+    entries.addAll(history.getEntriesList());
+    Collections.reverse(entries);
+    for(HistoryEntry he : entries)
+    {
+      int height =  he.getBlockHeight();
+      ChainHash tx_hash = new ChainHash(he.getTxHash());
+
+      out.println(String.format("<li> Block: <a href='/?search=%d'>%d</a> - tx: <a href='/?search=%s'>%s</a> </li>",
+        height, height,
+        tx_hash, tx_hash));
+    }
+    
 /*
     out.println("<table>");
     out.println(" <thead>");
@@ -54,6 +72,7 @@ public class AddressPage
   long totalSpendable = 0;
   long totalOutputs;
   List<TransactionBridge> bridges;
+  HistoryList history;
 
   private void loadData()
   {
@@ -61,6 +80,7 @@ public class AddressPage
     try
     {
       bridges = getSpendable(address);
+      history = getHistory(address);
       for (TransactionBridge b : bridges)
       {
 
@@ -90,6 +110,12 @@ public class AddressPage
     {
       e.printStackTrace(out);
     }
+  }
+
+  public HistoryList getHistory(AddressSpecHash addr)
+  {
+    return shackleton.getStub().getAddressHistory(RequestAddress.newBuilder().setAddressSpecHash(addr.getBytes()).build());
+
   }
 
   public List<TransactionBridge> getSpendable(AddressSpecHash addr)
