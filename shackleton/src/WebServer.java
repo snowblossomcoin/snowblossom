@@ -67,6 +67,15 @@ public class WebServer
           displayStatus(out);
           return;
         }
+        try
+        {
+          int block_num = Integer.parseInt(search);
+          if (block_num >= 0)
+          {
+            displayBlockByNumber(out, block_num);
+          }
+        }
+        catch(Throwable e){}
 
         // case: display block
         if (search.length()== Globals.BLOCKCHAIN_HASH_LEN*2)
@@ -237,6 +246,16 @@ public class WebServer
       block_summary_lines.put(hash, s);
     }
     return s;
+  }
+  private void displayBlockByNumber(PrintStream out, int block_number)
+    throws ValidationException
+  {
+
+    BlockHeader blk_head = shackleton.getStub().getBlockHeader(RequestBlockHeader.newBuilder().setBlockHeight(block_number).build());
+
+    ChainHash hash = new ChainHash(blk_head.getSnowHash());
+    displayHash(out, hash);
+
   }
 
   private void displayHash(PrintStream out, ChainHash hash)
