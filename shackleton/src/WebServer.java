@@ -73,6 +73,7 @@ public class WebServer
           if (block_num >= 0)
           {
             displayBlockByNumber(out, block_num);
+            return;
           }
         }
         catch(Throwable e){}
