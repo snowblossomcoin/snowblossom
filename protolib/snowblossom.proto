@@ -248,6 +248,7 @@ message HistoryList {
 message HistoryEntry {
   int32 block_height = 1;
   bytes tx_hash = 2;
+  bytes block_hash = 3;
 }
 
 

@@ -56,7 +56,7 @@ public abstract class DB implements DBFace
 
     if (config.getBoolean("addr_index"))
     {
-      address_history_map = openMutationMapSet("addr_hist");
+      address_history_map = openMutationMapSet("addr_hist_2");
     }
   }
 

@@ -220,6 +220,7 @@ public class BlockIngestor
       if ((found == null) || (!found.equals(hash)))
       {
         db.setBlockHashAtHeight(height, hash);
+        node.getBlockHeightCache().setHash(height, hash);
         if (height == 0) return;
         summary = db.getBlockSummaryMap().get(summary.getHeader().getPrevBlockHash());
       }
