@@ -28,10 +28,14 @@ public abstract class DB implements DBFace
   protected DBMap block_height_map;
   protected DBMap special_map;
   protected ProtoDBMap<Transaction> tx_map;
+  protected DBMapMutationSet address_history_map;
+
+  private Config config;
 
   public DB(Config config)
   {
     Runtime.getRuntime().addShutdownHook(new DBShutdownThread());
+    this.config = config;
   }
 
 
@@ -49,6 +53,11 @@ public abstract class DB implements DBFace
     utxo_node_map = openMap("u");
     block_height_map = openMap("height");
     special_map = openMap("special");
+
+    if (config.getBoolean("addr_index"))
+    {
+      address_history_map = openMutationMapSet("addr_hist_2");
+    }
   }
 
   @Override
@@ -65,6 +74,9 @@ public abstract class DB implements DBFace
 
   @Override
   public DBMap getUtxoNodeMap() { return utxo_node_map; }
+
+  @Override
+  public DBMapMutationSet getAddressHistoryMap() { return address_history_map; }
 
   @Override
   public ChainHash getBlockHashAtHeight(int height)

@@ -146,6 +146,7 @@ service UserService {
   rpc SubmitTransaction ( Transaction ) returns ( SubmitReply ) {}
   rpc GetUTXONode( GetUTXONodeRequest ) returns ( GetUTXONodeReply ) {}
   rpc GetMempoolTransactionList ( RequestAddress ) returns ( TransactionHashList ) {}
+  rpc GetAddressHistory ( RequestAddress ) returns ( HistoryList ) {} 
 
   rpc GetNodeStatus ( NullRequest ) returns ( NodeStatus ) {}
   rpc GetBlock ( RequestBlock ) returns ( Block ) {}
@@ -240,6 +241,16 @@ message RequestAddress {
 message TransactionHashList {
   repeated bytes tx_hashes = 1;
 }
+
+message HistoryList {
+  repeated HistoryEntry entries = 1;
+}
+message HistoryEntry {
+  int32 block_height = 1;
+  bytes tx_hash = 2;
+  bytes block_hash = 3;
+}
+
 
 message NullRequest {
 

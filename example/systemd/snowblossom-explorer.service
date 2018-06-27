@@ -1,0 +1,11 @@
+[Unit]
+Description=Snowblossom Explorer
+After=network.target
+
+[Service]
+User=snowblossom
+WorkingDirectory=/var/snowblossom
+ExecStart=/var/snowblossom/source/bazel-bin/ShackletonExplorer configs/explorer.conf
+
+[Install]
+WantedBy=multi-user.target

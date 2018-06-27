@@ -44,6 +44,8 @@ public class Globals
 
   public static final int BLOCK_CHUNK_HEADER_DOWNLOAD_SIZE = 500;
 
+  public static final int ADDRESS_HISTORY_MAX_REPLY = 10000;
+
   public static void addCryptoProvider()
   {
     Security.addProvider(new org.bouncycastle.jce.provider.BouncyCastleProvider());

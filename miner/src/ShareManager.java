@@ -68,9 +68,7 @@ public class ShareManager
       {
         share_map.put(address, map_shares);
       }
-
       total_shares -= shares;
-
     }
   }
   public synchronized PPLNSState getState()

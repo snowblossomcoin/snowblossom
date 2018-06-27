@@ -127,7 +127,10 @@ public class Peerage
     }
     for(int i=0; i<10; i++)
     {
-      tip.addPeers(shuffled_peer_list.poll());
+      if (shuffled_peer_list.size() > 0)
+      {
+        tip.addPeers(shuffled_peer_list.poll());
+      }
     }
    
     return tip.build();

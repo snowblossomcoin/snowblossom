@@ -48,6 +48,7 @@ public class SnowBlossomNode
   private MemPool mem_pool;
   private HashedTrie utxo_hashed_trie;
   private Peerage peerage;
+  private BlockHeightCache block_height_cache;
 
   private volatile boolean terminate;
 
@@ -89,6 +90,8 @@ public class SnowBlossomNode
 
     peerage = new Peerage(this);
     mem_pool.setPeerage(peerage);
+
+    block_height_cache = new BlockHeightCache(this);
 
   }
 
@@ -190,4 +193,5 @@ public class SnowBlossomNode
   public MemPool getMemPool(){return mem_pool;}
   public Peerage getPeerage(){return peerage;}
   public SnowUserService getUserService() {return user_service;}
+  public BlockHeightCache getBlockHeightCache() {return block_height_cache; }
 }
