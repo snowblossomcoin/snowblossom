@@ -305,19 +305,6 @@ public class MrPlow
 
     last_stats_time = now;
 
-    if (count == 0)
-    {
-      logger.info("we seem to be stalled, reconnecting to node");
-      try
-      {
-        subscribe();
-      }
-      catch (Throwable t)
-      {
-        logger.info("Exception in subscribe: " + t);
-      }
-    }
-
     if (config.getBoolean("display_timerecord"))
     {
 
