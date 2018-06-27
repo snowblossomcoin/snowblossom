@@ -9,6 +9,9 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.Map;
 
+import com.google.common.collect.TreeMultimap;
+
+
 
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -62,16 +65,18 @@ public class VoteTracker extends Thread
     NetworkParams params = shackleton.getParams();
     NodeStatus node_status = shackleton.getStub().getNodeStatus(nr());
 
-    update(node_status);
+    TreeMap<Integer, VoteCount> vote_map=new TreeMap<>();
+    TreeMap<String, Integer> pool_map = new TreeMap<>();
+
+    update(node_status, vote_map, pool_map);
     startup=false;
 
   }
 
-  private TreeMap<Integer, VoteCount> update(NodeStatus ns)
+  private void update(NodeStatus ns, TreeMap<Integer, VoteCount> vote_map, TreeMap<String, Integer> pool_count)
   {
-    TreeMap<Integer, VoteCount> vote_map=new TreeMap<>();
 
-    if (ns.getHeadSummary().getHeader().getBlockHeight() < LOOK_BACK) return vote_map;
+    if (ns.getHeadSummary().getHeader().getBlockHeight() < LOOK_BACK) return;
     ChainHash prev = new ChainHash(ns.getHeadSummary().getHeader().getSnowHash());
     int blocks = 0;
 
@@ -97,13 +102,17 @@ public class VoteTracker extends Thread
       }
       
       updateVoteMap(vote_map, extras);
+      String remark = HexUtil.getSafeString(extras.getRemarks());
+      if (!pool_count.containsKey(remark))
+      {
+        pool_count.put(remark, 0);
+      }
+      pool_count.put(remark, pool_count.get(remark) + 1);
+
 
       blocks++;
     }
 
-
-    return vote_map;
-    
   }
 
 
@@ -115,12 +124,43 @@ public class VoteTracker extends Thread
       return;
     }
 
-    TreeMap<Integer, VoteCount> vote_map = update(ns);
+    TreeMap<Integer, VoteCount> vote_map=new TreeMap<>();
+    TreeMap<String, Integer> pool_map = new TreeMap<>();
+
+    update(ns, vote_map, pool_map);
 
     for(Map.Entry<Integer, VoteCount> me : vote_map.entrySet())
     {
       out.println(String.format("Issue %d: %s", me.getKey(), me.getValue().toString()));
     }
+
+    TreeMultimap<Integer, String> pool_map_sort = TreeMultimap.create();
+    for(Map.Entry<String, Integer> me : pool_map.entrySet())
+    {
+      pool_map_sort.put(-me.getValue(), me.getKey());
+    }
+    out.println("<H2>Block Remarks in last 1000 blocks</H2>");
+    out.println("<table border='0' cellspacing='0'>");
+    out.println("<thead><tr><th>Remarks</th><th>Count</th></tr></thead>");
+    for(Map.Entry<Integer, String> me : pool_map_sort.entries())
+    {
+      
+      out.println(String.format("<tr><td>%s</td><td>%d</td></tr>", me.getValue(), -me.getKey()));
+    }
+    out.println("</table>");
+
+  }
+
+  public void getPoolReport(NodeStatus ns, PrintStream out)
+  {
+
+    if (startup)
+    {
+      out.println("Reading blocks for pools");
+      return;
+    }
+
+    
 
   }
 
