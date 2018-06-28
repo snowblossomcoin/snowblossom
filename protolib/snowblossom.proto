@@ -288,6 +288,8 @@ message WalletDatabase {
   repeated WalletKeyPair keys = 1;
   repeated AddressSpec addresses = 2;
   repeated Transaction transactions = 3;
+  int32 version = 4;
+  CipherKey cipher_key = 5;
 }
 
 message WalletKeyPair
@@ -295,4 +297,21 @@ message WalletKeyPair
   int32 signature_type = 1;
   bytes public_key = 2;
   bytes private_key = 3;
+  EncryptedPrivateKey encrypted_private_key = 4;
+}
+
+message EncryptedPrivateKey
+{
+  bytes cipher_id = 1;
+  bytes iv = 2;
+  bytes payload = 3;
+}
+
+message CipherKey
+{
+  int64 cipher_id = 1;
+  int64 pbkdf_rounds = 2;
+  bytes salt = 3;
+  bytes public_key = 4;
+
 }
