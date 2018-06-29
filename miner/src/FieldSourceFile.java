@@ -56,7 +56,7 @@ public class FieldSourceFile extends FieldSource
     {
       String hex = Integer.toString(i, 16);
       while(hex.length() < 4) hex = "0" + hex;
-      File f = new File(path, String.format("%s.snow.%s", base, hex));
+      File f = new File(new File(path, base), String.format("%s.snow.%s", base, hex));
       if (f.exists())
       {
         snow_file[i] = new RandomAccessFile(f, "r");
