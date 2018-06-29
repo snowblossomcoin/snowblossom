@@ -377,6 +377,7 @@ public class Arktika
           chunk_to_source_map.put(x,i);
         }
       }
+      logger.info(String.format("Layer %d - %s", i, fs.toString()));
     }
     logger.info(chunk_to_source_map.toString());
   }
