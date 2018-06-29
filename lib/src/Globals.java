@@ -46,6 +46,8 @@ public class Globals
 
   public static final int ADDRESS_HISTORY_MAX_REPLY = 10000;
 
+  public static final long MINE_CHUNK_SIZE = 1024L*1024L*1024L;
+
   public static void addCryptoProvider()
   {
     Security.addProvider(new org.bouncycastle.jce.provider.BouncyCastleProvider());

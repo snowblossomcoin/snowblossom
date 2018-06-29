@@ -35,7 +35,6 @@ public class FieldScan
     scan(true);
   }
 
-
   public void scan(boolean report)
   {
     TreeMap<Integer, SnowMerkleProof> fmap = new TreeMap<>();
@@ -62,7 +61,7 @@ public class FieldScan
           logger.info("creating field: " + field_folder + " memfield=" + memfield + ", precache=" + precache + ", minDepthToDisk=" + minDepthToDisk);
           SnowMerkleProof proof = new SnowMerkleProof(field_folder, name, memfield, precache, minDepthToDisk);
 
-          for(int i = 0; i<16; i++)
+          for(int i = 0; i<64; i++)
           {
             checkField(field_number, proof);
           }
