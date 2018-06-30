@@ -79,7 +79,7 @@ public class FieldSourceFile extends FieldSource
       h = h * SnowMerkle.DECK_ENTIRES;
 
       char letter = (char) ('a' + i);
-      File f = new File(path, base + ".deck." + letter);
+      File f = new File(new File(path, base), base + ".deck." + letter);
       if (f.exists())
       {
 
