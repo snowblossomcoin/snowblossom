@@ -6,6 +6,8 @@ import java.nio.ByteBuffer;
 import java.util.Random;
 import java.security.MessageDigest;
 
+import org.junit.Assert;
+
 
 public class PartialWork implements Comparable<PartialWork>
 {
@@ -34,6 +36,7 @@ public class PartialWork implements Comparable<PartialWork>
   // more passes done is first
   public int compareTo(PartialWork o)
   {
+    Assert.assertNotNull(o);
     if (passes_done > o.passes_done) return -1;
     if (passes_done < o.passes_done) return 1;
     return 0;
