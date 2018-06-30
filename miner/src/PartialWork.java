@@ -7,7 +7,7 @@ import java.util.Random;
 import java.security.MessageDigest;
 
 
-public class PartialWork
+public class PartialWork implements Comparable<PartialWork>
 {
   public WorkUnit wu;
   byte[] nonce;
@@ -29,6 +29,14 @@ public class PartialWork
     
     next_word_idx = PowUtil.getNextSnowFieldIndex(context, total_words, md);
 
+  }
+
+  // more passes done is first
+  public int compareTo(PartialWork o)
+  {
+    if (passes_done > o.passes_done) return -1;
+    if (passes_done < o.passes_done) return 1;
+    return 0;
   }
 
   public long getNextWordIdx()

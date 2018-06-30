@@ -33,6 +33,9 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.TreeMap;
 
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.MinMaxPriorityQueue;
+
 public class Arktika
 {
   private static final Logger logger = Logger.getLogger("snowblossom.miner");
@@ -82,6 +85,11 @@ public class Arktika
   private final int selected_field;
 
   private FieldSource deck_source;
+
+  private FieldSource all_sources[];
+  private ImmutableMap<Integer, Integer> chunk_to_layer_map;
+  private ImmutableMap<Integer, MinMaxPriorityQueue<PartialWork> > chunk_to_queue_map;
+  private ImmutableMap<Integer, MinMaxPriorityQueue<PartialWork> > layer_to_queue_map;
 
   public Arktika(Config config) throws Exception
   {
@@ -270,6 +278,13 @@ public class Arktika
     }
     public void onNext(WorkUnit wu)
     {
+      int last_block = -1;
+      WorkUnit wu_old = last_work_unit;
+      if (wu_old != null)
+      {
+        last_block = wu_old.getHeader().getBlockHeight();
+
+      }
       int min_field = wu.getHeader().getSnowField();
       if (min_field > selected_field)
       {
@@ -291,6 +306,17 @@ public class Arktika
           .build();
 
         last_work_unit = wu_new;
+        if (last_block != wu_new.getHeader().getBlockHeight())
+        {
+          for(MinMaxPriorityQueue<PartialWork> q : layer_to_queue_map.values())
+          {
+            synchronized(q)
+            {
+              q.clear();
+            }
+          }
+        }
+        
       }
       catch (Throwable t)
       {
@@ -321,7 +347,7 @@ public class Arktika
       thread_counts.add(Integer.parseInt(s));
     }
 
-    FieldSource[] all_sources=new FieldSource[layer_count];
+    all_sources=new FieldSource[layer_count];
 
     List<FieldSource> disk_sources = new LinkedList<>();
     LinkedList<Integer> chunk_ordering = new LinkedList<>();
@@ -372,6 +398,7 @@ public class Arktika
     logger.info(String.format("Found %d chunks", found.size()));
 
     TreeMap<Integer, Integer> chunk_to_source_map = new TreeMap<>();
+    TreeMap<Integer, MinMaxPriorityQueue<PartialWork> > layer_to_queue=new TreeMap();
 
     for(int i=0; i<layer_count; i++)
     {
@@ -387,12 +414,37 @@ public class Arktika
           chunk_to_source_map.put(x,i);
         }
       }
+      layer_to_queue.put(i, MinMaxPriorityQueue.expectedSize(2048).maximumSize(2048).create());
+
       logger.info(String.format("Layer %d - %s", i, fs.toString()));
     }
+
+    chunk_to_layer_map = ImmutableMap.copyOf(chunk_to_source_map);
+    layer_to_queue_map = ImmutableMap.copyOf(layer_to_queue);
+
+    TreeMap<Integer, MinMaxPriorityQueue<PartialWork>> chunk_to_queue=new TreeMap<>();
+    for(int x : chunk_to_layer_map.keySet())
+    {
+      int layer = chunk_to_layer_map.get(x);
+      chunk_to_queue.put(x, layer_to_queue_map.get(layer));
+    }
+    chunk_to_queue_map = ImmutableMap.copyOf(chunk_to_queue);
+    
     logger.info(chunk_to_source_map.toString());
     if (deck_source == null)
     {
       throw new RuntimeException("No sources seem to have the deck files.");
     }
   }
+  public void enqueue(int chunk, PartialWork work)
+  {
+    MinMaxPriorityQueue<PartialWork> q = chunk_to_queue_map.get(chunk);
+    if (q == null) return;
+    synchronized(q)
+    {
+      q.offer(work);
+    }
+  }
+
+
 }
