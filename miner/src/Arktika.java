@@ -129,6 +129,7 @@ public class Arktika
 
     subscribe();
 
+
   }
 
   private ManagedChannel channel;
@@ -441,7 +442,22 @@ public class Arktika
       throw new RuntimeException("No sources seem to have the deck files.");
     }
     composit_source = new FieldSourceComposit(ImmutableList.copyOf(all_sources));
+
+
+    long total_words = params.getSnowFieldInfo(selected_field).getLength() / SnowMerkle.HASH_LEN_LONG;
+    // START THREADS
+    for(int x=0; x<layer_count; x++)
+    {
+      FieldSource fs = all_sources[x];
+      int thread_count = thread_counts.get(x);
+      for(int i=0; i<thread_count; i++)
+      {
+        new LayerWorkThread(this, fs, layer_to_queue_map.get(x), total_words).start();
+      }
+    }
+
   }
+
   public void enqueue(int chunk, PartialWork work)
   {
     MinMaxPriorityQueue<PartialWork> q = chunk_to_queue_map.get(chunk);
@@ -451,6 +467,7 @@ public class Arktika
       q.offer(work);
     }
   }
+
 
 
 }
