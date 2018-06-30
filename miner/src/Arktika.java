@@ -34,6 +34,7 @@ import java.util.TreeSet;
 import java.util.TreeMap;
 
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.MinMaxPriorityQueue;
 
 public class Arktika
@@ -65,7 +66,7 @@ public class Arktika
   protected volatile WorkUnit last_work_unit;
 
   private MiningPoolServiceStub asyncStub;
-  private MiningPoolServiceBlockingStub blockingStub;
+  protected MiningPoolServiceBlockingStub blockingStub;
 
   private final NetworkParams params;
 
@@ -85,12 +86,13 @@ public class Arktika
 
   private final int selected_field;
 
-  private FieldSource deck_source;
+  protected FieldSource deck_source;
 
   private FieldSource all_sources[];
   private ImmutableMap<Integer, Integer> chunk_to_layer_map;
   private ImmutableMap<Integer, MinMaxPriorityQueue<PartialWork> > chunk_to_queue_map;
   private ImmutableMap<Integer, MinMaxPriorityQueue<PartialWork> > layer_to_queue_map;
+  protected FieldSource composit_source;
 
   public Arktika(Config config) throws Exception
   {
@@ -438,6 +440,7 @@ public class Arktika
     {
       throw new RuntimeException("No sources seem to have the deck files.");
     }
+    composit_source = new FieldSourceComposit(ImmutableList.copyOf(all_sources));
   }
   public void enqueue(int chunk, PartialWork work)
   {

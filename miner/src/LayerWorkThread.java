@@ -5,8 +5,11 @@ import java.security.MessageDigest;
 import java.nio.ByteBuffer;
 import snowblossom.lib.*;
 import snowblossom.proto.*;
+import snowblossom.mining.proto.*;
 import duckutil.TimeRecord;
 import duckutil.TimeRecordAuto;
+
+import java.util.Queue;
 
 
 import java.util.logging.Level;
@@ -29,12 +32,14 @@ public class LayerWorkThread extends Thread
 	FieldSource fs;
 	Arktika arktika;
   Queue<PartialWork> queue;
+  long total_words;
 
-	public LayerWorkThread(Arktika arktika, FieldSource fs, Queue<PartialWork> queue)
+	public LayerWorkThread(Arktika arktika, FieldSource fs, Queue<PartialWork> queue, long total_words)
 	{
 		this.fs = fs;
 		this.arktika = arktika;
     this.queue = queue;
+    this.total_words = total_words;
 		setName("LayerWorkThread(" + fs.toString() + ")");
 		setDaemon(true);
 		rnd = new Random();
@@ -62,12 +67,13 @@ public class LayerWorkThread extends Thread
 	}
 
   private void processPw(PartialWork pw)
+    throws Exception
   {
     if (pw.passes_done == Globals.POW_LOOK_PASSES)
     {
-		  if (PowUtil.lessThanTarget(found_hash, wu.getReportTarget()))
+		  if (PowUtil.lessThanTarget(pw.context, pw.wu.getReportTarget()))
 	  	{
-			  String str = HashUtils.getHexString(found_hash);
+			  String str = HexUtil.getHexString(pw.context);
 			  logger.info("Found passable solution: " + str);
 			  submitWork(pw);
 		  }
@@ -80,7 +86,7 @@ public class LayerWorkThread extends Thread
       if (fs.skipQueueOnRehit() && (fs.hasChunk(chunk)))
       { 
         pw.doPass(fs, md, total_words);
-        processPW(pw);
+        processPw(pw);
       }
       else
       {
@@ -92,26 +98,26 @@ public class LayerWorkThread extends Thread
 
 	private void submitWork(PartialWork pw) throws Exception
 	{
+    WorkUnit wu = pw.wu;
 		byte[] first_hash = PowUtil.hashHeaderBits(wu.getHeader(), nonce);
 		byte[] context = first_hash;
 
 
 		BlockHeader.Builder header = BlockHeader.newBuilder();
 		header.mergeFrom(wu.getHeader());
-		header.setNonce(ByteString.copyFrom(nonce));
+		header.setNonce(ByteString.copyFrom(pw.nonce));
+
+    byte[] word_buff = new byte[SnowMerkle.HASH_LEN];
+    ByteBuffer word_bb = ByteBuffer.wrap(word_buff);
+
 
 
 		for (int pass = 0; pass < Globals.POW_LOOK_PASSES; pass++)
 		{
 			word_bb.clear();
-
-			long word_idx = PowUtil.getNextSnowFieldIndex(context, merkle_proof.getTotalWords());
-			boolean gotData = merkle_proof.readWord(word_idx, word_bb, pass);
-			if (!gotData)
-			{
-				logger.log(Level.SEVERE, "readWord returned false on pass " + pass);
-			}
-			SnowPowProof proof = merkle_proof.getProof(word_idx);
+			long word_idx = PowUtil.getNextSnowFieldIndex(context, total_words);
+			arktika.composit_source.readWord(word_idx, word_bb);
+			SnowPowProof proof = ProofGen.getProof(arktika.composit_source, arktika.deck_source, word_idx, total_words);
 			header.addPowProof(proof);
 			context = PowUtil.getNextContext(context, word_buff);
 		}
@@ -124,17 +130,17 @@ public class LayerWorkThread extends Thread
 		req.setWorkId(wu.getWorkId());
 		req.setHeader(header.build());
 		
-		SubmitReply reply = blockingStub.submitWork( req.build());
+		SubmitReply reply = arktika.blockingStub.submitWork( req.build());
 		
 		if (PowUtil.lessThanTarget(found_hash, header.getTarget()))
 		{
-			share_block_count.getAndIncrement();
+			arktika.share_block_count.getAndIncrement();
 		}
 		logger.info("Work submit: " + reply);
-		share_submit_count.getAndIncrement();
+		arktika.share_submit_count.getAndIncrement();
 		if (!reply.getSuccess())
 		{
-			share_reject_count.getAndIncrement();
+			arktika.share_reject_count.getAndIncrement();
 		}
 
 	}

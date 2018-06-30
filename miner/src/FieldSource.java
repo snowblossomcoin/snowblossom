@@ -3,6 +3,8 @@ package snowblossom.miner;
 
 import com.google.common.collect.ImmutableSet;
 import java.util.Set;
+import java.util.Map;
+import java.nio.channels.FileChannel;
 
 import java.nio.ByteBuffer;
 import snowblossom.lib.Globals;
@@ -40,6 +42,10 @@ public abstract class FieldSource
   public boolean hasDeckFiles()
   {
     return false;
+  }
+  public Map<Long, FileChannel> getDeckFiles()
+  {
+    return null;
   }
 
 }
