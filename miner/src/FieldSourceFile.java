@@ -24,6 +24,7 @@ import java.util.Map;
 import java.util.TreeSet;
 import java.util.logging.Logger;
 
+import org.junit.Assert;
 
 public class FieldSourceFile extends FieldSource
 {
@@ -129,6 +130,8 @@ public class FieldSourceFile extends FieldSource
     
     int chunk =  (int)(word_index / words_per_chunk);
     long word_offset = word_index % words_per_chunk;
+
+    Assert.assertTrue(hasChunk(chunk));
 
     long read_offset = word_offset * SnowMerkle.HASH_LEN_LONG;
     ChannelUtil.readFully( snow_file_channel[chunk], bb, read_offset);

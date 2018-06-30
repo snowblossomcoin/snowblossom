@@ -21,9 +21,9 @@ public class PartialWork implements Comparable<PartialWork>
   byte[] word_buff = new byte[SnowMerkle.HASH_LEN];
   ByteBuffer word_bb = ByteBuffer.wrap(word_buff);
 
-
   public PartialWork(WorkUnit wu, Random rnd, MessageDigest md, long total_words)
   {
+    this.wu = wu;
     nonce = new byte[Globals.NONCE_LENGTH];
     rnd.nextBytes(nonce);
     wu.getHeader().getNonce().copyTo(nonce, 0);
@@ -39,7 +39,15 @@ public class PartialWork implements Comparable<PartialWork>
     Assert.assertNotNull(o);
     if (passes_done > o.passes_done) return -1;
     if (passes_done < o.passes_done) return 1;
+
+    //if (sort < o.sort) return -1;
+    //if (sort > o.sort) return 1;
     return 0;
+  }
+  public boolean equals(Object o)
+  {
+    System.out.println("Equals called");
+    return super.equals(o);
   }
 
   public long getNextWordIdx()
@@ -50,6 +58,8 @@ public class PartialWork implements Comparable<PartialWork>
   public void doPass(FieldSource fs, MessageDigest md, long total_words)
     throws java.io.IOException
   {
+    //System.out.println("Pass: " + passes_done);
+    Assert.assertTrue(next_word_idx >= 0);
     word_bb.clear();
     fs.readWord(next_word_idx, word_bb);
     context = PowUtil.getNextContext(context, word_buff, md);

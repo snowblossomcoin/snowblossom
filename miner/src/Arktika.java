@@ -32,10 +32,12 @@ import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.TreeMap;
+import java.util.Queue;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.MinMaxPriorityQueue;
+import org.junit.Assert;
 
 public class Arktika
 {
@@ -90,8 +92,8 @@ public class Arktika
 
   private FieldSource all_sources[];
   private ImmutableMap<Integer, Integer> chunk_to_layer_map;
-  private ImmutableMap<Integer, MinMaxPriorityQueue<PartialWork> > chunk_to_queue_map;
-  private ImmutableMap<Integer, MinMaxPriorityQueue<PartialWork> > layer_to_queue_map;
+  private ImmutableMap<Integer, Queue<PartialWork> > chunk_to_queue_map;
+  private ImmutableMap<Integer, Queue<PartialWork> > layer_to_queue_map;
   protected FieldSource composit_source;
 
   public Arktika(Config config) throws Exception
@@ -314,7 +316,7 @@ public class Arktika
         // If the block number changes, clear the queues
         if (last_block != wu_new.getHeader().getBlockHeight())
         {
-          for(MinMaxPriorityQueue<PartialWork> q : layer_to_queue_map.values())
+          for(Queue<PartialWork> q : layer_to_queue_map.values())
           {
             synchronized(q)
             {
@@ -404,7 +406,7 @@ public class Arktika
     logger.info(String.format("Found %d chunks", found.size()));
 
     TreeMap<Integer, Integer> chunk_to_source_map = new TreeMap<>();
-    TreeMap<Integer, MinMaxPriorityQueue<PartialWork> > layer_to_queue=new TreeMap();
+    TreeMap<Integer, Queue<PartialWork> > layer_to_queue=new TreeMap();
 
     for(int i=0; i<layer_count; i++)
     {
@@ -420,7 +422,7 @@ public class Arktika
           chunk_to_source_map.put(x,i);
         }
       }
-      layer_to_queue.put(i, MinMaxPriorityQueue.expectedSize(2048).maximumSize(2048).create());
+      layer_to_queue.put(i, MinMaxPriorityQueue.maximumSize(2000).expectedSize(2000).create());
 
       logger.info(String.format("Layer %d - %s", i, fs.toString()));
     }
@@ -428,7 +430,7 @@ public class Arktika
     chunk_to_layer_map = ImmutableMap.copyOf(chunk_to_source_map);
     layer_to_queue_map = ImmutableMap.copyOf(layer_to_queue);
 
-    TreeMap<Integer, MinMaxPriorityQueue<PartialWork>> chunk_to_queue=new TreeMap<>();
+    TreeMap<Integer, Queue<PartialWork>> chunk_to_queue=new TreeMap<>();
     for(int x : chunk_to_layer_map.keySet())
     {
       int layer = chunk_to_layer_map.get(x);
@@ -460,7 +462,9 @@ public class Arktika
 
   public void enqueue(int chunk, PartialWork work)
   {
-    MinMaxPriorityQueue<PartialWork> q = chunk_to_queue_map.get(chunk);
+    Assert.assertNotNull(work);
+
+    Queue<PartialWork> q = chunk_to_queue_map.get(chunk);
     if (q == null) return;
     synchronized(q)
     {

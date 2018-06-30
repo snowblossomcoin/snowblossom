@@ -10,6 +10,7 @@ import duckutil.TimeRecord;
 import duckutil.TimeRecordAuto;
 
 import java.util.Queue;
+import org.junit.Assert;
 
 
 import java.util.logging.Level;
@@ -25,10 +26,6 @@ public class LayerWorkThread extends Thread
 	Random rnd;
 	MessageDigest md = DigestUtil.getMD();
 
-	byte[] word_buff = new byte[SnowMerkle.HASH_LEN];
-	ByteBuffer word_bb = ByteBuffer.wrap(word_buff);
-	int proof_field;
-	byte[] nonce = new byte[Globals.NONCE_LENGTH];
 	FieldSource fs;
 	Arktika arktika;
   Queue<PartialWork> queue;
@@ -48,7 +45,8 @@ public class LayerWorkThread extends Thread
 
 	private void runPass() throws Exception
 	{
-    PartialWork pw = queue.poll();
+    PartialWork pw = null;
+    synchronized(queue){pw=queue.poll();}
     if (pw == null)
     {
       WorkUnit wu = arktika.last_work_unit;
@@ -71,6 +69,9 @@ public class LayerWorkThread extends Thread
   {
     if (pw.passes_done == Globals.POW_LOOK_PASSES)
     {
+      Assert.assertNotNull(pw);
+      Assert.assertNotNull(pw.context);
+      Assert.assertNotNull(pw.wu);
 		  if (PowUtil.lessThanTarget(pw.context, pw.wu.getReportTarget()))
 	  	{
 			  String str = HexUtil.getHexString(pw.context);
@@ -98,9 +99,12 @@ public class LayerWorkThread extends Thread
 
 	private void submitWork(PartialWork pw) throws Exception
 	{
+
+
     WorkUnit wu = pw.wu;
-		byte[] first_hash = PowUtil.hashHeaderBits(wu.getHeader(), nonce);
+		byte[] first_hash = PowUtil.hashHeaderBits(wu.getHeader(), pw.nonce);
 		byte[] context = first_hash;
+
 
 
 		BlockHeader.Builder header = BlockHeader.newBuilder();
@@ -109,13 +113,12 @@ public class LayerWorkThread extends Thread
 
     byte[] word_buff = new byte[SnowMerkle.HASH_LEN];
     ByteBuffer word_bb = ByteBuffer.wrap(word_buff);
-
-
-
+    
 		for (int pass = 0; pass < Globals.POW_LOOK_PASSES; pass++)
 		{
 			word_bb.clear();
 			long word_idx = PowUtil.getNextSnowFieldIndex(context, total_words);
+
 			arktika.composit_source.readWord(word_idx, word_bb);
 			SnowPowProof proof = ProofGen.getProof(arktika.composit_source, arktika.deck_source, word_idx, total_words);
 			header.addPowProof(proof);
@@ -159,6 +162,7 @@ public class LayerWorkThread extends Thread
 			{
 				err = true;
 				logger.warning("Error: " + t);
+        t.printStackTrace();
 			}
 
 			if (err)
