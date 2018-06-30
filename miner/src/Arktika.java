@@ -62,14 +62,14 @@ public class Arktika
     }
   }
 
-  private volatile WorkUnit last_work_unit;
+  protected volatile WorkUnit last_work_unit;
 
   private MiningPoolServiceStub asyncStub;
   private MiningPoolServiceBlockingStub blockingStub;
 
   private final NetworkParams params;
 
-  private AtomicLong op_count = new AtomicLong(0L);
+  protected AtomicLong op_count = new AtomicLong(0L);
   private long last_stats_time = System.currentTimeMillis();
   private Config config;
 
@@ -78,9 +78,10 @@ public class Arktika
   private TimeRecord time_record;
   private RateReporter rate_report=new RateReporter();
 
-  private AtomicLong share_submit_count = new AtomicLong(0L);
-  private AtomicLong share_reject_count = new AtomicLong(0L);
-  private AtomicLong share_block_count = new AtomicLong(0L);
+  protected AtomicLong share_submit_count = new AtomicLong(0L);
+  protected AtomicLong share_reject_count = new AtomicLong(0L);
+  protected AtomicLong share_block_count = new AtomicLong(0L);
+
 
   private final int selected_field;
 
@@ -306,6 +307,8 @@ public class Arktika
           .build();
 
         last_work_unit = wu_new;
+
+        // If the block number changes, clear the queues
         if (last_block != wu_new.getHeader().getBlockHeight())
         {
           for(MinMaxPriorityQueue<PartialWork> q : layer_to_queue_map.values())

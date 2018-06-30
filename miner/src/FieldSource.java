@@ -14,7 +14,7 @@ public abstract class FieldSource
   protected ImmutableSet<Integer> holding_set;
   protected static final Logger logger = Logger.getLogger("snowblossom.miner");
 
-  protected final long words_per_chunk = Globals.MINE_CHUNK_SIZE / SnowMerkle.HASH_LEN_LONG;
+  public final long words_per_chunk = Globals.MINE_CHUNK_SIZE / SnowMerkle.HASH_LEN_LONG;
 
   /**
    * Read the 16-byte word at word_index into the byte buffer
