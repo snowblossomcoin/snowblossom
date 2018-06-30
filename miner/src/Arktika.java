@@ -81,6 +81,8 @@ public class Arktika
 
   private final int selected_field;
 
+  private FieldSource deck_source;
+
   public Arktika(Config config) throws Exception
   {
     this.config = config;
@@ -325,6 +327,8 @@ public class Arktika
     LinkedList<Integer> chunk_ordering = new LinkedList<>();
     TreeSet<Integer> found = new TreeSet<>();
 
+    // Load up the disk sources first
+    // so that memory sources can read from them
     for(int i=0; i<layer_count; i++)
     {
       String path = locations.get(i);
@@ -344,6 +348,8 @@ public class Arktika
       }
     }
     
+    // Load up memory sources using last added chunks,
+    // presumable from the slowest sources
     for(int i=0; i<layer_count; i++)
     {
       String path = locations.get(i);
@@ -370,6 +376,10 @@ public class Arktika
     for(int i=0; i<layer_count; i++)
     {
       FieldSource fs = all_sources[i];
+      if ((deck_source == null) && (fs.hasDeckFiles()))
+      {
+        deck_source = fs;
+      }
       for(int x : fs.getHoldingSet())
       {
         if (!chunk_to_source_map.containsKey(x))
@@ -380,5 +390,9 @@ public class Arktika
       logger.info(String.format("Layer %d - %s", i, fs.toString()));
     }
     logger.info(chunk_to_source_map.toString());
+    if (deck_source == null)
+    {
+      throw new RuntimeException("No sources seem to have the deck files.");
+    }
   }
 }
