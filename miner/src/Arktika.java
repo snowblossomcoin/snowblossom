@@ -33,6 +33,7 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.TreeMap;
 import java.util.Queue;
+import java.util.Map;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableList;
@@ -267,6 +268,16 @@ public class Arktika
       old.printReport(System.out);
     }
 
+    StringBuilder queue_report = new StringBuilder();
+    queue_report.append("Queues: {"); 
+    for(Map.Entry<Integer, Queue<PartialWork>> me : layer_to_queue_map.entrySet())
+    {
+      queue_report.append(me.getValue().size());
+      queue_report.append(",");
+    }
+    queue_report.append("}");
+    logger.info(queue_report.toString());
+
     logger.info(String.format("Shares: %d (rejected %d) (blocks %d)", share_submit_count.get(), share_reject_count.get(), share_block_count.get()));
   }
 
@@ -422,7 +433,7 @@ public class Arktika
           chunk_to_source_map.put(x,i);
         }
       }
-      layer_to_queue.put(i, MinMaxPriorityQueue.maximumSize(2000).expectedSize(2000).create());
+      layer_to_queue.put(i, MinMaxPriorityQueue.maximumSize(500).expectedSize(500).create());
 
       logger.info(String.format("Layer %d - %s", i, fs.toString()));
     }
@@ -469,6 +480,8 @@ public class Arktika
     synchronized(q)
     {
       q.offer(work);
+      q.notify();
+      q.notify();
     }
   }
 

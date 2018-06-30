@@ -40,13 +40,27 @@ public class LayerWorkThread extends Thread
 		setName("LayerWorkThread(" + fs.toString() + ")");
 		setDaemon(true);
 		rnd = new Random();
+    if (fs instanceof FieldSourceMem)
+    {
+      setPriority(1);
+    }
 
 	}
 
 	private void runPass() throws Exception
 	{
     PartialWork pw = null;
-    synchronized(queue){pw=queue.poll();}
+    boolean wait_on_empty = (rnd.nextDouble() < 0.5);
+    synchronized(queue)
+    {
+      pw=queue.poll();
+      if ((pw == null) && (wait_on_empty))
+      {
+        queue.wait(500);
+        return;
+      }
+    }
+
     if (pw == null)
     {
       WorkUnit wu = arktika.last_work_unit;
@@ -55,6 +69,8 @@ public class LayerWorkThread extends Thread
         sleep(250);
         return;
       }
+      yield();
+
       pw = new PartialWork(wu, rnd, md, total_words);
     }
     else
