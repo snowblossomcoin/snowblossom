@@ -30,6 +30,7 @@ public class LayerWorkThread extends Thread
 	Arktika arktika;
   Queue<PartialWork> queue;
   long total_words;
+  boolean is_mem;
 
 	public LayerWorkThread(Arktika arktika, FieldSource fs, Queue<PartialWork> queue, long total_words)
 	{
@@ -43,6 +44,7 @@ public class LayerWorkThread extends Thread
     if (fs instanceof FieldSourceMem)
     {
       setPriority(1);
+      is_mem = true;
     }
 
 	}
@@ -50,15 +52,9 @@ public class LayerWorkThread extends Thread
 	private void runPass() throws Exception
 	{
     PartialWork pw = null;
-    boolean wait_on_empty = (rnd.nextDouble() < 0.5);
     synchronized(queue)
     {
       pw=queue.poll();
-      if ((pw == null) && (wait_on_empty))
-      {
-        queue.wait(500);
-        return;
-      }
     }
 
     if (pw == null)
@@ -69,7 +65,20 @@ public class LayerWorkThread extends Thread
         sleep(250);
         return;
       }
-      yield();
+      if (is_mem)
+      {
+        long t1 = System.nanoTime();
+        yield();
+        long t_diff = System.nanoTime() - t1;
+        //if (t_diff > 50000)
+        {
+          synchronized(queue)
+          {
+            queue.wait(10000);
+          } 
+          return;
+        }
+      }
 
       pw = new PartialWork(wu, rnd, md, total_words);
     }
