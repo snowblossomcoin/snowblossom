@@ -71,7 +71,7 @@ public class FieldSourceMem extends FieldSource
   @Override
   public boolean skipQueueOnRehit()
   {
-    return false;
+    return true;
   }
 
 }

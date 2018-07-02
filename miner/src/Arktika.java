@@ -379,7 +379,15 @@ public class Arktika
       String path = locations.get(i);
       if (!path.startsWith("mem_"))
       {
-        FieldSource fs = new FieldSourceFile(params, selected_field, new File(path));
+        FieldSource fs = null;
+        if (path.equals("fake"))
+        {
+          fs = new FieldSourceFake(params, selected_field);
+        }
+        else
+        {
+          fs = new FieldSourceFile(params, selected_field, new File(path));
+        }
         disk_sources.add(fs);
         all_sources[i] = fs;
         for(int x : fs.getHoldingSet())
@@ -433,7 +441,7 @@ public class Arktika
           chunk_to_source_map.put(x,i);
         }
       }
-      layer_to_queue.put(i, MinMaxPriorityQueue.maximumSize(500).expectedSize(500).create());
+      layer_to_queue.put(i, MinMaxPriorityQueue.maximumSize(5000).expectedSize(5000).create());
 
       logger.info(String.format("Layer %d - %s", i, fs.toString()));
     }

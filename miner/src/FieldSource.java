@@ -36,7 +36,7 @@ public abstract class FieldSource
 
   public boolean skipQueueOnRehit()
   {
-    return false;
+    return true;
   }
 
   public boolean hasDeckFiles()

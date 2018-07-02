@@ -70,14 +70,14 @@ public class LayerWorkThread extends Thread
         long t1 = System.nanoTime();
         yield();
         long t_diff = System.nanoTime() - t1;
-        //if (t_diff > 50000)
+        /*if (t_diff > 10000)
         {
           synchronized(queue)
           {
             queue.wait(10000);
           } 
           return;
-        }
+        }*/
       }
 
       pw = new PartialWork(wu, rnd, md, total_words);
