@@ -111,7 +111,6 @@ public class Arktika
 
     params = NetworkParams.loadFromConfig(config);
 
-    snow_path = new File(config.get("snow_path"));
 
     if ((!config.isSet("mine_to_address")) && (!config.isSet("mine_to_wallet")))
     {
