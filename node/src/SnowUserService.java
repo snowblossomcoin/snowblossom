@@ -277,11 +277,22 @@ public class SnowUserService extends UserServiceGrpc.UserServiceImplBase
   @Override
   public void getAddressHistory(RequestAddress req, StreamObserver<HistoryList> observer)
   {
+    try
+    {
     AddressSpecHash spec_hash = new AddressSpecHash(req.getAddressSpecHash());
 
     observer.onNext( AddressHistoryUtil.getHistory(spec_hash, node.getDB(), node.getBlockHeightCache()) );
     observer.onCompleted();
+    }
+    catch(Throwable e)
+    {
+      logger.info("Exception: " + e);
 
+      responseObserver.onNext(HistoryList.newBuilder().build());
+      responseObserver.onCompleted();
+      return;
+    }
+ 
   }
 
 
