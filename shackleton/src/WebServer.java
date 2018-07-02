@@ -138,7 +138,7 @@ public class WebServer
   private void displayStatus(PrintStream out)
   {
     NetworkParams params = shackleton.getParams();
-    NodeStatus node_status = shackleton.getStub().getNodeStatus(nr());
+    NodeStatus node_status = shackleton.getStub().getNodeStatus(QueryUtil.nr());
     out.println("<h2>Node Status</h2>");
     out.println("<pre>");
     out.println("mem_pool_size: " + node_status.getMemPoolSize());
@@ -285,7 +285,7 @@ public class WebServer
   private void displayAddress(PrintStream out, AddressSpecHash address)
   {
     NetworkParams params = shackleton.getParams();
-    new AddressPage(out, address, shackleton).render();
+    new AddressPage(out, address, params, shackleton.getStub(), true).render();
   }
 
   private void displayBlock(PrintStream out, Block blk)
@@ -326,11 +326,6 @@ public class WebServer
   }
 
 
-
-  public NullRequest nr()
-  {
-    return NullRequest.newBuilder().build();
-  }
 
   public abstract class GeneralHandler implements HttpHandler
   {

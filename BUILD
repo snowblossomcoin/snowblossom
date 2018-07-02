@@ -49,6 +49,14 @@ java_binary(
     "//shackleton:shackleton",
   ]
 )
+java_binary(
+  name = "RichList",
+  main_class = "snowblossom.shackleton.RichList",
+  runtime_deps = [
+    "//shackleton:shackleton",
+  ]
+)
+
 
 java_binary(
   name = "SnowBlossomClient",
