@@ -374,6 +374,7 @@ public class Arktika
     }
 
     all_sources=new FieldSource[layer_count];
+    LinkedList<FieldSource> composit_builder = new LinkedList<>();
 
     List<FieldSource> disk_sources = new LinkedList<>();
     TreeSet<Integer> found = new TreeSet<>();
@@ -392,6 +393,7 @@ public class Arktika
         fs = new FieldSourceFile(params, selected_field, new File(path));
         disk_sources.add(fs);
         all_sources[i] = fs;
+        composit_builder.add(fs);
         for(int x : fs.getHoldingSet())
         {
           if (!found.contains(x))
@@ -405,6 +407,7 @@ public class Arktika
         FieldSource fs = new FieldSourceFake(params, selected_field);
         disk_sources.add(fs);
         all_sources[i] = fs;
+        composit_builder.add(fs);
         for(int x : fs.getHoldingSet())
         {
           if (!found.contains(x))
@@ -417,6 +420,10 @@ public class Arktika
       {
         FieldSource fs = new FieldSourceRemote(config, i);
         all_sources[i] = fs;
+        //Not adding to composit because
+        // 1) to slow for current merkle implementation
+        // 2) don't want to get requests over network and relay
+        //   over network
         for(int x : fs.getHoldingSet())
         {
           if (!found.contains(x))
@@ -452,6 +459,7 @@ public class Arktika
 
         FieldSource fs = new FieldSourceMem(mem_set, disk_sources);
         all_sources[i] = fs;
+        composit_builder.add(fs);
       }
     }
     logger.info(String.format("Found %d chunks", found.size()));
@@ -494,8 +502,7 @@ public class Arktika
     {
       throw new RuntimeException("No sources seem to have the deck files.");
     }
-    composit_source = new FieldSourceComposit(ImmutableList.copyOf(all_sources));
-
+    composit_source = new FieldSourceComposit(ImmutableList.copyOf(composit_builder));
 
     long total_words = params.getSnowFieldInfo(selected_field).getLength() / SnowMerkle.HASH_LEN_LONG;
     // START THREADS
