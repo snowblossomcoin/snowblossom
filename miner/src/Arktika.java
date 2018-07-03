@@ -40,6 +40,10 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.MinMaxPriorityQueue;
 import org.junit.Assert;
 
+import io.grpc.Server;
+import io.grpc.ServerBuilder;
+
+
 public class Arktika
 {
   private static final Logger logger = Logger.getLogger("snowblossom.miner");
@@ -134,6 +138,13 @@ public class Arktika
     loadField();
 
     subscribe();
+
+      Server s = ServerBuilder
+        .forPort(2311)
+        .addService(new Stubo(composit_source))
+        .build();
+      s.start();
+
 
 
   }
@@ -365,7 +376,6 @@ public class Arktika
     all_sources=new FieldSource[layer_count];
 
     List<FieldSource> disk_sources = new LinkedList<>();
-    LinkedList<Integer> chunk_ordering = new LinkedList<>();
     TreeSet<Integer> found = new TreeSet<>();
 
     // Load up the disk sources first
@@ -386,7 +396,6 @@ public class Arktika
         {
           if (!found.contains(x))
           {
-            chunk_ordering.add(x);
             found.add(x);
           }
         }
@@ -400,7 +409,18 @@ public class Arktika
         {
           if (!found.contains(x))
           {
-            chunk_ordering.add(x);
+            found.add(x);
+          }
+        }
+      }
+      else if (type.equals("remote"))
+      {
+        FieldSource fs = new FieldSourceRemote(config, i);
+        all_sources[i] = fs;
+        for(int x : fs.getHoldingSet())
+        {
+          if (!found.contains(x))
+          {
             found.add(x);
           }
         }
@@ -411,22 +431,22 @@ public class Arktika
       }
     }
     
-    // Load up memory sources using last added chunks,
-    // presumable from the slowest sources
     for(int i=0; i<layer_count; i++)
     {
       String type = config.get("layer_" + i + "_type");
       if (type.equals("mem"))
       {
-        config.require("layer_" +i +"_size");
-        int chunks = config.getInt("layer_" + i + "_size");
+        config.require("layer_" + i + "_range");
+        List<String> range_str = config.getList("layer_"+i+"_range");
+        int start = Integer.parseInt(range_str.get(0));
+        int end = Integer.parseInt(range_str.get(1));
+        Assert.assertTrue(start >= 0);
+        Assert.assertTrue(end > start);
 
         TreeSet<Integer> mem_set = new TreeSet<>();
-        while((chunks > 0) && (chunk_ordering.size() > 0))
+        for(int j=start; j<end; j++)
         {
-          int last = chunk_ordering.pollLast();
-          mem_set.add(last);
-          chunks--;
+          mem_set.add(j);
         }
 
         FieldSource fs = new FieldSourceMem(mem_set, disk_sources);

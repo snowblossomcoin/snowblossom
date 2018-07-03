@@ -71,6 +71,7 @@ public class FieldSourceRemote extends FieldSource implements BatchSource
     bb.put(bs.toByteArray());
   } 
 
+  /** Shouldn't use this much, just allowed here for proof generation */
   @Override
   public List<ByteString> readWordsBulk(List<Long> indexes)
   {
