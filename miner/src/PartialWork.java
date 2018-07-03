@@ -55,13 +55,11 @@ public class PartialWork implements Comparable<PartialWork>
     return next_word_idx;
   }
 
-  public void doPass(FieldSource fs, MessageDigest md, long total_words)
+  public void doPass(byte[] word_buff, MessageDigest md, long total_words)
     throws java.io.IOException
   {
     //System.out.println("Pass: " + passes_done);
     Assert.assertTrue(next_word_idx >= 0);
-    word_bb.clear();
-    fs.readWord(next_word_idx, word_bb);
     context = PowUtil.getNextContext(context, word_buff, md);
 
     passes_done++;

@@ -32,6 +32,10 @@ public class LayerWorkThread extends Thread
   long total_words;
   boolean is_mem;
 
+  byte[] word_buff = new byte[SnowMerkle.HASH_LEN];
+  ByteBuffer word_bb = ByteBuffer.wrap(word_buff);
+
+
 	public LayerWorkThread(Arktika arktika, FieldSource fs, Queue<PartialWork> queue, long total_words)
 	{
 		this.fs = fs;
@@ -49,7 +53,7 @@ public class LayerWorkThread extends Thread
 
 	}
 
-	private void runPass() throws Exception
+	protected void runPass() throws Exception
 	{
     PartialWork pw = null;
     synchronized(queue)
@@ -84,12 +88,14 @@ public class LayerWorkThread extends Thread
     }
     else
     {
-      pw.doPass(fs, md, total_words);
+      word_bb.clear();
+      fs.readWord(pw.next_word_idx, word_bb);
+      pw.doPass(word_buff, md, total_words);
     }
     processPw(pw);
 	}
 
-  private void processPw(PartialWork pw)
+  protected void processPw(PartialWork pw)
     throws Exception
   {
     if (pw.passes_done == Globals.POW_LOOK_PASSES)
@@ -111,7 +117,9 @@ public class LayerWorkThread extends Thread
       int chunk = (int)(next_word / fs.words_per_chunk);
       if (fs.skipQueueOnRehit() && (fs.hasChunk(chunk)))
       { 
-        pw.doPass(fs, md, total_words);
+        word_bb.clear();
+        fs.readWord(pw.next_word_idx, word_bb);
+        pw.doPass(word_buff, md, total_words);
         processPw(pw);
       }
       else
@@ -122,7 +130,7 @@ public class LayerWorkThread extends Thread
 
   }
 
-	private void submitWork(PartialWork pw) throws Exception
+	protected void submitWork(PartialWork pw) throws Exception
 	{
 
 
@@ -136,8 +144,6 @@ public class LayerWorkThread extends Thread
 		header.mergeFrom(wu.getHeader());
 		header.setNonce(ByteString.copyFrom(pw.nonce));
 
-    byte[] word_buff = new byte[SnowMerkle.HASH_LEN];
-    ByteBuffer word_bb = ByteBuffer.wrap(word_buff);
     
 		for (int pass = 0; pass < Globals.POW_LOOK_PASSES; pass++)
 		{

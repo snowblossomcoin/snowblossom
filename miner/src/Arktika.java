@@ -473,7 +473,7 @@ public class Arktika
           chunk_to_source_map.put(x,i);
         }
       }
-      layer_to_queue.put(i, MinMaxPriorityQueue.maximumSize(5000).expectedSize(5000).create());
+      layer_to_queue.put(i, MinMaxPriorityQueue.maximumSize(10000).expectedSize(10000).create());
 
       logger.info(String.format("Layer %d - %s", i, fs.toString()));
     }
@@ -506,7 +506,14 @@ public class Arktika
       int thread_count = config.getInt("layer_" + x + "_threads");
       for(int i=0; i<thread_count; i++)
       {
-        new LayerWorkThread(this, fs, layer_to_queue_map.get(x), total_words).start();
+        if (fs instanceof BatchSource)
+        {
+          new BatchLayerWorkThread(this, fs,  layer_to_queue_map.get(x), total_words).start();
+        }
+        else
+        {
+          new LayerWorkThread(this, fs, layer_to_queue_map.get(x), total_words).start();
+        }
       }
     }
 
