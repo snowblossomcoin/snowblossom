@@ -374,7 +374,6 @@ public class Arktika
     }
 
     all_sources=new FieldSource[layer_count];
-    LinkedList<FieldSource> composit_builder = new LinkedList<>();
 
     List<FieldSource> disk_sources = new LinkedList<>();
     TreeSet<Integer> found = new TreeSet<>();
@@ -393,7 +392,6 @@ public class Arktika
         fs = new FieldSourceFile(params, selected_field, new File(path));
         disk_sources.add(fs);
         all_sources[i] = fs;
-        composit_builder.add(fs);
         for(int x : fs.getHoldingSet())
         {
           if (!found.contains(x))
@@ -407,7 +405,6 @@ public class Arktika
         FieldSource fs = new FieldSourceFake(params, selected_field);
         disk_sources.add(fs);
         all_sources[i] = fs;
-        composit_builder.add(fs);
         for(int x : fs.getHoldingSet())
         {
           if (!found.contains(x))
@@ -459,13 +456,13 @@ public class Arktika
 
         FieldSource fs = new FieldSourceMem(mem_set, disk_sources);
         all_sources[i] = fs;
-        composit_builder.add(fs);
       }
     }
     logger.info(String.format("Found %d chunks", found.size()));
 
     TreeMap<Integer, Integer> chunk_to_source_map = new TreeMap<>();
     TreeMap<Integer, Queue<PartialWork> > layer_to_queue=new TreeMap();
+    LinkedList<FieldSource> composit_builder = new LinkedList<>();
 
     for(int i=0; i<layer_count; i++)
     {
@@ -484,6 +481,15 @@ public class Arktika
       layer_to_queue.put(i, MinMaxPriorityQueue.maximumSize(10000).expectedSize(10000).create());
 
       logger.info(String.format("Layer %d - %s", i, fs.toString()));
+      if (!(fs instanceof FieldSourceRemote))
+      {
+        //Not adding remote to composit because
+        // 1) to slow for current merkle implementation
+        // 2) don't want to get requests over network and relay
+        //   over network
+
+        composit_builder.add(fs);
+      }
     }
 
     chunk_to_layer_map = ImmutableMap.copyOf(chunk_to_source_map);

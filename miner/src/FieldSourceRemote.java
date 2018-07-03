@@ -28,7 +28,7 @@ import snowblossom.mining.proto.SharedMiningServiceGrpc.SharedMiningServiceBlock
 
 public class FieldSourceRemote extends FieldSource implements BatchSource
 {
-  private SharedMiningServiceBlockingStub stub;
+  private ThreadLocal<SharedMiningServiceBlockingStub> stub_local=new ThreadLocal<>();
 
   public FieldSourceRemote(Config config, int layer)
   {
@@ -53,11 +53,26 @@ public class FieldSourceRemote extends FieldSource implements BatchSource
     }
     holding_set = ImmutableSet.copyOf(holding);
 
-    String host = config.get("layer_" + layer + "_host");
-    int port = 2311;
+    stub_host = config.get("layer_" + layer + "_host");
+    stub_port = 2311;
 
-    ManagedChannel channel = ManagedChannelBuilder.forAddress(host, port).usePlaintext(true).build();
-    stub = SharedMiningServiceGrpc.newBlockingStub(channel);
+    //ManagedChannel channel = ManagedChannelBuilder.forAddress(host, port).usePlaintext(true).build();
+    //stub = SharedMiningServiceGrpc.newBlockingStub(channel);
+  }
+
+  private String stub_host;
+  private int stub_port;
+
+  protected SharedMiningServiceBlockingStub getStub()
+  {
+    SharedMiningServiceBlockingStub stub = stub_local.get();
+    if (stub == null)
+    {
+      ManagedChannel channel = ManagedChannelBuilder.forAddress(stub_host, stub_port).usePlaintext(true).build();
+      stub = SharedMiningServiceGrpc.newBlockingStub(channel);
+      stub_local.set(stub);
+    }
+    return stub;
   }
 
   @Override
@@ -75,7 +90,7 @@ public class FieldSourceRemote extends FieldSource implements BatchSource
   @Override
   public List<ByteString> readWordsBulk(List<Long> indexes)
   {
-    return stub.getWords(GetWordsRequest.newBuilder().addAllWordIndexes(indexes).build()).getWordsList();
+    return getStub().getWords(GetWordsRequest.newBuilder().addAllWordIndexes(indexes).build()).getWordsList();
   }
 
 
