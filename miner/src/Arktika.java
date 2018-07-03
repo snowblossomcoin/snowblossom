@@ -440,6 +440,7 @@ public class Arktika
         List<String> range_str = config.getList("layer_"+i+"_range");
         int start = Integer.parseInt(range_str.get(0));
         int end = Integer.parseInt(range_str.get(1));
+        logger.info("Mem range: " + start + " to " + end);
         Assert.assertTrue(start >= 0);
         Assert.assertTrue(end > start);
 
