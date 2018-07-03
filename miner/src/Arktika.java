@@ -96,21 +96,23 @@ public class Arktika
   private ImmutableMap<Integer, Queue<PartialWork> > chunk_to_queue_map;
   private ImmutableMap<Integer, Queue<PartialWork> > layer_to_queue_map;
   protected FieldSource composit_source;
+  private final int layer_count;
+
 
   public Arktika(Config config) throws Exception
   {
     this.config = config;
     logger.info(String.format("Starting Arktika version %s", Globals.VERSION));
 
-    config.require("snow_path_list");
-    config.require("thread_list");
     config.require("pool_host");
     config.require("selected_field");
+    config.require("layer_count");
+
+    layer_count = config.getInt("layer_count");
 
     selected_field = config.getInt("selected_field");
 
     params = NetworkParams.loadFromConfig(config);
-
 
     if ((!config.isSet("mine_to_address")) && (!config.isSet("mine_to_wallet")))
     {
@@ -121,6 +123,8 @@ public class Arktika
       throw new RuntimeException("Config must either specify mine_to_address or mine_to_wallet, not both");
     }
 
+    // this is a bad idea, don't use this.  It eats all the cpu doing
+    // record keeping
     if (config.getBoolean("display_timerecord"))
     {
       time_record = new TimeRecord();
@@ -347,22 +351,15 @@ public class Arktika
 
   private void loadField() throws Exception
   {
-    List<String> locations = config.getList("snow_path_list");
-    List<String> thread_str = config.getList("thread_list");
-
-    if (locations.size() != thread_str.size())
+    for(int i = 0; i<layer_count; i++)
     {
-      throw new RuntimeException("Must have same number of entries in thread_list as in snow_path_list");
+      config.require("layer_" + i + "_threads");
+      config.require("layer_" + i + "_type");
     }
-    int layer_count = locations.size();
+
     if (layer_count == 0)
     {
       throw new RuntimeException("Time is but a window");
-    }
-    List<Integer> thread_counts = new LinkedList<>();
-    for(String s : thread_str)
-    {
-      thread_counts.add(Integer.parseInt(s));
     }
 
     all_sources=new FieldSource[layer_count];
@@ -375,18 +372,14 @@ public class Arktika
     // so that memory sources can read from them
     for(int i=0; i<layer_count; i++)
     {
-      String path = locations.get(i);
-      if (!path.startsWith("mem_"))
+      String type = config.get("layer_" + i + "_type");
+      if (type.equals("file"))
       {
+        config.require("layer_" + i + "_path");
+        String path = config.get("layer_" + i + "_path");
+      
         FieldSource fs = null;
-        if (path.equals("fake"))
-        {
-          fs = new FieldSourceFake(params, selected_field);
-        }
-        else
-        {
-          fs = new FieldSourceFile(params, selected_field, new File(path));
-        }
+        fs = new FieldSourceFile(params, selected_field, new File(path));
         disk_sources.add(fs);
         all_sources[i] = fs;
         for(int x : fs.getHoldingSet())
@@ -398,17 +391,36 @@ public class Arktika
           }
         }
       }
+      else if (type.equals("fake"))
+      {
+        FieldSource fs = new FieldSourceFake(params, selected_field);
+        disk_sources.add(fs);
+        all_sources[i] = fs;
+        for(int x : fs.getHoldingSet())
+        {
+          if (!found.contains(x))
+          {
+            chunk_ordering.add(x);
+            found.add(x);
+          }
+        }
+      }
+      else if (type.equals("mem"))
+      {
+        //We'll get to you layer
+      }
     }
     
     // Load up memory sources using last added chunks,
     // presumable from the slowest sources
     for(int i=0; i<layer_count; i++)
     {
-      String path = locations.get(i);
-      if (path.startsWith("mem_"))
+      String type = config.get("layer_" + i + "_type");
+      if (type.equals("mem"))
       {
-        String[] split = path.split("_");
-        int chunks = Integer.parseInt(split[1]);
+        config.require("layer_" +i +"_size");
+        int chunks = config.getInt("layer_" + i + "_size");
+
         TreeSet<Integer> mem_set = new TreeSet<>();
         while((chunks > 0) && (chunk_ordering.size() > 0))
         {
@@ -469,7 +481,8 @@ public class Arktika
     for(int x=0; x<layer_count; x++)
     {
       FieldSource fs = all_sources[x];
-      int thread_count = thread_counts.get(x);
+
+      int thread_count = config.getInt("layer_" + x + "_threads");
       for(int i=0; i<thread_count; i++)
       {
         new LayerWorkThread(this, fs, layer_to_queue_map.get(x), total_words).start();
