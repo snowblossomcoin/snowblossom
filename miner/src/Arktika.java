@@ -97,8 +97,8 @@ public class Arktika
 
   private FieldSource all_sources[];
   private ImmutableMap<Integer, Integer> chunk_to_layer_map;
-  private ImmutableMap<Integer, Queue<PartialWork> > chunk_to_queue_map;
-  private ImmutableMap<Integer, Queue<PartialWork> > layer_to_queue_map;
+  private ImmutableMap<Integer, FaQueue > chunk_to_queue_map;
+  private ImmutableMap<Integer, FaQueue > layer_to_queue_map;
   protected FieldSource composit_source;
   private final int layer_count;
 
@@ -145,7 +145,7 @@ public class Arktika
         .build();
       s.start();
 
-
+    new QueuePruner().start();
 
   }
 
@@ -284,7 +284,7 @@ public class Arktika
 
     StringBuilder queue_report = new StringBuilder();
     queue_report.append("Queues: {"); 
-    for(Map.Entry<Integer, Queue<PartialWork>> me : layer_to_queue_map.entrySet())
+    for(Map.Entry<Integer, FaQueue> me : layer_to_queue_map.entrySet())
     {
       queue_report.append(me.getValue().size());
       queue_report.append(",");
@@ -341,12 +341,9 @@ public class Arktika
         // If the block number changes, clear the queues
         if (last_block != wu_new.getHeader().getBlockHeight())
         {
-          for(Queue<PartialWork> q : layer_to_queue_map.values())
+          for(FaQueue q : layer_to_queue_map.values())
           {
-            synchronized(q)
-            {
-              q.clear();
-            }
+            q.clear();
           }
         }
         
@@ -461,7 +458,7 @@ public class Arktika
     logger.info(String.format("Found %d chunks", found.size()));
 
     TreeMap<Integer, Integer> chunk_to_source_map = new TreeMap<>();
-    TreeMap<Integer, Queue<PartialWork> > layer_to_queue=new TreeMap();
+    TreeMap<Integer, FaQueue > layer_to_queue=new TreeMap();
     LinkedList<FieldSource> composit_builder = new LinkedList<>();
 
     for(int i=0; i<layer_count; i++)
@@ -478,7 +475,7 @@ public class Arktika
           chunk_to_source_map.put(x,i);
         }
       }
-      layer_to_queue.put(i, MinMaxPriorityQueue.maximumSize(10000).expectedSize(10000).create());
+      layer_to_queue.put(i, new FaQueue(10000));
 
       logger.info(String.format("Layer %d - %s", i, fs.toString()));
       if (!(fs instanceof FieldSourceRemote))
@@ -495,7 +492,7 @@ public class Arktika
     chunk_to_layer_map = ImmutableMap.copyOf(chunk_to_source_map);
     layer_to_queue_map = ImmutableMap.copyOf(layer_to_queue);
 
-    TreeMap<Integer, Queue<PartialWork>> chunk_to_queue=new TreeMap<>();
+    TreeMap<Integer, FaQueue> chunk_to_queue=new TreeMap<>();
     for(int x : chunk_to_layer_map.keySet())
     {
       int layer = chunk_to_layer_map.get(x);
@@ -536,14 +533,32 @@ public class Arktika
   {
     Assert.assertNotNull(work);
 
-    Queue<PartialWork> q = chunk_to_queue_map.get(chunk);
+    FaQueue q = chunk_to_queue_map.get(chunk);
     if (q == null) return;
-    synchronized(q)
+    q.enqueue(work);
+  }
+
+
+  public class QueuePruner extends Thread
+  {
+    public QueuePruner()
     {
-      q.offer(work);
-      q.notify();
-      q.notify();
+      setDaemon(true);
+      setName("QueuePruner");
     }
+
+    public void run()
+    {
+      while(!isTerminated())
+      {
+        try { sleep(1000); } catch(Throwable t){}
+        for(FaQueue q : layer_to_queue_map.values())
+        {
+          q.prune();
+        }
+      }
+    }
+
   }
 
 

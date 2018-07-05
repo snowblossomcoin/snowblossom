@@ -26,7 +26,7 @@ public class BatchLayerWorkThread extends LayerWorkThread
 	private static final Logger logger = Logger.getLogger("snowblossom.miner");
   public static final int BATCH_SIZE=256;
 
-	public BatchLayerWorkThread(Arktika arktika, FieldSource fs, Queue<PartialWork> queue, long total_words)
+	public BatchLayerWorkThread(Arktika arktika, FieldSource fs, FaQueue queue, long total_words)
 	{
     super(arktika, fs, queue, total_words);
 
@@ -36,23 +36,9 @@ public class BatchLayerWorkThread extends LayerWorkThread
 	protected void runPass() throws Exception
 	{
     LinkedList<PartialWork> pw_list = new LinkedList<>();
-    synchronized(queue)
-    {
-      PartialWork pw=queue.poll();
-      while(pw != null)
-      {
-        pw_list.add(pw);
 
-        if (pw_list.size() >= BATCH_SIZE)
-        {
-          pw=null;
-        }
-        else
-        {
-          pw=queue.poll();
-        }
-      }
-    }
+    queue.superPoll(BATCH_SIZE, pw_list);
+
     if (pw_list.size() < BATCH_SIZE)
     {
       WorkUnit wu = arktika.last_work_unit;

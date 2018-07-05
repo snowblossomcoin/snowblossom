@@ -28,7 +28,7 @@ public class LayerWorkThread extends Thread
 
 	FieldSource fs;
 	Arktika arktika;
-  Queue<PartialWork> queue;
+  FaQueue queue;
   long total_words;
   boolean is_mem;
 
@@ -36,7 +36,7 @@ public class LayerWorkThread extends Thread
   ByteBuffer word_bb = ByteBuffer.wrap(word_buff);
 
 
-	public LayerWorkThread(Arktika arktika, FieldSource fs, Queue<PartialWork> queue, long total_words)
+	public LayerWorkThread(Arktika arktika, FieldSource fs, FaQueue queue, long total_words)
 	{
 		this.fs = fs;
 		this.arktika = arktika;
@@ -56,10 +56,7 @@ public class LayerWorkThread extends Thread
 	protected void runPass() throws Exception
 	{
     PartialWork pw = null;
-    synchronized(queue)
-    {
-      pw=queue.poll();
-    }
+    pw=queue.poll();
 
     if (pw == null)
     {
