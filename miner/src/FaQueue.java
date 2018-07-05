@@ -33,6 +33,10 @@ public class FaQueue
     counts[slot].incrementAndGet();
   }
 
+  /**
+   * There is some error to this number due to races during a clear
+   * but it will be reset on the next clear so it shouldn't drift far
+   */
   public int size()
   {
     int sz = 0;
@@ -40,6 +44,9 @@ public class FaQueue
     return sz;
   }
 
+  /**
+   * it would be best for this to be run only by one thread at once
+   */
   public void prune()
   {
     int sz = size();

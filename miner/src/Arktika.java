@@ -551,10 +551,12 @@ public class Arktika
     {
       while(!isTerminated())
       {
-        try { sleep(1000); } catch(Throwable t){}
+        try { sleep(10); } catch(Throwable t){}
         for(FaQueue q : layer_to_queue_map.values())
         {
+          //logger.info("Preprune: " + q.size());
           q.prune();
+          //logger.info("Prune: " + q.size());
         }
       }
     }

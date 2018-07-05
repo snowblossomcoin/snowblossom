@@ -8,6 +8,8 @@ import java.security.MessageDigest;
 
 import org.junit.Assert;
 
+import com.google.common.annotations.VisibleForTesting;
+
 
 public class PartialWork implements Comparable<PartialWork>
 {
@@ -20,6 +22,12 @@ public class PartialWork implements Comparable<PartialWork>
 
   byte[] word_buff = new byte[SnowMerkle.HASH_LEN];
   ByteBuffer word_bb = ByteBuffer.wrap(word_buff);
+
+  @VisibleForTesting
+  public PartialWork(int pass_no)
+  {
+    passes_done = pass_no;
+  }
 
   public PartialWork(WorkUnit wu, Random rnd, MessageDigest md, long total_words)
   {
