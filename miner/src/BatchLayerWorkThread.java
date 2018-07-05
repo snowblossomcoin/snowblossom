@@ -63,6 +63,7 @@ public class BatchLayerWorkThread extends LayerWorkThread
           arktika.enqueue(chunk, pw);
         }
       }
+      arktika.tryPruneAllQueues();
     }
 
     if (pw_list.size() > 0)

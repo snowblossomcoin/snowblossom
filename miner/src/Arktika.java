@@ -145,7 +145,7 @@ public class Arktika
         .build();
       s.start();
 
-    new QueuePruner().start();
+    //new QueuePruner().start();
 
   }
 
@@ -562,6 +562,15 @@ public class Arktika
     }
 
   }
+
+  public void tryPruneAllQueues()
+  {
+    for(FaQueue q : layer_to_queue_map.values())
+    {
+      q.tryPrune();
+    }
+  }
+
 
 
 

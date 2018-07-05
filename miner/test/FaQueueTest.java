@@ -39,7 +39,7 @@ public class FaQueueTest
       queue.enqueue(new PartialWork(i % 6));
     }
     Assert.assertEquals(1000, queue.size());
-    queue.prune();
+    queue.tryPrune();
     Assert.assertEquals(100, queue.size());
   }
 }

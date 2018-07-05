@@ -5,6 +5,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.List;
 
 import snowblossom.lib.Globals;
+import java.util.concurrent.Semaphore;
 
 public class FaQueue
 {
@@ -65,6 +66,17 @@ public class FaQueue
       }
 
     }
+  }
+
+  private final Semaphore prune_sem = new Semaphore(1);
+  public void tryPrune()
+  {
+    if (prune_sem.tryAcquire(1))
+    {
+      prune();
+      prune_sem.release();
+    }
+
   }
 
   public void superPoll(int max, List<PartialWork> lst)

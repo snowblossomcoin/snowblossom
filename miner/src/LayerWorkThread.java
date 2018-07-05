@@ -122,6 +122,7 @@ public class LayerWorkThread extends Thread
       else
       {
         arktika.enqueue(chunk, pw);
+        arktika.tryPruneAllQueues();
       }
     }
 
