@@ -24,7 +24,10 @@ import com.google.protobuf.ByteString;
 public class BatchLayerWorkThread extends LayerWorkThread
 {
 	private static final Logger logger = Logger.getLogger("snowblossom.miner");
-  public static final int BATCH_SIZE=256;
+  //  256 = 590hk/s
+  //  512 = 635kh/s 
+  // 1024 = 650kh/s
+  public static final int BATCH_SIZE=1024;
 
 	public BatchLayerWorkThread(Arktika arktika, FieldSource fs, FaQueue queue, long total_words)
 	{

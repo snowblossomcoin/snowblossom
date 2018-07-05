@@ -29,6 +29,7 @@ import snowblossom.mining.proto.SharedMiningServiceGrpc.SharedMiningServiceBlock
 public class FieldSourceRemote extends FieldSource implements BatchSource
 {
   private ThreadLocal<SharedMiningServiceBlockingStub> stub_local=new ThreadLocal<>();
+  SharedMiningServiceBlockingStub stub_one;
 
   public FieldSourceRemote(Config config, int layer)
   {
@@ -56,8 +57,10 @@ public class FieldSourceRemote extends FieldSource implements BatchSource
     stub_host = config.get("layer_" + layer + "_host");
     stub_port = 2311;
 
-    //ManagedChannel channel = ManagedChannelBuilder.forAddress(host, port).usePlaintext(true).build();
-    //stub = SharedMiningServiceGrpc.newBlockingStub(channel);
+    // In cloud testing, using stub per thread got 611kh/s vs 575kh/s with a single stub
+    // otherwise same setup
+    //ManagedChannel channel = ManagedChannelBuilder.forAddress(stub_host, stub_port).usePlaintext(true).build();
+    //stub_one = SharedMiningServiceGrpc.newBlockingStub(channel);
   }
 
   private String stub_host;
@@ -65,6 +68,8 @@ public class FieldSourceRemote extends FieldSource implements BatchSource
 
   protected SharedMiningServiceBlockingStub getStub()
   {
+    if (stub_one != null) return stub_one;
+
     SharedMiningServiceBlockingStub stub = stub_local.get();
     if (stub == null)
     {
