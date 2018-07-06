@@ -11,24 +11,29 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Collections;
+import snowblossom.proto.UserServiceGrpc.UserServiceBlockingStub;
 
 public class AddressPage
 {
   private final PrintStream out;
   private final AddressSpecHash address;
-  private final Shackleton shackleton;
+  private final NetworkParams params;
+  private final UserServiceBlockingStub stub;
   private final DecimalFormat df = new DecimalFormat("0.000000");
+  private final boolean want_history;
 
-  public AddressPage(PrintStream out, AddressSpecHash address, Shackleton shackleton)
+  public AddressPage(PrintStream out, AddressSpecHash address, NetworkParams params, UserServiceBlockingStub stub, boolean want_history)
   {
     this.out = out;
     this.address = address;
-    this.shackleton = shackleton;
+    this.params = params;
+    this.stub = stub;
+    this.want_history = want_history;
   }
 
   public void render()
   {
-    out.println("<p>Address: " + AddressUtil.getAddressString(shackleton.getParams().getAddressPrefix(), address) + "</p>");
+    out.println("<p>Address: " + AddressUtil.getAddressString(params.getAddressPrefix(), address) + "</p>");
     loadData();
 
     double val_conf_d = (double) valueConfirmed / (double) Globals.SNOW_VALUE;
@@ -36,19 +41,22 @@ public class AddressPage
     out.println("<H2>Balance</H2>");
     out.println(String.format("<p>%s (%s pending) in %d outputs</p>", df.format(val_conf_d), df.format(val_unconf_d), totalOutputs));
 
-    out.println("<H2>History</H2>");
-
-    LinkedList<HistoryEntry> entries = new LinkedList<>();
-    entries.addAll(history.getEntriesList());
-    Collections.reverse(entries);
-    for(HistoryEntry he : entries)
+    if (want_history)
     {
-      int height =  he.getBlockHeight();
-      ChainHash tx_hash = new ChainHash(he.getTxHash());
+      out.println("<H2>History</H2>");
 
-      out.println(String.format("<li> Block: <a href='/?search=%d'>%d</a> - tx: <a href='/?search=%s'>%s</a> </li>",
-        height, height,
-        tx_hash, tx_hash));
+      LinkedList<HistoryEntry> entries = new LinkedList<>();
+      entries.addAll(history.getEntriesList());
+      Collections.reverse(entries);
+      for(HistoryEntry he : entries)
+      {
+        int height =  he.getBlockHeight();
+        ChainHash tx_hash = new ChainHash(he.getTxHash());
+
+        out.println(String.format("<li> Block: <a href='/?search=%d'>%d</a> - tx: <a href='/?search=%s'>%s</a> </li>",
+          height, height,
+          tx_hash, tx_hash));
+      }
     }
     
 /*
@@ -74,13 +82,16 @@ public class AddressPage
   List<TransactionBridge> bridges;
   HistoryList history;
 
-  private void loadData()
+  protected void loadData()
   {
 
     try
     {
       bridges = getSpendable(address);
-      history = getHistory(address);
+      if (want_history)
+      {
+        history = getHistory(address);
+      }
       for (TransactionBridge b : bridges)
       {
 
@@ -114,14 +125,14 @@ public class AddressPage
 
   public HistoryList getHistory(AddressSpecHash addr)
   {
-    return shackleton.getStub().getAddressHistory(RequestAddress.newBuilder().setAddressSpecHash(addr.getBytes()).build());
+    return stub.getAddressHistory(RequestAddress.newBuilder().setAddressSpecHash(addr.getBytes()).build());
 
   }
 
   public List<TransactionBridge> getSpendable(AddressSpecHash addr)
   {
 
-    GetUTXONodeReply reply = shackleton.getStub().getUTXONode(GetUTXONodeRequest.newBuilder().setPrefix(addr.getBytes()).setIncludeProof(true).build());
+    GetUTXONodeReply reply = stub.getUTXONode(GetUTXONodeRequest.newBuilder().setPrefix(addr.getBytes()).setIncludeProof(true).build());
 
     HashMap<String, TransactionBridge> bridge_map = new HashMap<>();
 
@@ -135,9 +146,9 @@ public class AddressPage
       }
     }
 
-    for (ByteString tx_hash : shackleton.getStub().getMempoolTransactionList(RequestAddress.newBuilder().setAddressSpecHash(addr.getBytes()).build()).getTxHashesList())
+    for (ByteString tx_hash : stub.getMempoolTransactionList(RequestAddress.newBuilder().setAddressSpecHash(addr.getBytes()).build()).getTxHashesList())
     {
-      Transaction tx = shackleton.getStub().getTransaction(RequestTransaction.newBuilder().setTxHash(tx_hash).build());
+      Transaction tx = stub.getTransaction(RequestTransaction.newBuilder().setTxHash(tx_hash).build());
       TransactionInner inner = TransactionUtil.getInner(tx);
 
       for (TransactionInput in : inner.getInputsList())

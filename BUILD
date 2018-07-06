@@ -24,6 +24,13 @@ java_binary(
   ]
 )
 java_binary(
+  name = "Arktika",
+  main_class = "snowblossom.miner.Arktika",
+  runtime_deps = [
+    "//miner:miner",
+  ]
+)
+java_binary(
   name = "MrPlow",
   main_class = "snowblossom.miner.MrPlow",
   runtime_deps = [
@@ -42,6 +49,14 @@ java_binary(
     "//shackleton:shackleton",
   ]
 )
+java_binary(
+  name = "RichList",
+  main_class = "snowblossom.shackleton.RichList",
+  runtime_deps = [
+    "//shackleton:shackleton",
+  ]
+)
+
 
 java_binary(
   name = "SnowBlossomClient",

@@ -96,6 +96,7 @@ public class PoolMiner
     {
       throw new RuntimeException("Config must either specify mine_to_address or mine_to_wallet, not both");
     }
+
     if (config.getBoolean("display_timerecord"))
     {
       time_record = new TimeRecord();

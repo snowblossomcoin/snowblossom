@@ -37,3 +37,16 @@ message ShareEntry {
   string address = 1;
   int64 share_count = 2;
 }
+
+service SharedMiningService {
+  rpc GetWords ( GetWordsRequest ) returns ( GetWordsResponce ) {}
+}
+
+message GetWordsRequest {
+  repeated int64 word_indexes = 1;
+}
+
+message GetWordsResponce {
+  repeated bytes words = 1;
+}
+

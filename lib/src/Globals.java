@@ -4,7 +4,7 @@ import java.security.Security;
 
 public class Globals
 {
-  public static final String VERSION = "1.1.2-dev";
+  public static final String VERSION = "1.2.0";
 
   public static final int POW_LOOK_PASSES = 6;
 
@@ -45,6 +45,8 @@ public class Globals
   public static final int BLOCK_CHUNK_HEADER_DOWNLOAD_SIZE = 500;
 
   public static final int ADDRESS_HISTORY_MAX_REPLY = 10000;
+
+  public static final long MINE_CHUNK_SIZE = 1024L*1024L*1024L;
 
   public static void addCryptoProvider()
   {
