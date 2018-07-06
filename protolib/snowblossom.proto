@@ -284,12 +284,18 @@ message PeerList {
   repeated PeerInfo peers = 1;
 }
 
+
+// If anything is added or changed here, it is vital to update
+// WalletUtil.mergeDatabase as needed.  Or else the new fields
+// will not be copied in a merge resulting in terrible data loss.
 message WalletDatabase {
   repeated WalletKeyPair keys = 1;
   repeated AddressSpec addresses = 2;
   repeated Transaction transactions = 3;
-  int32 version = 4;
-  CipherKey cipher_key = 5;
+  map<string, bool> used_addresses = 4;
+  map<string, int64> address_create_time = 5;
+  int32 version = 10;
+  //CipherKey cipher_key = 11;
 }
 
 message WalletKeyPair
@@ -297,7 +303,7 @@ message WalletKeyPair
   int32 signature_type = 1;
   bytes public_key = 2;
   bytes private_key = 3;
-  EncryptedPrivateKey encrypted_private_key = 4;
+  //EncryptedPrivateKey encrypted_private_key = 4;
 }
 
 message EncryptedPrivateKey
@@ -315,3 +321,4 @@ message CipherKey
   bytes public_key = 4;
 
 }
+

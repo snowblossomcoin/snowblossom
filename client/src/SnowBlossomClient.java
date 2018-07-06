@@ -154,33 +154,14 @@ public class SnowBlossomClient
   public void loadWallet()
     throws Exception
   {
-    wallet_path.mkdirs();
-
-    File db_file = new File(wallet_path, "wallet.db");
-    if (db_file.exists())
+    wallet_database = WalletUtil.loadWallet(wallet_path, true);
+    if (wallet_database == null)
     {
-      wallet_database = WalletDatabase.parseFrom(new FileInputStream(db_file));
-    }
-    else
-    {
-      logger.log(Level.WARNING, String.format("File %s does not exist, creating new wallet", db_file.getPath()));
+      logger.log(Level.WARNING, String.format("Directory %s does not contain wallet, creating new wallet", wallet_path.getPath()));
       wallet_database = WalletUtil.makeNewDatabase(config);
-      saveWallet();
+      WalletUtil.saveWallet(wallet_database, wallet_path);
     }
 
-  }
-
-  public void saveWallet()
-    throws Exception
-  {
-    File db_file = new File(wallet_path, "wallet.db");
-    AtomicFileOutputStream out = new AtomicFileOutputStream(db_file);
-
-    wallet_database.writeTo(out);
-    out.flush();
-    out.close();
-
-    logger.log(Level.INFO, String.format("Save to file %s completed", db_file.getPath()));
   }
 
   public void showBalances()
