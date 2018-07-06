@@ -158,7 +158,7 @@ public class SnowBlossomClient
     if (wallet_database == null)
     {
       logger.log(Level.WARNING, String.format("Directory %s does not contain wallet, creating new wallet", wallet_path.getPath()));
-      wallet_database = WalletUtil.makeNewDatabase(config);
+      wallet_database = WalletUtil.makeNewDatabase(config, params);
       WalletUtil.saveWallet(wallet_database, wallet_path);
     }
 

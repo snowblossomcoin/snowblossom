@@ -22,6 +22,11 @@ public class AddressUtil
     return getHashForSpec(spec, DigestUtil.getMDAddressSpec());
   }
 
+  public static String getAddressString(AddressSpec spec, NetworkParams params)
+  {
+    return getAddressString(params.getAddressPrefix(), getHashForSpec(spec));
+  }
+
   public static AddressSpecHash getHashForSpec(AddressSpec spec, MessageDigest md)
   {
     try

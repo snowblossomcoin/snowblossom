@@ -13,6 +13,7 @@ import snowblossom.lib.KeyUtil;
 import snowblossom.lib.TransactionBridge;
 import snowblossom.lib.TransactionUtil;
 import snowblossom.lib.Validation;
+import snowblossom.lib.NetworkParamsRegtest;
 import snowblossom.client.WalletUtil;
 import duckutil.ConfigMem;
 
@@ -126,7 +127,7 @@ public class WalletTest
     ConfigMem config = new ConfigMem(ImmutableMap.of());
 
     WalletDatabase.Builder builder = WalletDatabase.newBuilder();
-    WalletUtil.genNewKey(builder, config); 
+    WalletUtil.genNewKey(builder, config, new NetworkParamsRegtest()); 
 
     WalletDatabase a = builder.build();
 

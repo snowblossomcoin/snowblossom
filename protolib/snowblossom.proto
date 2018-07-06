@@ -286,8 +286,8 @@ message PeerList {
 
 
 // If anything is added or changed here, it is vital to update
-// WalletUtil.mergeDatabase as needed.  Or else the new fields
-// will not be copied in a merge resulting in terrible data loss.
+// WalletUtil.mergeDatabase as needed and increase WalletUtil.WALLET_DB_VERSION
+// Or else the new fields will not be copied in a merge resulting in terrible data loss.
 message WalletDatabase {
   repeated WalletKeyPair keys = 1;
   repeated AddressSpec addresses = 2;

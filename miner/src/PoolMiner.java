@@ -15,6 +15,7 @@ import snowblossom.mining.proto.*;
 import snowblossom.mining.proto.MiningPoolServiceGrpc.MiningPoolServiceStub;
 import snowblossom.mining.proto.MiningPoolServiceGrpc.MiningPoolServiceBlockingStub;
 import snowblossom.lib.trie.HashUtils;
+import snowblossom.client.WalletUtil;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -163,11 +164,8 @@ public class PoolMiner
     if (config.isSet("mine_to_wallet"))
     {
       File wallet_path = new File(config.get("mine_to_wallet"));
-      File wallet_db = new File(wallet_path, "wallet.db");
+      WalletDatabase wallet = WalletUtil.loadWallet(wallet_path, false);
 
-      FileInputStream in = new FileInputStream(wallet_db);
-      WalletDatabase wallet = WalletDatabase.parseFrom(in);
-      in.close();
       if (wallet.getAddressesCount() == 0)
       {
         throw new RuntimeException("Wallet has no addresses");

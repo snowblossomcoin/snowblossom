@@ -42,6 +42,7 @@ import org.junit.Assert;
 
 import io.grpc.Server;
 import io.grpc.ServerBuilder;
+import snowblossom.client.WalletUtil;
 
 
 public class Arktika
@@ -196,11 +197,8 @@ public class Arktika
     if (config.isSet("mine_to_wallet"))
     {
       File wallet_path = new File(config.get("mine_to_wallet"));
-      File wallet_db = new File(wallet_path, "wallet.db");
+      WalletDatabase wallet = WalletUtil.loadWallet(wallet_path, false);
 
-      FileInputStream in = new FileInputStream(wallet_db);
-      WalletDatabase wallet = WalletDatabase.parseFrom(in);
-      in.close();
       if (wallet.getAddressesCount() == 0)
       {
         throw new RuntimeException("Wallet has no addresses");

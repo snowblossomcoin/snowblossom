@@ -5,6 +5,7 @@ import duckutil.Config;
 import duckutil.AtomicFileOutputStream;
 import snowblossom.lib.AddressUtil;
 import snowblossom.lib.KeyUtil;
+import snowblossom.lib.NetworkParams;
 import snowblossom.proto.*;
 
 import com.google.protobuf.ByteString;
@@ -29,7 +30,7 @@ public class WalletUtil
   private static final Logger logger = Logger.getLogger("snowblossom.client");
   public static final int WALLET_DB_VERSION = 2;
 
-  public static WalletDatabase makeNewDatabase(Config config)
+  public static WalletDatabase makeNewDatabase(Config config, NetworkParams params)
   {
     WalletDatabase.Builder builder = WalletDatabase.newBuilder();
     builder.setVersion(WALLET_DB_VERSION);
@@ -37,21 +38,22 @@ public class WalletUtil
     int count = config.getIntWithDefault("key_count", 8);
     for (int i = 0; i < count; i++)
     {
-      genNewKey(builder, config);
+      genNewKey(builder, config, params);
     }
 
     return builder.build();
   }
 
-  public static void genNewKey(WalletDatabase.Builder wallet_builder, Config config)
+  public static void genNewKey(WalletDatabase.Builder wallet_builder, Config config, NetworkParams params)
   {
     String key_mode = config.getWithDefault("key_mode", MODE_STANDARD).toLowerCase();
+    AddressSpec claim = null;
 
     if (key_mode.equals(MODE_STANDARD))
     {
       WalletKeyPair wkp = KeyUtil.generateWalletStandardECKey();
       wallet_builder.addKeys(wkp);
-      AddressSpec claim = AddressUtil.getSimpleSpecForKey(wkp);
+      claim = AddressUtil.getSimpleSpecForKey(wkp);
       wallet_builder.addAddresses(claim);
     }
     else if (key_mode.equals(MODE_QHARD))
@@ -65,13 +67,16 @@ public class WalletUtil
       wallet_builder.addKeys(k_rsa);
       wallet_builder.addKeys(k_dstu);
 
-      AddressSpec claim = AddressUtil.getMultiSig(3, ImmutableList.of(k_ec, k_rsa, k_dstu));
+      claim = AddressUtil.getMultiSig(3, ImmutableList.of(k_ec, k_rsa, k_dstu));
       wallet_builder.addAddresses(claim);
+      
     }
     else
     {
       throw new RuntimeException("Unknown key_mode: " + key_mode);
     }
+
+    wallet_builder.putAddressCreateTime( AddressUtil.getAddressString(claim, params), System.currentTimeMillis());
   }
 
   public static WalletDatabase loadWallet(File wallet_path, boolean cleanup)

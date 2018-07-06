@@ -12,7 +12,8 @@ java_library(
       "@org_rocksdb_rocksdbjni//jar",
       "@duckutil//:duckutil_lib",
       "@duckutil//:lobstack_lib",
-      "//lib:lib",
+      "//lib",
+      "//client",
     ],
 )
 
