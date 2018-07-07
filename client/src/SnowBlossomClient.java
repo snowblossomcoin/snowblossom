@@ -162,6 +162,8 @@ public class SnowBlossomClient
       WalletUtil.saveWallet(wallet_database, wallet_path);
     }
 
+    wallet_database = WalletUtil.fillKeyPool(wallet_database, wallet_path, config, params);
+
   }
 
   public void showBalances()
@@ -182,6 +184,10 @@ public class SnowBlossomClient
       try
       {
         List<TransactionBridge> bridges = getSpendable(hash);
+        if (bridges.size() > 0)
+        {
+          wallet_database = WalletUtil.markUsed(wallet_database, wallet_path, config, params, hash);
+        }
 
         for(TransactionBridge b : bridges)
         {
@@ -236,12 +242,18 @@ public class SnowBlossomClient
   }
 
   public List<TransactionBridge> getAllSpendable()
+    throws Exception
   {
     LinkedList<TransactionBridge> all = new LinkedList<>();
     for(AddressSpec claim : wallet_database.getAddressesList())
     {
       AddressSpecHash hash = AddressUtil.getHashForSpec(claim);
-      all.addAll(getSpendable(hash));
+      List<TransactionBridge> br_lst = getSpendable(hash);
+      if (br_lst.size() > 0)
+      {
+        wallet_database = WalletUtil.markUsed(wallet_database, wallet_path, config, params, hash);
+      }
+      all.addAll(br_lst);
     }
     return all;
   }
@@ -306,12 +318,8 @@ public class SnowBlossomClient
             }
           }
           bridge_map.put(key, b_out);
-
         }
-
       }
-
-
     }
 
 

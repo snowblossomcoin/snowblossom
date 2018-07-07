@@ -6,6 +6,7 @@ import duckutil.AtomicFileOutputStream;
 import snowblossom.lib.AddressUtil;
 import snowblossom.lib.KeyUtil;
 import snowblossom.lib.NetworkParams;
+import snowblossom.lib.AddressSpecHash;
 import snowblossom.proto.*;
 
 import com.google.protobuf.ByteString;
@@ -77,6 +78,65 @@ public class WalletUtil
     }
 
     wallet_builder.putAddressCreateTime( AddressUtil.getAddressString(claim, params), System.currentTimeMillis());
+  }
+
+  public static WalletDatabase fillKeyPool(WalletDatabase existing_db, File wallet_path, Config config, NetworkParams params)
+    throws Exception
+  {
+    int key_pool = config.getIntWithDefault("key_pool_size", 100);
+    int unused = getUnusedAddressCount(existing_db, params);
+    if (unused < key_pool)
+    {
+      int to_make = key_pool - unused;
+      WalletDatabase.Builder partial_new_db = WalletDatabase.newBuilder();
+      partial_new_db.setVersion(WALLET_DB_VERSION);
+      for(int i=0; i<to_make; i++)
+      {
+        genNewKey(partial_new_db, config, params);
+      }
+      WalletDatabase new_db_part = partial_new_db.build();
+      saveWallet(new_db_part, wallet_path);
+
+      return mergeDatabases(ImmutableList.of(existing_db, new_db_part));
+
+    }
+    return existing_db;
+  }
+
+
+  public static WalletDatabase markUsed(WalletDatabase existing_db, File wallet_path, Config config, NetworkParams params, AddressSpecHash hash)
+    throws Exception
+  {
+    String address = AddressUtil.getAddressString(params.getAddressPrefix(), hash);
+
+    return markUsed(existing_db, wallet_path, config, params, address);
+  }
+  public static WalletDatabase markUsed(WalletDatabase existing_db, File wallet_path, Config config, NetworkParams params, String address)
+    throws Exception
+  {
+    if (existing_db.getUsedAddressesMap().containsKey(address)) return existing_db;
+    WalletDatabase.Builder partial_new_db = WalletDatabase.newBuilder();
+    partial_new_db.putUsedAddresses(address, true);
+
+    WalletDatabase new_db_part = partial_new_db.build();
+    saveWallet(new_db_part, wallet_path);
+
+    return mergeDatabases(ImmutableList.of(existing_db, new_db_part));
+
+  }
+
+  public static int getUnusedAddressCount(WalletDatabase db, NetworkParams params)
+  {
+    HashSet<String> unused=new HashSet<>();
+    for(AddressSpec spec : db.getAddressesList())
+    {
+      String addr = AddressUtil.getAddressString(spec, params);
+      unused.add(addr);
+    }
+    unused.removeAll(db.getUsedAddressesMap().keySet());
+
+
+    return unused.size();
   }
 
   public static WalletDatabase loadWallet(File wallet_path, boolean cleanup)
