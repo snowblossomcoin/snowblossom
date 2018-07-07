@@ -107,7 +107,7 @@ public class SnowBlossomClient
 	private final NetworkParams params;
 
   private File wallet_path;
-  private WalletDatabase wallet_database;
+  private Purse purse;
   private Config config;
 
   public SnowBlossomClient(Config config) throws Exception
@@ -139,7 +139,7 @@ public class SnowBlossomClient
     throws Exception
   {
     AddressSpecHash to_hash = AddressUtil.getHashForAddress(params.getAddressPrefix(), to);
-    Transaction tx = TransactionUtil.makeTransaction(wallet_database, getAllSpendable(), to_hash, value, 0L);
+    Transaction tx = TransactionUtil.makeTransaction(purse.getDB(), getAllSpendable(), to_hash, value, 0L);
 
     logger.info("Transaction: " + new ChainHash(tx.getTxHash()) + " - " + tx.toByteString().size());
 
@@ -154,15 +154,7 @@ public class SnowBlossomClient
   public void loadWallet()
     throws Exception
   {
-    wallet_database = WalletUtil.loadWallet(wallet_path, true);
-    if (wallet_database == null)
-    {
-      logger.log(Level.WARNING, String.format("Directory %s does not contain wallet, creating new wallet", wallet_path.getPath()));
-      wallet_database = WalletUtil.makeNewDatabase(config, params);
-      WalletUtil.saveWallet(wallet_database, wallet_path);
-    }
-
-    wallet_database = WalletUtil.fillKeyPool(wallet_database, wallet_path, config, params);
+    purse = new Purse(wallet_path, config, params);
 
   }
 
@@ -174,7 +166,7 @@ public class SnowBlossomClient
     DecimalFormat df = new DecimalFormat("0.000000");
 
     Throwable logException = null;
-    for(AddressSpec claim : wallet_database.getAddressesList())
+    for(AddressSpec claim : purse.getDB().getAddressesList())
     {
       AddressSpecHash hash = AddressUtil.getHashForSpec(claim);
       String address = AddressUtil.getAddressString(params.getAddressPrefix(), hash);
@@ -186,7 +178,7 @@ public class SnowBlossomClient
         List<TransactionBridge> bridges = getSpendable(hash);
         if (bridges.size() > 0)
         {
-          wallet_database = WalletUtil.markUsed(wallet_database, wallet_path, config, params, hash);
+          purse.markUsed(hash);
         }
 
         for(TransactionBridge b : bridges)
@@ -245,13 +237,13 @@ public class SnowBlossomClient
     throws Exception
   {
     LinkedList<TransactionBridge> all = new LinkedList<>();
-    for(AddressSpec claim : wallet_database.getAddressesList())
+    for(AddressSpec claim : purse.getDB().getAddressesList())
     {
       AddressSpecHash hash = AddressUtil.getHashForSpec(claim);
       List<TransactionBridge> br_lst = getSpendable(hash);
       if (br_lst.size() > 0)
       {
-        wallet_database = WalletUtil.markUsed(wallet_database, wallet_path, config, params, hash);
+        purse.markUsed(hash);
       }
       all.addAll(br_lst);
     }
@@ -365,7 +357,7 @@ public class SnowBlossomClient
         long value = min_send + rnd.nextLong(send_delta);
 
         out_list.add( TransactionOutput.newBuilder()
-          .setRecipientSpecHash(TransactionUtil.getRandomChangeAddress(wallet_database).getBytes() )
+          .setRecipientSpecHash(TransactionUtil.getRandomChangeAddress(purse.getDB()).getBytes() )
           .setValue(value)
           .build());
         needed_value+=value;
@@ -379,7 +371,7 @@ public class SnowBlossomClient
         input_list.add(b);
       }
 
-      Transaction tx = TransactionUtil.makeTransaction(wallet_database, input_list, out_list, fee);
+      Transaction tx = TransactionUtil.makeTransaction(purse.getDB(), input_list, out_list, fee);
       if (tx == null)
       {
         logger.warning("Unable to make transaction");
