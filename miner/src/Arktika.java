@@ -428,6 +428,10 @@ public class Arktika
       {
         //We'll get to you layer
       }
+      else
+      {
+        throw new RuntimeException("Unknown type: " + type);
+      }
     }
     
     for(int i=0; i<layer_count; i++)
