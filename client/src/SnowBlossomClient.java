@@ -66,6 +66,24 @@ public class SnowBlossomClient
         client.send(value, to);
 
       }
+      else if (command.equals("getfresh"))
+      {
+        boolean mark_used = false;
+        boolean generate_now = false;
+        if (args.length > 2)
+        {
+          mark_used = Boolean.parseBoolean(args[2]);
+        }
+        if (args.length > 3)
+        {
+          generate_now = Boolean.parseBoolean(args[3]);
+        }
+
+        AddressSpecHash hash  = client.getPurse().getUnusedAddress(mark_used, generate_now);
+        String addr = AddressUtil.getAddressString(client.getParams().getAddressPrefix(), hash);
+        System.out.println(addr);
+
+      }
       else if (command.equals("monitor"))
       {
         while(true)
@@ -135,11 +153,16 @@ public class SnowBlossomClient
 
   }
 
+  public Purse getPurse(){return purse;}
+  public NetworkParams getParams(){return params;}
+
   public void send(long value, String to)
     throws Exception
   {
     AddressSpecHash to_hash = AddressUtil.getHashForAddress(params.getAddressPrefix(), to);
-    Transaction tx = TransactionUtil.makeTransaction(purse.getDB(), getAllSpendable(), to_hash, value, 0L);
+    Transaction tx = TransactionUtil.makeTransaction(purse.getDB(), getAllSpendable(), 
+      to_hash, value, 0L, 
+      purse.getUnusedAddress(true,false));
 
     logger.info("Transaction: " + new ChainHash(tx.getTxHash()) + " - " + tx.toByteString().size());
 
@@ -371,7 +394,7 @@ public class SnowBlossomClient
         input_list.add(b);
       }
 
-      Transaction tx = TransactionUtil.makeTransaction(purse.getDB(), input_list, out_list, fee);
+      Transaction tx = TransactionUtil.makeTransaction(purse.getDB(), input_list, out_list, fee, null);
       if (tx == null)
       {
         logger.warning("Unable to make transaction");

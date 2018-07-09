@@ -22,6 +22,9 @@ import java.util.List;
 import java.util.Random;
 import java.util.LinkedList;
 import snowblossom.lib.HexUtil;
+import com.google.common.collect.TreeMultimap;
+import java.util.TreeMap;
+import java.util.Map;
 
 public class WalletUtil
 {
@@ -116,6 +119,7 @@ public class WalletUtil
   {
     if (existing_db.getUsedAddressesMap().containsKey(address)) return existing_db;
     WalletDatabase.Builder partial_new_db = WalletDatabase.newBuilder();
+    partial_new_db.setVersion(WalletUtil.WALLET_DB_VERSION);
     partial_new_db.putUsedAddresses(address, true);
 
     WalletDatabase new_db_part = partial_new_db.build();
@@ -123,6 +127,39 @@ public class WalletUtil
 
     return mergeDatabases(ImmutableList.of(existing_db, new_db_part));
 
+  }
+
+  public static AddressSpecHash getOldestUnused(WalletDatabase db, NetworkParams params)
+  {
+    TreeMap<String, Long> unused = new TreeMap<>();
+    TreeMap<String, AddressSpecHash> addr_to_hash_map = new TreeMap<>();
+
+    for(AddressSpec spec : db.getAddressesList())
+    {
+      String addr = AddressUtil.getAddressString(spec, params);
+      long tm = 0;
+      if (db.getAddressCreateTimeMap().containsKey(addr))
+      {
+        tm = db.getAddressCreateTimeMap().get(addr);
+      }
+      addr_to_hash_map.put(addr, AddressUtil.getHashForSpec(spec));
+
+      unused.put(addr, tm);
+    }
+    for(String addr : db.getUsedAddressesMap().keySet())
+    {
+      unused.remove(addr);
+    }
+    TreeMultimap<Long, String> age_map = TreeMultimap.create();
+    for(Map.Entry<String, Long> me : unused.entrySet())
+    {
+      age_map.put(me.getValue(), me.getKey());
+    }
+    for(Map.Entry<Long, String> me : age_map.entries())
+    {
+      return addr_to_hash_map.get(me.getValue());
+    }
+    return null;
   }
 
   public static int getUnusedAddressCount(WalletDatabase db, NetworkParams params)

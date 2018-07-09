@@ -102,13 +102,31 @@ public class TransactionUtil
       .setRecipientSpecHash(to.getBytes())
       .build();
 
-    return makeTransaction(wallet, spendable, ImmutableList.of(out), fee);
+    return makeTransaction(wallet, spendable, ImmutableList.of(out), fee, null);
+
+  }
+ 
+  public static Transaction makeTransaction(WalletDatabase wallet,
+    Collection<TransactionBridge> spendable,
+    AddressSpecHash to,
+    long value, long fee, AddressSpecHash change_address)
+    throws ValidationException
+  {
+    TransactionOutput out = TransactionOutput.newBuilder()
+      .setValue(value)
+      .setRecipientSpecHash(to.getBytes())
+      .build();
+
+    return makeTransaction(wallet, spendable, ImmutableList.of(out), fee, change_address);
 
   }
   
-  public static Transaction makeTransaction(WalletDatabase wallet, 
+  public static Transaction makeTransaction(
+    WalletDatabase wallet, 
     Collection<TransactionBridge> spendable, 
-    List<TransactionOutput> output_list, long fee)
+    List<TransactionOutput> output_list, 
+    long fee,
+    AddressSpecHash change_address)
     throws ValidationException
   {
     TransactionInner.Builder tx_inner = TransactionInner.newBuilder();
@@ -162,7 +180,11 @@ public class TransactionUtil
 
     if (needed_input < 0)
     {
-      AddressSpecHash change = getRandomChangeAddress(wallet);
+      AddressSpecHash change = change_address;
+      if (change == null)
+      {
+        change = getRandomChangeAddress(wallet);
+      }
       TransactionOutput o = TransactionOutput.newBuilder()
         .setValue(-needed_input)
         .setRecipientSpecHash(change.getBytes())
