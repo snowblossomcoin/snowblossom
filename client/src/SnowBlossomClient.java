@@ -66,6 +66,11 @@ public class SnowBlossomClient
         client.send(value, to);
 
       }
+      else if (command.equals("balance"))
+      {
+            client.showBalances();
+
+      }
       else if (command.equals("getfresh"))
       {
         boolean mark_used = false;
@@ -88,7 +93,6 @@ public class SnowBlossomClient
       {
         while(true)
         {
-          Thread.sleep(60000);
           try
           {
             if (client == null)
@@ -104,6 +108,7 @@ public class SnowBlossomClient
             client = null;
 
           }
+          Thread.sleep(60000);
         }
       }
       else if (command.equals("loadtest"))
@@ -148,7 +153,7 @@ public class SnowBlossomClient
     {
       wallet_path = new File(config.get("wallet_path"));
       loadWallet();
-      showBalances();
+      //showBalances();
     }
 
   }
@@ -394,7 +399,8 @@ public class SnowBlossomClient
         input_list.add(b);
       }
 
-      Transaction tx = TransactionUtil.makeTransaction(purse.getDB(), input_list, out_list, fee, null);
+      Transaction tx = TransactionUtil.makeTransaction(purse.getDB(), input_list, out_list, fee, 
+      purse.getUnusedAddress(true,false));
       if (tx == null)
       {
         logger.warning("Unable to make transaction");
