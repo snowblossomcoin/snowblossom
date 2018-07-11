@@ -73,7 +73,7 @@ public class SnowBlossomClient
       }
       else if (command.equals("balance"))
       {
-            client.showBalances(false);
+            client.showBalances(true);
 
       }
       else if (command.equals("getfresh"))
