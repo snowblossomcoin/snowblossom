@@ -9,8 +9,13 @@ import snowblossom.lib.*;
 import org.junit.Assert;
 import snowblossom.proto.*;
 import snowblossom.proto.UserServiceGrpc.UserServiceBlockingStub;
+import java.util.concurrent.atomic.AtomicLong;
 import snowblossom.proto.UserServiceGrpc.UserServiceStub;
 import snowblossom.trie.proto.TrieNode;
+
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.Callable;
+import duckutil.TaskMaster;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -68,7 +73,7 @@ public class SnowBlossomClient
       }
       else if (command.equals("balance"))
       {
-            client.showBalances();
+            client.showBalances(false);
 
       }
       else if (command.equals("getfresh"))
@@ -99,7 +104,7 @@ public class SnowBlossomClient
             {
                client = new SnowBlossomClient(config);
             }
-            client.showBalances();
+            client.showBalances(false);
 
           }
           catch(Throwable t)
@@ -132,6 +137,7 @@ public class SnowBlossomClient
   private File wallet_path;
   private Purse purse;
   private Config config;
+  private ThreadPoolExecutor exec;
 
   public SnowBlossomClient(Config config) throws Exception
   {
@@ -143,6 +149,7 @@ public class SnowBlossomClient
     params = NetworkParams.loadFromConfig(config);
     int port = config.getIntWithDefault("node_port", params.getDefaultPort());
 
+    exec = TaskMaster.getBasicExecutor(64,"client_lookup");
 
     ManagedChannel channel = ManagedChannelBuilder.forAddress(host, port).usePlaintext(true).build();
 
@@ -153,7 +160,7 @@ public class SnowBlossomClient
     {
       wallet_path = new File(config.get("wallet_path"));
       loadWallet();
-      //showBalances();
+      showBalances(false);
     }
 
   }
@@ -186,32 +193,35 @@ public class SnowBlossomClient
 
   }
 
-  public void showBalances()
+  public void showBalances(boolean print_each_address)
   {
-    long total_confirmed = 0;
-    long total_unconfirmed = 0;
-    long total_spendable = 0;
-    DecimalFormat df = new DecimalFormat("0.000000");
+    final AtomicLong total_confirmed = new AtomicLong(0);
+    final AtomicLong total_unconfirmed = new AtomicLong(0L);
+    final AtomicLong total_spendable = new AtomicLong(0L);
+    final DecimalFormat df = new DecimalFormat("0.000000");
 
     Throwable logException = null;
+    TaskMaster tm = new TaskMaster(exec);
+
     for(AddressSpec claim : purse.getDB().getAddressesList())
     {
-      AddressSpecHash hash = AddressUtil.getHashForSpec(claim);
-      String address = AddressUtil.getAddressString(params.getAddressPrefix(), hash);
-      System.out.print("Address: " + address + " - ");
-      long value_confirmed = 0;
-      long value_unconfirmed = 0;
-      try
+      tm.addTask(new Callable(){
+      public String call()
+        throws Exception
       {
+        AddressSpecHash hash = AddressUtil.getHashForSpec(claim);
+        String address = AddressUtil.getAddressString(params.getAddressPrefix(), hash);
+        StringBuilder sb = new StringBuilder();
+        sb.append("Address: " + address + " - ");
+        long value_confirmed = 0;
+        long value_unconfirmed = 0;
         List<TransactionBridge> bridges = getSpendable(hash);
         if (bridges.size() > 0)
         {
           purse.markUsed(hash);
         }
-
         for(TransactionBridge b : bridges)
         {
-
           if (b.unconfirmed)
           {
             if (!b.spent)
@@ -229,34 +239,34 @@ public class SnowBlossomClient
           }
           if (!b.spent)
           {
-            total_spendable += b.value;
+            total_spendable.addAndGet(b.value);
           }
-
         }
 
         double val_conf_d = (double) value_confirmed / (double) Globals.SNOW_VALUE;
         double val_unconf_d = (double) value_unconfirmed / (double) Globals.SNOW_VALUE;
-        System.out.println(String.format(" %s (%s pending) in %d outputs",
+        sb.append(String.format(" %s (%s pending) in %d outputs",
           df.format(val_conf_d), df.format(val_unconf_d), bridges.size()));
+        total_confirmed.addAndGet(value_confirmed);
+        total_unconfirmed.addAndGet(value_unconfirmed);
+        return sb.toString();
+      }
 
-        total_confirmed += value_confirmed;
-        total_unconfirmed += value_unconfirmed;
-      }
-      catch(Throwable e)
-      {
-        logException = e;
-        System.out.println(e);
-      }
+      });
 
     }
-    if (logException != null)
+
+    List<String> addr_balances = tm.getResults();
+    if (print_each_address)
     {
-      System.out.println("Last exception stacktrace:");
-      logException.printStackTrace(System.out);
+      for(String s : addr_balances) System.out.println(s);
+
     }
-    double total_conf_d = (double) total_confirmed / (double) Globals.SNOW_VALUE;
-    double total_unconf_d = (double) total_unconfirmed / (double) Globals.SNOW_VALUE;
-    double total_spend_d = (double) total_spendable / Globals.SNOW_VALUE_D;
+
+
+    double total_conf_d = (double) total_confirmed.get() / (double) Globals.SNOW_VALUE;
+    double total_unconf_d = (double) total_unconfirmed.get() / (double) Globals.SNOW_VALUE;
+    double total_spend_d = (double) total_spendable.get() / Globals.SNOW_VALUE_D;
     System.out.println(String.format("Total: %s (%s pending) (%s spendable)", df.format(total_conf_d), df.format(total_unconf_d),
       df.format(total_spend_d)));
   }
