@@ -445,10 +445,10 @@ public class Arktika
         int end = Integer.parseInt(range_str.get(1));
         logger.info("Mem range: " + start + " to " + end);
         Assert.assertTrue(start >= 0);
-        Assert.assertTrue(end > start);
+        Assert.assertTrue(end >= start);
 
         TreeSet<Integer> mem_set = new TreeSet<>();
-        for(int j=start; j<end; j++)
+        for(int j=start; j<=end; j++)
         {
           mem_set.add(j);
         }

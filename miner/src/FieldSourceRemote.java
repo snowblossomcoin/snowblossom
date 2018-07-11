@@ -44,11 +44,11 @@ public class FieldSourceRemote extends FieldSource implements BatchSource
     int start = Integer.parseInt(range_lst.get(0));
     int end = Integer.parseInt(range_lst.get(1));
 
-    Assert.assertTrue(end > start);
+    Assert.assertTrue(end >= start);
     Assert.assertTrue(start >= 0);
 
     TreeSet<Integer> holding = new TreeSet<>();
-    for(int x = start; x<end; x++)
+    for(int x = start; x<=end; x++)
     {
       holding.add(x);
     }
