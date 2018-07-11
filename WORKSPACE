@@ -51,7 +51,7 @@ maven_jar(
 
 maven_jar(
   name = "bcprov",
-  artifact = "org.bouncycastle:bcprov-jdk15on:1.59",
-  sha1 = "2507204241ab450456bdb8e8c0a8f986e418bd99",
+  artifact = "org.bouncycastle:bcprov-jdk15on:1.60",
+  sha1 = "bd47ad3bd14b8e82595c7adaa143501e60842a84",
 )
 
