@@ -288,6 +288,6 @@ public class WalletUtil
     out.flush();
     out.close();
 
-    logger.log(Level.INFO, String.format("Save to file %s completed", db_file.getPath()));
+    logger.log(Level.FINE, String.format("Save to file %s completed", db_file.getPath()));
   }
 }

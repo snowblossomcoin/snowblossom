@@ -26,6 +26,18 @@ This is the Snowblossom basic wallet.  It needs a SnowBlossomNode to connect to,
 
 This is the mining agent, it conencts to a node (doesn't have to be your node) to get block templates and then submits them back when it solves them.  Requires a local copy of snow fields to work or can create them as needed.
 
+## PoolMiner / Arktika
+
+These are different mining agents.  They connect to a mining pool to get work.  Requires a local copy of the snow fields to work.
+
+## MrPlow
+
+A simple PPLNS mining pool.  Needs a node to connect to.
+
+## ShackletonExplorer
+
+A web server that shows stats.  Needs a node to connect to.
+
 ## SnowFall
 
 Program that generates snow fields.  It is recommended to use tools/snowfall... scripts rather than running directly

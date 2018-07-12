@@ -50,6 +50,16 @@ public class SnowBlossomClient
 
     SnowBlossomClient client = new SnowBlossomClient(config);
 
+    if (args.length == 1)
+    {
+      client.showBalances(false);
+
+      System.out.println("Here is an unused address:");
+        AddressSpecHash hash  = client.getPurse().getUnusedAddress(false, false);
+        String addr = AddressUtil.getAddressString(client.getParams().getAddressPrefix(), hash);
+        System.out.println(addr);
+    }
+
     if (args.length > 1)
     {
       String command = args[1];
@@ -160,7 +170,6 @@ public class SnowBlossomClient
     {
       wallet_path = new File(config.get("wallet_path"));
       loadWallet();
-      showBalances(false);
     }
 
   }
