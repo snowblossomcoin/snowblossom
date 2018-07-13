@@ -54,10 +54,12 @@ public class SnowBlossomClient
     {
       client.showBalances(false);
 
+      client.printBasicStats();
+
       System.out.println("Here is an unused address:");
-        AddressSpecHash hash  = client.getPurse().getUnusedAddress(false, false);
-        String addr = AddressUtil.getAddressString(client.getParams().getAddressPrefix(), hash);
-        System.out.println(addr);
+      AddressSpecHash hash  = client.getPurse().getUnusedAddress(false, false);
+      String addr = AddressUtil.getAddressString(client.getParams().getAddressPrefix(), hash);
+      System.out.println(addr);
     }
 
     if (args.length > 1)
@@ -199,6 +201,17 @@ public class SnowBlossomClient
     throws Exception
   {
     purse = new Purse(wallet_path, config, params);
+
+  }
+
+  public void printBasicStats()
+  {
+    int total_keys = purse.getDB().getKeysCount();
+    int total_addresses = purse.getDB().getAddressesCount();
+    int used_addresses = purse.getDB().getUsedAddressesCount();
+    int unused_addresses = total_addresses - used_addresses;
+
+    System.out.println(String.format("Wallet Keys: %d, Addresses: %d, Fresh pool: %d", total_keys, total_addresses, unused_addresses));
 
   }
 
