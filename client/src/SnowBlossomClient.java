@@ -224,9 +224,11 @@ public class SnowBlossomClient
         sb.append("Address: " + address + " - ");
         long value_confirmed = 0;
         long value_unconfirmed = 0;
+        boolean used=false;
         List<TransactionBridge> bridges = getSpendable(hash);
         if (bridges.size() > 0)
         {
+          used=true;
           purse.markUsed(hash);
         }
         for(TransactionBridge b : bridges)
@@ -251,6 +253,10 @@ public class SnowBlossomClient
             total_spendable.addAndGet(b.value);
           }
         }
+        if (purse.getDB().getUsedAddressesMap().containsKey(address))
+        {
+          used=true;
+        }
 
         double val_conf_d = (double) value_confirmed / (double) Globals.SNOW_VALUE;
         double val_unconf_d = (double) value_unconfirmed / (double) Globals.SNOW_VALUE;
@@ -258,7 +264,11 @@ public class SnowBlossomClient
           df.format(val_conf_d), df.format(val_unconf_d), bridges.size()));
         total_confirmed.addAndGet(value_confirmed);
         total_unconfirmed.addAndGet(value_unconfirmed);
-        return sb.toString();
+        if (used)
+        {
+          return sb.toString();
+        }
+        return "";
       }
 
       });
@@ -268,7 +278,13 @@ public class SnowBlossomClient
     List<String> addr_balances = tm.getResults();
     if (print_each_address)
     {
-      for(String s : addr_balances) System.out.println(s);
+      for(String s : addr_balances)
+      {
+        if (s.length() > 0)
+        {
+          System.out.println(s);
+        }
+      }
 
     }
 

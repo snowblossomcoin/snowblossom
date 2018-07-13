@@ -45,6 +45,9 @@ This is all automatic, you don't need to worry about it.
 One awesome advantage of doing the wallet files in this way is that you can rsync these around or run multiple clients at once.
 Any changes by any clients will be written to new file names and the merge will happen just fine when a client reads those.
 
+This means if you are running the same wallet on multiple computers you can use any syncing mechanism to copy the files around.
+Unison, rsync, dropbox, etc.  (Just don't do rsync --delete)
+
 # Commands
 
 * balance - show balance of all addresses
