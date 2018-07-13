@@ -11,7 +11,7 @@ import java.nio.ByteBuffer;
 import snowblossom.lib.Globals;
 import snowblossom.lib.SnowMerkle;
 import duckutil.TaskMaster;
-import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
 
 
 public class FieldSourceMem extends FieldSource
@@ -27,7 +27,7 @@ public class FieldSourceMem extends FieldSource
 
     holding_set = ImmutableSet.copyOf(to_have);
     
-    Executor exec = TaskMaster.getBasicExecutor(16, "memload");
+    ExecutorService exec = TaskMaster.getBasicExecutor(16, "memload");
 
     TaskMaster<Boolean> task_q=new TaskMaster<>(exec);
 
@@ -67,6 +67,7 @@ public class FieldSourceMem extends FieldSource
       });
     }
     task_q.getResults();
+    exec.shutdown();
   }
 
   @Override
