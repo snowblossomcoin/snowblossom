@@ -5,10 +5,14 @@ import com.google.common.collect.ImmutableSet;
 import java.util.Set;
 import java.util.Collection;
 import java.util.List;
+import java.util.concurrent.Callable;
 
 import java.nio.ByteBuffer;
 import snowblossom.lib.Globals;
 import snowblossom.lib.SnowMerkle;
+import duckutil.TaskMaster;
+import java.util.concurrent.Executor;
+
 
 public class FieldSourceMem extends FieldSource
 {
@@ -22,32 +26,47 @@ public class FieldSourceMem extends FieldSource
     chunks = new byte[max+1][];
 
     holding_set = ImmutableSet.copyOf(to_have);
+    
+    Executor exec = TaskMaster.getBasicExecutor(16, "memload");
+
+    TaskMaster<Boolean> task_q=new TaskMaster<>(exec);
+
 
     for(int x : to_have)
     {
-      chunks[x] = new byte[(int)Globals.MINE_CHUNK_SIZE];
-      ByteBuffer bb = ByteBuffer.wrap(chunks[x]);
+      task_q.addTask(new Callable(){
 
-      boolean found=false;
-      for(FieldSource fs : sources)
-      {
-        if (!found)
+        public Boolean call()
+          throws Exception
         {
-          if (fs.hasChunk(x))
+          chunks[x] = new byte[(int)Globals.MINE_CHUNK_SIZE];
+          ByteBuffer bb = ByteBuffer.wrap(chunks[x]);
+
+          boolean found=false;
+          for(FieldSource fs : sources)
           {
-            long xl = x;
-            logger.info(String.format("Reading chunk %d into memory from %s", x, fs.toString()));
-            fs.bulkRead( words_per_chunk * xl, bb );
-            found=true;
-            System.gc();
+            if (!found)
+            {
+              if (fs.hasChunk(x))
+              {
+                long xl = x;
+                logger.info(String.format("Reading chunk %d into memory from %s", x, fs.toString()));
+                fs.bulkRead( words_per_chunk * xl, bb );
+                found=true;
+                System.gc();
+              }
+            }
           }
+          if (!found)
+          {
+            throw new RuntimeException(String.format("Unable to load chunk %d into memory.  Not in sources.", x));
+          }
+          return found;
         }
-      }
-      if (!found)
-      {
-        throw new RuntimeException(String.format("Unable to load chunk %d into memory.  Not in sources.", x));
-      }
+
+      });
     }
+    task_q.getResults();
   }
 
   @Override
