@@ -205,6 +205,7 @@ public class SnowBlossomClient
   }
 
   public void printBasicStats()
+    throws ValidationException
   {
     int total_keys = purse.getDB().getKeysCount();
     int total_addresses = purse.getDB().getAddressesCount();
@@ -212,6 +213,24 @@ public class SnowBlossomClient
     int unused_addresses = total_addresses - used_addresses;
 
     System.out.println(String.format("Wallet Keys: %d, Addresses: %d, Fresh pool: %d", total_keys, total_addresses, unused_addresses));
+
+    TreeMap<String, Integer> address_type_map = new TreeMap<>();
+    for(AddressSpec spec : purse.getDB().getAddressesList())
+    {
+      String type = AddressUtil.getAddressSpecTypeSummary(spec);
+      if (address_type_map.containsKey(type))
+      {
+        address_type_map.put(type, 1 + address_type_map.get(type));
+      }
+      else
+      {
+        address_type_map.put(type, 1);
+      } 
+    }
+    for(Map.Entry<String, Integer> me : address_type_map.entrySet())
+    {
+      System.out.println("  " + me.getKey() + ": " + me.getValue());
+    }
 
   }
 

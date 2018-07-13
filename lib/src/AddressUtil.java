@@ -110,6 +110,26 @@ public class AddressUtil
     return new AddressSpecHash( Duck32.decode(human, address) );
   }
 
+  public static String getAddressSpecTypeSummary(AddressSpec spec)
+    throws ValidationException
+  {
+    String multi = String.format("%dof%d", spec.getRequiredSigners(), spec.getSigSpecsCount());
+
+    StringBuilder algo_str = new StringBuilder();
+
+
+    for(int s = 0; s<spec.getSigSpecsCount(); s++)
+    {
+      SigSpec sig = spec.getSigSpecs(s);
+      String algo = SignatureUtil.getAlgo(sig.getSignatureType());
+      if (s > 0) algo_str.append(" ");
+      algo_str.append(algo);
+    }
+
+    return multi + " " + algo_str;
+
+  }
+
   public static void prettyDisplayAddressSpec(AddressSpec spec, PrintStream out, NetworkParams params)
     throws ValidationException
   {
