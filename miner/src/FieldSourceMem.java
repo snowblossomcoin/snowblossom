@@ -53,7 +53,6 @@ public class FieldSourceMem extends FieldSource
                 logger.info(String.format("Reading chunk %d into memory from %s", x, fs.toString()));
                 fs.bulkRead( words_per_chunk * xl, bb );
                 found=true;
-                System.gc();
               }
             }
           }
@@ -68,6 +67,7 @@ public class FieldSourceMem extends FieldSource
     }
     task_q.getResults();
     exec.shutdown();
+    System.gc();
   }
 
   @Override
