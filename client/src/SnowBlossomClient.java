@@ -278,7 +278,9 @@ public class SnowBlossomClient
     List<String> addr_balances = tm.getResults();
     if (print_each_address)
     {
-      for(String s : addr_balances)
+      Set<String> lines = new TreeSet<String>();
+      lines.addAll(addr_balances);
+      for(String s : lines)
       {
         if (s.length() > 0)
         {
