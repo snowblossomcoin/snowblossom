@@ -10,6 +10,7 @@ import snowblossom.proto.*;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.net.URLDecoder;
 import java.text.DecimalFormat;
@@ -17,6 +18,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Map;
 import java.util.TimeZone;
+import duckutil.TaskMaster;
 
 public class WebServer
 {
@@ -35,7 +37,7 @@ public class WebServer
 
     server = HttpServer.create(new InetSocketAddress(port), 0);
 		server.createContext("/", new RootHandler());
-    server.setExecutor(null);
+    server.setExecutor(TaskMaster.getBasicExecutor(32,"shackleton"));
 
 
   }
@@ -331,6 +333,8 @@ public class WebServer
   {
     @Override
     public void handle(HttpExchange t) throws IOException {
+
+      t.getResponseHeaders().add("Content-Language", "en-US");
       ByteArrayOutputStream b_out = new ByteArrayOutputStream();
       PrintStream print_out = new PrintStream(b_out);
       try
@@ -346,8 +350,9 @@ public class WebServer
 
       byte[] data = b_out.toByteArray();
       t.sendResponseHeaders(200, data.length);
-      t.getResponseBody().write(data);
-
+      OutputStream out = t.getResponseBody();
+      out.write(data);
+      out.close();
 
     }
 
