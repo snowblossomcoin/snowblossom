@@ -134,7 +134,18 @@ public class SnowBlossomClient
       }
       else
       {
-        logger.log(Level.SEVERE, String.format("Unknown command %s.  Try 'send'", command));
+        logger.log(Level.SEVERE, String.format("Unknown command %s.", command));
+
+        System.out.println("Commands:");
+        System.out.println("(no command) - show total balance, show one fresh address");
+        System.out.println("  balance - show balance of all addresses");
+        System.out.println("  monitor - show balance and repeat");
+        System.out.println("  getfresh [mark_used] [generate_now] - get a fresh address");
+        System.out.println("    if mark_used is true, mark the address as used");
+        System.out.println("    if generate_now is true, generate a new address rather than using the key pool");
+        System.out.println("  send <amount> <destination> - send snow to address");
+
+
         System.exit(-1);
       }
     }
