@@ -71,7 +71,7 @@ public class Arktika
     }
   }
 
-  protected volatile WorkUnit last_work_unit;
+  private volatile WorkUnit last_work_unit;
 
   private MiningPoolServiceStub asyncStub;
   protected MiningPoolServiceBlockingStub blockingStub;
@@ -295,7 +295,14 @@ public class Arktika
 
   public WorkUnit getWorkUnit()
   {
-    return last_work_unit;
+    WorkUnit wu = last_work_unit;
+    if (wu == null) return null;
+    if (wu.getHeader().getTimestamp() + 45000 < System.currentTimeMillis())
+    {
+      return null;
+    }
+
+    return wu;
   }
 
   public class WorkUnitEater implements StreamObserver<WorkUnit>

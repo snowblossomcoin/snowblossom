@@ -60,7 +60,7 @@ public class LayerWorkThread extends Thread
 
     if (pw == null)
     {
-      WorkUnit wu = arktika.last_work_unit;
+      WorkUnit wu = arktika.getWorkUnit();
       if (wu == null)
       {
         sleep(250);

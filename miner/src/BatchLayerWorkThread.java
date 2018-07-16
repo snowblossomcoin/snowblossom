@@ -44,7 +44,7 @@ public class BatchLayerWorkThread extends LayerWorkThread
 
     if (pw_list.size() < BATCH_SIZE)
     {
-      WorkUnit wu = arktika.last_work_unit;
+      WorkUnit wu = arktika.getWorkUnit();
       if (wu == null)
       {
         sleep(250);
