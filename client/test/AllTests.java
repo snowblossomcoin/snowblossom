@@ -6,7 +6,8 @@ import org.junit.runners.Suite.SuiteClasses;
 
 @RunWith(Suite.class)
 @SuiteClasses({
-  WalletTest.class
+  WalletTest.class,
+  PurseTest.class
 })
 public class AllTests
 {}

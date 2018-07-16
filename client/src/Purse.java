@@ -79,21 +79,23 @@ public class Purse
       return hash;
     }
 
-    AddressSpecHash hash = WalletUtil.getOldestUnused(wallet_database, params);
-    if (hash == null)
+    synchronized(this)
     {
-      return getUnusedAddress(mark_used, true);
+
+      AddressSpecHash hash = WalletUtil.getOldestUnused(wallet_database, params);
+      if (hash == null)
+      {
+        return getUnusedAddress(mark_used, true);
+      }
+      if (mark_used)
+      {
+        markUsed(hash);
+       
+      }
+      return hash;    
     }
-    if (mark_used)
-    {
-      markUsed(hash);
-     
-    }
-    return hash;    
 
   }
-
-
 
 }
 
