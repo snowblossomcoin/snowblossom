@@ -128,6 +128,14 @@ public class SnowBlossomClient
           Thread.sleep(60000);
         }
       }
+      else if (command.equals("rpcserver"))
+      {
+        new JsonRpcServer(config);
+        while(true)
+        {
+          Thread.sleep(1000);
+        }
+      }
       else if (command.equals("loadtest"))
       {
         client.runLoadTest();

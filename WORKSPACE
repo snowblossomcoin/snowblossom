@@ -55,3 +55,33 @@ maven_jar(
   sha1 = "bd47ad3bd14b8e82595c7adaa143501e60842a84",
 )
 
+maven_jar(
+  name = "jsonrpc2_server",
+  artifact = "com.thetransactioncompany:jsonrpc2-server:1.11",
+  sha1 = "3f5866109d05f036bd12c7998d0b20166c656033",
+)
+
+maven_jar(
+  name = "jsonrpc2_base",
+  artifact = "com.thetransactioncompany:jsonrpc2-base:1.38.1",
+  sha1 = "ba8da1486587870aa0eb2820b731e3ed6f8fa8a2",
+)
+
+maven_jar(
+  name = "json_smart",
+  artifact = "net.minidev:json-smart:2.3",
+  sha1 = "007396407491352ce4fa30de92efb158adb76b5b",
+)
+
+maven_jar(
+  name = "accessors_smart",
+  artifact = "net.minidev:accessors-smart:1.2",
+  sha1 = "c592b500269bfde36096641b01238a8350f8aa31",
+)
+
+maven_jar(
+  name = "asm",
+  artifact = "org.ow2.asm:asm:6.2",
+  sha1 = "1b6c4ff09ce03f3052429139c2a68e295cae6604",
+)
+

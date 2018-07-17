@@ -13,6 +13,11 @@ java_library(
     "@org_rocksdb_rocksdbjni//jar",
     "@duckutil//:duckutil_lib",
     "@duckutil//:lobstack_lib",
+    "@jsonrpc2_server//jar",
+    "@jsonrpc2_base//jar",
+    "@json_smart//jar",
+    "@accessors_smart//jar",
+    "@asm//jar",
     ],
 )
 
