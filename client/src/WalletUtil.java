@@ -274,7 +274,7 @@ public class WalletUtil
     wallet_path.mkdirs();
 
     Random rnd = new Random();
-    byte[] rnd_data = new byte[6];
+    byte[] rnd_data = new byte[7];
     rnd.nextBytes(rnd_data);
     String name = "snow-" + db.getVersion() + "_" + HexUtil.getHexString(rnd_data) + ".wallet";
     File db_file = new File(wallet_path, name);

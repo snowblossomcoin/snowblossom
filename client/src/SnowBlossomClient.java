@@ -16,10 +16,12 @@ import snowblossom.trie.proto.TrieNode;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.Callable;
 import duckutil.TaskMaster;
+import java.io.PrintStream;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileOutputStream;
+import java.io.Reader;
+import java.io.InputStreamReader;
 import duckutil.AtomicFileOutputStream;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
@@ -29,6 +31,7 @@ import java.text.DecimalFormat;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import com.google.protobuf.util.JsonFormat;
 
 public class SnowBlossomClient
 {
@@ -54,7 +57,7 @@ public class SnowBlossomClient
     {
       client.showBalances(false);
 
-      client.printBasicStats();
+      client.printBasicStats(client.getPurse().getDB());
 
       System.out.println("Here is an unused address:");
       AddressSpecHash hash  = client.getPurse().getUnusedAddress(false, false);
@@ -135,6 +138,43 @@ public class SnowBlossomClient
         {
           Thread.sleep(1000);
         }
+      }
+      else if (command.equals("export"))
+      {
+        if (args.length != 3)
+        {
+          logger.log(Level.SEVERE, "export must be followed by filename to write to");
+          System.exit(-1);
+        }
+        
+        JsonFormat.Printer printer = JsonFormat.printer();
+        AtomicFileOutputStream atomic_out = new AtomicFileOutputStream(args[2]);
+        PrintStream print_out = new PrintStream(atomic_out);
+
+        print_out.println(printer.print(client.getPurse().getDB()));
+        print_out.close();
+        
+        logger.info(String.format("Wallet saved to %s", args[2]));
+      }
+      else if (command.equals("import"))
+      {
+        JsonFormat.Parser parser = JsonFormat.parser();
+        WalletDatabase.Builder wallet_import = WalletDatabase.newBuilder();
+        if (args.length != 3)
+        {
+          logger.log(Level.SEVERE, "import must be followed by filename to read from");
+          System.exit(-1);
+        }
+
+        Reader input = new InputStreamReader(new FileInputStream(args[2]));
+        parser.merge(input, wallet_import);
+        client.getPurse().mergeIn(wallet_import.build());
+
+        logger.info("Imported data:");
+        client.printBasicStats(wallet_import.build());
+
+        
+
       }
       else if (command.equals("loadtest"))
       {
@@ -223,18 +263,18 @@ public class SnowBlossomClient
 
   }
 
-  public void printBasicStats()
+  public void printBasicStats(WalletDatabase db)
     throws ValidationException
   {
-    int total_keys = purse.getDB().getKeysCount();
-    int total_addresses = purse.getDB().getAddressesCount();
-    int used_addresses = purse.getDB().getUsedAddressesCount();
+    int total_keys = db.getKeysCount();
+    int total_addresses = db.getAddressesCount();
+    int used_addresses = db.getUsedAddressesCount();
     int unused_addresses = total_addresses - used_addresses;
 
     System.out.println(String.format("Wallet Keys: %d, Addresses: %d, Fresh pool: %d", total_keys, total_addresses, unused_addresses));
 
     TreeMap<String, Integer> address_type_map = new TreeMap<>();
-    for(AddressSpec spec : purse.getDB().getAddressesList())
+    for(AddressSpec spec : db.getAddressesList())
     {
       String type = AddressUtil.getAddressSpecTypeSummary(spec);
       if (address_type_map.containsKey(type))

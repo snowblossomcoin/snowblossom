@@ -48,6 +48,15 @@ public class Purse
 
   public WalletDatabase getDB(){return wallet_database;}
 
+  public synchronized void mergeIn(WalletDatabase merge)
+    throws Exception
+  {
+    WalletUtil.saveWallet(merge, wallet_path);
+
+    wallet_database = WalletUtil.mergeDatabases(ImmutableList.of(wallet_database, merge));
+
+  }
+
 	public synchronized void markUsed(AddressSpecHash hash)
     throws Exception
 	{
