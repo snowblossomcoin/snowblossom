@@ -192,6 +192,8 @@ public class SnowBlossomClient
         System.out.println("    if mark_used is true, mark the address as used");
         System.out.println("    if generate_now is true, generate a new address rather than using the key pool");
         System.out.println("  send <amount> <destination> - send snow to address");
+        System.out.println("  export <file> - export wallet to json file");
+        System.out.println("  import <file> - import wallet from json file");
 
 
         System.exit(-1);
