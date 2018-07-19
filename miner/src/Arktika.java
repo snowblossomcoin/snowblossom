@@ -380,6 +380,8 @@ public class Arktika
     List<FieldSource> disk_sources = new LinkedList<>();
     TreeSet<Integer> found = new TreeSet<>();
 
+    boolean has_fake=false;
+
     // Load up the disk sources first
     // so that memory sources can read from them
     for(int i=0; i<layer_count; i++)
@@ -414,6 +416,7 @@ public class Arktika
             found.add(x);
           }
         }
+        has_fake = true;
       }
       else if (type.equals("remote"))
       {
@@ -512,7 +515,14 @@ public class Arktika
     logger.info(chunk_to_source_map.toString());
     if (deck_source == null)
     {
-      throw new RuntimeException("No sources seem to have the deck files.");
+      if (!has_fake)
+      {
+        throw new RuntimeException("No sources seem to have the deck files.");
+      }
+      else
+      {
+        logger.info("No deck files, but using fake source so probably fine.");
+      }
     }
     composit_source = new FieldSourceComposit(ImmutableList.copyOf(composit_builder));
 
