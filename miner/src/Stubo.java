@@ -11,9 +11,11 @@ import io.grpc.stub.StreamObserver;
 public class Stubo extends SharedMiningServiceGrpc.SharedMiningServiceImplBase
 {
   FieldSource src;
-  public Stubo(FieldSource src)
+  int field_number;
+  public Stubo(FieldSource src, int field_number)
   {
     this.src = src;
+    this.field_number = field_number;
   }
 
   @Override
@@ -21,6 +23,14 @@ public class Stubo extends SharedMiningServiceGrpc.SharedMiningServiceImplBase
   {
     try
     {
+      if (req.getField() > 0)
+      {
+        if (req.getField() != field_number)
+        {
+          throw new java.io.IOException(
+            String.format("Wrong field requested %d.  I have %d", req.getField(), field_number));
+        }
+      }
       GetWordsResponce.Builder builder = GetWordsResponce.newBuilder();
 
       for(long x : req.getWordIndexesList())

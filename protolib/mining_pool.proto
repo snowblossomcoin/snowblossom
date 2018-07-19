@@ -44,6 +44,7 @@ service SharedMiningService {
 
 message GetWordsRequest {
   repeated int64 word_indexes = 1;
+  int32 field = 2;
 }
 
 message GetWordsResponce {

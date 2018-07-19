@@ -30,9 +30,11 @@ public class FieldSourceRemote extends FieldSource implements BatchSource
 {
   private ThreadLocal<SharedMiningServiceBlockingStub> stub_local=new ThreadLocal<>();
   SharedMiningServiceBlockingStub stub_one;
+  private int field_number;
 
-  public FieldSourceRemote(Config config, int layer)
+  public FieldSourceRemote(Config config, int layer, int field_number)
   {
+    this.field_number = field_number;
     config.require("layer_" + layer + "_host");
     config.require("layer_" + layer + "_range");
 
@@ -95,7 +97,10 @@ public class FieldSourceRemote extends FieldSource implements BatchSource
   @Override
   public List<ByteString> readWordsBulk(List<Long> indexes)
   {
-    return getStub().getWords(GetWordsRequest.newBuilder().addAllWordIndexes(indexes).build()).getWordsList();
+    return getStub().getWords(GetWordsRequest.newBuilder()
+      .addAllWordIndexes(indexes)
+      .setField(field_number)
+      .build()).getWordsList();
   }
 
 

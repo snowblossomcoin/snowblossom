@@ -142,7 +142,7 @@ public class Arktika
 
       Server s = ServerBuilder
         .forPort(2311)
-        .addService(new Stubo(composit_source))
+        .addService(new Stubo(composit_source, selected_field))
         .build();
       s.start();
 
@@ -417,7 +417,7 @@ public class Arktika
       }
       else if (type.equals("remote"))
       {
-        FieldSource fs = new FieldSourceRemote(config, i);
+        FieldSource fs = new FieldSourceRemote(config, i, selected_field);
         all_sources[i] = fs;
         //Not adding to composit because
         // 1) to slow for current merkle implementation
