@@ -298,6 +298,86 @@ public class SnowBlossomClient
 
   }
 
+  public BalanceInfo getBalance(AddressSpecHash hash)
+    throws Exception
+  {
+    long value_confirmed = 0;
+    long value_unconfirmed = 0;
+    long value_spendable = 0;
+    boolean used=false;
+    List<TransactionBridge> bridges = getSpendable(hash);
+    if (bridges.size() > 0)
+    {
+      used=true;
+      purse.markUsed(hash);
+    }
+    for(TransactionBridge b : bridges)
+    {
+      if (b.unconfirmed)
+      {
+        if (!b.spent)
+        {
+          value_unconfirmed += b.value;
+        }
+      }
+      else //confirmed
+      {
+        value_confirmed += b.value;
+        if (b.spent)
+        {
+          value_unconfirmed -= b.value;
+        }
+      }
+      if (!b.spent)
+      {
+        value_spendable =+ b.value;
+      }
+    }
+    return BalanceInfo.newBuilder()
+      .setConfirmed(value_confirmed)
+      .setUnconfirmed(value_unconfirmed)
+      .setSpendable(value_spendable)
+      .build();
+    
+  }
+
+  public BalanceInfo getBalance()
+  {
+    TaskMaster<BalanceInfo> tm = new TaskMaster(exec);
+
+    for(AddressSpec claim : purse.getDB().getAddressesList())
+    {
+      tm.addTask(new Callable(){
+      public BalanceInfo call()
+        throws Exception
+      {
+        AddressSpecHash hash = AddressUtil.getHashForSpec(claim);
+        BalanceInfo bi = getBalance(hash);
+
+        return bi;
+      }
+      });
+    }
+
+    long total_confirmed = 0L;
+    long total_unconfirmed = 0L;
+    long total_spendable = 0L;
+    for(BalanceInfo bi : tm.getResults())
+    {
+      total_confirmed += bi.getConfirmed();
+      total_unconfirmed += bi.getUnconfirmed();
+      total_spendable += bi.getSpendable();
+    }
+
+    return BalanceInfo.newBuilder()
+      .setConfirmed(total_confirmed)
+      .setUnconfirmed(total_unconfirmed)
+      .setSpendable(total_spendable)
+      .build();
+
+     
+  }
+
   public void showBalances(boolean print_each_address)
   {
     final AtomicLong total_confirmed = new AtomicLong(0);

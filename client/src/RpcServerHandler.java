@@ -22,6 +22,8 @@ public class RpcServerHandler
   public void registerHandlers(JsonRpcServer json_server)
   {
 		json_server.register(new GetFreshHandler());
+		json_server.register(new BalanceHandler());
+		json_server.register(new SendHandler());
 
   }
 
@@ -38,13 +40,16 @@ public class RpcServerHandler
     {
       boolean mark_used = false;
       boolean generate_now = false;
-      if (req.getNamedParams().containsKey("mark_used"))
+      if (req.getNamedParams() != null)
       {
-        mark_used = (boolean) req.getNamedParams().get("mark_used");
-      }
-      if (req.getNamedParams().containsKey("generate_now"))
-      {
-        generate_now = (boolean) req.getNamedParams().get("generate_now");
+        if (req.getNamedParams().containsKey("mark_used"))
+        {
+          mark_used = (boolean) req.getNamedParams().get("mark_used");
+        }
+        if (req.getNamedParams().containsKey("generate_now"))
+        {
+          generate_now = (boolean) req.getNamedParams().get("generate_now");
+        }
       }
       JSONObject reply = new JSONObject();
       reply.put("mark_used", mark_used);
@@ -58,6 +63,57 @@ public class RpcServerHandler
     }
   }
 
+  public class BalanceHandler extends JsonRequestHandler
+  {
+    public String[] handledRequests()
+    {
+      return new String[]{"balance"};
+    }
+
+    @Override
+    protected JSONObject processRequest(JSONRPC2Request req, MessageContext ctx)
+      throws Exception
+    {
+      JSONObject reply = new JSONObject();
+
+      BalanceInfo bi = client.getBalance();
+
+      reply.put("flake_confirmed", bi.getConfirmed());
+      reply.put("flake_unconfirmed", bi.getUnconfirmed());
+      reply.put("flake_spendable", bi.getSpendable());
+
+      reply.put("confirmed", bi.getConfirmed() / Globals.SNOW_VALUE_D);
+      reply.put("unconfirmed", bi.getUnconfirmed() / Globals.SNOW_VALUE_D);
+      reply.put("spendable", bi.getSpendable() / Globals.SNOW_VALUE_D);
+
+      return reply;
+ 
+    }
+
+  }
+
+  public class SendHandler extends JsonRequestHandler
+  {
+    public String[] handledRequests()
+    {
+      return new String[]{"send"};
+    }
+
+    @Override
+    protected JSONObject processRequest(JSONRPC2Request req, MessageContext ctx)
+      throws Exception
+    {
+      JSONObject reply = new JSONObject();
+
+      
+
+
+      return reply;
+ 
+    }
+
+  }
 
 
 }
+

@@ -298,6 +298,12 @@ message WalletDatabase {
   //CipherKey cipher_key = 11;
 }
 
+message BalanceInfo {
+  int64 confirmed = 1;
+  int64 unconfirmed = 2;
+  int64 spendable = 3;
+}
+
 message WalletKeyPair
 {
   int32 signature_type = 1;

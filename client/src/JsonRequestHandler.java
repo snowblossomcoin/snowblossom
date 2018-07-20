@@ -8,9 +8,13 @@ import com.thetransactioncompany.jsonrpc2.server.MessageContext;
 
 import net.minidev.json.JSONObject;
 
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 
 public abstract class JsonRequestHandler implements RequestHandler
 {
+  private static final Logger logger = Logger.getLogger("snowblossom.client");
   public abstract String[] handledRequests();
 
   public JSONRPC2Response process(JSONRPC2Request req, MessageContext ctx)
@@ -23,6 +27,7 @@ public abstract class JsonRequestHandler implements RequestHandler
     }
     catch(Throwable t)
     {
+      logger.info("Error in rpc: " + t);
       return new JSONRPC2Response(new JSONRPC2Error(500, t.toString()), req.getID());
 
     }
