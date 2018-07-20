@@ -33,8 +33,6 @@ public class JsonRpcServer
 
   private final Dispatcher dispatcher;
 
-	
-
   public JsonRpcServer(Config config)
 		throws Exception
   {

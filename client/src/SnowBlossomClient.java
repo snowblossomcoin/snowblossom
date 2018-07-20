@@ -133,7 +133,10 @@ public class SnowBlossomClient
       }
       else if (command.equals("rpcserver"))
       {
-        new JsonRpcServer(config);
+        JsonRpcServer json_server = new JsonRpcServer(config);
+        RpcServerHandler server_handler = new RpcServerHandler(client);
+        server_handler.registerHandlers(json_server);
+
         while(true)
         {
           Thread.sleep(1000);
