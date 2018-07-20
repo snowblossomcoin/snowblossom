@@ -17,6 +17,7 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.Callable;
 import duckutil.TaskMaster;
 import java.io.PrintStream;
+import duckutil.jsonrpc.JsonRpcServer;
 
 import java.io.File;
 import java.io.FileInputStream;

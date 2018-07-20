@@ -9,6 +9,8 @@ import net.minidev.json.JSONObject;
 
 import snowblossom.proto.*;
 import snowblossom.lib.*;
+import duckutil.jsonrpc.JsonRpcServer;
+import duckutil.jsonrpc.JsonRequestHandler;
 
 public class RpcServerHandler
 {
