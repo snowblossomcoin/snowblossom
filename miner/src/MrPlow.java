@@ -27,6 +27,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.TreeMap;
 import java.util.List;
+import duckutil.jsonrpc.JsonRpcServer;
 
 public class MrPlow
 {
@@ -40,6 +41,9 @@ public class MrPlow
   // So as it is set, if a miner gets 12 shares inside of 2 minutes, move them up.
   public static final long SHARE_VIEW_WINDOW = 120000L;
   public static final int SHARES_IN_VIEW_FOR_RETARGET = 12;
+
+  public static ByteString BLOCK_KEY = ByteString.copyFrom(new String("blocks_found").getBytes());
+
 
   public static void main(String args[]) throws Exception
   {
@@ -96,6 +100,7 @@ public class MrPlow
       TimeRecord.setSharedRecord(time_record);
     }
 
+    
 
     int port = config.getIntWithDefault("mining_pool_port",23380);
     agent = new MiningPoolServiceAgent(this);
@@ -131,6 +136,13 @@ public class MrPlow
       .forPort(port)
       .addService(agent)
       .build();
+
+    if (config.isSet("rpc_port"))
+    {
+      JsonRpcServer json_server = new JsonRpcServer(config, false);
+      new MrPlowJsonHandler(this).registerHandlers(json_server);
+
+    }
 
     s.start();
   }
@@ -182,9 +194,9 @@ public class MrPlow
      
 
     }
-
-
   }
+
+  public DB getDB() {return db;}
 
   private void saveState()
   {

@@ -121,8 +121,11 @@ public class MiningPoolServiceAgent extends MiningPoolServiceGrpc.MiningPoolServ
 
         SubmitReply reply = plow.getBlockingStub().submitBlock(real_block);
         logger.info("REAL BLOCK SUBMIT: " + reply);
+        if (plow.getDB().getSpecialMapSet() != null)
+        {
+          plow.getDB().getSpecialMapSet().add(MrPlow.BLOCK_KEY, formed_header.toByteString());
+        }
       }
-
 
       observer.onNext( SubmitReply.newBuilder().setSuccess(true).build() );
       observer.onCompleted();

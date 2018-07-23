@@ -18,6 +18,7 @@ public interface DBFace
   public void setBlockHashAtHeight(int height, ChainHash hash);
 
   public DBMap getSpecialMap();
+  public DBMapMutationSet getSpecialMapSet();
 
 
 }

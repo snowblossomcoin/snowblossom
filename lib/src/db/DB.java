@@ -29,6 +29,7 @@ public abstract class DB implements DBFace
   protected DBMap special_map;
   protected ProtoDBMap<Transaction> tx_map;
   protected DBMapMutationSet address_history_map;
+  protected DBMapMutationSet special_map_set;
 
   private Config config;
 
@@ -54,6 +55,14 @@ public abstract class DB implements DBFace
     block_height_map = openMap("height");
     special_map = openMap("special");
 
+    try
+    {
+      // Lobstack for example doesn't have multation map set implemented
+      // but most htings don't need this so whatever
+      special_map_set = openMutationMapSet("special_map_set");
+    }
+    catch(Throwable t){}
+
     if (config.getBoolean("addr_index"))
     {
       address_history_map = openMutationMapSet("addr_hist_2");
@@ -77,6 +86,9 @@ public abstract class DB implements DBFace
 
   @Override
   public DBMapMutationSet getAddressHistoryMap() { return address_history_map; }
+
+  @Override
+  public DBMapMutationSet getSpecialMapSet() { return special_map_set; }
 
   @Override
   public ChainHash getBlockHashAtHeight(int height)
