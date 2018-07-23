@@ -287,6 +287,7 @@ public class MrPlow
   public UserServiceBlockingStub getBlockingStub(){return blockingStub;}
   public ShareManager getShareManager(){return share_manager;}
   public ReportManager getReportManager(){return report_manager;}
+  public MiningPoolServiceAgent getAgent(){return agent;}
 
   public void printStats()
   {

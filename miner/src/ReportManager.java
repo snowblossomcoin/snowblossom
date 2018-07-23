@@ -11,6 +11,8 @@ import java.util.logging.Level;
 import java.util.Map;
 import java.util.TreeSet;
 
+import net.minidev.json.JSONObject;
+
 public class ReportManager
 {
   private static final Logger logger = Logger.getLogger("snowblossom.miner");
@@ -39,6 +41,34 @@ public class ReportManager
   public RateReporter getTotalRate()
   {
     return total;
+  }
+
+  public synchronized void writeReportJson(JSONObject json)
+  {
+    json.put("total", total.getRawRates());
+
+    JSONObject miners = new JSONObject();
+
+    TreeSet<String> to_remove = new TreeSet<>();
+    for(Map.Entry<String, RateReporter> me : rate_map.entrySet())
+    {
+      if (me.getValue().isZero())
+      {
+        to_remove.add(me.getKey());
+      }
+      else
+      {
+        miners.put(me.getKey(), me.getValue().getRawRates());
+      }
+    }
+
+    for(String k : to_remove)
+    {
+      rate_map.remove(k);
+    }
+
+    json.put("miners", miners);
+ 
   }
 
   public synchronized void writeReport(String path)

@@ -51,6 +51,14 @@ public class MiningPoolServiceAgent extends MiningPoolServiceGrpc.MiningPoolServ
 
   }
 
+  public int getMinerConnectionCount()
+  {
+    synchronized(miner_list)
+    {
+      return miner_list.size();
+    }
+  }
+
   @Override
   public void submitWork(WorkSubmitRequest req, StreamObserver<SubmitReply> observer)
   {

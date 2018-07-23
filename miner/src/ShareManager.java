@@ -76,6 +76,11 @@ public class ShareManager
     return PPLNSState.newBuilder().addAllShareEntries(share_queue).build();
   }
 
+  public synchronized Map<String, Long> getShareMap()
+  {
+    return ImmutableMap.copyOf(share_map);
+  }
+
   public synchronized Map<String, Double> getPayRatios()
   {
     TreeMap<String, Double> ratio_map = new TreeMap<>();

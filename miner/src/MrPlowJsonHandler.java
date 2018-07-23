@@ -30,6 +30,7 @@ public class MrPlowJsonHandler
   public void registerHandlers(JsonRpcServer json_server)
   {
     json_server.register(new GetFoundBlockHandler());
+    json_server.register(new GetStatsHandler());
 
   }
   public class GetFoundBlockHandler extends JsonRequestHandler
@@ -67,6 +68,38 @@ public class MrPlowJsonHandler
     }
   }
 
+
+  public class GetStatsHandler extends JsonRequestHandler
+  { 
+    public String[] handledRequests()
+    { 
+      return new String[]{"getstats"};
+    }
+
+    @Override
+    protected JSONObject processRequest(JSONRPC2Request req, MessageContext ctx)
+      throws Exception
+    { 
+
+      
+      JSONObject reply = new JSONObject();
+
+      int found_blocks = mr_plow.getDB().getSpecialMapSet().getSet(MrPlow.BLOCK_KEY, 100000).size();
+
+      reply.put("found_blocks" , found_blocks);
+
+      JSONObject rates = new JSONObject();
+      mr_plow.getReportManager().writeReportJson(rates);
+
+
+      reply.put("rates", rates);
+      reply.put("share_map", mr_plow.getShareManager().getShareMap());
+      reply.put("connections", mr_plow.getAgent().getMinerConnectionCount());
+
+
+      return reply;
+    }
+  }
 
 
 
