@@ -5,10 +5,13 @@ import duckutil.Config;
 import snowblossom.lib.NetworkParams;
 import snowblossom.lib.AddressSpecHash;
 import snowblossom.lib.AddressUtil;
+import snowblossom.lib.TransactionUtil;
 import snowblossom.proto.*;
 
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.List;
+import snowblossom.lib.TransactionBridge;
 
 import com.google.common.collect.ImmutableList;
 
@@ -24,15 +27,17 @@ public class Purse
   private final File wallet_path;
   private final Config config;
   private final NetworkParams params;
+  private final SnowBlossomClient client;
 
   private volatile WalletDatabase wallet_database;
 
-  public Purse(File wallet_path, Config config, NetworkParams params)
+  public Purse(SnowBlossomClient client, File wallet_path, Config config, NetworkParams params)
     throws Exception
   {
     this.wallet_path = wallet_path;
     this.config = config;
     this.params = params;
+    this.client = client;
 
     wallet_database = WalletUtil.loadWallet(wallet_path, true);
     if (wallet_database == null)
@@ -104,6 +109,26 @@ public class Purse
       return hash;    
     }
 
+  }
+
+  public synchronized Transaction send(List<TransactionOutput> out_list, long fee, boolean broadcast)
+    throws Exception
+  {
+    boolean mark_used = broadcast;
+    AddressSpecHash change = client.getPurse().getUnusedAddress(mark_used, false);
+
+    List<TransactionBridge> spendable = client.getAllSpendable();
+
+    Transaction tx = TransactionUtil.makeTransaction(wallet_database, spendable, out_list, fee, change);
+
+    if (broadcast)
+    {
+      client.sendOrException(tx);
+    }
+
+    return tx;
+
+    
   }
 
 }

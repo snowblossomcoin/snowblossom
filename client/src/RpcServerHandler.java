@@ -11,6 +11,11 @@ import snowblossom.proto.*;
 import snowblossom.lib.*;
 import duckutil.jsonrpc.JsonRpcServer;
 import duckutil.jsonrpc.JsonRequestHandler;
+import java.util.Map;
+import java.util.LinkedList;
+import com.google.protobuf.util.JsonFormat;
+import net.minidev.json.parser.JSONParser;
+
 
 public class RpcServerHandler
 {
@@ -107,10 +112,50 @@ public class RpcServerHandler
     {
       JSONObject reply = new JSONObject();
 
+      if (req.getNamedParams() == null)
+      {
+        throw new Exception("Send requires parameters");
+      }
 
 
+      Map<String, Object> params = req.getNamedParams();
+
+      Map<String, Object> to_map = (Map)params.get("to");
+
+      boolean broadcast = true;
+
+      if (params.containsKey("broadcast"))
+      {
+        broadcast = (boolean) req.getNamedParams().get("broadcast");
+      }
+
+      LinkedList<TransactionOutput> out_list = new LinkedList<>();
+      for(Map.Entry<String, Object> me : to_map.entrySet())
+      {
+        String address = me.getKey();
+        double value = (double)me.getValue();
+        
+        AddressSpecHash spec_hash = new AddressSpecHash(address, client.getParams());
+        long flakes = Math.round(value * Globals.SNOW_VALUE);
+
+        out_list.add(TransactionOutput.newBuilder().setValue(flakes).setRecipientSpecHash(spec_hash.getBytes()).build());
+
+      }
+
+      long fee = 0;
+      Transaction tx = client.getPurse().send(out_list, fee, broadcast); 
+
+      reply.put("tx_hash", HexUtil.getHexString(tx.getTxHash()));
+      reply.put("tx_data", HexUtil.getHexString(tx.toByteString()));
+
+      /*JsonFormat.Printer printer = JsonFormat.printer();
+      String json_str = printer.print(TransactionUtil.getInner(tx));
+
+      JSONParser parser = new JSONParser(JSONParser.MODE_STRICTEST);
       
+      JSONObject tx_json = (JSONObject)parser.parse(json_str);
 
+      reply.put("tx_json", tx_json);*/
 
       return reply;
  

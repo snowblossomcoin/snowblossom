@@ -262,10 +262,22 @@ public class SnowBlossomClient
 
   }
 
+  public void sendOrException(Transaction tx)
+    throws Exception
+  {
+    SubmitReply res = blockingStub.submitTransaction(tx);
+
+    if (!res.getSuccess())
+    {
+      throw new Exception("Submit transaction rejected: " + res.getErrorMessage());
+    }
+
+  }
+
   public void loadWallet()
     throws Exception
   {
-    purse = new Purse(wallet_path, config, params);
+    purse = new Purse(this, wallet_path, config, params);
 
   }
 
