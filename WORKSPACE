@@ -22,8 +22,8 @@ java_proto_repositories()
 
 maven_jar(
   name = "org_rocksdb_rocksdbjni",
-  artifact = "org.rocksdb:rocksdbjni:5.11.3",
-  sha1 = "a177b51aa2797794757fcaf4178044dbfe1b5834",
+  artifact = "org.rocksdb:rocksdbjni:5.14.2",
+  sha1 = "a6087318fab540ba0b4c6ff68475ffbedc0b3d10",
 )
 
 maven_jar(
