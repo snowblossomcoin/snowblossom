@@ -138,6 +138,8 @@ public class SnowBlossomClient
         RpcServerHandler server_handler = new RpcServerHandler(client);
         server_handler.registerHandlers(json_server);
 
+        logger.info("RPC Server started");
+
         while(true)
         {
           Thread.sleep(1000);
