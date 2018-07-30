@@ -20,11 +20,22 @@ name="snowblossom-$version"
 
 cd -
 cp -r "snowblossom" "$name"
+
+#node
 cp ../../bazel-bin/SnowBlossomNode_deploy.jar "$name"/
+cp "configs/node.conf" "$name/configs/"
+
+#client
 cp ../../bazel-bin/SnowBlossomClient_deploy.jar "$name"/
-cp ../../bazel-bin/SnowBlossomMiner_deploy.jar "$name"/
+cp "configs/client.conf" "$name/configs/"
+
+#miner
+#cp ../../bazel-bin/SnowBlossomMiner_deploy.jar "$name"/
+#cp "configs/miner.conf" "$name/configs/"
+
+#pool-miner
 cp ../../bazel-bin/PoolMiner_deploy.jar "$name"/
-cp -R configs "$name"/
+cp "configs/pool-miner.conf" "$name/configs/"
 
 # convert line endings to make easily windows editable -_-;
 for i in "$name/configs"/*; do sed -i 's/(?<=\r)$/\r$/' "$i"; done

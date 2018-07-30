@@ -13,7 +13,7 @@ release_info=`wget -qO - https://api.github.com/repos/snowblossomcoin/snowblosso
 release=`echo "$release_info" | grep -m1 -Po 'browser_download_url": "\K[^"]+'`
 release_file="${release##*/}"
 release_name="${release_file%.*}"
-echo "Installing $release_name node in $snowblossom_home"
+echo "Installing $release_name pool-miner in $snowblossom_home"
 
 # install java
 apt-get update
@@ -30,11 +30,11 @@ mv -n "$release_name"/* ./
 
 # install systemd service and
 # automatically start at boot
-systemctl enable "$snowblossom_home/systemd/snowblossom-node.service" 
+systemctl enable "$snowblossom_home/systemd/snowblossom-pool-miner.service" 
 # (re)start
-systemctl restart snowblossom-node.service
+# systemctl restart snowblossom-pool-miner.service
 
-echo "Done!"
+echo "Done! NOT Running."
 echo "You can manage the systemd service normally with:"
-echo "manage:   systemctl {start|stop|restart} snowblossom-miner.service"
-echo "logs  :   journalctl -n 100 -f -u snowblossom-miner.service"
+echo "manage:   systemctl {start|stop|restart} snowblossom-pool-miner.service"
+echo "logs  :   journalctl -n 100 -f -u snowblossom-pool-miner.service"
