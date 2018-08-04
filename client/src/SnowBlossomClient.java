@@ -246,6 +246,8 @@ public class SnowBlossomClient
   public Purse getPurse(){return purse;}
   public NetworkParams getParams(){return params;}
 
+  public UserServiceBlockingStub getStub(){ return blockingStub; }
+  
   public void send(long value, String to)
     throws Exception
   {
