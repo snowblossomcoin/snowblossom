@@ -176,7 +176,7 @@ public class SnowBlossomNode
       seen_height = getPeerage().getHighestSeenHeader().getBlockHeight();
     }
 
-    int diff = Math.abs(seen_height - height);
+    int diff = seen_height - height;
     if (diff < 10) return true; //whatever
 
     return false;

@@ -42,7 +42,7 @@ public class TransactionMapUtil
   {
     TransactionStatus.Builder status = TransactionStatus.newBuilder();
 
-    boolean confirmed=false;
+    status.setUnknown(true);
     for(ByteString val : db.getTransactionBlockMap().getSet(tx_id.getBytes(), 10000))
     {
       ByteBuffer bb = ByteBuffer.wrap(val.toByteArray());
@@ -57,11 +57,8 @@ public class TransactionMapUtil
 			{
         status.setConfirmed(true);
         status.setHeightConfirmed(height);
-        confirmed=true;
 			}
     }
-    status.setUnknown(true);
-
     return status.build();
     
   }
