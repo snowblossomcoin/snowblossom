@@ -151,6 +151,7 @@ service UserService {
   rpc GetNodeStatus ( NullRequest ) returns ( NodeStatus ) {}
   rpc GetBlock ( RequestBlock ) returns ( Block ) {}
   rpc GetTransaction ( RequestTransaction ) returns ( Transaction ) {}
+  rpc GetTransactionStatus ( RequestTransaction ) returns ( TransactionStatus ) {}
   rpc GetBlockHeader ( RequestBlockHeader ) returns ( BlockHeader ) {}
 }
 
@@ -183,6 +184,14 @@ message PeerInfo {
   int64 learned = 5;
   string version = 6;
   bytes node_id = 7;
+}
+
+message TransactionStatus {
+  oneof z {
+    bool unknown = 1;
+    bool mempool = 2;
+    bool confirmed = 3;
+    }
 }
 
 message RequestBlock {

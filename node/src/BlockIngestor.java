@@ -1,5 +1,6 @@
 package snowblossom.node;
 
+import com.google.common.collect.TreeMultimap;
 import com.google.protobuf.ByteString;
 import duckutil.TimeRecord;
 import duckutil.TimeRecordAuto;
@@ -10,6 +11,7 @@ import snowblossom.proto.BlockHeader;
 import snowblossom.proto.BlockSummary;
 import snowblossom.proto.Transaction;
 import snowblossom.lib.trie.HashUtils;
+import snowblossom.lib.trie.ByteStringComparator;
 
 import java.io.FileOutputStream;
 import java.io.PrintStream;
@@ -115,12 +117,16 @@ public class BlockIngestor
       {
         try(TimeRecordAuto tra_tx = TimeRecord.openAuto("BlockIngestor.saveTx"))
         {
+          ByteString block_hash_str = blockhash.getBytes();
           HashMap<ByteString, Transaction> tx_map = new HashMap<>();
+          TreeMultimap<ByteString, ByteString> tx_block_map = TreeMultimap.create(new ByteStringComparator(), new ByteStringComparator());
           for(Transaction tx : blk.getTransactionsList())
           {
             tx_map.put(tx.getTxHash(), tx);
+            tx_block_map.put(tx.getTxHash(), block_hash_str);
           }
           db.getTransactionMap().putAll(tx_map);
+          db.getTransactionBlockMap().addAll(tx_block_map);
         }
       }
       if (addr_index)

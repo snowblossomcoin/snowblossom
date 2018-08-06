@@ -30,6 +30,7 @@ public abstract class DB implements DBFace
   protected ProtoDBMap<Transaction> tx_map;
   protected DBMapMutationSet address_history_map;
   protected DBMapMutationSet special_map_set;
+  protected DBMapMutationSet transaction_block_map;
 
   private Config config;
 
@@ -67,6 +68,10 @@ public abstract class DB implements DBFace
     {
       address_history_map = openMutationMapSet("addr_hist_2");
     }
+    if (config.getBoolean("tx_index"))
+    {
+      transaction_block_map = openMutationMapSet("tx_blk_map");
+    }
   }
 
   @Override
@@ -89,6 +94,9 @@ public abstract class DB implements DBFace
 
   @Override
   public DBMapMutationSet getSpecialMapSet() { return special_map_set; }
+
+  @Override
+  public DBMapMutationSet getTransactionBlockMap() { return transaction_block_map; }
 
   @Override
   public ChainHash getBlockHashAtHeight(int height)

@@ -11,6 +11,7 @@ public interface DBFace
   public ProtoDBMap<BlockSummary> getBlockSummaryMap();
   public ProtoDBMap<Transaction> getTransactionMap();
   public DBMapMutationSet getAddressHistoryMap();
+  public DBMapMutationSet getTransactionBlockMap();
 
   public DBMap getUtxoNodeMap();
 

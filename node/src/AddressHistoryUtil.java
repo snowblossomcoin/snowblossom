@@ -33,7 +33,6 @@ public class AddressHistoryUtil
         ByteString addr = out.getRecipientSpecHash();
         map.put(addr, val);
       }
-
     }
     db.getAddressHistoryMap().addAll(map);
   }
@@ -48,9 +47,7 @@ public class AddressHistoryUtil
     bb.put(tx_id.toByteArray());
 
     return ByteString.copyFrom(buff);
-
   }
-
 
   public static HistoryList getHistory(AddressSpecHash spec_hash, DB db, BlockHeightCache cache)
   {
@@ -83,8 +80,6 @@ public class AddressHistoryUtil
     }
 
     return hist_list.build();
-
   }
-
 
 }
