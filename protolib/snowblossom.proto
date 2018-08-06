@@ -191,7 +191,8 @@ message TransactionStatus {
     bool unknown = 1;
     bool mempool = 2;
     bool confirmed = 3;
-    }
+  }
+  int32 height_confirmed = 4;
 }
 
 message RequestBlock {

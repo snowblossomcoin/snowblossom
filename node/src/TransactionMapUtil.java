@@ -3,6 +3,7 @@ package snowblossom.node;
 import snowblossom.lib.db.DB;
 import snowblossom.proto.*;
 import snowblossom.lib.Globals;
+import snowblossom.lib.ChainHash;
 
 import snowblossom.lib.trie.ByteStringComparator;
 import com.google.common.collect.TreeMultimap;
@@ -37,4 +38,31 @@ public class TransactionMapUtil
 
   }
 
+  public static TransactionStatus getTxStatus(ChainHash tx_id, DB db, BlockHeightCache cache)
+  {
+    TransactionStatus.Builder status = TransactionStatus.newBuilder();
+
+    boolean confirmed=false;
+    for(ByteString val : db.getTransactionBlockMap().getSet(tx_id.getBytes(), 10000))
+    {
+      ByteBuffer bb = ByteBuffer.wrap(val.toByteArray());
+      int height = bb.getInt();
+
+      byte[] b = new byte[Globals.BLOCKCHAIN_HASH_LEN];
+
+      bb.get(b);
+      ChainHash blk_hash = new ChainHash(b);
+			
+			if (blk_hash.equals(cache.getHash(height)))
+			{
+        status.setConfirmed(true);
+        status.setHeightConfirmed(height);
+        confirmed=true;
+			}
+    }
+    status.setUnknown(true);
+
+    return status.build();
+    
+  }
 }

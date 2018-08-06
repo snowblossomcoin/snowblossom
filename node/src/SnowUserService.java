@@ -260,6 +260,26 @@ public class SnowUserService extends UserServiceGrpc.UserServiceImplBase
   }
 
   @Override
+  public void getTransactionStatus(RequestTransaction req, StreamObserver<TransactionStatus> observer)
+  {
+    ChainHash tx_id = new ChainHash(req.getTxHash());
+
+    TransactionStatus status = null;
+    if (node.getMemPool().getTransaction(tx_id) != null)
+    {
+      status = TransactionStatus.newBuilder().setMempool(true).build();
+    }
+    else
+    {
+      status = TransactionMapUtil.getTxStatus(tx_id, node.getDB(), node.getBlockHeightCache());
+    }
+
+    observer.onNext(status);
+    observer.onCompleted();
+
+  }
+
+  @Override
   public void getMempoolTransactionList(RequestAddress req, StreamObserver<TransactionHashList> observer)
   {
     AddressSpecHash spec_hash = new AddressSpecHash(req.getAddressSpecHash());
