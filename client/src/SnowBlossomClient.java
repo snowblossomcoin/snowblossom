@@ -347,7 +347,7 @@ public class SnowBlossomClient
       }
       if (!b.spent)
       {
-        value_spendable =+ b.value;
+        value_spendable += b.value;
       }
     }
     return BalanceInfo.newBuilder()

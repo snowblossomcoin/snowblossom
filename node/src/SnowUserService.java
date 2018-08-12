@@ -265,13 +265,14 @@ public class SnowUserService extends UserServiceGrpc.UserServiceImplBase
     ChainHash tx_id = new ChainHash(req.getTxHash());
 
     TransactionStatus status = null;
-    if (node.getMemPool().getTransaction(tx_id) != null)
+    status = TransactionMapUtil.getTxStatus(tx_id, node.getDB(), node.getBlockHeightCache());
+
+    if (status.getUnknown())
     {
-      status = TransactionStatus.newBuilder().setMempool(true).build();
-    }
-    else
-    {
-      status = TransactionMapUtil.getTxStatus(tx_id, node.getDB(), node.getBlockHeightCache());
+      if (node.getMemPool().getTransaction(tx_id) != null)
+      {
+        status = TransactionStatus.newBuilder().setMempool(true).build();
+      }
     }
 
     observer.onNext(status);
