@@ -153,8 +153,8 @@ service UserService {
   rpc GetTransaction ( RequestTransaction ) returns ( Transaction ) {}
   rpc GetTransactionStatus ( RequestTransaction ) returns ( TransactionStatus ) {}
   rpc GetBlockHeader ( RequestBlockHeader ) returns ( BlockHeader ) {}
+  rpc GetFeeEstimate ( NullRequest ) returns ( FeeEstimate ) {}
 }
-
 
 
 message PeerMessage {
@@ -208,6 +208,10 @@ message RequestBlockHeader {
 message SubmitReply {
   bool success = 1;
   string error_message = 2;
+}
+
+message FeeEstimate {
+  double fee_per_byte = 1; //flakes per byte of tx
 }
 
 message SubscribeBlockTemplateRequest {

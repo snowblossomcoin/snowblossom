@@ -247,13 +247,21 @@ public class SnowBlossomClient
   public NetworkParams getParams(){return params;}
 
   public UserServiceBlockingStub getStub(){ return blockingStub; }
+
+  public FeeEstimate getFeeEstimate()
+  {
+    return getStub().getFeeEstimate(NullRequest.newBuilder().build());
+  }
   
   public void send(long value, String to)
     throws Exception
   {
+
+    // We don't actually know the real transaction size, so just making a WAG
+    long fee = (long) (1000L * getFeeEstimate().getFeePerByte());
     AddressSpecHash to_hash = AddressUtil.getHashForAddress(params.getAddressPrefix(), to);
     Transaction tx = TransactionUtil.makeTransaction(purse.getDB(), getAllSpendable(), 
-      to_hash, value, 0L, 
+      to_hash, value, fee, 
       purse.getUnusedAddress(true,false));
 
     logger.info("Transaction: " + new ChainHash(tx.getTxHash()) + " - " + tx.toByteString().size());

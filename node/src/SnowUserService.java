@@ -296,6 +296,13 @@ public class SnowUserService extends UserServiceGrpc.UserServiceImplBase
   }
 
   @Override
+  public void getFeeEstimate(NullRequest null_request, StreamObserver<FeeEstimate> observer)
+  {
+    observer.onNext( FeeEstimate.newBuilder().setFeePerByte( Globals.BASIC_FEE ).build() );
+    observer.onCompleted();
+  }
+
+  @Override
   public void getAddressHistory(RequestAddress req, StreamObserver<HistoryList> observer)
   {
     AddressSpecHash spec_hash = new AddressSpecHash(req.getAddressSpecHash());
