@@ -122,7 +122,36 @@ public class SignatureUtil
 			throw new ValidationException(String.format("Unknown sig type %d", sig_type));
 		}
     return algo;
+  }
 
+  /**
+   * These estimates could be way off, especially for RSA which entirely
+   * depends on key size.  But gives an idea for fee estimation.
+   */
+  public static int estimateSignatureBytes(int sig_type)
+    throws ValidationException
+  {
+    if (sig_type == SIG_TYPE_ECDSA_COMPRESSED)
+    {
+      return 70;
+    }
+    if (sig_type == SIG_TYPE_ECDSA)
+    {
+      return 120;
+    }
+    if (sig_type == SIG_TYPE_DSA)
+    {
+      return 100;
+    }
+    if (sig_type == SIG_TYPE_RSA)
+    {
+      return 8192/8;
+    }
+    if (sig_type == SIG_TYPE_DSTU4145)
+    {
+      return 50;  
+    }
+	  throw new ValidationException(String.format("Unknown sig type %d", sig_type));
 
   }
 
