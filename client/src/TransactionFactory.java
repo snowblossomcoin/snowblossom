@@ -134,6 +134,8 @@ public class TransactionFactory
       }
     }
 
+    inner.setFee(fee);
+
     long change = input_total - fee - needed_for_outputs;
 
     int change_count = 0;

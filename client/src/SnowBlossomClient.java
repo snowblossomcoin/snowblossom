@@ -8,6 +8,7 @@ import io.grpc.ManagedChannelBuilder;
 import snowblossom.lib.*;
 import org.junit.Assert;
 import snowblossom.proto.*;
+import snowblossom.util.proto.*;
 import snowblossom.proto.UserServiceGrpc.UserServiceBlockingStub;
 import java.util.concurrent.atomic.AtomicLong;
 import snowblossom.proto.UserServiceGrpc.UserServiceStub;
@@ -257,12 +258,19 @@ public class SnowBlossomClient
     throws Exception
   {
 
-    // We don't actually know the real transaction size, so just making a WAG
-    long fee = (long) (1000L * getFeeEstimate().getFeePerByte());
+    TransactionFactoryConfig.Builder tx_config = TransactionFactoryConfig.newBuilder();
+
+    tx_config.setSign(true);
     AddressSpecHash to_hash = AddressUtil.getHashForAddress(params.getAddressPrefix(), to);
-    Transaction tx = TransactionUtil.makeTransaction(purse.getDB(), getAllSpendable(), 
-      to_hash, value, fee, 
-      purse.getUnusedAddress(true,false));
+    tx_config.addOutputs(TransactionOutput.newBuilder().setRecipientSpecHash(to_hash.getBytes()).setValue(value).build());
+    tx_config.setChangeFreshAddress(true);
+    tx_config.setInputConfirmedThenPending(true);
+    tx_config.setFeeUseEstimate(true);
+
+    TransactionFactoryResult res = TransactionFactory.createTransaction(tx_config.build(), purse.getDB(), this);
+
+    Transaction tx = res.getTx();
+
 
     logger.info("Transaction: " + new ChainHash(tx.getTxHash()) + " - " + tx.toByteString().size());
 
@@ -615,9 +623,7 @@ public class SnowBlossomClient
       //Collections.shuffle(spendable);
 
       LinkedList<TransactionOutput> out_list = new LinkedList<>();
-      long fee = rnd.nextLong(500);
-      fee = 0;
-      long needed_value = fee;
+      long needed_value = 50000; //should cover a fee
       for(int i=0; i< output_count; i++)
       {
         long value = min_send + rnd.nextLong(send_delta);
@@ -629,16 +635,28 @@ public class SnowBlossomClient
         needed_value+=value;
       }
 
-      LinkedList<TransactionBridge> input_list = new LinkedList<>();
+      LinkedList<UTXOEntry> input_list = new LinkedList<>();
       while(needed_value > 0)
       {
         TransactionBridge b = spendable.pop();
         needed_value -= b.value;
-        input_list.add(b);
+        input_list.add(b.toUTXOEntry());
       }
 
-      Transaction tx = TransactionUtil.makeTransaction(purse.getDB(), input_list, out_list, fee, 
-      purse.getUnusedAddress(true,false));
+      TransactionFactoryConfig.Builder tx_config = TransactionFactoryConfig.newBuilder();
+
+      tx_config.setSign(true);
+
+      tx_config.addAllOutputs(out_list);
+      tx_config.setChangeRandomFromWallet(true);
+      tx_config.setInputSpecificList(true);
+      tx_config.setFeeUseEstimate(true);
+      tx_config.addAllInputs(input_list);
+
+      TransactionFactoryResult res = TransactionFactory.createTransaction(tx_config.build(), purse.getDB(), this);
+
+      Transaction tx = res.getTx();
+
       if (tx == null)
       {
         logger.warning("Unable to make transaction");

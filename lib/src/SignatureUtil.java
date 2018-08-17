@@ -149,7 +149,7 @@ public class SignatureUtil
     }
     if (sig_type == SIG_TYPE_DSTU4145)
     {
-      return 50;  
+      return 90;  
     }
 	  throw new ValidationException(String.format("Unknown sig type %d", sig_type));
 

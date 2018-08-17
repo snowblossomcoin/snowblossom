@@ -281,6 +281,7 @@ public class TransactionUtil
     out.println("Transaction: " + tx_hash + " size: " + tx.toByteString().size());
     TreeSet<String> sign_set=new TreeSet<>();
     DecimalFormat df = new DecimalFormat("0.000000");
+    DecimalFormat df_short = new DecimalFormat("0.00");
 
     for(SignatureEntry se : tx.getSignaturesList())
     {
@@ -343,7 +344,14 @@ public class TransactionUtil
       AddressUtil.prettyDisplayAddressSpec(claim, out, params, c_idx, sign_set);
 
     }
-    out.println(String.format("  Fee: %s", df.format( inner.getFee() / Globals.SNOW_VALUE_D)));
+
+    double fee_flakes = inner.getFee();
+    double fee_flakes_per_byte = fee_flakes / tx.toByteString().size();
+
+    out.println(String.format("  Fee: %s (%s flakes per byte)", 
+      df.format( inner.getFee() / Globals.SNOW_VALUE_D),
+      df_short.format( fee_flakes_per_byte )
+      ));
     if (inner.getExtra().size() > 0)
     {
       out.println("  Extra: " + HexUtil.getSafeString(inner.getExtra()));
