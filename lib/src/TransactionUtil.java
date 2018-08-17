@@ -39,6 +39,7 @@ public class TransactionUtil
    * Also assumes the inputs and output funds are exactly matched
    * with no fee.
    */
+  @Deprecated
   public static Transaction createTransaction(
     List<TransactionInput> sources,
     List<TransactionOutput> dests,
@@ -91,6 +92,7 @@ public class TransactionUtil
 
   }
 
+  @Deprecated
   public static Transaction makeTransaction(WalletDatabase wallet,
     Collection<TransactionBridge> spendable,
     AddressSpecHash to,
@@ -106,6 +108,7 @@ public class TransactionUtil
 
   }
  
+  @Deprecated
   public static Transaction makeTransaction(WalletDatabase wallet,
     Collection<TransactionBridge> spendable,
     AddressSpecHash to,
@@ -121,6 +124,7 @@ public class TransactionUtil
 
   }
   
+  @Deprecated
   public static Transaction makeTransaction(
     WalletDatabase wallet, 
     Collection<TransactionBridge> spendable, 

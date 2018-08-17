@@ -1,0 +1,52 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "snowblossom.util.proto";
+option java_outer_classname = "SnowBlossomUtilProto";
+
+import "protolib/snowblossom.proto";
+
+package snowblossom;
+
+message TransactionFactoryConfig {
+  repeated TransactionOutput outputs = 1;
+  bool sign = 2;
+  int64 split_change_over = 3; // Split change outputs if over this many flakes
+  oneof change_mode
+  {
+    bool change_random_from_wallet = 4;
+    bool change_fresh_address = 5;
+    bool change_specific_addresses = 6;
+  }
+  repeated bytes change_addresses = 7;
+
+  oneof input_mode
+  {
+    bool input_specific_list = 8;
+    bool input_confirmed_then_pending = 9;
+    bool input_confirmed_only = 10;
+  }
+  repeated UTXOEntry inputs = 11;
+
+  oneof fee_mode
+  {
+    int64 fee_flat = 12;
+    bool fee_use_estimate = 13;
+  }
+
+  bytes extra = 14;
+}
+
+message UTXOEntry {
+  bytes spec_hash = 1;
+  bytes src_tx = 2;
+  int32 src_tx_out_idx = 3;
+  int64 value = 4;
+}
+
+message TransactionFactoryResult {
+  Transaction tx = 1;
+  bool all_signed = 2;
+  int64 fee = 3;
+  int32 signatures_added = 4;
+}

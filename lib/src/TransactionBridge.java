@@ -7,6 +7,7 @@ import snowblossom.proto.Transaction;
 import snowblossom.proto.TransactionInner;
 import snowblossom.proto.TransactionInput;
 import snowblossom.proto.TransactionOutput;
+import snowblossom.util.proto.UTXOEntry;
 import snowblossom.trie.proto.TrieNode;
 
 import java.nio.ByteBuffer;
@@ -68,6 +69,7 @@ public class TransactionBridge implements Comparable<TransactionBridge>
         .setSrcTxOutIdx( out_idx)
         .build();
   }
+
   public TransactionBridge(TransactionInput in)
   {
     spent=true;
@@ -141,4 +143,13 @@ public class TransactionBridge implements Comparable<TransactionBridge>
     return false;
   }
 
+  public UTXOEntry toUTXOEntry()
+  {
+    return UTXOEntry.newBuilder()
+      .setSpecHash( in.getSpecHash() )
+      .setSrcTx( in.getSrcTxId() )
+      .setSrcTxOutIdx( in.getSrcTxOutIdx() )
+      .setValue(value)
+      .build();
+  }
 }

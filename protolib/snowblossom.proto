@@ -99,6 +99,7 @@ message SignatureEntry {
 
 message TransactionInput {
   bytes spec_hash = 1; // Do we really need this?  Can always pull it from tx out
+
                        // if we have it, we can look up the utxo by spec_hash/tx_id/out_idx
                        // otherwise we need a tx index, which isn't the end of the world
   bytes src_tx_id = 2;
