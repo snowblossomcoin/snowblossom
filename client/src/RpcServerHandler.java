@@ -35,7 +35,9 @@ public class RpcServerHandler
   {
 		json_server.register(new GetFreshHandler());
 		json_server.register(new BalanceHandler());
-		json_server.register(new SendHandler());
+		json_server.register(new CreateTxHandler());
+		json_server.register(new SignTxHandler());
+		json_server.register(new BroadcastTxHandler());
 
   }
 
@@ -103,8 +105,74 @@ public class RpcServerHandler
     }
 
   }
+  public class SignTxHandler extends JsonRequestHandler
+  {
+    public String[] handledRequests()
+    {
+      return new String[]{"sign_transaction"};
+    }
 
-  public class SendHandler extends JsonRequestHandler
+    @Override
+    protected JSONObject processRequest(JSONRPC2Request req, MessageContext ctx)
+      throws Exception
+    {
+      JSONObject reply = new JSONObject();
+      Map<String, Object> params = req.getNamedParams();
+
+      String tx_data = (String)params.get("tx_data");
+      Transaction tx = Transaction.parseFrom( HexUtil.stringToHex(tx_data) );
+
+      TransactionFactoryResult factory_result = TransactionFactory.signTransaction(tx, client.getPurse().getDB());
+      
+      tx = factory_result.getTx();
+      TransactionInner inner = TransactionUtil.getInner(tx);
+
+      reply.put("tx_hash", HexUtil.getHexString(tx.getTxHash()));
+      reply.put("tx_data", HexUtil.getHexString(tx.toByteString()));
+      reply.put("fee", inner.getFee());
+      reply.put("signatures_added", factory_result.getSignaturesAdded());
+      reply.put("all_signed", factory_result.getAllSigned());
+
+      return reply;
+ 
+    }
+
+  }
+
+  public class BroadcastTxHandler extends JsonRequestHandler
+  {
+    public String[] handledRequests()
+    {
+      return new String[]{"broadcast"};
+    }
+
+    @Override
+    protected JSONObject processRequest(JSONRPC2Request req, MessageContext ctx)
+      throws Exception
+    {
+      JSONObject reply = new JSONObject();
+      Map<String, Object> params = req.getNamedParams();
+
+      String tx_data = (String)params.get("tx_data");
+      Transaction tx = Transaction.parseFrom( HexUtil.stringToHex(tx_data) );
+
+      TransactionInner inner = TransactionUtil.getInner(tx);
+
+      client.sendOrException(tx);
+
+      reply.put("tx_hash", HexUtil.getHexString(tx.getTxHash()));
+      reply.put("tx_data", HexUtil.getHexString(tx.toByteString()));
+      reply.put("fee", inner.getFee());
+
+      return reply;
+ 
+    }
+
+  }
+
+
+
+  public class CreateTxHandler extends JsonRequestHandler
   {
     public String[] handledRequests()
     {
