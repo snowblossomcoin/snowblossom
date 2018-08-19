@@ -159,6 +159,7 @@ public class RpcServerHandler
       TransactionInner inner = TransactionUtil.getInner(tx);
 
       client.sendOrException(tx);
+      reply.put("broadcast", true);
 
       reply.put("tx_hash", HexUtil.getHexString(tx.getTxHash()));
       reply.put("tx_data", HexUtil.getHexString(tx.toByteString()));
