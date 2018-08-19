@@ -164,7 +164,7 @@ public class PoolMiner
     if (config.isSet("mine_to_wallet"))
     {
       File wallet_path = new File(config.get("mine_to_wallet"));
-      WalletDatabase wallet = WalletUtil.loadWallet(wallet_path, false);
+      WalletDatabase wallet = WalletUtil.loadWallet(wallet_path, false, params);
 
       if (wallet.getAddressesCount() == 0)
       {

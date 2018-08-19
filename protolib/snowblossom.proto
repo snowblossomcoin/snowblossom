@@ -310,6 +310,7 @@ message WalletDatabase {
   map<string, bool> used_addresses = 4;
   map<string, int64> address_create_time = 5;
   int32 version = 10;
+  string network = 11;
   //CipherKey cipher_key = 11;
 }
 

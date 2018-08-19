@@ -41,7 +41,7 @@ public class PurseTest
     throws Exception
   {
     File empty_sub = new File(test_folder.newFolder(), "empty");
-    WalletDatabase db = WalletUtil.loadWallet(empty_sub, true);
+    WalletDatabase db = WalletUtil.loadWallet(empty_sub, true, new NetworkParamsRegtest());
     Assert.assertNull(db);
 
   }

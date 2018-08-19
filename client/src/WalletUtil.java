@@ -28,21 +28,32 @@ import java.util.Map;
 
 public class WalletUtil
 {
+  
   public static final String MODE_STANDARD = "standard";
   public static final String MODE_QHARD = "qhard";
 
   private static final Logger logger = Logger.getLogger("snowblossom.client");
-  public static final int WALLET_DB_VERSION = 2;
+
+  /** Version log
+   * 0 - old wallet.db version
+   * 2 - merging support, multiple files
+   * 3 - network version added
+   */
+  public static final int WALLET_DB_VERSION = 3;
 
   public static WalletDatabase makeNewDatabase(Config config, NetworkParams params)
   {
     WalletDatabase.Builder builder = WalletDatabase.newBuilder();
     builder.setVersion(WALLET_DB_VERSION);
+    builder.setNetwork(params.getNetworkName());
 
-    int count = config.getIntWithDefault("key_count", 8);
-    for (int i = 0; i < count; i++)
+    if (!config.getBoolean("watch_only"))
     {
-      genNewKey(builder, config, params);
+      int count = config.getIntWithDefault("key_count", 8);
+      for (int i = 0; i < count; i++)
+      {
+        genNewKey(builder, config, params);
+      }
     }
 
     return builder.build();
@@ -50,6 +61,10 @@ public class WalletUtil
 
   public static void genNewKey(WalletDatabase.Builder wallet_builder, Config config, NetworkParams params)
   {
+    if (config.getBoolean("watch_only"))
+    {
+      throw new RuntimeException("Unable to create new address on watch only wallet.");
+    }
     String key_mode = config.getWithDefault("key_mode", MODE_STANDARD).toLowerCase();
     AddressSpec claim = null;
 
@@ -86,6 +101,12 @@ public class WalletUtil
   public static WalletDatabase fillKeyPool(WalletDatabase existing_db, File wallet_path, Config config, NetworkParams params)
     throws Exception
   {
+    
+    if (config.getBoolean("watch_only"))
+    {
+      return existing_db;
+    }
+
     int key_pool = config.getIntWithDefault("key_pool_size", 100);
     int unused = getUnusedAddressCount(existing_db, params);
     if (unused < key_pool)
@@ -93,6 +114,7 @@ public class WalletUtil
       int to_make = key_pool - unused;
       WalletDatabase.Builder partial_new_db = WalletDatabase.newBuilder();
       partial_new_db.setVersion(WALLET_DB_VERSION);
+      partial_new_db.setNetwork(params.getNetworkName());
       for(int i=0; i<to_make; i++)
       {
         genNewKey(partial_new_db, config, params);
@@ -100,7 +122,7 @@ public class WalletUtil
       WalletDatabase new_db_part = partial_new_db.build();
       saveWallet(new_db_part, wallet_path);
 
-      return mergeDatabases(ImmutableList.of(existing_db, new_db_part));
+      return mergeDatabases(ImmutableList.of(existing_db, new_db_part), params);
 
     }
     return existing_db;
@@ -120,12 +142,13 @@ public class WalletUtil
     if (existing_db.getUsedAddressesMap().containsKey(address)) return existing_db;
     WalletDatabase.Builder partial_new_db = WalletDatabase.newBuilder();
     partial_new_db.setVersion(WalletUtil.WALLET_DB_VERSION);
+    partial_new_db.setNetwork(params.getNetworkName());
     partial_new_db.putUsedAddresses(address, true);
 
     WalletDatabase new_db_part = partial_new_db.build();
     saveWallet(new_db_part, wallet_path);
 
-    return mergeDatabases(ImmutableList.of(existing_db, new_db_part));
+    return mergeDatabases(ImmutableList.of(existing_db, new_db_part),params);
 
   }
 
@@ -176,9 +199,11 @@ public class WalletUtil
     return unused.size();
   }
 
-  public static WalletDatabase loadWallet(File wallet_path, boolean cleanup)
+  public static WalletDatabase loadWallet(File wallet_path, boolean cleanup, NetworkParams params)
     throws Exception
   {
+    String network_name = params.getNetworkName();
+
     if (!wallet_path.isDirectory()) return null;
 
     LinkedList<File> files_to_read = new LinkedList<>();
@@ -203,6 +228,14 @@ public class WalletUtil
       WalletDatabase w = WalletDatabase.parseFrom(fin);
       fin.close();
 
+      if (w.getNetwork().length() > 0)
+      {
+        if (!w.getNetwork().equals( params.getNetworkName() ))
+        {
+          throw new Exception(String.format("Wallet load error: in file %s, attempting to load network %s, expecting %s",f.toString(), w.getNetwork(), params.getNetworkName()));
+        }
+      }
+
       found_db_list.add(w);
       if (w.getVersion() <= WALLET_DB_VERSION)
       {
@@ -220,7 +253,7 @@ public class WalletUtil
 
     if (found_db_list.size() > 0)
     {
-      WalletDatabase merged = mergeDatabases(found_db_list);
+      WalletDatabase merged = mergeDatabases(found_db_list,params);
 
       if ((cleanup) && (found_db_list.size() > 1))
       {
@@ -238,11 +271,13 @@ public class WalletUtil
     return null;
   }
 
-	public static WalletDatabase mergeDatabases(List<WalletDatabase> src_list)
+	public static WalletDatabase mergeDatabases(List<WalletDatabase> src_list, NetworkParams params)
   {
     WalletDatabase.Builder new_db = WalletDatabase.newBuilder();
 
     new_db.setVersion(WALLET_DB_VERSION);
+    new_db.setNetwork(params.getNetworkName());
+
     HashSet<WalletKeyPair> key_set=new HashSet<>();
     HashSet<AddressSpec> address_set =new HashSet<>();
     HashSet<Transaction> tx_set = new HashSet<>();
@@ -289,5 +324,15 @@ public class WalletUtil
     out.close();
 
     logger.log(Level.FINE, String.format("Save to file %s completed", db_file.getPath()));
+  }
+
+  public static WalletDatabase getWatchCopy(WalletDatabase db)
+  {
+    WalletDatabase.Builder watch = WalletDatabase.newBuilder();
+
+    watch.mergeFrom(db);
+    watch.clearKeys();
+
+    return watch.build();
   }
 }

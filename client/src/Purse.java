@@ -39,7 +39,7 @@ public class Purse
     this.params = params;
     this.client = client;
 
-    wallet_database = WalletUtil.loadWallet(wallet_path, true);
+    wallet_database = WalletUtil.loadWallet(wallet_path, true, params);
     if (wallet_database == null)
     {
       logger.log(Level.WARNING, String.format("Directory %s does not contain wallet, creating new wallet", wallet_path.getPath()));
@@ -58,7 +58,7 @@ public class Purse
   {
     WalletUtil.saveWallet(merge, wallet_path);
 
-    wallet_database = WalletUtil.mergeDatabases(ImmutableList.of(wallet_database, merge));
+    wallet_database = WalletUtil.mergeDatabases(ImmutableList.of(wallet_database, merge), params);
 
   }
 
@@ -88,7 +88,7 @@ public class Purse
       WalletUtil.saveWallet(new_db_part, wallet_path);
       synchronized(this)
       {
-        wallet_database = WalletUtil.mergeDatabases(ImmutableList.of(wallet_database, new_db_part));
+        wallet_database = WalletUtil.mergeDatabases(ImmutableList.of(wallet_database, new_db_part), params);
       }
       return hash;
     }

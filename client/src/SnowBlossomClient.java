@@ -163,6 +163,27 @@ public class SnowBlossomClient
         
         logger.info(String.format("Wallet saved to %s", args[2]));
       }
+      else if (command.equals("export_watch_only"))
+      {
+        if (args.length != 3)
+        {
+          logger.log(Level.SEVERE, "export must be followed by filename to write to");
+          System.exit(-1);
+        }
+        
+        JsonFormat.Printer printer = JsonFormat.printer();
+        AtomicFileOutputStream atomic_out = new AtomicFileOutputStream(args[2]);
+        PrintStream print_out = new PrintStream(atomic_out);
+
+        WalletDatabase watch_db = WalletUtil.getWatchCopy(client.getPurse().getDB());
+
+
+        print_out.println(printer.print(watch_db));
+        print_out.close();
+        
+        logger.info(String.format("Wallet saved to %s", args[2]));
+      }
+ 
       else if (command.equals("import"))
       {
         JsonFormat.Parser parser = JsonFormat.parser();
@@ -175,6 +196,11 @@ public class SnowBlossomClient
 
         Reader input = new InputStreamReader(new FileInputStream(args[2]));
         parser.merge(input, wallet_import);
+        if (config.getBoolean("watch_only") && (wallet_import.getKeysCount() > 0))
+        {
+          logger.log(Level.SEVERE, "Attempting to import wallet with keys into watch only wallet. Nope.");
+          System.exit(-1);
+        }
         client.getPurse().mergeIn(wallet_import.build());
 
         logger.info("Imported data:");
@@ -200,8 +226,9 @@ public class SnowBlossomClient
         System.out.println("    if generate_now is true, generate a new address rather than using the key pool");
         System.out.println("  send <amount> <destination> - send snow to address");
         System.out.println("  export <file> - export wallet to json file");
+        System.out.println("  export_watch_only <file> - export wallet to json file with no keys");
         System.out.println("  import <file> - import wallet from json file, merges with existing");
-
+        System.out.println("  rpcserver - run a local rpc server for client commands");
 
         System.exit(-1);
       }
