@@ -16,6 +16,7 @@ import duckutil.jsonrpc.JsonRequestHandler;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.LinkedList;
+import java.util.List;
 import com.google.protobuf.util.JsonFormat;
 import net.minidev.json.parser.JSONParser;
 
@@ -39,6 +40,7 @@ public class RpcServerHandler
 		json_server.register(new SignTxHandler());
 		json_server.register(new BroadcastTxHandler());
 		json_server.register(new GetTxHandler());
+		json_server.register(new GetUnspentHandler());
 
   }
 
@@ -209,6 +211,50 @@ public class RpcServerHandler
  
     }
 
+  }
+
+  public class GetUnspentHandler extends JsonRequestHandler
+  {
+    public String[] handledRequests()
+    {
+      return new String[]{"get_unspent"};
+    }
+
+    @Override
+    protected JSONObject processRequest(JSONRPC2Request req, MessageContext ctx)
+      throws Exception
+    {
+
+      JSONObject reply = new JSONObject();
+      List<TransactionBridge> bridges = client.getAllSpendable();
+
+      JSONArray unspent = new JSONArray();
+      for(TransactionBridge br : bridges)
+      {
+        if (!br.spent)
+        {
+          JSONObject utxo = new JSONObject();
+
+
+          UTXOEntry e = br.toUTXOEntry();
+
+          AddressSpecHash spec_hash = new AddressSpecHash(e.getSpecHash());
+
+          utxo.put("address", spec_hash.toAddressString(client.getParams()));
+          utxo.put("src_tx", HexUtil.getHexString(e.getSrcTx()));
+          utxo.put("src_tx_out_idx", e.getSrcTxOutIdx());
+          utxo.put("value", e.getValue());
+          utxo.put("confirmed", !br.unconfirmed);
+
+          unspent.add(utxo);
+
+        }
+      }
+
+      reply.put("unspent", unspent);
+
+      return reply;
+    }
   }
 
 
