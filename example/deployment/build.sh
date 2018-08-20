@@ -21,6 +21,8 @@ name="snowblossom-$version"
 cd -
 cp -r "snowblossom" "$name"
 
+mkdir -p "$name/configs"
+
 #node
 cp ../../bazel-bin/SnowBlossomNode_deploy.jar "$name"/
 cp "configs/node.conf" "$name/configs/"
@@ -37,10 +39,14 @@ cp "configs/client.conf" "$name/configs/"
 cp ../../bazel-bin/PoolMiner_deploy.jar "$name"/
 cp "configs/pool-miner.conf" "$name/configs/"
 
+# make logs
+mkdir -p "$name/logs/"
+touch "$name/logs/logs.placeholder"
+
 # convert line endings to make easily windows editable -_-;
 for i in "$name/configs"/*; do sed -i 's/(?<=\r)$/\r$/' "$i"; done
 for i in "$name"/*.bat; do sed -i 's/(?<=\r)$/\r$/' "$i"; done
 
 zip -r -9 "$name.zip" "$name"
 #tar -czf "$name.tar.gz" "$name"
-rm -r "$name"
+rm -rf "$name"
