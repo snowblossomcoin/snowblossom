@@ -17,7 +17,7 @@ import java.util.ArrayList;
 
 public class KeyUtil
 {
-  public static ByteString EC_SECP256K1_PREFIX= HexUtil.stringToHex("3036301006072a8648ce3d020106052b8104000a032200");
+  public static ByteString EC_SECP256K1_PREFIX= HexUtil.hexStringToBytes("3036301006072a8648ce3d020106052b8104000a032200");
 
   public static PublicKey convertCompressedECDSA(ByteString encoded)
     throws ValidationException

@@ -38,7 +38,7 @@ public class TransactionMapUtil
 
   }
 
-  public static TransactionStatus getTxStatus(ChainHash tx_id, DB db, BlockHeightCache cache)
+  public static TransactionStatus getTxStatus(ChainHash tx_id, DB db, BlockHeightCache cache, BlockSummary head_summary)
   {
     TransactionStatus.Builder status = TransactionStatus.newBuilder();
 
@@ -57,6 +57,9 @@ public class TransactionMapUtil
 			{
         status.setConfirmed(true);
         status.setHeightConfirmed(height);
+        int curr_height = head_summary.getHeader().getBlockHeight();
+        int depth = 1 + curr_height - height;
+        status.setConfirmations(depth);
 			}
     }
     return status.build();

@@ -38,6 +38,7 @@ public class RpcServerHandler
 		json_server.register(new CreateTxHandler());
 		json_server.register(new SignTxHandler());
 		json_server.register(new BroadcastTxHandler());
+		json_server.register(new GetTxHandler());
 
   }
 
@@ -120,7 +121,7 @@ public class RpcServerHandler
       Map<String, Object> params = req.getNamedParams();
 
       String tx_data = (String)params.get("tx_data");
-      Transaction tx = Transaction.parseFrom( HexUtil.stringToHex(tx_data) );
+      Transaction tx = Transaction.parseFrom( HexUtil.hexStringToBytes(tx_data) );
 
       TransactionFactoryResult factory_result = TransactionFactory.signTransaction(tx, client.getPurse().getDB());
       
@@ -154,7 +155,7 @@ public class RpcServerHandler
       Map<String, Object> params = req.getNamedParams();
 
       String tx_data = (String)params.get("tx_data");
-      Transaction tx = Transaction.parseFrom( HexUtil.stringToHex(tx_data) );
+      Transaction tx = Transaction.parseFrom( HexUtil.hexStringToBytes(tx_data) );
 
       TransactionInner inner = TransactionUtil.getInner(tx);
 
@@ -164,6 +165,45 @@ public class RpcServerHandler
       reply.put("tx_hash", HexUtil.getHexString(tx.getTxHash()));
       reply.put("tx_data", HexUtil.getHexString(tx.toByteString()));
       reply.put("fee", inner.getFee());
+
+      return reply;
+ 
+    }
+
+  }
+
+  public class GetTxHandler extends JsonRequestHandler
+  {
+    public String[] handledRequests()
+    {
+      return new String[]{"get_transaction"};
+    }
+
+    @Override
+    protected JSONObject processRequest(JSONRPC2Request req, MessageContext ctx)
+      throws Exception
+    {
+      ChainHash tx_hash = new ChainHash(HexUtil.hexStringToBytes(RpcUtil.requireString(req, "tx_hash")));
+
+      JSONObject reply = new JSONObject();
+
+      Transaction tx = client.getStub().getTransaction(RequestTransaction.newBuilder().setTxHash(tx_hash.getBytes()).build());
+      if (tx == null)
+      {
+        throw new Exception("Unknown transaction: " + tx_hash);
+
+      }
+
+        TransactionInner inner = TransactionUtil.getInner(tx);
+
+        reply.put("tx_hash", HexUtil.getHexString(tx.getTxHash()));
+        reply.put("tx_data", HexUtil.getHexString(tx.toByteString()));
+        reply.put("fee", inner.getFee());
+
+        TransactionStatus status = client.getStub().getTransactionStatus(RequestTransaction.newBuilder().setTxHash(tx_hash.getBytes()).build());
+
+        reply.put("status", RpcUtil.protoToJson(status));
+
 
       return reply;
  
@@ -239,7 +279,7 @@ public class RpcServerHandler
       if (params.containsKey("extra"))
       {
         String extra_str = (String) params.get("extra");
-        tx_config.setExtra( HexUtil.stringToHex(extra_str) ); 
+        tx_config.setExtra( HexUtil.hexStringToBytes(extra_str) ); 
       }
       if (params.containsKey("fee_flat"))
       {
@@ -275,7 +315,7 @@ public class RpcServerHandler
           u.setSpecHash(spec_hash.getBytes());
 
           String tx_id = (String) m.get("src_tx");
-          ChainHash tx_hash = new ChainHash( HexUtil.stringToHex(tx_id) );
+          ChainHash tx_hash = new ChainHash( HexUtil.hexStringToBytes(tx_id) );
           u.setSrcTx(tx_hash.getBytes());
 
           u.setSrcTxOutIdx( (int)(long) m.get("src_tx_out_idx") );
@@ -326,15 +366,6 @@ public class RpcServerHandler
       {
         client.sendOrException(tx);
       }
-
-      /*JsonFormat.Printer printer = JsonFormat.printer();
-      String json_str = printer.print(TransactionUtil.getInner(tx));
-
-      JSONParser parser = new JSONParser(JSONParser.MODE_STRICTEST);
-      
-      JSONObject tx_json = (JSONObject)parser.parse(json_str);
-
-      reply.put("tx_json", tx_json);*/
 
       return reply;
  

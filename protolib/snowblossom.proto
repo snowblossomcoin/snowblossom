@@ -194,6 +194,7 @@ message TransactionStatus {
     bool confirmed = 3;
   }
   int32 height_confirmed = 4;
+  int32 confirmations = 5;
 }
 
 message RequestBlock {

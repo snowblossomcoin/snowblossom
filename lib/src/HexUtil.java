@@ -5,7 +5,7 @@ import org.apache.commons.codec.binary.Hex;
 
 public class HexUtil
 {
-  public static ByteString stringToHex(String s)
+  public static ByteString hexStringToBytes(String s)
   {
     try
     { 

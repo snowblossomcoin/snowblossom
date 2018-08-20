@@ -93,20 +93,11 @@ public class RpcUtil
     {
       JSONObject reply = new JSONObject();
       String tx_data = requireString(req, "tx_data");
-      Transaction tx = Transaction.parseFrom( HexUtil.stringToHex(tx_data) );
+      Transaction tx = Transaction.parseFrom( HexUtil.hexStringToBytes(tx_data) );
       TransactionInner inner = TransactionUtil.getInner(tx);
 
-      JsonFormat.Printer printer = JsonFormat.printer();
-      String tx_json_str = printer.print(tx);
-      String tx_inner_json_str = printer.print(inner);
-
-      JSONParser parser = new JSONParser(JSONParser.MODE_STRICTEST);
-
-      JSONObject tx_json = (JSONObject)parser.parse(tx_json_str);
-      JSONObject tx_inner_json = (JSONObject)parser.parse(tx_inner_json_str);
-
-      reply.put("tx", tx_json);
-			reply.put("inner", tx_inner_json);
+      reply.put("tx", protoToJson(tx));
+			reply.put("inner", protoToJson(inner));
 
       return reply;
     }
@@ -114,7 +105,7 @@ public class RpcUtil
 
 
 
-  private String requireString(JSONRPC2Request req, String name)
+  public static String requireString(JSONRPC2Request req, String name)
     throws Exception
   {
     if (req.getNamedParams() == null) throw new Exception("params map must be included in request");
@@ -123,8 +114,17 @@ public class RpcUtil
     if (!(o instanceof String)) throw new Exception("String parameter " + name + " is required");
 
     return (String)o;
-
   }
 
+  public static JSONObject protoToJson(com.google.protobuf.Message m)
+    throws Exception
+  {
+    JsonFormat.Printer printer = JsonFormat.printer();
+    String str = printer.print(m);
+
+    JSONParser parser = new JSONParser(JSONParser.MODE_STRICTEST);
+    return (JSONObject) parser.parse(str);
+
+  }
 
 }

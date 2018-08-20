@@ -28,7 +28,7 @@ public class ChainHash implements Comparable<ChainHash>
   public ChainHash(String str)
   {
     Assert.assertEquals(Globals.BLOCKCHAIN_HASH_LEN*2, str.length());
-    this.bytes = HexUtil.stringToHex(str);
+    this.bytes = HexUtil.hexStringToBytes(str);
   }
 
   @Override

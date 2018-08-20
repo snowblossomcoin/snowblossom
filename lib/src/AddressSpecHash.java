@@ -38,7 +38,7 @@ public class AddressSpecHash implements Comparable<AddressSpecHash>
   public AddressSpecHash(String str)
   {
     Assert.assertEquals(Globals.ADDRESS_SPEC_HASH_LEN*2, str.length());
-    this.bytes = HexUtil.stringToHex(str);
+    this.bytes = HexUtil.hexStringToBytes(str);
   }
 
 
