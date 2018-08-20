@@ -41,6 +41,7 @@ public class RpcServerHandler
 		json_server.register(new BroadcastTxHandler());
 		json_server.register(new GetTxHandler());
 		json_server.register(new GetUnspentHandler());
+    json_server.register(new GetStatusHandler());
 
   }
 
@@ -235,7 +236,6 @@ public class RpcServerHandler
         {
           JSONObject utxo = new JSONObject();
 
-
           UTXOEntry e = br.toUTXOEntry();
 
           AddressSpecHash spec_hash = new AddressSpecHash(e.getSpecHash());
@@ -247,11 +247,40 @@ public class RpcServerHandler
           utxo.put("confirmed", !br.unconfirmed);
 
           unspent.add(utxo);
-
         }
       }
-
       reply.put("unspent", unspent);
+
+      return reply;
+    }
+  }
+
+  public class GetStatusHandler extends JsonRequestHandler
+  {
+    public String[] handledRequests()
+    {
+      return new String[]{"get_status"};
+    }
+
+    @Override
+    protected JSONObject processRequest(JSONRPC2Request req, MessageContext ctx)
+      throws Exception
+    {
+
+      JSONObject reply = new JSONObject();
+
+      NodeStatus node_status = client.getStub().getNodeStatus( NullRequest.newBuilder().build() );
+      reply.put("node_status", RpcUtil.protoToJson(node_status));
+
+      BalanceInfo balance_info = client.getBalance();
+
+      JSONObject balance_obj = RpcUtil.protoToJson(balance_info);
+
+      balance_obj.put("confirmed_snow", balance_info.getConfirmed() / Globals.SNOW_VALUE_D);
+      balance_obj.put("unconfirmed_snow", balance_info.getUnconfirmed() / Globals.SNOW_VALUE_D);
+      balance_obj.put("spendable_snow", balance_info.getSpendable() / Globals.SNOW_VALUE_D);
+
+      reply.put("balance", balance_obj);
 
       return reply;
     }
