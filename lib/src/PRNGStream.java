@@ -4,6 +4,7 @@ import org.apache.commons.math3.random.AbstractWell;
 import org.apache.commons.math3.random.Well44497b;
 
 import java.nio.ByteBuffer;
+import java.nio.Buffer;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.Security;
@@ -88,7 +89,7 @@ import java.util.TreeMap;
 
       bb.put(b);
       bb.put(ex);
-      bb.rewind();
+      ((Buffer)bb).rewind();
 
       for(int i=0; i<seed_ints.length; i++)
       {
