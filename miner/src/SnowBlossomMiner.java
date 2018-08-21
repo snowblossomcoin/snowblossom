@@ -20,6 +20,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
+import java.nio.Buffer;
 import java.security.MessageDigest;
 import java.text.DecimalFormat;
 import java.util.Collections;
@@ -324,7 +325,7 @@ public class SnowBlossomMiner
         for (int pass = 0; pass < Globals.POW_LOOK_PASSES; pass++)
         {
           long word_idx;
-          word_bb.clear();
+          ((Buffer)word_bb).clear();
           word_idx = PowUtil.getNextSnowFieldIndex(context, merkle_proof.getTotalWords(), md);
           merkle_proof.readWord(word_idx, word_bb, pass);
           context = PowUtil.getNextContext(context, word_buff, md);
@@ -356,7 +357,7 @@ public class SnowBlossomMiner
 
       for (int pass = 0; pass < Globals.POW_LOOK_PASSES; pass++)
       {
-        word_bb.clear();
+        ((Buffer)word_bb).clear();
 
         long word_idx = PowUtil.getNextSnowFieldIndex(context, merkle_proof.getTotalWords());
         boolean gotData = merkle_proof.readWord(word_idx, word_bb, pass);

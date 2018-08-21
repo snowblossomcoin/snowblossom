@@ -3,6 +3,7 @@ package snowblossom.miner;
 import java.util.Random;
 import java.security.MessageDigest;
 import java.nio.ByteBuffer;
+import java.nio.Buffer;
 import snowblossom.lib.*;
 import snowblossom.proto.*;
 import snowblossom.mining.proto.*;
@@ -85,7 +86,7 @@ public class LayerWorkThread extends Thread
     }
     else
     {
-      word_bb.clear();
+      ((Buffer)word_bb).clear();
       fs.readWord(pw.next_word_idx, word_bb);
       pw.doPass(word_buff, md, total_words);
     }
@@ -114,7 +115,7 @@ public class LayerWorkThread extends Thread
       int chunk = (int)(next_word / fs.words_per_chunk);
       if (fs.skipQueueOnRehit() && (fs.hasChunk(chunk)))
       { 
-        word_bb.clear();
+        ((Buffer)word_bb).clear();
         fs.readWord(pw.next_word_idx, word_bb);
         pw.doPass(word_buff, md, total_words);
         processPw(pw);
@@ -145,7 +146,7 @@ public class LayerWorkThread extends Thread
     
 		for (int pass = 0; pass < Globals.POW_LOOK_PASSES; pass++)
 		{
-			word_bb.clear();
+			((Buffer)word_bb).clear();
 			long word_idx = PowUtil.getNextSnowFieldIndex(context, total_words);
 
 			arktika.composit_source.readWord(word_idx, word_bb);
