@@ -19,6 +19,7 @@ import java.util.concurrent.Callable;
 import duckutil.TaskMaster;
 import java.io.PrintStream;
 import duckutil.jsonrpc.JsonRpcServer;
+import snowblossom.lib.trie.HashUtils;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -552,24 +553,23 @@ public class SnowBlossomClient
     return all;
   }
 
+  public ChainHash getCurrentUtxoRootHash()
+  {
+    return new ChainHash(blockingStub.getNodeStatus( NullRequest.newBuilder().build() ).getHeadSummary().getHeader().getUtxoRootHash());
+
+  }
+
   public List<TransactionBridge> getSpendable(AddressSpecHash addr)
+    throws ValidationException
   {
 
-    GetUTXONodeReply reply = blockingStub.getUTXONode( GetUTXONodeRequest.newBuilder()
-      .setPrefix(addr.getBytes())
-      .setIncludeProof(true)
-      .build());
+    List<TransactionBridge> confirmed_bridges = GetUTXOUtil.getSpendableValidated(addr, blockingStub, getCurrentUtxoRootHash().getBytes());
+
 
     HashMap<String, TransactionBridge> bridge_map=new HashMap<>();
-
-    for(TrieNode node : reply.getAnswerList())
+    for(TransactionBridge b : confirmed_bridges)
     {
-      if (node.getIsLeaf())
-      {
-        TransactionBridge b = new TransactionBridge(node);
-
         bridge_map.put(b.getKeyString(), b);
-      }
     }
 
     for(ByteString tx_hash : blockingStub.getMempoolTransactionList(

@@ -4,7 +4,7 @@ import java.security.Security;
 
 public class Globals
 {
-  public static final String VERSION = "1.3.2";
+  public static final String VERSION = "1.3.2-dev";
 
   public static final int POW_LOOK_PASSES = 6;
 
