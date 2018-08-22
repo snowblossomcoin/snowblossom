@@ -131,7 +131,7 @@ public class HashedTrie
     {
       results.add(node);
     }
-    if (results.size() + proof.size() >= max_results) return;
+    if (results.size() >= max_results) return;
 
 
     for(ChildEntry ce : node.getChildrenList())

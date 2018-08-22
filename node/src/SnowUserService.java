@@ -182,7 +182,7 @@ public class SnowUserService extends UserServiceGrpc.UserServiceImplBase
     LinkedList<TrieNode> proof = new LinkedList<>();
     LinkedList<TrieNode> results = new LinkedList<>();
     int max_results = 10000;
-    if (request.getMaxResults() > 0) max_results = request.getMaxResults();
+    if (request.getMaxResults() > 0) max_results = Math.min(max_results, request.getMaxResults());
 
 
     node.getUtxoHashedTrie().getNodeDetails(utxo_root.getBytes(), target, proof, results, max_results);
