@@ -42,7 +42,7 @@ public class GetUTXOUtil
 		{
     	last_utxo_root= new ChainHash(stub.getNodeStatus( NullRequest.newBuilder().build() ).getHeadSummary().getHeader().getUtxoRootHash());
 			utxo_root_time = System.currentTimeMillis();
-      logger.log(Level.DEBUG, "UTXO root hash: " + last_utxo_root);
+      logger.log(Level.FINE, "UTXO root hash: " + last_utxo_root);
 		}
 		return last_utxo_root;
   }
