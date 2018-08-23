@@ -13,14 +13,63 @@ import com.google.protobuf.ByteString;
 
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
+import com.google.common.collect.ImmutableList;
+import duckutil.LRUCache;
 
 public class GetUTXOUtil
 {
+  public static final long UTXO_ROOT_EXPIRE=500L; 
 
   private static final Logger logger = Logger.getLogger("snowblossom.client");
 
-  public static List<TransactionBridge> getSpendableValidated(AddressSpecHash addr, UserServiceBlockingStub stub, ByteString utxo_root )
+	// Saves cache of address,utxo_root to list of bridges, which will
+  // never change for that given input pair
+  private LRUCache<String, List<TransactionBridge> > spendable_cache = new LRUCache<>(1000);
+
+  private UserServiceBlockingStub stub;
+	private long utxo_root_time = 0;
+  private ChainHash last_utxo_root = null;
+
+  public GetUTXOUtil(UserServiceBlockingStub stub)
+  {
+    this.stub = stub;
+  }
+
+  public synchronized ChainHash getCurrentUtxoRootHash()
+  {
+		
+		if (utxo_root_time + UTXO_ROOT_EXPIRE < System.currentTimeMillis())
+		{
+    	last_utxo_root= new ChainHash(stub.getNodeStatus( NullRequest.newBuilder().build() ).getHeadSummary().getHeader().getUtxoRootHash());
+			utxo_root_time = System.currentTimeMillis();
+      logger.log(Level.DEBUG, "UTXO root hash: " + last_utxo_root);
+		}
+		return last_utxo_root;
+  }
+
+  public List<TransactionBridge> getSpendableValidated(AddressSpecHash addr)
+		throws ValidationException
+  {
+		ChainHash utxo_root = getCurrentUtxoRootHash();
+    String key = addr.toString() + "/" + utxo_root;
+		synchronized(spendable_cache)
+		{
+			List<TransactionBridge> lst = spendable_cache.get(key);
+			if (lst != null) return lst;
+		}
+
+		List<TransactionBridge> lst = getSpendableValidatedStatic(addr, stub, utxo_root.getBytes());
+		
+		lst = ImmutableList.copyOf(lst);
+		synchronized(spendable_cache)
+		{
+			spendable_cache.put(key, lst);
+		}
+		return lst;
+
+  }
+
+  public static List<TransactionBridge> getSpendableValidatedStatic(AddressSpecHash addr, UserServiceBlockingStub stub, ByteString utxo_root )
     throws ValidationException
   {
     logger.log(Level.FINE,String.format("Get Spendable (%s, %s)", addr.toString(), HexUtil.getHexString(utxo_root)));

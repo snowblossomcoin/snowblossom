@@ -247,6 +247,7 @@ public class SnowBlossomClient
   private Purse purse;
   private Config config;
   private ThreadPoolExecutor exec;
+  private GetUTXOUtil get_utxo_util;
 
   public SnowBlossomClient(Config config) throws Exception
   {
@@ -264,6 +265,8 @@ public class SnowBlossomClient
 
     asyncStub = UserServiceGrpc.newStub(channel);
     blockingStub = UserServiceGrpc.newBlockingStub(channel);
+
+    get_utxo_util = new GetUTXOUtil(blockingStub);
 
     if (config.isSet("wallet_path"))
     {
@@ -553,18 +556,17 @@ public class SnowBlossomClient
     return all;
   }
 
-  public ChainHash getCurrentUtxoRootHash()
+  /*public ChainHash getCurrentUtxoRootHash()
   {
     return new ChainHash(blockingStub.getNodeStatus( NullRequest.newBuilder().build() ).getHeadSummary().getHeader().getUtxoRootHash());
 
-  }
+  }*/
 
   public List<TransactionBridge> getSpendable(AddressSpecHash addr)
     throws ValidationException
   {
 
-    List<TransactionBridge> confirmed_bridges = GetUTXOUtil.getSpendableValidated(addr, blockingStub, getCurrentUtxoRootHash().getBytes());
-
+    List<TransactionBridge> confirmed_bridges = get_utxo_util.getSpendableValidated(addr);
 
     HashMap<String, TransactionBridge> bridge_map=new HashMap<>();
     for(TransactionBridge b : confirmed_bridges)
