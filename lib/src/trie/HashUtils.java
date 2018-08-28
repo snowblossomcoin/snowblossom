@@ -6,6 +6,11 @@ import org.apache.commons.codec.binary.Hex;
 
 import java.security.MessageDigest;
 import java.util.List;
+import java.util.LinkedList;
+import java.util.TreeMap;
+
+import snowblossom.trie.proto.TrieNode;
+import snowblossom.trie.proto.ChildEntry;
 
 public class HashUtils
 {
@@ -41,5 +46,35 @@ public class HashUtils
 	{
 		return getHexString(bs.toByteArray());
 	}
+
+  public static boolean validateNodeHash(TrieNode node)
+  {
+    List<ByteString> hash_list = null;
+    if (node.getIsLeaf())
+    {
+      hash_list = ImmutableList.of(node.getPrefix(), node.getLeafData());
+    }
+    else
+    {
+      hash_list = new LinkedList<>();
+      hash_list.add(node.getPrefix());
+      TreeMap<ByteString, ChildEntry> sortedChildren = new TreeMap<>(new ByteStringComparator());
+
+      for(ChildEntry ce : node.getChildrenList())
+      {
+        sortedChildren.put(ce.getKey(), ce);
+      }
+      for(ChildEntry ce : sortedChildren.values())
+      {
+        hash_list.add(ce.getKey());
+        hash_list.add(ce.getHash());
+      }
+    }
+
+
+    ByteString hash_calc = hashConcat(hash_list);
+
+    return node.getHash().equals(hash_calc);
+  }
 
 }
