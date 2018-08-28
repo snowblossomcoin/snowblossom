@@ -2,7 +2,6 @@ package lib.test;
 
 import org.apache.commons.codec.binary.Hex;
 import org.bouncycastle.asn1.ASN1Encodable;
-import org.bouncycastle.jcajce.provider.asymmetric.ec.BCECPublicKey;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -107,18 +106,27 @@ public class SignatureTest
   public void testCompressedEcPrefix() throws Exception
   {
     java.security.spec.ECGenParameterSpec spec = new java.security.spec.ECGenParameterSpec("secp256k1");
-    KeyPairGenerator key_gen = KeyPairGenerator.getInstance("ECDSA", "BC");
+    KeyPairGenerator key_gen = KeyPairGenerator.getInstance("ECDSA");
     key_gen.initialize(spec);
 
     KeyPair pair = key_gen.genKeyPair();
     PublicKey pub = pair.getPublic();
     PrivateKey priv = pair.getPrivate();
 
-    BCECPublicKey pk = (BCECPublicKey) pub;
+    if (pub instanceof org.spongycastle.jcajce.provider.asymmetric.ec.BCECPublicKey)
+    {
+      org.spongycastle.jcajce.provider.asymmetric.ec.BCECPublicKey pk = (org.spongycastle.jcajce.provider.asymmetric.ec.BCECPublicKey) pub;
+      pk.setPointFormat("COMPRESSED");
+    }
 
-    pk.setPointFormat("COMPRESSED");
+    if (pub instanceof org.bouncycastle.jcajce.provider.asymmetric.ec.BCECPublicKey)
+    {
+      org.bouncycastle.jcajce.provider.asymmetric.ec.BCECPublicKey pk = (org.bouncycastle.jcajce.provider.asymmetric.ec.BCECPublicKey) pub;
+      pk.setPointFormat("COMPRESSED");
+    }
 
-    byte[] encoded = pk.getEncoded();
+
+    byte[] encoded = pub.getEncoded();
 
     byte[] prefix = new byte[encoded.length -33];
     for(int i=0; i<prefix.length; i++)
@@ -141,9 +149,17 @@ public class SignatureTest
     PublicKey pub = pair.getPublic();
     PrivateKey priv = pair.getPrivate();
 
-    org.bouncycastle.jcajce.provider.asymmetric.ec.BCECPublicKey pk = (org.bouncycastle.jcajce.provider.asymmetric.ec.BCECPublicKey) pub;
+    if (pub instanceof org.spongycastle.jcajce.provider.asymmetric.ec.BCECPublicKey)
+    {
+      org.spongycastle.jcajce.provider.asymmetric.ec.BCECPublicKey pk = (org.spongycastle.jcajce.provider.asymmetric.ec.BCECPublicKey) pub;
+      pk.setPointFormat("COMPRESSED");
+    }
 
-    pk.setPointFormat("COMPRESSED");
+    if (pub instanceof org.bouncycastle.jcajce.provider.asymmetric.ec.BCECPublicKey)
+    {
+      org.bouncycastle.jcajce.provider.asymmetric.ec.BCECPublicKey pk = (org.bouncycastle.jcajce.provider.asymmetric.ec.BCECPublicKey) pub;
+      pk.setPointFormat("COMPRESSED");
+    }
 
     System.out.println("Class: " + pub.getClass());
 
@@ -153,11 +169,9 @@ public class SignatureTest
 
     X509EncodedKeySpec spec_dec = new X509EncodedKeySpec(encoded);
 
-    KeyFactory fact = KeyFactory.getInstance("ECDSA","BC");
+    KeyFactory fact = KeyFactory.getInstance("ECDSA");
     PublicKey decoded = fact.generatePublic(spec_dec);
     System.out.println("Keyclass: " + decoded.getClass());
-    System.out.println("Keyalgo: " + pk.getAlgorithm());
-    System.out.println("Keyformat: " + pk.getFormat());
 
     Assert.assertEquals(pub, decoded);
 
@@ -191,7 +205,7 @@ public class SignatureTest
     throws Exception
   {
     System.out.println("------------------------" + gen_algo + "/" + sign_algo);
-    KeyPairGenerator key_gen = KeyPairGenerator.getInstance(gen_algo, "BC");
+    KeyPairGenerator key_gen = KeyPairGenerator.getInstance(gen_algo);
 
     if (gen_spec != null) key_gen.initialize(gen_spec);
 

@@ -22,16 +22,24 @@ import snowblossom.lib.SnowFieldInfo;
 import snowblossom.lib.SnowMerkle;
 import snowblossom.lib.TransactionBridge;
 import snowblossom.lib.TransactionUtil;
+import snowblossom.lib.Globals;
 
 import java.io.File;
 import java.security.KeyPair;
 import java.util.*;
+import org.junit.BeforeClass;
 
 
 public class SpoonTest
 {
   @Rule
   public TemporaryFolder test_folder = new TemporaryFolder();
+
+  @BeforeClass
+  public static void loadProvider()
+  {
+    Globals.addCryptoProvider();
+  }
 
   /**
    * More of a giant orbital space platform full of weasels

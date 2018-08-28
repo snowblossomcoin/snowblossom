@@ -51,9 +51,26 @@ public class Globals
   // In flakes per byte
   public static final double BASIC_FEE = 2.5;
 
+
+  // Not a big fan of static global variables
+  // but already loading the cryptoprovider is a global
+  // thing that effects state so this isn't far from
+  // that.
+  private static String crypt_provider_name;
+  public static String getCryptoProviderName()
+  {
+    return crypt_provider_name;
+  }
+
   public static void addCryptoProvider()
   {
     Security.addProvider(new org.bouncycastle.jce.provider.BouncyCastleProvider());
+    crypt_provider_name = "BC";
+  }
+  public static void addCryptoProviderAndroid()
+  {
+    Security.addProvider(new org.spongycastle.jce.provider.BouncyCastleProvider());
+    crypt_provider_name = "SC"; 
   }
 
 }

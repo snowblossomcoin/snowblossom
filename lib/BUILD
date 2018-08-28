@@ -8,6 +8,8 @@ java_library(
     "@commons_codec//jar",
     "@commons_math3//jar",
     "@bcprov//jar",
+    "@scprov//jar",
+    "@sccore//jar",
     "@junit_junit//jar",
     "@org_rocksdb_rocksdbjni//jar",
     "@duckutil//:duckutil_lib",
@@ -27,6 +29,7 @@ java_test(
         "//lib:lib",
         "//protolib:protolib",
         "@bcprov//jar",
+        "@scprov//jar",
         "@commons_codec//jar",
         "@duckutil//:duckutil_lib"
     ]

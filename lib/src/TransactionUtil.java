@@ -68,7 +68,7 @@ public class TransactionUtil
       tx.setTxHash(ByteString.copyFrom(md_bc.digest(inner_data.toByteArray())));
 
 
-      Signature sig_engine = Signature.getInstance("ECDSA");
+      Signature sig_engine = Signature.getInstance("ECDSA", Globals.getCryptoProviderName());
       sig_engine.initSign(key_pair.getPrivate());
       sig_engine.update(tx.getTxHash().toByteArray());
 

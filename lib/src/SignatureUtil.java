@@ -80,7 +80,7 @@ public class SignatureUtil
     try
     {
 
-      Signature sig_engine = Signature.getInstance(algo);
+      Signature sig_engine = Signature.getInstance(algo, Globals.getCryptoProviderName());
       sig_engine.initVerify(pub_key);
       sig_engine.update(signed_data.toByteArray());
 
@@ -166,7 +166,7 @@ public class SignatureUtil
 	  
     try
     {
-      Signature sig_engine = Signature.getInstance(algo);
+      Signature sig_engine = Signature.getInstance(algo, Globals.getCryptoProviderName());
       sig_engine.initSign(priv_key);
       sig_engine.update(data.toByteArray());
 

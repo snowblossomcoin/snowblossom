@@ -2,7 +2,6 @@ package snowblossom.lib;
 
 import com.google.protobuf.ByteString;
 import org.bouncycastle.asn1.*;
-import org.bouncycastle.jcajce.provider.asymmetric.ec.BCECPublicKey;
 import org.junit.Assert;
 import snowblossom.proto.WalletKeyPair;
 
@@ -48,7 +47,7 @@ public class KeyUtil
     try
     {
       X509EncodedKeySpec spec = new X509EncodedKeySpec(encoded.toByteArray());
-      KeyFactory fact = KeyFactory.getInstance(algo);
+      KeyFactory fact = KeyFactory.getInstance(algo, Globals.getCryptoProviderName());
       return fact.generatePublic(spec);
     }
     catch(java.security.GeneralSecurityException e)
@@ -63,7 +62,7 @@ public class KeyUtil
     try
     {
       PKCS8EncodedKeySpec spec = new PKCS8EncodedKeySpec(encoded.toByteArray());
-      KeyFactory fact = KeyFactory.getInstance(algo);
+      KeyFactory fact = KeyFactory.getInstance(algo, Globals.getCryptoProviderName());
       return fact.generatePrivate(spec);
     }
     catch(java.security.GeneralSecurityException e)
@@ -78,14 +77,25 @@ public class KeyUtil
     try
     {
       ECGenParameterSpec spec = new ECGenParameterSpec("secp256k1");
-      KeyPairGenerator key_gen = KeyPairGenerator.getInstance("ECDSA", "BC");
+      KeyPairGenerator key_gen = KeyPairGenerator.getInstance("ECDSA", Globals.getCryptoProviderName());
       key_gen.initialize(spec);
 
       KeyPair pair = key_gen.genKeyPair();
 
-      BCECPublicKey pub = (BCECPublicKey) pair.getPublic();
-
-      pub.setPointFormat("COMPRESSED");
+      if (pair.getPublic() instanceof org.bouncycastle.jcajce.provider.asymmetric.ec.BCECPublicKey)
+      {
+        org.bouncycastle.jcajce.provider.asymmetric.ec.BCECPublicKey pub = (org.bouncycastle.jcajce.provider.asymmetric.ec.BCECPublicKey) pair.getPublic();
+        pub.setPointFormat("COMPRESSED");
+      }
+      else if (pair.getPublic() instanceof org.spongycastle.jcajce.provider.asymmetric.ec.BCECPublicKey)
+      {
+        org.spongycastle.jcajce.provider.asymmetric.ec.BCECPublicKey pub = (org.spongycastle.jcajce.provider.asymmetric.ec.BCECPublicKey) pair.getPublic();
+        pub.setPointFormat("COMPRESSED");
+      }
+      else
+      {
+        throw new Exception("Unable to set public point format to compressed.  Not from SC or BC provider");
+      }
 
       return pair;
     }
@@ -231,16 +241,28 @@ public class KeyUtil
       
       ECGenParameterSpec spec = new ECGenParameterSpec(curve_name);
 
-      KeyPairGenerator key_gen = KeyPairGenerator.getInstance("ECDSA","BC");
+      KeyPairGenerator key_gen = KeyPairGenerator.getInstance("ECDSA", Globals.getCryptoProviderName());
       key_gen.initialize(spec);
-      KeyPair key_pair = key_gen.genKeyPair();
+      KeyPair pair = key_gen.genKeyPair();
 
-      BCECPublicKey pub = (BCECPublicKey) key_pair.getPublic();
-      pub.setPointFormat("COMPRESSED");
+      if (pair.getPublic() instanceof org.bouncycastle.jcajce.provider.asymmetric.ec.BCECPublicKey)
+      {
+        org.bouncycastle.jcajce.provider.asymmetric.ec.BCECPublicKey pub = (org.bouncycastle.jcajce.provider.asymmetric.ec.BCECPublicKey) pair.getPublic();
+        pub.setPointFormat("COMPRESSED");
+      }
+      else if (pair.getPublic() instanceof org.spongycastle.jcajce.provider.asymmetric.ec.BCECPublicKey)
+      {
+        org.spongycastle.jcajce.provider.asymmetric.ec.BCECPublicKey pub = (org.spongycastle.jcajce.provider.asymmetric.ec.BCECPublicKey) pair.getPublic();
+        pub.setPointFormat("COMPRESSED");
+      }
+      else
+      {
+        throw new Exception("Unable to set public point format to compressed.  Not from SC or BC provider");
+      }
 
       WalletKeyPair wkp = WalletKeyPair.newBuilder()
-        .setPublicKey(ByteString.copyFrom(key_pair.getPublic().getEncoded()))
-        .setPrivateKey(ByteString.copyFrom(key_pair.getPrivate().getEncoded()))
+        .setPublicKey(ByteString.copyFrom(pair.getPublic().getEncoded()))
+        .setPrivateKey(ByteString.copyFrom(pair.getPrivate().getEncoded()))
         .setSignatureType(SignatureUtil.SIG_TYPE_ECDSA)
         .build();
       return wkp;
@@ -257,7 +279,7 @@ public class KeyUtil
     {
       RSAKeyGenParameterSpec spec = new RSAKeyGenParameterSpec(key_len, RSAKeyGenParameterSpec.F4);
 
-      KeyPairGenerator key_gen = KeyPairGenerator.getInstance("RSA","BC");
+      KeyPairGenerator key_gen = KeyPairGenerator.getInstance("RSA", Globals.getCryptoProviderName());
 
       key_gen.initialize(spec);
       KeyPair key_pair = key_gen.genKeyPair();
@@ -278,7 +300,7 @@ public class KeyUtil
   {
     try
     {
-      KeyPairGenerator key_gen = KeyPairGenerator.getInstance("DSA","BC");
+      KeyPairGenerator key_gen = KeyPairGenerator.getInstance("DSA", Globals.getCryptoProviderName());
 
       key_gen.initialize(3072);
 
@@ -302,7 +324,7 @@ public class KeyUtil
     {
       ECGenParameterSpec spec = new ECGenParameterSpec("1.2.804.2.1.1.1.1.3.1.1.2." + curve);
 
-      KeyPairGenerator key_gen = KeyPairGenerator.getInstance("DSTU4145","BC");
+      KeyPairGenerator key_gen = KeyPairGenerator.getInstance("DSTU4145", Globals.getCryptoProviderName());
 
       key_gen.initialize(spec);
       KeyPair key_pair = key_gen.genKeyPair();

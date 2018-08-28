@@ -14,7 +14,7 @@ maven_jar(
 git_repository(
   name = "org_pubref_rules_protobuf",
   remote = "https://github.com/fireduck64/rules_protobuf",
-  tag = "gnet-up3",
+  tag = "guava-26-android",
 )
 
 load("@org_pubref_rules_protobuf//java:rules.bzl", "java_proto_repositories")
@@ -54,6 +54,17 @@ maven_jar(
   artifact = "org.bouncycastle:bcprov-jdk15on:1.60",
   sha1 = "bd47ad3bd14b8e82595c7adaa143501e60842a84",
 )
+maven_jar(
+  name = "scprov",
+  artifact = "com.madgag.spongycastle:prov:1.58.0.0",
+  sha1 = "2e2c2f624ed91eb40e690e3596c98439b1b50f2a",
+)
+maven_jar(
+  name = "sccore",
+  artifact = "com.madgag.spongycastle:core:1.58.0.0",
+  sha1 = "e08789f8f1e74f155db8b69c3575b5cb213c156c",
+)
+
 
 maven_jar(
   name = "jsonrpc2_server",
