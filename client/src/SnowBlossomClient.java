@@ -203,6 +203,8 @@ public class SnowBlossomClient
           logger.log(Level.SEVERE, "Attempting to import wallet with keys into watch only wallet. Nope.");
           System.exit(-1);
         }
+
+        WalletUtil.testWallet( wallet_import.build() );
         client.getPurse().mergeIn(wallet_import.build());
 
         logger.info("Imported data:");
@@ -278,6 +280,7 @@ public class SnowBlossomClient
 
   public Purse getPurse(){return purse;}
   public NetworkParams getParams(){return params;}
+  public Config getConfig(){return config;}
 
   public UserServiceBlockingStub getStub(){ return blockingStub; }
 

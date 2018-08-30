@@ -7,6 +7,9 @@ import snowblossom.lib.AddressUtil;
 import snowblossom.lib.KeyUtil;
 import snowblossom.lib.NetworkParams;
 import snowblossom.lib.AddressSpecHash;
+import snowblossom.lib.ValidationException;
+import snowblossom.lib.SignatureUtil;
+import snowblossom.lib.ChainHash;
 import snowblossom.proto.*;
 
 import com.google.protobuf.ByteString;
@@ -334,5 +337,41 @@ public class WalletUtil
     watch.clearKeys();
 
     return watch.build();
+  }
+
+
+  public static List<AddressSpecHash> testWallet(WalletDatabase db)
+    throws ValidationException
+  {
+    Random rnd = new Random();
+    byte[] rnd_bytes = new byte[32];
+    rnd.nextBytes(rnd_bytes);
+    ChainHash rnd_hash = new ChainHash(rnd_bytes);
+
+    for(WalletKeyPair pair : db.getKeysList())
+    {
+      SigSpec sig_spec = SigSpec.newBuilder()
+        .setSignatureType( pair.getSignatureType() )
+        .setPublicKey( pair.getPublicKey() )
+        .build();
+
+      ByteString sig = SignatureUtil.sign(pair, rnd_hash);
+
+      if (!SignatureUtil.checkSignature(sig_spec, rnd_hash.getBytes(), sig))
+      {
+        throw new ValidationException("Signature check failure on keypair: " + pair);
+      }
+      
+    }
+
+    LinkedList<AddressSpecHash> addresses = new LinkedList<>();
+
+    for(AddressSpec spec : db.getAddressesList())
+    {
+      addresses.add( AddressUtil.getHashForSpec(spec) );
+    }
+
+    return addresses;
+    
   }
 }

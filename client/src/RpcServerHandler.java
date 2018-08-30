@@ -42,6 +42,7 @@ public class RpcServerHandler
 		json_server.register(new GetTxHandler());
 		json_server.register(new GetUnspentHandler());
     json_server.register(new GetStatusHandler());
+    json_server.register(new ImportWalletHandler());
 
   }
 
@@ -447,6 +448,63 @@ public class RpcServerHandler
     }
 
   }
+
+  public class ImportWalletHandler extends JsonRequestHandler
+  {
+    public String[] handledRequests()
+    {
+      return new String[]{"import_wallet"};
+    }
+
+    @Override
+    protected JSONObject processRequest(JSONRPC2Request req, MessageContext ctx)
+      throws Exception
+    {
+      Map<String, Object> params = req.getNamedParams();
+      JSONObject wallet_data = (JSONObject) params.get("wallet");
+
+      WalletDatabase.Builder wallet_import = WalletDatabase.newBuilder();
+      JsonFormat.Parser parser = JsonFormat.parser();
+      parser.merge(wallet_data.toString(), wallet_import);
+
+
+      WalletDatabase new_db = wallet_import.build();
+      List<AddressSpecHash> addresses = WalletUtil.testWallet( new_db );
+
+        if (client.getConfig().getBoolean("watch_only") && (new_db.getKeysCount() > 0))
+        {
+					throw new ValidationException("Attempting to import wallet with keys into watch only wallet. Nope.");
+        }
+
+
+      client.getPurse().mergeIn( new_db );
+
+
+      JSONObject reply = new JSONObject();
+
+      JSONArray address_list = new JSONArray();
+      for(AddressSpecHash spec_hash : addresses)
+      {
+        String address = spec_hash.toAddressString( client.getParams() );
+        address_list.add(address);
+      }
+      reply.put("addresses", address_list);
+
+      JSONArray keypair_list = new JSONArray();
+      for(WalletKeyPair pair : new_db.getKeysList())
+      {
+        String key_string = HexUtil.getHexString( pair.getPublicKey() );
+        keypair_list.add(key_string);
+      }
+
+      reply.put("keys", keypair_list);
+
+
+      return reply;
+    }
+  }
+
+
 
 }
 
