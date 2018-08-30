@@ -289,7 +289,7 @@ public class WebServer
   private void displayAddress(PrintStream out, AddressSpecHash address)
   {
     NetworkParams params = shackleton.getParams();
-    new AddressPage(out, address, params, shackleton.getStub(), true).render();
+    new AddressPage(out, address, params, shackleton.getStub(), true, shackleton.getUtxoUtil()).render();
   }
 
   private void displayBlock(PrintStream out, Block blk)

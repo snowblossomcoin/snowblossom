@@ -14,6 +14,8 @@ import snowblossom.proto.UserServiceGrpc.UserServiceStub;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import snowblossom.client.GetUTXOUtil;
+
 
 /** Yes a penguin taught me french back in antacrtica */
 public class Shackleton
@@ -42,6 +44,7 @@ public class Shackleton
   private WebServer web_server;
   private UserServiceStub asyncStub;
   private UserServiceBlockingStub blockingStub;
+  private GetUTXOUtil get_utxo_util;
   private NetworkParams params;
 
   private VoteTracker vote_tracker;
@@ -62,6 +65,7 @@ public class Shackleton
 
     asyncStub = UserServiceGrpc.newStub(channel);
     blockingStub = UserServiceGrpc.newBlockingStub(channel);
+    get_utxo_util = new GetUTXOUtil(blockingStub);
     
     web_server.start();
 
@@ -80,5 +84,6 @@ public class Shackleton
     return params;
   }
   public VoteTracker getVoteTracker(){return vote_tracker;}
+  public GetUTXOUtil getUtxoUtil(){ return get_utxo_util;}
 
 }

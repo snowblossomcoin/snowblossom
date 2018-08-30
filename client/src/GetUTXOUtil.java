@@ -47,6 +47,65 @@ public class GetUTXOUtil
 		return last_utxo_root;
   }
 
+  public Map<String, TransactionBridge> getSpendableWithMempool(AddressSpecHash addr)
+		throws ValidationException
+  {
+
+		List<TransactionBridge> confirmed_bridges = getSpendableValidated(addr);
+
+    HashMap<String, TransactionBridge> bridge_map=new HashMap<>();
+    for(TransactionBridge b : confirmed_bridges)
+    {   
+        bridge_map.put(b.getKeyString(), b);
+    }
+
+    for(ByteString tx_hash : stub.getMempoolTransactionList(
+      RequestAddress.newBuilder().setAddressSpecHash(addr.getBytes()).build()).getTxHashesList())
+    { 
+      Transaction tx = stub.getTransaction(RequestTransaction.newBuilder().setTxHash(tx_hash).build());
+
+      TransactionInner inner = TransactionUtil.getInner(tx);
+
+      for(TransactionInput in : inner.getInputsList())
+      { 
+        if (addr.equals(in.getSpecHash()))
+        { 
+          TransactionBridge b_in = new TransactionBridge(in);
+          String key = b_in.getKeyString();
+          if (bridge_map.containsKey(key))
+          { 
+            bridge_map.get(key).spent=true;
+          }
+          else
+          {
+            bridge_map.put(key, b_in);
+          }
+        }
+      }
+      for(int o=0; o<inner.getOutputsCount(); o++)
+      { 
+        TransactionOutput out = inner.getOutputs(o);
+        if (addr.equals(out.getRecipientSpecHash()))
+        {
+          TransactionBridge b_out = new TransactionBridge(out, o, new ChainHash(tx_hash));
+          String key = b_out.getKeyString();
+          b_out.unconfirmed=true;
+
+          if (bridge_map.containsKey(key))
+          { 
+            if (bridge_map.get(key).spent)
+            {
+              b_out.spent=true;
+            }
+          }
+          bridge_map.put(key, b_out);
+        }
+      }
+    }
+    return bridge_map;
+
+  }
+
   public List<TransactionBridge> getSpendableValidated(AddressSpecHash addr)
 		throws ValidationException
   {

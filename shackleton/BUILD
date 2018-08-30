@@ -6,6 +6,7 @@ java_library(
   deps = [
       "//protolib:protolib",
       "//lib:lib",
+      "//client:client",
       "@commons_codec//jar",
       "@commons_math3//jar",
       "@bcprov//jar",

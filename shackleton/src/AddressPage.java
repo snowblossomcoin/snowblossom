@@ -12,6 +12,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Collections;
 import snowblossom.proto.UserServiceGrpc.UserServiceBlockingStub;
+import snowblossom.client.GetUTXOUtil;
 
 public class AddressPage
 {
@@ -21,14 +22,17 @@ public class AddressPage
   private final UserServiceBlockingStub stub;
   private final DecimalFormat df = new DecimalFormat("0.000000");
   private final boolean want_history;
+  private final GetUTXOUtil get_utxo_util;
+ 
 
-  public AddressPage(PrintStream out, AddressSpecHash address, NetworkParams params, UserServiceBlockingStub stub, boolean want_history)
+  public AddressPage(PrintStream out, AddressSpecHash address, NetworkParams params, UserServiceBlockingStub stub, boolean want_history, GetUTXOUtil get_utxo_util)
   {
     this.out = out;
     this.address = address;
     this.params = params;
     this.stub = stub;
     this.want_history = want_history;
+    this.get_utxo_util = get_utxo_util;
   }
 
   public void render()
@@ -130,65 +134,11 @@ public class AddressPage
   }
 
   public List<TransactionBridge> getSpendable(AddressSpecHash addr)
+    throws ValidationException
   {
 
-    GetUTXONodeReply reply = stub.getUTXONode(GetUTXONodeRequest.newBuilder().setPrefix(addr.getBytes()).setIncludeProof(true).build());
-
-    HashMap<String, TransactionBridge> bridge_map = new HashMap<>();
-
-    for (TrieNode node : reply.getAnswerList())
-    {
-      if (node.getIsLeaf())
-      {
-        TransactionBridge b = new TransactionBridge(node);
-
-        bridge_map.put(b.getKeyString(), b);
-      }
-    }
-
-    for (ByteString tx_hash : stub.getMempoolTransactionList(RequestAddress.newBuilder().setAddressSpecHash(addr.getBytes()).build()).getTxHashesList())
-    {
-      Transaction tx = stub.getTransaction(RequestTransaction.newBuilder().setTxHash(tx_hash).build());
-      TransactionInner inner = TransactionUtil.getInner(tx);
-
-      for (TransactionInput in : inner.getInputsList())
-      {
-        if (addr.equals(in.getSpecHash()))
-        {
-          TransactionBridge b_in = new TransactionBridge(in);
-          String key = b_in.getKeyString();
-          if (bridge_map.containsKey(key))
-          {
-            bridge_map.get(key).spent = true;
-          }
-          else
-          {
-            bridge_map.put(key, b_in);
-          }
-        }
-      }
-      for (int o = 0; o < inner.getOutputsCount(); o++)
-      {
-        TransactionOutput out = inner.getOutputs(o);
-        if (addr.equals(out.getRecipientSpecHash()))
-        {
-          TransactionBridge b_out = new TransactionBridge(out, o, new ChainHash(tx_hash));
-          String key = b_out.getKeyString();
-          b_out.unconfirmed = true;
-
-          if (bridge_map.containsKey(key))
-          {
-            if (bridge_map.get(key).spent)
-            {
-              b_out.spent = true;
-            }
-          }
-          bridge_map.put(key, b_out);
-        }
-      }
-    }
     LinkedList<TransactionBridge> lst = new LinkedList<>();
-    lst.addAll(bridge_map.values());
+    lst.addAll(get_utxo_util.getSpendableWithMempool(addr).values());
     return lst;
 
   }

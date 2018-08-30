@@ -16,6 +16,7 @@ import java.util.HashSet;
 import java.util.HashMap;
 import java.util.Map;
 import com.google.common.collect.TreeMultimap;
+import snowblossom.client.GetUTXOUtil;
 
 import java.text.DecimalFormat;
 
@@ -45,6 +46,7 @@ public class RichList
   private UserServiceStub asyncStub;
   private UserServiceBlockingStub stub;
   private NetworkParams params;
+  private GetUTXOUtil get_utxo_util;
 
   public RichList(Config config)
     throws Exception
@@ -61,6 +63,8 @@ public class RichList
 
     asyncStub = UserServiceGrpc.newStub(channel);
     stub = UserServiceGrpc.newBlockingStub(channel);
+
+    get_utxo_util = new GetUTXOUtil(stub);
 
     NodeStatus node_status = stub.getNodeStatus(QueryUtil.nr());
 
@@ -101,7 +105,7 @@ public class RichList
     for(AddressSpecHash spec : all_addresses)
     {
       String addr = AddressUtil.getAddressString(params.getAddressPrefix(), spec);
-      AddressPage page = new AddressPage(System.out, spec, params, stub, false);
+      AddressPage page = new AddressPage(System.out, spec, params, stub, false, get_utxo_util);
       page.loadData();
       balance_map.put(addr, page.valueConfirmed);
     }
