@@ -327,6 +327,7 @@ public class WebServer
       out.println("Found transaction");
       TransactionUtil.prettyDisplayTx(tx, out, shackleton.getParams());
       out.println("");
+      out.println("Transaction status:");
 
       try
       {
