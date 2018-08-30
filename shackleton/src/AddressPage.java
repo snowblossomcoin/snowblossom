@@ -47,6 +47,15 @@ public class AddressPage
 
     if (want_history)
     {
+      out.println("<H2>Mempool</H2>");
+      for(ByteString tx_hash : mempool_list.getTxHashesList())
+      {
+        String tx = HexUtil.getHexString(tx_hash);
+
+        out.println(String.format("<li>tx: <a href='/?search=%s'>%s</a> </li>",
+          tx, tx));
+      }
+
       out.println("<H2>History</H2>");
 
       LinkedList<HistoryEntry> entries = new LinkedList<>();
@@ -85,6 +94,7 @@ public class AddressPage
   long totalOutputs;
   List<TransactionBridge> bridges;
   HistoryList history;
+  TransactionHashList mempool_list;
 
   protected void loadData()
   {
@@ -95,6 +105,7 @@ public class AddressPage
       if (want_history)
       {
         history = getHistory(address);
+        mempool_list = stub.getMempoolTransactionList(RequestAddress.newBuilder().setAddressSpecHash(address.getBytes()).build()); 
       }
       for (TransactionBridge b : bridges)
       {
