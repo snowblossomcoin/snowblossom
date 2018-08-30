@@ -19,6 +19,8 @@ import java.util.Date;
 import java.util.Map;
 import java.util.TimeZone;
 import duckutil.TaskMaster;
+import com.google.protobuf.util.JsonFormat;
+
 
 public class WebServer
 {
@@ -324,7 +326,22 @@ public class WebServer
       out.println("<pre>");
       out.println("Found transaction");
       TransactionUtil.prettyDisplayTx(tx, out, shackleton.getParams());
+      out.println("");
+
+      try
+      {
+        TransactionStatus status = shackleton.getStub().getTransactionStatus(RequestTransaction.newBuilder().setTxHash(tx.getTxHash()).build());
+        JsonFormat.Printer printer = JsonFormat.printer();
+        out.println(printer.print(status));
+      }
+      catch(com.google.protobuf.InvalidProtocolBufferException e)
+      {
+        throw new ValidationException(e);
+      }
+
       out.println("</pre>");
+
+      
   }
 
 
