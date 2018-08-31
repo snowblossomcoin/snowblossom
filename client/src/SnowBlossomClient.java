@@ -587,8 +587,15 @@ public class SnowBlossomClient
   public void runLoadTest()
     throws Exception
   {
+    while(true)
+    {
+      runLoadTestInner();
+    }
+  }
+  private void runLoadTestInner()
+    throws Exception
+  {
     LinkedList<TransactionBridge> spendable = new LinkedList<>();
-
     for(TransactionBridge br : getAllSpendable())
     {
       if (!br.spent) spendable.add(br);
@@ -620,7 +627,15 @@ public class SnowBlossomClient
       LinkedList<UTXOEntry> input_list = new LinkedList<>();
       while(needed_value > 0)
       {
-        if (spendable.size() == 0) throw new Exception("Out of funds, can't continue");
+        // This can happen because we are accumulating inputs as needed
+        // but if the transaction maker uses the inputs in a different order
+        // it might not use them all so we end up popping one and not using it
+        // and thus forgetting about it.
+        if (spendable.size() == 0)
+        {
+          logger.info("Out of inputs, resyncing");
+          return;
+        }
         TransactionBridge b = spendable.pop();
         needed_value -= b.value;
         input_list.add(b.toUTXOEntry());
