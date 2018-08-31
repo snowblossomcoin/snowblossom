@@ -605,7 +605,7 @@ public class SnowBlossomClient
       //Collections.shuffle(spendable);
 
       LinkedList<TransactionOutput> out_list = new LinkedList<>();
-      long needed_value = 50000; //should cover a fee
+      long needed_value = 0; //should cover a fee
       for(int i=0; i< output_count; i++)
       {
         long value = min_send + rnd.nextLong(send_delta);
@@ -620,6 +620,7 @@ public class SnowBlossomClient
       LinkedList<UTXOEntry> input_list = new LinkedList<>();
       while(needed_value > 0)
       {
+        if (spendable.size() == 0) throw new Exception("Out of funds, can't continue");
         TransactionBridge b = spendable.pop();
         needed_value -= b.value;
         input_list.add(b.toUTXOEntry());
@@ -632,7 +633,8 @@ public class SnowBlossomClient
       tx_config.addAllOutputs(out_list);
       tx_config.setChangeRandomFromWallet(true);
       tx_config.setInputSpecificList(true);
-      tx_config.setFeeUseEstimate(true);
+      tx_config.setFeeUseEstimate(false);
+      tx_config.setFeeFlat(0L);
       tx_config.addAllInputs(input_list);
 
       TransactionFactoryResult res = TransactionFactory.createTransaction(tx_config.build(), purse.getDB(), this);
