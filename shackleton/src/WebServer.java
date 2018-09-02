@@ -156,18 +156,20 @@ public class WebServer
     out.println("<pre>");
 
     SnowFieldInfo sf = params.getSnowFieldInfo(summary.getActivatedField());
-
+    SnowFieldInfo next_sf = params.getSnowFieldInfo(summary.getActivatedField() + 1);
+    double previous_diff = PowUtil.getDiffForTarget(sf.getActivationTarget());
+    double avg_diff = PowUtil.getDiffForTarget(BlockchainUtil.readInteger(summary.getTargetAverage()));
+    double next_diff = PowUtil.getDiffForTarget(next_sf.getActivationTarget());
+    int percent_to_next_field = (int)Math.max(0, Math.round(100 * (avg_diff-previous_diff) / (next_diff-previous_diff)));
 
     out.println("work_sum: " + summary.getWorkSum());
     out.println("blocktime_average_ms: " + summary.getBlocktimeAverageMs());
-    out.println("activated_field: " + summary.getActivatedField() + " " + sf.getName());
+    out.println("activated_field: " + summary.getActivatedField() + " " + sf.getName() + " (" + percent_to_next_field + "% to " + Math.round(next_diff) + ")");
     out.println("block_height: " + header.getBlockHeight());
     out.println("total_transactions: " + summary.getTotalTransactions());
 
 
 
-
-    double avg_diff = PowUtil.getDiffForTarget(BlockchainUtil.readInteger(summary.getTargetAverage()));
     double target_diff = PowUtil.getDiffForTarget(BlockchainUtil.targetBytesToBigInteger(header.getTarget()));
     double block_time_sec = summary.getBlocktimeAverageMs() / 1000.0 ;
     double estimated_hash = Math.pow(2.0, target_diff) / block_time_sec / 1e6;
