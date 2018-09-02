@@ -7,6 +7,7 @@ import snowblossom.lib.*;
 
 import java.util.Random;
 import java.util.TreeMap;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -104,14 +105,33 @@ public class PeerLink implements StreamObserver<PeerMessage>
       if (msg.hasTx())
       {
         Transaction tx = msg.getTx();
+        //logger.info("TX: " + new ChainHash(tx.getTxHash()));
         try
         {
           if (node.getMemPool().addTransaction(tx))
           {
             node.getPeerage().broadcastTransaction(tx);
           }
+          else
+          {
+            //logger.info("Chill false");
+          }
         }
-        catch(ValidationException e){}
+        catch(ValidationException e)
+        {
+          if (e.toString().contains("Unable to find source tx"))
+          {
+            if (node.areWeSynced())
+            {
+              logger.info("Requesting cluster for tx: " +  new ChainHash(tx.getTxHash()));
+
+              writeMessage( PeerMessage.newBuilder()
+                .setReqCluster(
+                  RequestTransaction.newBuilder().setTxHash(tx.getTxHash()).build())
+              .build());
+            }
+          }
+        }
         // do not care about tx validation errors from peers
       }
       else if (msg.hasTip())
@@ -212,6 +232,11 @@ public class PeerLink implements StreamObserver<PeerMessage>
         Validation.checkBlockHeaderBasics(node.getParams(), header, false);
         considerBlockHeader(header);
       }
+      else if (msg.hasReqCluster())
+      {
+        ChainHash tx_id = new ChainHash(msg.getReqCluster().getTxHash());
+        sendCluster(tx_id);
+      }
     }
     catch(ValidationException e)
     {
@@ -221,6 +246,20 @@ public class PeerLink implements StreamObserver<PeerMessage>
     {
       logger.log(Level.INFO, "Some bs from " + getLinkId(), e);
       close();
+    }
+  }
+
+  private void sendCluster(ChainHash tx_id)
+  {
+    List<Transaction> tx_list = node.getMemPool().getTxClusterForTransaction(tx_id);
+    if (tx_list == null) return;
+    
+    logger.info("Sending cluster for " + tx_id + " - " + tx_list.size() + " transactions");
+
+    for(Transaction tx : tx_list)
+    {
+      writeMessage( PeerMessage.newBuilder()
+        .setTx(tx).build());
     }
   }
 

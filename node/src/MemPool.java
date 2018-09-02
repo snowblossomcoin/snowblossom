@@ -104,6 +104,15 @@ public class MemPool
     return ImmutableSet.copyOf(address_tx_map.get(spec_hash));
   }
 
+  public synchronized List<Transaction> getTxClusterForTransaction(ChainHash tx_id)
+  {
+    for(TXCluster cluster : priority_map.values())
+    {
+      if (cluster.tx_set.contains(tx_id)) return cluster.tx_list;
+    }
+    return null;
+  }
+
   public synchronized List<Transaction> getTransactionsForBlock(ChainHash last_utxo, int max_size)
   {
     List<Transaction> block_list = new ArrayList<Transaction>();
@@ -414,14 +423,20 @@ public class MemPool
    */
   public class TXCluster implements Comparable<TXCluster>
   {
-    ImmutableList<Transaction> tx_list;
+    final ImmutableList<Transaction> tx_list;
+    final ImmutableSet<ChainHash> tx_set;
     int total_size;
     long total_fee;
-    String rnd_val;
+    final String rnd_val;
 
     public TXCluster(List<Transaction> tx_in_list)
     {
       tx_list = ImmutableList.copyOf(tx_in_list);
+
+      HashSet<ChainHash> s = new HashSet<>();
+      
+      total_size=0;
+      
 
       for (Transaction t : tx_in_list)
       {
@@ -429,7 +444,10 @@ public class MemPool
 
         TransactionInner inner = TransactionUtil.getInner(t);
         total_fee += inner.getFee();
+
+        s.add(new ChainHash(t.getTxHash()));
       }
+      tx_set = ImmutableSet.copyOf(s);
       rnd_val = "" + new Random().nextDouble();
     }
 

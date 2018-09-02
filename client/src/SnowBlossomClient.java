@@ -605,7 +605,7 @@ public class SnowBlossomClient
     long max_send = 500000L;
     long send_delta = max_send - min_send;
     SplittableRandom rnd = new SplittableRandom();
-    int output_count = 2;
+    int output_count = 1;
 
     while(true)
     {

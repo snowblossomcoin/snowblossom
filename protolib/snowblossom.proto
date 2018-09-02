@@ -168,6 +168,8 @@ message PeerMessage {
 
     RequestBlockHeader req_header = 5;
     BlockHeader header = 6;
+
+    RequestTransaction req_cluster = 7;
   }
 }
 
