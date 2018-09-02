@@ -127,10 +127,10 @@ public class PeerLink implements StreamObserver<PeerMessage>
             {
               ChainHash tx_id =  new ChainHash(tx.getTxHash());
 
-              logger.info("Requesting cluster for tx: " +  tx_id);
 
               if (node.getBlockIngestor().reserveTxCluster(tx_id))
               {
+                logger.info("Requesting cluster for tx: " +  tx_id);
                 writeMessage( PeerMessage.newBuilder()
                   .setReqCluster(
                     RequestTransaction.newBuilder().setTxHash(tx.getTxHash()).build())
