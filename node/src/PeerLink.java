@@ -8,6 +8,7 @@ import snowblossom.lib.*;
 import java.util.Random;
 import java.util.TreeMap;
 import java.util.List;
+import java.util.HashSet;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -34,6 +35,8 @@ public class PeerLink implements StreamObserver<PeerMessage>
   private PeerInfo peer_info; //only set when we are client
 
   private TreeMap<Integer, ChainHash> peer_block_map = new TreeMap<Integer, ChainHash>();
+
+  private HashSet<ChainHash> cluster_req_set = new HashSet<>();
 
   public PeerLink(SnowBlossomNode node, StreamObserver<PeerMessage> sink)
   {
@@ -123,12 +126,28 @@ public class PeerLink implements StreamObserver<PeerMessage>
           {
             if (node.areWeSynced())
             {
-              logger.info("Requesting cluster for tx: " +  new ChainHash(tx.getTxHash()));
+              ChainHash tx_id =  new ChainHash(tx.getTxHash());
 
-              writeMessage( PeerMessage.newBuilder()
-                .setReqCluster(
-                  RequestTransaction.newBuilder().setTxHash(tx.getTxHash()).build())
-              .build());
+              logger.info("Requesting cluster for tx: " +  tx_id);
+
+
+
+              boolean do_request = false;
+              synchronized(cluster_req_set)
+              {
+                if (!cluster_req_set.contains(tx_id))
+                {
+                  do_request=true;
+                  cluster_req_set.add(tx_id);
+                }
+              }
+              if (do_request)
+              {
+                writeMessage( PeerMessage.newBuilder()
+                  .setReqCluster(
+                    RequestTransaction.newBuilder().setTxHash(tx.getTxHash()).build())
+                .build());
+              }
             }
           }
         }
