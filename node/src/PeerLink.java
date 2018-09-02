@@ -36,7 +36,6 @@ public class PeerLink implements StreamObserver<PeerMessage>
 
   private TreeMap<Integer, ChainHash> peer_block_map = new TreeMap<Integer, ChainHash>();
 
-  private HashSet<ChainHash> cluster_req_set = new HashSet<>();
 
   public PeerLink(SnowBlossomNode node, StreamObserver<PeerMessage> sink)
   {
@@ -130,18 +129,7 @@ public class PeerLink implements StreamObserver<PeerMessage>
 
               logger.info("Requesting cluster for tx: " +  tx_id);
 
-
-
-              boolean do_request = false;
-              synchronized(cluster_req_set)
-              {
-                if (!cluster_req_set.contains(tx_id))
-                {
-                  do_request=true;
-                  cluster_req_set.add(tx_id);
-                }
-              }
-              if (do_request)
+              if (node.getBlockIngestor().reserveTxCluster(tx_id))
               {
                 writeMessage( PeerMessage.newBuilder()
                   .setReqCluster(

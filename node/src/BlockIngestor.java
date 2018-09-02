@@ -33,7 +33,8 @@ public class BlockIngestor
 
   private static final ByteString HEAD = ByteString.copyFrom(new String("head").getBytes());
 
-  private LRUCache<ChainHash, Long> block_pull_map = new LRUCache<>(1000);
+  private LRUCache<ChainHash, Long> block_pull_map = new LRUCache<>(2000);
+  private LRUCache<ChainHash, Long> tx_cluster_pull_map = new LRUCache<>(2000);
 
   private PrintStream block_log;
   private TimeRecord time_record;
@@ -252,6 +253,20 @@ public class BlockIngestor
     {
       long tm = System.currentTimeMillis();
       if (block_pull_map.containsKey(hash) && (block_pull_map.get(hash) + 15000L > tm))
+      {
+        return false;
+      }
+      block_pull_map.put(hash, tm);
+      return true;
+    }
+  }
+
+  public boolean reserveTxCluster(ChainHash hash)
+  {
+    synchronized(tx_cluster_pull_map)
+    {
+      long tm = System.currentTimeMillis();
+      if (tx_cluster_pull_map.containsKey(hash) && (tx_cluster_pull_map.get(hash) + 300000L > tm))
       {
         return false;
       }
