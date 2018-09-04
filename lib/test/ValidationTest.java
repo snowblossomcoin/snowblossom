@@ -3,6 +3,7 @@ package lib.test;
 import com.google.protobuf.ByteString;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.junit.Assert;
 import snowblossom.proto.*;
 import snowblossom.lib.AddressSpecHash;
 import snowblossom.lib.AddressUtil;
@@ -12,11 +13,16 @@ import snowblossom.lib.KeyUtil;
 import snowblossom.lib.SignatureUtil;
 import snowblossom.lib.Validation;
 import snowblossom.lib.ValidationException;
+import snowblossom.lib.TransactionUtil;
+import snowblossom.lib.HexUtil;
 
 import java.security.KeyPair;
 import java.security.MessageDigest;
 import java.security.Signature;
 import java.util.Random;
+import java.util.ArrayList;
+import com.google.common.collect.ImmutableList;
+import java.util.List;
 
 public class ValidationTest
 {
@@ -106,6 +112,7 @@ public class ValidationTest
     tx.setInnerData(inner_data);
     tx.setTxHash(ByteString.copyFrom(md_bc.digest(inner_data.toByteArray())));
 
+    crossCheckTxOut(tx.build());
     Validation.checkTransactionBasics(tx.build(), true);
 
   }
@@ -127,8 +134,6 @@ public class ValidationTest
 
 
     byte[] public_key = key_pair.getPublic().getEncoded();
-
-
 
     byte[] src_tx = new byte[Globals.BLOCKCHAIN_HASH_LEN];
     rnd.nextBytes(src_tx);
@@ -181,11 +186,67 @@ public class ValidationTest
       .setSignature( ByteString.copyFrom(sig) )
       .build());
 
-
     Validation.checkTransactionBasics(tx.build(), false);
 
-    System.out.println("Basic transaction size: " + tx.build().toByteString().size());
+    crossCheckTxOut(tx.build());
 
+    System.out.println("Basic transaction size: " + tx.build().toByteString().size());
+  }
+
+
+  @Test
+  public void testTxOutCoding()
+    throws Exception
+  {
+    Random rnd = new Random();
+    // Try a variety of values and make sure they all encode right
+    List<Long> values = ImmutableList.of(0L, 9101L, 1000000000L, 180000101L);
+    List<Integer> lengths = ImmutableList.of(0, 16, 32, 1001, 65010, 134111);
+
+    for(long val : values)
+    for(int byte_size : lengths)
+    {
+      System.out.println("Checking output val: " + val + " addr size: " + byte_size);
+      Transaction.Builder tx = Transaction.newBuilder();
+      TransactionInner.Builder inner = TransactionInner.newBuilder();
+
+      for(int i=0; i<3; i++)
+      {
+        byte[] b = new byte[byte_size];
+        rnd.nextBytes(b);
+        ByteString bs = ByteString.copyFrom(b);
+        inner.addOutputs( TransactionOutput.newBuilder().setValue(val).setRecipientSpecHash(bs).build() );
+      }
+
+      tx.setInnerData( inner.build().toByteString() );
+      crossCheckTxOut( tx.build() );
+
+    }
+
+  }
+
+
+  private void crossCheckTxOut(Transaction tx)
+    throws Exception
+  {
+    ArrayList<ByteString> tx_out_raw = TransactionUtil.extractWireFormatTxOut(tx);
+    TransactionInner inner = TransactionUtil.getInner(tx);
+
+    Assert.assertEquals(tx_out_raw.size(), inner.getOutputsCount());
+
+    for(int i=0; i<tx_out_raw.size(); i++)
+    {
+      String raw = HexUtil.getHexString(tx_out_raw.get(i));
+      String recode = HexUtil.getHexString(inner.getOutputs(i).toByteString());
+
+      Assert.assertEquals(raw, recode);
+      Assert.assertEquals(tx_out_raw.get(i), inner.getOutputs(i).toByteString());
+
+      TransactionOutput p_tx_out_raw = TransactionOutput.parseFrom(tx_out_raw.get(i));
+      TransactionOutput p_tx_out_recode = TransactionOutput.parseFrom(inner.getOutputs(i).toByteString());
+
+      Assert.assertEquals(p_tx_out_raw, p_tx_out_recode);
+    }
   }
  
 }

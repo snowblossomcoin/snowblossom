@@ -347,10 +347,12 @@ public class Validation
       long spent = 0L;
       // Sum up all outputs
       int out_idx =0;
+      ArrayList<ByteString> raw_output_list = TransactionUtil.extractWireFormatTxOut(tx);
+
       for(TransactionOutput out : inner.getOutputsList())
       {
         spent+=out.getValue();
-        utxo_buffer.addOutput(out, new ChainHash(tx.getTxHash()), out_idx);
+        utxo_buffer.addOutput(raw_output_list, out, new ChainHash(tx.getTxHash()), out_idx);
         out_idx++;
       }
 

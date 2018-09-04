@@ -382,6 +382,7 @@ public class MemPoolTest
   }
 
   public static TransactionInput addUtxoToUseAtInput(UtxoUpdateBuffer utxo_buffer, KeyPair keys, long value)
+    throws Exception  
   {
     Random rnd = new Random();
     byte[] tx_id_buff = new byte[Globals.BLOCKCHAIN_HASH_LEN];
@@ -404,7 +405,7 @@ public class MemPoolTest
       .setValue(value)
       .build();
 
-    utxo_buffer.addOutput(tx_out, tx_id, 0);
+    utxo_buffer.addOutput(ImmutableList.of(tx_out.toByteString()) , tx_out, tx_id, 0);
 
 
     return tx_in;

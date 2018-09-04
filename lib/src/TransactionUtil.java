@@ -11,6 +11,9 @@ import java.security.Signature;
 import java.text.DecimalFormat;
 import java.util.*;
 
+import com.google.protobuf.CodedInputStream;
+import com.google.protobuf.CodedOutputStream;
+import java.io.ByteArrayOutputStream;
 
 
 public class TransactionUtil
@@ -29,6 +32,61 @@ public class TransactionUtil
     catch(Exception e)
     {
       throw new RuntimeException(e);
+    }
+  }
+
+  public static ArrayList<ByteString> extractWireFormatTxOut(Transaction tx)
+    throws ValidationException
+  {
+    try
+    {
+      CodedInputStream code_in = CodedInputStream.newInstance(tx.getInnerData().toByteArray());
+
+      ArrayList<ByteString> lst = new ArrayList<>();
+
+      while(true)
+      {
+        int tag = code_in.readTag();
+        if (tag == 0) break;
+        
+        // The least signficiate 3 bits are the proto field type
+        // so shift to get out field number, which is 5 for TranasctionOutput
+        if (tag >> 3 == 5)
+        {
+          ByteArrayOutputStream b_out = new ByteArrayOutputStream();
+          CodedOutputStream c_out = CodedOutputStream.newInstance(b_out);
+          code_in.skipField(tag, c_out);
+          c_out.flush();
+
+          ByteString bs = ByteString.copyFrom(b_out.toByteArray());
+
+          // So funny story...when you get an inner message like this as opposed to just serializing
+          // the object, protobuf puts a tag and size on the coded input stream.  So we need to figure
+          // out how many bytes that is an trim it off.
+          CodedInputStream read_again = CodedInputStream.newInstance(bs.toByteArray());
+          // Expected tag
+          int tag2 = read_again.readTag();
+          // Size of element
+          int size = read_again.readInt32();
+
+          // All we really care is how many bytes those two take.  For shorter messages
+          // it will be 2, but could be higher if protobuf needs more bytes to encode the size
+          int offset = read_again.getTotalBytesRead();
+
+          bs = bs.substring(offset);
+          lst.add(bs);
+        }
+        else
+        {
+          code_in.skipField(tag);
+        }
+
+      }
+      return lst;
+    }
+    catch(java.io.IOException e)
+    {
+      throw new ValidationException(e);
     }
   }
 

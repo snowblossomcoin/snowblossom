@@ -3,11 +3,13 @@ package snowblossom.lib;
 import com.google.protobuf.ByteString;
 import snowblossom.proto.TransactionInput;
 import snowblossom.proto.TransactionOutput;
+import snowblossom.proto.Transaction;
 import snowblossom.lib.trie.HashUtils;
 import snowblossom.lib.trie.HashedTrie;
 
 import java.nio.ByteBuffer;
 import java.util.HashMap;
+import java.util.List;
 
 public class UtxoUpdateBuffer
 {
@@ -88,13 +90,16 @@ public class UtxoUpdateBuffer
     updates.put(key, null);
   }
 
-  public void addOutput(TransactionOutput out, ChainHash tx_id, int out_idx)
+  public void addOutput(List<ByteString> raw_output_list, TransactionOutput out, ChainHash tx_id, int out_idx)
+    throws ValidationException
   {
     ByteString key = getKey(
       new AddressSpecHash(out.getRecipientSpecHash()),
       tx_id,
       out_idx);
-    updates.put(key, out.toByteString());
+    ByteString data = raw_output_list.get(out_idx);
+
+    updates.put(key, data);
   }
 
   public static ByteString getKey(TransactionInput in)
