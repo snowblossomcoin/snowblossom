@@ -605,14 +605,16 @@ public class SnowBlossomClient
     long max_send = 500000L;
     long send_delta = max_send - min_send;
     SplittableRandom rnd = new SplittableRandom();
-    int output_count = 1;
 
     while(true)
     {
+      int output_count = 1;
+      long fee = 50;
+      while (rnd.nextDouble() < 0.5) output_count++;
       //Collections.shuffle(spendable);
 
       LinkedList<TransactionOutput> out_list = new LinkedList<>();
-      long needed_value = 50; //should cover a fee
+      long needed_value = fee; //should cover a fee
       for(int i=0; i< output_count; i++)
       {
         long value = min_send + rnd.nextLong(send_delta);
@@ -649,7 +651,8 @@ public class SnowBlossomClient
       tx_config.setChangeRandomFromWallet(true);
       tx_config.setInputSpecificList(true);
       tx_config.setFeeUseEstimate(false);
-      tx_config.setFeeFlat(50L);
+      tx_config.setFeeFlat(fee);
+      tx_config.setSplitChangeOver(25000000L);
       tx_config.addAllInputs(input_list);
 
       TransactionFactoryResult res = TransactionFactory.createTransaction(tx_config.build(), purse.getDB(), this);
