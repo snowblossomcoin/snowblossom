@@ -432,6 +432,10 @@ public class Validation
         throw new ValidationException("TxOut extras not enabled yet");
       }
     }
+    if (out.getForBenefitOfSpecHash().size() > 0)
+    {
+      validateAddressSpecHash(out.getForBenefitOfSpecHash(), "TxOut for_benefit_of_spec_hash");
+    }
 
 
   }
