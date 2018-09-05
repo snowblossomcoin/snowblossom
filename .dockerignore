@@ -1,0 +1,10 @@
+Dockerfile
+.dockerignore
+.git
+.gitignore
+*.sh
+
+node_db
+wallet
+snow
+configs
