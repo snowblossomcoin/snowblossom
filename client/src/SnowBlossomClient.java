@@ -89,7 +89,7 @@ public class SnowBlossomClient
         client.send(value, to);
 
       }
-      if (command.equals("sendlocked"))
+      else if (command.equals("sendlocked"))
       {
         if (args.length < 6)
         {
