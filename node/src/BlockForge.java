@@ -74,11 +74,11 @@ public class BlockForge
       long fee_sum = 0L;
       for(Transaction tx : regular_transactions)
       {
-         fee_sum += Validation.deepTransactionCheck(tx, utxo_buffer);
+         fee_sum += Validation.deepTransactionCheck(tx, utxo_buffer, header_builder.build(), params);
       }
 
       Transaction coinbase = buildCoinbase( header_builder.getBlockHeight(), fee_sum, mine_to);
-      Validation.deepTransactionCheck(coinbase, utxo_buffer);
+      Validation.deepTransactionCheck(coinbase, utxo_buffer, header_builder.build(), params);
 
       block_builder.addTransactions(coinbase);
       block_builder.addAllTransactions(regular_transactions);

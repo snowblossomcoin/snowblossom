@@ -47,7 +47,7 @@ public class BlockForgeTest
       SubscribeBlockTemplateRequest.Builder req = 
       SubscribeBlockTemplateRequest.newBuilder();
 
-      double weight = rnd.nextDouble();
+      double weight = rnd.nextDouble() + 0.05;
 
       for(int j=0; j<count; j++)
       {

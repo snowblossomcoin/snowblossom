@@ -8,6 +8,7 @@ import com.google.protobuf.ByteString;
 import duckutil.TimeRecord;
 import org.junit.Assert;
 import snowblossom.lib.*;
+import snowblossom.proto.BlockHeader;
 import snowblossom.proto.Transaction;
 import snowblossom.proto.TransactionInner;
 import snowblossom.proto.TransactionInput;
@@ -62,13 +63,15 @@ public class MemPool
   private TreeMultimap<Double, TXCluster> priority_map = TreeMultimap.<Double, TXCluster>create();
 
   private HashedTrie utxo_hashed_trie;
+  private ChainStateSource chain_state_source;
 
   public static int MEM_POOL_MAX = 10000;
 
   private Object tickle_trigger = new Object();
 
-  public MemPool(HashedTrie utxo_hashed_trie)
+  public MemPool(HashedTrie utxo_hashed_trie, ChainStateSource chain_state_source)
   {
+    this.chain_state_source = chain_state_source;
     this.utxo_hashed_trie = utxo_hashed_trie;
 
     new Tickler().start();
@@ -401,9 +404,14 @@ public class MemPool
 
     t1 = System.nanoTime();
     UtxoUpdateBuffer test_buffer = new UtxoUpdateBuffer(utxo_hashed_trie, utxo_for_pri_map);
+    BlockHeader dummy_header = BlockHeader.newBuilder()
+      .setBlockHeight( chain_state_source.getHeight() + 1)
+      .setTimestamp(System.currentTimeMillis())
+      .build();
+
     for (Transaction t : ordered_list)
     {
-      Validation.deepTransactionCheck(t, test_buffer);
+      Validation.deepTransactionCheck(t, test_buffer, dummy_header, chain_state_source.getParams());
     }
     TimeRecord.record(t1, "utxo_sim");
 
