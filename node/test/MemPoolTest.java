@@ -11,16 +11,9 @@ import snowblossom.proto.TransactionInput;
 import snowblossom.proto.TransactionOutput;
 import snowblossom.lib.trie.HashedTrie;
 import snowblossom.lib.trie.TrieDBMem;
-import snowblossom.lib.AddressSpecHash;
-import snowblossom.lib.AddressUtil;
-import snowblossom.lib.ChainHash;
-import snowblossom.lib.Globals;
-import snowblossom.lib.KeyUtil;
 import snowblossom.node.MemPool;
-import snowblossom.lib.SignatureUtil;
-import snowblossom.lib.TransactionUtil;
-import snowblossom.lib.UtxoUpdateBuffer;
-import snowblossom.lib.ValidationException;
+import snowblossom.node.ChainStateSource;
+import snowblossom.lib.*;
 
 import java.security.KeyPair;
 import java.util.Random;
@@ -55,7 +48,7 @@ public class MemPoolTest
 
     Transaction tx = TransactionUtil.createTransaction(ImmutableList.of(in), ImmutableList.of(out), keys);
 
-    MemPool mem_pool = new MemPool(utxo_trie);
+    MemPool mem_pool = new MemPool(utxo_trie, new DummyChainState(100));
 
     mem_pool.rebuildPriorityMap(utxo_root);
 
@@ -118,7 +111,7 @@ public class MemPoolTest
 
     Transaction tx = TransactionUtil.createTransaction(ImmutableList.of(in), ImmutableList.of(out), keys);
 
-    MemPool mem_pool = new MemPool(utxo_trie);
+    MemPool mem_pool = new MemPool(utxo_trie, new DummyChainState(100));
 
     mem_pool.rebuildPriorityMap(utxo_root);
 
@@ -157,7 +150,7 @@ public class MemPoolTest
 
     Transaction tx = TransactionUtil.createTransaction(ImmutableList.of(in), ImmutableList.of(out), keys);
 
-    MemPool mem_pool = new MemPool(utxo_trie);
+    MemPool mem_pool = new MemPool(utxo_trie, new DummyChainState(100));
 
     mem_pool.rebuildPriorityMap(utxo_root);
 
@@ -204,7 +197,7 @@ public class MemPoolTest
 
     Transaction tx = TransactionUtil.createTransaction(ImmutableList.of(in, in), ImmutableList.of(out), keys);
 
-    MemPool mem_pool = new MemPool(utxo_trie);
+    MemPool mem_pool = new MemPool(utxo_trie, new DummyChainState(100));
 
     mem_pool.rebuildPriorityMap(utxo_root);
 
@@ -240,7 +233,7 @@ public class MemPoolTest
 
     Transaction tx_a = TransactionUtil.createTransaction(ImmutableList.of(in_a), ImmutableList.of(out_a), keys);
 
-    MemPool mem_pool = new MemPool(utxo_trie);
+    MemPool mem_pool = new MemPool(utxo_trie, new DummyChainState(100));
 
     mem_pool.rebuildPriorityMap(utxo_root);
 
@@ -314,7 +307,7 @@ public class MemPoolTest
     
     ChainHash utxo_root = utxo_buffer.commit();
 
-    MemPool mem_pool = new MemPool(utxo_trie);
+    MemPool mem_pool = new MemPool(utxo_trie, new DummyChainState(100));
     Assert.assertEquals(0, mem_pool.getTransactionsForBlock(utxo_root, 1048576).size());
 
     TimeRecord tr = new TimeRecord();
@@ -413,11 +406,25 @@ public class MemPoolTest
 
   }
 
-
-
   public static HashedTrie newMemoryTrie()
   {
     return new HashedTrie(new TrieDBMem(), Globals.UTXO_KEY_LEN, true);
+  }
+
+  public class DummyChainState implements ChainStateSource
+  {
+    private int height;
+    public DummyChainState(int height)
+    {
+      this.height = height;
+    }
+
+    @Override
+    public int getHeight() {return height; }
+    
+    @Override
+    public NetworkParams getParams() {return new NetworkParamsRegtest(); }
+    
   }
 
 }

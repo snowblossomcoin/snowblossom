@@ -83,10 +83,11 @@ message CoinbaseExtras {
 
 // If any of these are defined then
 // these things are required to be met for the transaction
-// to be confirmed
+// to be confirmed or the TransactionOutput to be used
+// depending on where the requirement is defined
 message TransactionRequirements {
-  bytes required_block = 1;
-  bytes required_tx = 2;
+  //bytes required_block = 1;
+  //bytes required_tx = 2;
   int32 required_block_height = 3;
   int64 required_time = 4;
 }
@@ -112,7 +113,11 @@ message TransactionOutput {
 
   // This could easily make an unspendable output if it refernces a block or tx
   // that will never be in.  Use with care.
-  //TransactionRequirements requirements = 3;
+  TransactionRequirements requirements = 3;
+
+  // Doesn't do anything protocol wise, other things might respect
+  // this as something.
+  bytes for_benefit_of_spec_hash = 4;
 }
 
 // The hash of this will simply be the hash of:

@@ -392,6 +392,13 @@ public class TransactionUtil
       double value = o.getValue() / Globals.SNOW_VALUE_D;
 
       out.println(String.format("  Output: %s %s", address, df.format(value)));
+      if (o.getRequirements().getRequiredBlockHeight() > 0) out.println("    Required block height: " + o.getRequirements().getRequiredBlockHeight());
+      if (o.getRequirements().getRequiredTime() > 0) out.println("    Required time: " + o.getRequirements().getRequiredTime());
+      if (o.getForBenefitOfSpecHash().size() > 0)
+      {
+        String for_addr = new AddressSpecHash( o.getForBenefitOfSpecHash() ).toAddressString(params);
+        out.println("    For benefit of: " + for_addr);
+      }
     }
 
     for(int c_idx = 0; c_idx < inner.getClaimsCount(); c_idx++)

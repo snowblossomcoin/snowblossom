@@ -42,8 +42,6 @@ public abstract class NetworkParams
 
   public ByteString getBlockZeroRemark() { return ByteString.copyFrom(new String("it begins").getBytes()); }
 
-  public int getMaxBlockSize() { return 1024 * 1024 * 2; }
-
   /**
    * Use NTP
    */
@@ -51,6 +49,9 @@ public abstract class NetworkParams
 
   public abstract List<String> getSeedNodes();
   public int getDefaultPort() { return 2338; }
+
+  public int getActivationHeightTxOutRequirements() { return Integer.MAX_VALUE; }
+  public int getActivationHeightTxOutExtras() { return Integer.MAX_VALUE; }
 
   /**
    * Returns a mapping of field seeds, which also

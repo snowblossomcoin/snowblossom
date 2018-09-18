@@ -22,7 +22,7 @@ import java.text.DecimalFormat;
  * This class takes in new blocks, validates them and stores them in the db.
  * In appropritate, updates the tip of the chain.
  */
-public class BlockIngestor
+public class BlockIngestor implements ChainStateSource
 {
   private static final Logger logger = Logger.getLogger("snowblossom.blockchain");
   private SnowBlossomNode node;
@@ -240,11 +240,17 @@ public class BlockIngestor
     return chainhead;
   }
 
+  @Override
   public int getHeight()
   {
     BlockSummary summ = getHead();
     if (summ == null) return 0;
     return summ.getHeader().getBlockHeight();
+  }
+  @Override
+  public NetworkParams getParams()
+  {
+    return params;
   }
 
   public boolean reserveBlock(ChainHash hash)

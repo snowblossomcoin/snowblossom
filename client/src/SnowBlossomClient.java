@@ -89,6 +89,26 @@ public class SnowBlossomClient
         client.send(value, to);
 
       }
+      else if (command.equals("sendlocked"))
+      {
+        if (args.length < 6)
+        {
+          logger.log(Level.SEVERE, "Incorrect syntax. Syntax: SnowBlossomClient <config_file> sendlocked <amount> <dest_address> <fbo_address> <block>");
+          System.exit(-1);
+        }
+        double val_snow = Double.parseDouble(args[2]);
+
+        long value = (long) (val_snow * Globals.SNOW_VALUE);
+        String to = args[3];
+        String fbo = args[4];
+        int block = Integer.parseInt(args[5]);
+
+        DecimalFormat df = new DecimalFormat("0.000000");
+        logger.info(String.format("Building locked send of %s to %s for %s until %d", df.format(val_snow), to, fbo, block));
+        client.sendLocked(value, to, fbo, block);
+
+      }
+ 
       else if (command.equals("balance"))
       {
             client.showBalances(true);
@@ -316,7 +336,40 @@ public class SnowBlossomClient
     System.out.println(blockingStub.submitTransaction(tx));
 
   }
+  public void sendLocked(long value, String to, String fbo, int block)
+    throws Exception
+  {
 
+    TransactionFactoryConfig.Builder tx_config = TransactionFactoryConfig.newBuilder();
+
+    tx_config.setSign(true);
+    AddressSpecHash to_hash = AddressUtil.getHashForAddress(params.getAddressPrefix(), to);
+    AddressSpecHash fbo_hash = AddressUtil.getHashForAddress(params.getAddressPrefix(), fbo);
+    tx_config.addOutputs(TransactionOutput.newBuilder()
+      .setRecipientSpecHash(to_hash.getBytes())
+      .setValue(value)
+      .setForBenefitOfSpecHash(fbo_hash.getBytes())
+      .setRequirements( TransactionRequirements.newBuilder().setRequiredBlockHeight(block).build() )
+      .build());
+    tx_config.setChangeFreshAddress(true);
+    tx_config.setInputConfirmedThenPending(true);
+    tx_config.setFeeUseEstimate(true);
+
+    TransactionFactoryResult res = TransactionFactory.createTransaction(tx_config.build(), purse.getDB(), this);
+
+    Transaction tx = res.getTx();
+
+    logger.info("Transaction: " + new ChainHash(tx.getTxHash()) + " - " + tx.toByteString().size());
+
+    TransactionUtil.prettyDisplayTx(tx, System.out, params);
+
+    //logger.info(tx.toString());
+
+    System.out.println(blockingStub.submitTransaction(tx));
+
+  }
+
+ 
   public void sendOrException(Transaction tx)
     throws Exception
   {

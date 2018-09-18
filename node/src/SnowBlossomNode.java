@@ -86,7 +86,7 @@ public class SnowBlossomNode
   {
     ingestor = new BlockIngestor(this);
     forge = new BlockForge(this);
-    mem_pool = new MemPool(utxo_hashed_trie);
+    mem_pool = new MemPool(utxo_hashed_trie, ingestor);
 
     peerage = new Peerage(this);
     mem_pool.setPeerage(peerage);

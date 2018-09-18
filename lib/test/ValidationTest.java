@@ -5,16 +5,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.Assert;
 import snowblossom.proto.*;
-import snowblossom.lib.AddressSpecHash;
-import snowblossom.lib.AddressUtil;
-import snowblossom.lib.DigestUtil;
-import snowblossom.lib.Globals;
-import snowblossom.lib.KeyUtil;
-import snowblossom.lib.SignatureUtil;
-import snowblossom.lib.Validation;
-import snowblossom.lib.ValidationException;
-import snowblossom.lib.TransactionUtil;
-import snowblossom.lib.HexUtil;
+import snowblossom.lib.*;
 
 import java.security.KeyPair;
 import java.security.MessageDigest;
@@ -132,7 +123,6 @@ public class ValidationTest
 
     KeyPair key_pair = KeyUtil.generateECCompressedKey();
 
-
     byte[] public_key = key_pair.getPublic().getEncoded();
 
     byte[] src_tx = new byte[Globals.BLOCKCHAIN_HASH_LEN];
@@ -225,7 +215,6 @@ public class ValidationTest
 
   }
 
-
   private void crossCheckTxOut(Transaction tx)
     throws Exception
   {
@@ -248,5 +237,193 @@ public class ValidationTest
       Assert.assertEquals(p_tx_out_raw, p_tx_out_recode);
     }
   }
- 
+
+  @Test(expected = ValidationException.class)
+  public void testRequirementTimeBeforeHeight()
+    throws Exception
+  {
+    TransactionOutput out = TransactionOutput.newBuilder()
+      .setRequirements(
+        TransactionRequirements.newBuilder().setRequiredTime(System.currentTimeMillis() + 3600L).build())
+      .build();
+
+    NetworkParams params = new NetworkParamsRegtest();
+    BlockHeader header = BlockHeader.newBuilder()
+      .setBlockHeight( params.getActivationHeightTxOutRequirements() - 1)
+      .setTimestamp( System.currentTimeMillis() )
+      .build();
+
+    Validation.validateTransactionOutput(out, header, params);
+  }
+
+  @Test(expected = ValidationException.class)
+  public void testRequirementBlockBeforeHeight()
+    throws Exception
+  {
+    TransactionOutput out = TransactionOutput.newBuilder()
+      .setRequirements(
+        TransactionRequirements.newBuilder().setRequiredBlockHeight(8000).build())
+      .build();
+
+    NetworkParams params = new NetworkParamsRegtest();
+    BlockHeader header = BlockHeader.newBuilder()
+      .setBlockHeight( params.getActivationHeightTxOutRequirements() - 1)
+      .setTimestamp( System.currentTimeMillis() )
+      .build();
+
+    Validation.validateTransactionOutput(out, header, params);
+  }
+
+  @Test
+  public void testRequirementTimeAtHeight()
+    throws Exception
+  {
+    TransactionOutput out = TransactionOutput.newBuilder()
+      .setRequirements(
+        TransactionRequirements.newBuilder().setRequiredTime(System.currentTimeMillis() + 3600L).build())
+      .build();
+
+    NetworkParams params = new NetworkParamsRegtest();
+    BlockHeader header = BlockHeader.newBuilder()
+      .setBlockHeight( params.getActivationHeightTxOutRequirements())
+      .setTimestamp( System.currentTimeMillis() )
+      .build();
+
+    Validation.validateTransactionOutput(out, header, params);
+  }
+
+  @Test
+  public void testRequirementBlockAtHeight()
+    throws Exception
+  {
+    TransactionOutput out = TransactionOutput.newBuilder()
+      .setRequirements(
+        TransactionRequirements.newBuilder().setRequiredBlockHeight(8000).build())
+      .build();
+
+    NetworkParams params = new NetworkParamsRegtest();
+    BlockHeader header = BlockHeader.newBuilder()
+      .setBlockHeight( params.getActivationHeightTxOutRequirements())
+      .setTimestamp( System.currentTimeMillis() )
+      .build();
+
+    Validation.validateTransactionOutput(out, header, params);
+  }
+
+  @Test
+  public void testExtrasAtHeight()
+    throws Exception
+  {
+    byte[] b=new byte[20];
+    ByteString bs = ByteString.copyFrom(b);
+    TransactionOutput out = TransactionOutput.newBuilder()
+      .setForBenefitOfSpecHash(bs)
+      .build();
+
+    NetworkParams params = new NetworkParamsRegtest();
+    BlockHeader header = BlockHeader.newBuilder()
+      .setBlockHeight( params.getActivationHeightTxOutExtras())
+      .setTimestamp( System.currentTimeMillis() )
+      .build();
+
+    Validation.validateTransactionOutput(out, header, params);
+  }
+
+  @Test(expected = ValidationException.class)
+  public void testExtrasBeforeHeight()
+    throws Exception
+  {
+    byte[] b=new byte[20];
+    ByteString bs = ByteString.copyFrom(b);
+    TransactionOutput out = TransactionOutput.newBuilder()
+      .setForBenefitOfSpecHash(bs)
+      .build();
+
+    NetworkParams params = new NetworkParamsRegtest();
+    BlockHeader header = BlockHeader.newBuilder()
+      .setBlockHeight( params.getActivationHeightTxOutExtras() - 1)
+      .setTimestamp( System.currentTimeMillis() )
+      .build();
+
+    Validation.validateTransactionOutput(out, header, params);
+  }
+
+  @Test
+  public void testSpendableAtHeight()
+    throws Exception
+  {
+    TransactionOutput out = TransactionOutput.newBuilder()
+      .setRequirements(
+        TransactionRequirements.newBuilder().setRequiredBlockHeight(8000).build())
+      .build();
+
+    NetworkParams params = new NetworkParamsRegtest();
+    BlockHeader header = BlockHeader.newBuilder()
+      .setBlockHeight( 8000 )
+      .setTimestamp( System.currentTimeMillis() )
+      .build();
+
+    Validation.validateSpendable(out, header, params);
+  }
+
+  @Test(expected = ValidationException.class)
+  public void testNotSpendableAtHeight()
+    throws Exception
+  {
+    TransactionOutput out = TransactionOutput.newBuilder()
+      .setRequirements(
+        TransactionRequirements.newBuilder().setRequiredBlockHeight(8000).build())
+      .build();
+
+    NetworkParams params = new NetworkParamsRegtest();
+    BlockHeader header = BlockHeader.newBuilder()
+      .setBlockHeight( 7999 )
+      .setTimestamp( System.currentTimeMillis() )
+      .build();
+
+    Validation.validateSpendable(out, header, params);
+  }
+
+
+  @Test
+  public void testSpendableAtTime()
+    throws Exception
+  {
+    TransactionOutput out = TransactionOutput.newBuilder()
+      .setRequirements(
+        TransactionRequirements.newBuilder().setRequiredTime(System.currentTimeMillis()).build())
+      .build();
+
+    NetworkParams params = new NetworkParamsRegtest();
+    BlockHeader header = BlockHeader.newBuilder()
+      .setBlockHeight( 8000 )
+      .setTimestamp( System.currentTimeMillis() )
+      .build();
+
+    Validation.validateSpendable(out, header, params);
+  }
+
+  @Test(expected = ValidationException.class)
+  public void testNotSpendableAtTime()
+    throws Exception
+  {
+    long tm = System.currentTimeMillis();
+    TransactionOutput out = TransactionOutput.newBuilder()
+      .setRequirements(
+        TransactionRequirements.newBuilder().setRequiredTime(tm).build())
+      .build();
+
+    NetworkParams params = new NetworkParamsRegtest();
+    BlockHeader header = BlockHeader.newBuilder()
+      .setBlockHeight( 8000 )
+      .setTimestamp( tm - 100 )
+      .build();
+
+    Validation.validateSpendable(out, header, params);
+  }
+
+
+
+
+
 }

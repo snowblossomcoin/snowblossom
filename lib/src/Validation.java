@@ -294,7 +294,7 @@ public class Validation
 
       for(Transaction tx : blk.getTransactionsList())
       {
-        fee_sum += deepTransactionCheck(tx, utxo_buffer);
+        fee_sum += deepTransactionCheck(tx, utxo_buffer, blk.getHeader(), params);
       }
 
       long reward = PowUtil.getBlockReward(params, blk.getHeader().getBlockHeight());
@@ -315,7 +315,12 @@ public class Validation
   
   }
 
-  public static long deepTransactionCheck(Transaction tx, UtxoUpdateBuffer utxo_buffer)
+  /**
+   * The block header need not be complete or real
+   * It only needs block height and timestamp set for the purpose of this check
+   * @return the fee amount in flakes if tx is good
+   */
+  public static long deepTransactionCheck(Transaction tx, UtxoUpdateBuffer utxo_buffer, BlockHeader block_header, NetworkParams params)
     throws ValidationException
   {
     try(TimeRecordAuto tra_blk = TimeRecord.openAuto("Validation.deepTransactionCheck"))
@@ -340,6 +345,7 @@ public class Validation
         {
           throw new ValidationException(String.format("No matching output for input %s", new ChainHash(in.getSrcTxId())));
         }
+        validateSpendable(matching_out, block_header, params);
         sum_of_inputs += matching_out.getValue();
         utxo_buffer.useOutput(matching_out, new ChainHash(in.getSrcTxId()), in.getSrcTxOutIdx());
       }
@@ -351,9 +357,11 @@ public class Validation
 
       for(TransactionOutput out : inner.getOutputsList())
       {
+        validateTransactionOutput(out, block_header, params);
         spent+=out.getValue();
         utxo_buffer.addOutput(raw_output_list, out, new ChainHash(tx.getTxHash()), out_idx);
         out_idx++;
+
       }
 
       spent+=inner.getFee();
@@ -368,6 +376,68 @@ public class Validation
    
       return inner.getFee();
     }
+  }
+
+  /** This the call to validate than an old TransactionOutput is spendable now */
+  public static void validateSpendable(TransactionOutput out, BlockHeader header, NetworkParams params)
+    throws ValidationException
+  {
+    if (header.getBlockHeight() >= params.getActivationHeightTxOutRequirements())
+    {
+      if (out.getRequirements().getRequiredBlockHeight() > header.getBlockHeight())
+      {
+        throw new ValidationException(String.format("Output can not be spent until height %d", 
+          out.getRequirements().getRequiredBlockHeight()));
+      }
+      if (out.getRequirements().getRequiredTime() > header.getTimestamp())
+      {
+        throw new ValidationException(String.format("Output can not be spent until time %d", 
+          out.getRequirements().getRequiredTime()));
+      }
+    }
+
+  }
+
+  /** This is the call to validate that a transaction output being written now is valid */
+  public static void validateTransactionOutput(TransactionOutput out, BlockHeader header, NetworkParams params)
+    throws ValidationException
+  {
+
+    if (header.getBlockHeight() < params.getActivationHeightTxOutRequirements())
+    {
+      if (out.getRequirements().getRequiredBlockHeight() != 0)
+      {
+        throw new ValidationException("TxOut requirements not enabled yet");
+      }
+      if (out.getRequirements().getRequiredTime() != 0)
+      {
+        throw new ValidationException("TxOut requirements not enabled yet");
+      }
+    }
+    else
+    {
+      if (out.getRequirements().getRequiredBlockHeight() < 0)
+      {
+        throw new ValidationException("TxOut required block height must not be negative");
+      }
+      if (out.getRequirements().getRequiredTime() < 0)
+      {
+        throw new ValidationException("TxOut required time must not be negative");
+      }
+    }
+    if (header.getBlockHeight() < params.getActivationHeightTxOutExtras())
+    {
+      if (out.getForBenefitOfSpecHash().size() > 0)
+      {
+        throw new ValidationException("TxOut extras not enabled yet");
+      }
+    }
+    if (out.getForBenefitOfSpecHash().size() > 0)
+    {
+      validateAddressSpecHash(out.getForBenefitOfSpecHash(), "TxOut for_benefit_of_spec_hash");
+    }
+
+
   }
 
   public static void validateAddressSpecHash(ByteString hash, String name)

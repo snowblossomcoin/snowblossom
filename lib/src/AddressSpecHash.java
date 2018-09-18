@@ -41,7 +41,6 @@ public class AddressSpecHash implements Comparable<AddressSpecHash>
     this.bytes = HexUtil.hexStringToBytes(str);
   }
 
-
   @Override
   public String toString()
   {
