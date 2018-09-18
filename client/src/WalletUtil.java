@@ -34,6 +34,7 @@ public class WalletUtil
   
   public static final String MODE_STANDARD = "standard";
   public static final String MODE_QHARD = "qhard";
+  public static final String MODE_TLS = "tls";
 
   private static final Logger logger = Logger.getLogger("snowblossom.client");
 
@@ -92,6 +93,13 @@ public class WalletUtil
       claim = AddressUtil.getMultiSig(3, ImmutableList.of(k_ec, k_rsa, k_dstu));
       wallet_builder.addAddresses(claim);
       
+    }
+    else if (key_mode.equals(MODE_TLS))
+    {
+      WalletKeyPair wkp = KeyUtil.generateWalletRSAKey(4096);
+      wallet_builder.addKeys(wkp);
+      claim = AddressUtil.getSimpleSpecForKey(wkp);
+      wallet_builder.addAddresses(claim);
     }
     else
     {
