@@ -41,6 +41,13 @@ public class KeyUtil
     return full.substring(EC_SECP256K1_PREFIX.size());
   }
 
+  public static KeyPair decodeKeypair(WalletKeyPair wkp)
+    throws ValidationException
+  {
+    String algo = SignatureUtil.getAlgo(wkp.getSignatureType());
+    return new KeyPair( decodeKey( wkp.getPublicKey(), algo), decodePrivateKey(wkp.getPrivateKey(), algo));
+  }
+
   public static PublicKey decodeKey(ByteString encoded, String algo)
     throws ValidationException
   {
