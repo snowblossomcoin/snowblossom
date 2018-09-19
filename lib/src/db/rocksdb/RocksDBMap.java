@@ -5,9 +5,12 @@ import snowblossom.lib.db.DBMap;
 import org.rocksdb.RocksDB;
 import org.rocksdb.RocksDBException;
 import org.rocksdb.WriteBatch;
+import org.rocksdb.RocksIterator;
 
 import java.util.Map;
 import java.util.SortedMap;
+import java.util.List;
+import java.util.LinkedList;
 
 
 public class RocksDBMap extends DBMap
@@ -85,5 +88,44 @@ public class RocksDBMap extends DBMap
 
   }
 
+  @Override
+  public List<ByteString> getClosestKeys(ByteString key, int count)
+  {
+    ByteString key_str = prefix.concat(key);
+    LinkedList<ByteString> lst = new LinkedList<>();
+
+    try(RocksIterator it = db.newIterator())
+    {
+      it.seek(key_str.toByteArray());
+      
+      // Empty set, doomed
+      if (!it.isValid()) return lst;
+
+      for(int i=0; i<count; i++)
+      {
+        lst.add(ByteString.copyFrom(it.key()).substring(prefix.size()));
+        it.next();
+        if (it.isValid()) it.seekToFirst(); //wrap around
+      }
+      
+      it.seek(key_str.toByteArray());
+      for(int i=0; i<count; i++)
+      {
+        // First element covered by section above, so move then add
+        it.prev();
+        if (!it.isValid()) it.seekToLast();
+        lst.add(ByteString.copyFrom(it.key()).substring(prefix.size()));
+      }
+
+      // This is really fun in the degenerate case where the map is shorter than count and we keep wraping.
+      // as long as we have at least one element, this should be fine.
+
+    }
+    return lst;
+
+
+
+
+  }
 
 }

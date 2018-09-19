@@ -5,6 +5,7 @@ import duckutil.TimeRecord;
 
 import java.util.Map;
 import java.util.SortedMap;
+import java.util.List;
 
 public abstract class DBMap
 {
@@ -42,6 +43,15 @@ public abstract class DBMap
     TimeRecord.record(t1, "db_putall_seq");
   }
 
+  /** 
+   * Return a list of keys near target 'key'.  Doing 'count' before and 'count' after.
+   * Includes wraping around the end of the map as needed to get the count.
+   * For example, sending in count=3 will try to return 6 elements, 3 in each direction.
+   */
+  public List<ByteString> getClosestKeys(ByteString key, int count)
+  {
+    throw new RuntimeException("NOT IMPLEMENTED");
+  }
   
 }
 
