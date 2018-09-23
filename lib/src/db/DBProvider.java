@@ -31,7 +31,7 @@ public abstract class DBProvider
   {
   }
 
-  protected abstract DBMap openMap(String name) throws Exception;
-  protected abstract DBMapMutationSet openMutationMapSet(String name) throws Exception;
+  public abstract DBMap openMap(String name) throws Exception;
+  public abstract DBMapMutationSet openMutationMapSet(String name) throws Exception;
 
 }

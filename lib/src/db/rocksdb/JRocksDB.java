@@ -89,7 +89,7 @@ public class JRocksDB extends DBProvider
   }
 
   @Override
-  protected synchronized DBMapMutationSet openMutationMapSet(String name) throws Exception
+  public synchronized DBMapMutationSet openMutationMapSet(String name) throws Exception
   {
     RocksDB db = null;
     if (use_separate_dbs)
@@ -111,7 +111,7 @@ public class JRocksDB extends DBProvider
   }
 
   @Override
-  protected synchronized DBMap openMap(String name) throws Exception
+  public synchronized DBMap openMap(String name) throws Exception
   {
     RocksDB db = null;
     if (use_separate_dbs)

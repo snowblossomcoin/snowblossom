@@ -33,13 +33,13 @@ public class LobstackDB extends DBProvider
   }
 
   @Override
-  protected DBMapMutationSet openMutationMapSet(String name) throws Exception
+  public DBMapMutationSet openMutationMapSet(String name) throws Exception
   {
 		throw new Exception("NOT IMPLEMENTED");
   }
 
   @Override
-  protected DBMap openMap(String name) throws Exception
+  public DBMap openMap(String name) throws Exception
   {
     return new LobstackDBMap(stack, name);
   }
