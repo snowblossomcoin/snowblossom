@@ -16,7 +16,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-public abstract class DB implements DBFace
+public class DB implements DBFace
 {
   private static final Logger logger = Logger.getLogger("snowblossom.db");
   protected int max_set_return_count=100000;
@@ -33,44 +33,50 @@ public abstract class DB implements DBFace
   protected DBMapMutationSet transaction_block_map;
 
   private Config config;
+  private DBProvider prov;
 
-  public DB(Config config)
+  public DB(Config config, DBProvider prov)
+    throws Exception
   {
     Runtime.getRuntime().addShutdownHook(new DBShutdownThread());
     this.config = config;
+    this.prov = prov;
+    open();
+
   }
 
 
   public void close()
   {
+    prov.close();
   }
 
   public void open()
     throws Exception
   {
-    block_map = new ProtoDBMap(Block.newBuilder().build().getParserForType(), openMap("block"));
-    tx_map = new ProtoDBMap(Transaction.newBuilder().build().getParserForType(), openMap("tx"));
-    block_summary_map = new ProtoDBMap(BlockSummary.newBuilder().build().getParserForType(), openMap("blocksummary"));
+    block_map = new ProtoDBMap(Block.newBuilder().build().getParserForType(), prov.openMap("block"));
+    tx_map = new ProtoDBMap(Transaction.newBuilder().build().getParserForType(), prov.openMap("tx"));
+    block_summary_map = new ProtoDBMap(BlockSummary.newBuilder().build().getParserForType(), prov.openMap("blocksummary"));
 
-    utxo_node_map = openMap("u");
-    block_height_map = openMap("height");
-    special_map = openMap("special");
+    utxo_node_map = prov.openMap("u");
+    block_height_map = prov.openMap("height");
+    special_map = prov.openMap("special");
 
     try
     {
       // Lobstack for example doesn't have multation map set implemented
       // but most htings don't need this so whatever
-      special_map_set = openMutationMapSet("special_map_set");
+      special_map_set = prov.openMutationMapSet("special_map_set");
     }
     catch(Throwable t){}
 
     if (config.getBoolean("addr_index"))
     {
-      address_history_map = openMutationMapSet("addr_hist_2");
+      address_history_map = prov.openMutationMapSet("addr_hist_2");
     }
     if (config.getBoolean("tx_index"))
     {
-      transaction_block_map = openMutationMapSet("tx_blk_map");
+      transaction_block_map = prov.openMutationMapSet("tx_blk_map");
     }
   }
 
@@ -118,9 +124,6 @@ public abstract class DB implements DBFace
     block_height_map.put(ByteString.copyFrom(bb.array()), hash.getBytes());
   }
 
-
-  protected abstract DBMap openMap(String name) throws Exception;
-  protected abstract DBMapMutationSet openMutationMapSet(String name) throws Exception;
 
   protected void dbShutdownHandler()
   {

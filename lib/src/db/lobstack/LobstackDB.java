@@ -1,7 +1,7 @@
 package snowblossom.lib.db.lobstack;
 
 import duckutil.Config;
-import snowblossom.lib.db.DB;
+import snowblossom.lib.db.DBProvider;
 import snowblossom.lib.db.DBMap;
 import snowblossom.lib.db.DBMapMutationSet;
 import lobstack.Lobstack;
@@ -10,7 +10,7 @@ import java.io.File;
 import java.util.logging.Logger;
 
 
-public class LobstackDB extends DB
+public class LobstackDB extends DBProvider
 {
   private static final Logger logger = Logger.getLogger("snowblossom.db");
 
@@ -30,7 +30,6 @@ public class LobstackDB extends DB
 
 		stack = new Lobstack(new File(path), "snowdb");
 
-   	open(); 
   }
 
   @Override

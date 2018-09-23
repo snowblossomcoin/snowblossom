@@ -1,7 +1,7 @@
 package snowblossom.lib.db.rocksdb;
 
 import duckutil.Config;
-import snowblossom.lib.db.DB;
+import snowblossom.lib.db.DBProvider;
 import snowblossom.lib.db.DBMap;
 import snowblossom.lib.db.DBMapMutationSet;
 import org.rocksdb.FlushOptions;
@@ -15,7 +15,7 @@ import java.util.logging.Logger;
 
 import java.util.TreeMap;
 
-public class JRocksDB extends DB
+public class JRocksDB extends DBProvider
 {
   private static final Logger logger = Logger.getLogger("snowblossom.db");
 
@@ -67,7 +67,6 @@ public class JRocksDB extends DB
       shared_db = openRocksDB(path);
     }
 
-    open();
   }
 
   protected RocksDB openRocksDB(String path)

@@ -130,11 +130,11 @@ public class SnowBlossomNode
     
     if(db_type.equals("rocksdb"))
     {
-      db = new JRocksDB(config);
+      db = new DB(config, new JRocksDB(config));
     }
     else if (db_type.equals("lobstack"))
     {
-      db = new LobstackDB(config);
+      db = new DB(config, new LobstackDB(config));
     }
     else
     {
