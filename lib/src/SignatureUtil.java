@@ -155,7 +155,7 @@ public class SignatureUtil
 
   }
 
-  public static ByteString sign(WalletKeyPair key_pair, ChainHash data)
+   public static ByteString sign(WalletKeyPair key_pair, ByteString data)
     throws ValidationException
   {
 
@@ -181,6 +181,13 @@ public class SignatureUtil
       throw new ValidationException(e);
     }
 
+  }
+
+
+  public static ByteString sign(WalletKeyPair key_pair, ChainHash data)
+    throws ValidationException
+  {
+    return sign(key_pair, data.getBytes());
   }
 
   public static ImmutableSet<String> ALLOWED_ECDSA_CURVES = getAllowedECDSACurves();
