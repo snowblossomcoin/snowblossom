@@ -427,9 +427,18 @@ public class Validation
     }
     if (header.getBlockHeight() < params.getActivationHeightTxOutExtras())
     {
+      
       if (out.getForBenefitOfSpecHash().size() > 0)
       {
         throw new ValidationException("TxOut extras not enabled yet");
+      }
+      TransactionOutput test_out = TransactionOutput.newBuilder()
+        .setRecipientSpecHash(out.getRecipientSpecHash())
+        .setValue(out.getValue())
+        .build();
+      if (!test_out.toByteString().equals(out.toByteString()))
+      {
+        throw new ValidationException("TxOut extras not enabled yet, extra data found");
       }
     }
     if (out.getForBenefitOfSpecHash().size() > 0)
