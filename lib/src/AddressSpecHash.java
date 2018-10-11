@@ -6,8 +6,7 @@ import snowblossom.lib.trie.ByteStringComparator;
 import snowblossom.lib.trie.HashUtils;
 
 /**
- * Represents a basic hash that could be anything on
- * the blockchain.  A transaction ID, a block ID, a merkle root, etc.
+ * Represents a hash of an address
  */
 public class AddressSpecHash implements Comparable<AddressSpecHash>
 {
