@@ -6,6 +6,7 @@ import com.google.protobuf.ByteString;
 import snowblossom.proto.*;
 import snowblossom.lib.*;
 import duckutil.AtomicFileOutputStream;
+import duckutil.NetUtil;
 import java.io.PrintStream;
 
 import java.net.InetAddress;

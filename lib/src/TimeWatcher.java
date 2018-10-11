@@ -2,6 +2,7 @@ package snowblossom.lib;
 
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import duckutil.NetUtil;
 
 
 public class TimeWatcher extends Thread
