@@ -9,7 +9,8 @@ public class HexUtil
   {
     try
     { 
-      return ByteString.copyFrom(Hex.decodeHex(s));
+      Hex h = new Hex();
+      return ByteString.copyFrom(h.decode(s.getBytes()));
     }
     catch(Exception e)
     {
@@ -19,7 +20,8 @@ public class HexUtil
 
   public static String getHexString(byte[] data)
   {
-    return Hex.encodeHexString(data);
+    Hex h = new Hex();
+    return new String(h.encodeHex(data));
   }
 
   public static String getHexString(ByteString bs)

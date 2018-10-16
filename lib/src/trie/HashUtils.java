@@ -8,6 +8,7 @@ import java.security.MessageDigest;
 import java.util.List;
 import java.util.LinkedList;
 import java.util.TreeMap;
+import snowblossom.lib.HexUtil;
 
 import snowblossom.trie.proto.TrieNode;
 import snowblossom.trie.proto.ChildEntry;
@@ -39,12 +40,12 @@ public class HashUtils
 
 	public static String getHexString(byte[] data)
 	{
-    return Hex.encodeHexString(data);
+    return HexUtil.getHexString(data);
 	}
 
 	public static String getHexString(ByteString bs)
 	{
-		return getHexString(bs.toByteArray());
+    return HexUtil.getHexString(bs);
 	}
 
   public static boolean validateNodeHash(TrieNode node)

@@ -2,7 +2,6 @@ package snowblossom.lib;
 
 
 import com.google.protobuf.ByteString;
-import org.apache.commons.codec.binary.Hex;
 
 import java.math.BigInteger;
 
@@ -23,14 +22,7 @@ import java.math.BigInteger;
       this.length = length;
       activation_target = BlockchainUtil.getTargetForDiff(activation_bits);
 
-      try
-      {
-        merkle_root_hash = ByteString.copyFrom(Hex.decodeHex(hash));
-      }
-      catch(org.apache.commons.codec.DecoderException e)
-      {
-        throw new RuntimeException(e);
-      }
+      merkle_root_hash = HexUtil.hexStringToBytes(hash);
     }
 
     public String getName(){return name;}
