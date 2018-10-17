@@ -9,6 +9,8 @@ import snowblossom.lib.trie.ByteStringComparator;
 
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.List;
+import java.util.LinkedList;
 
 public class ProtoDBMap<M extends Message>
 {
@@ -39,6 +41,24 @@ public class ProtoDBMap<M extends Message>
     {
       throw new RuntimeException(e);
     }
+  }
+  public List<M> getClosestKeys(ByteString key, int count)
+  {
+    List<ByteString> list_bs = inner.getClosestKeys(key, count);
+
+    LinkedList<M> list = new LinkedList<>();
+    for(ByteString bs : list_bs)
+    {
+      try
+      {
+        list.add( parser.parseFrom(bs) );
+      }
+      catch(InvalidProtocolBufferException e)
+      {
+        throw new RuntimeException(e);
+      }
+    }
+    return list;
   }
 
   public boolean containsKey(ByteString key)
