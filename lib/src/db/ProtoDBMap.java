@@ -42,16 +42,17 @@ public class ProtoDBMap<M extends Message>
       throw new RuntimeException(e);
     }
   }
-  public List<M> getClosestKeys(ByteString key, int count)
+  public List<M> getClosest(ByteString key, int count)
   {
     List<ByteString> list_bs = inner.getClosestKeys(key, count);
 
     LinkedList<M> list = new LinkedList<>();
     for(ByteString bs : list_bs)
     {
+      ByteString value = inner.get(bs);
       try
       {
-        list.add( parser.parseFrom(bs) );
+        list.add( parser.parseFrom(value) );
       }
       catch(InvalidProtocolBufferException e)
       {
