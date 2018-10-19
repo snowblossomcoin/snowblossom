@@ -106,7 +106,7 @@ public class RichList
     
   } 
 
-  HashSet<AddressSpecHash> all_addresses = new HashSet<>();
+  //HashSet<AddressSpecHash> all_addresses = new HashSet<>();
   HashMap<String, Long> balance_map = new HashMap<>();
 
   private long getAddressBalances(List<TransactionBridge> br_lst)
@@ -128,7 +128,7 @@ public class RichList
   }
 
 
-  private void getAddressBalances()
+  /*private void getAddressBalances()
   {
     for(AddressSpecHash spec : all_addresses)
     {
@@ -177,7 +177,7 @@ public class RichList
 
     }
 
-  }
+  }*/
 
   
 }
