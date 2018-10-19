@@ -127,22 +127,29 @@ public class GetUTXOUtil
 		return lst;
 
   }
-
   public static List<TransactionBridge> getSpendableValidatedStatic(AddressSpecHash addr, UserServiceBlockingStub stub, ByteString utxo_root )
     throws ValidationException
   {
     logger.log(Level.FINE,String.format("Get Spendable (%s, %s)", addr.toString(), HexUtil.getHexString(utxo_root)));
+    return getSpendableValidatedStatic(addr.getBytes(), stub, utxo_root);
+    
+
+  }
+
+  public static List<TransactionBridge> getSpendableValidatedStatic(ByteString prefix, UserServiceBlockingStub stub, ByteString utxo_root )
+    throws ValidationException
+  {
     HashMap<ByteString, TrieNode> node_map = new HashMap<>(10000,0.5f);
     LinkedList<TransactionBridge> bridges = new LinkedList<>();
 
-    for(TrieNode n : getNodesByPrefix(addr.getBytes(), stub, true, utxo_root))
+    for(TrieNode n : getNodesByPrefix(prefix, stub, true, utxo_root))
     {
       node_map.put(n.getPrefix(), n);
     }
 
-    descend(ByteString.EMPTY, addr.getBytes(), stub, bridges, node_map, utxo_root, utxo_root);
-
-    logger.log(Level.FINE, String.format("Get Spendable %s: %d nodes, %d bridges", addr.toString(), node_map.size(), bridges.size()));
+    descend(ByteString.EMPTY, prefix, stub, bridges, node_map, utxo_root, utxo_root);
+    
+    logger.log(Level.FINE, String.format("Get Spendable: %d nodes, %d bridges", node_map.size(), bridges.size()));
 
     return bridges;
 

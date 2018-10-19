@@ -19,6 +19,9 @@ import com.google.common.collect.TreeMultimap;
 import snowblossom.client.GetUTXOUtil;
 
 import java.text.DecimalFormat;
+import com.google.protobuf.ByteString;
+import java.util.List;
+
 
 public class RichList
 {
@@ -70,10 +73,17 @@ public class RichList
 
     System.out.println("Highest block: " + node_status.getHeadSummary().getHeader().getBlockHeight());
 
-    getAllBlocks(node_status.getHeadSummary().getHeader());
-    System.out.println("Address count: " + all_addresses.size());
+    List<TransactionBridge> bridge_list = GetUTXOUtil.getSpendableValidatedStatic( ByteString.EMPTY, stub, node_status.getHeadSummary().getHeader().getUtxoRootHash());
 
-    getAddressBalances();
+
+    //getAllBlocks(node_status.getHeadSummary().getHeader());
+    DecimalFormat df = new DecimalFormat("0.000000");
+
+    long total_value = getAddressBalances(bridge_list);
+    System.out.println("Total value: " + df.format(total_value / 1e6));
+
+    
+    System.out.println("Address count: " + balance_map.size());
 
     TreeMultimap<Long, String> m = TreeMultimap.create();
 
@@ -81,7 +91,6 @@ public class RichList
     {
       m.put(-me.getValue(), me.getKey());
     }
-    DecimalFormat df = new DecimalFormat("0.000000");
     for(Map.Entry<Long, String> me : m.entries())
     {
       if (me.getKey() != 0L)
@@ -99,6 +108,25 @@ public class RichList
 
   HashSet<AddressSpecHash> all_addresses = new HashSet<>();
   HashMap<String, Long> balance_map = new HashMap<>();
+
+  private long getAddressBalances(List<TransactionBridge> br_lst)
+  {
+    long total = 0;
+    for(TransactionBridge br : br_lst)
+    {
+      AddressSpecHash spec = new AddressSpecHash( br.out.getRecipientSpecHash());
+      String addr = AddressUtil.getAddressString(params.getAddressPrefix(), spec);
+      long val = 0;
+      if (balance_map.containsKey(addr)) val = balance_map.get(addr);
+
+      val += br.value;
+      total += br.value;
+      balance_map.put(addr, val);
+    }
+    return total;
+
+  }
+
 
   private void getAddressBalances()
   {
