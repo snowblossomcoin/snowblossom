@@ -22,6 +22,10 @@ public abstract class DBMap
 
   public abstract ByteString get(ByteString key);
   public abstract void put(ByteString key, ByteString value);
+  public void remove(ByteString key)
+  {
+    throw new RuntimeException("NOT IMPLEMENTED");
+  }
 
   public boolean containsKey(ByteString key)
   {
@@ -30,6 +34,10 @@ public abstract class DBMap
   public boolean containsKey(String key)
   {
     return containsKey(ByteString.copyFrom(key.getBytes()));
+  }
+  public Map<ByteString, ByteString> getByPrefix(ByteString prefix, int max_reply)
+  {
+    throw new RuntimeException("NOT IMPLEMENTED");
   }
 
   /** Implementing class should override this if they have something better to do */

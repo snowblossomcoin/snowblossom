@@ -11,7 +11,8 @@ import java.util.Map;
 import java.util.SortedMap;
 import java.util.List;
 import java.util.LinkedList;
-
+import java.util.HashMap;
+import snowblossom.lib.db.DBTooManyResultsException;
 
 public class RocksDBMap extends DBMap
 {
@@ -45,18 +46,28 @@ public class RocksDBMap extends DBMap
     {
       throw new RuntimeException(e);
     }
-
   }
 
   public void put(ByteString key, ByteString value)
   {
     try
     {
-
       ByteString key_str = prefix.concat(key);
-
       db.put(jdb.getWriteOption(), key_str.toByteArray(), value.toByteArray());
+    }
+    catch(RocksDBException e)
+    {
+      throw new RuntimeException(e);
+    }
+  }
 
+  @Override
+  public void remove(ByteString key)
+  {
+    try
+    {
+      ByteString key_str = prefix.concat(key);
+      db.delete(jdb.getWriteOption(), key_str.toByteArray());
     }
     catch(RocksDBException e)
     {
@@ -123,8 +134,44 @@ public class RocksDBMap extends DBMap
     }
     return lst;
 
+  }
 
+  @Override
+  public Map<ByteString, ByteString> getByPrefix(ByteString key, int max_reply)
+  {
+    ByteString key_str = prefix.concat(key);
 
+    LinkedList<ByteString> set = new LinkedList<>();
+		Map<ByteString, ByteString> map = new HashMap<>(16,0.5f);
+
+    int count = 0;
+    RocksIterator it = db.newIterator();
+
+    try
+    {
+      it.seek(key_str.toByteArray());
+
+      while(it.isValid())
+      {
+        ByteString curr_key = ByteString.copyFrom(it.key());
+        if (!curr_key.startsWith(key_str)) break;
+
+        ByteString k = curr_key.substring(prefix.size());
+        
+       	map.put(k, ByteString.copyFrom(it.value()));
+				count++;
+
+        if (count > max_reply) throw new DBTooManyResultsException();
+
+        it.next();
+      }
+    }
+    finally
+    {
+      it.dispose();
+    }
+
+    return map;
 
   }
 

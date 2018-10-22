@@ -75,7 +75,5 @@ public class ProtoDBMap<M extends Message>
       sorted.put(me.getKey(), me.getValue().toByteString());
     }
     inner.putAll(sorted);
-
-
   }
 }

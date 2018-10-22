@@ -10,6 +10,11 @@ import java.util.List;
 import com.google.common.collect.TreeMultimap;
 import snowblossom.lib.trie.ByteStringComparator;
 
+/**
+ * Why the hell is this named this?
+ * All this is is a multimap that looks something like:
+ * Map<ByteString, Set<ByteString>> 
+ */
 public abstract class DBMapMutationSet
 {
   public abstract void add(ByteString key, ByteString value);
