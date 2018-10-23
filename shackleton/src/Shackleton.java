@@ -65,7 +65,7 @@ public class Shackleton
 
     asyncStub = UserServiceGrpc.newStub(channel);
     blockingStub = UserServiceGrpc.newBlockingStub(channel);
-    get_utxo_util = new GetUTXOUtil(blockingStub);
+    get_utxo_util = new GetUTXOUtil(blockingStub, params);
     
     web_server.start();
 

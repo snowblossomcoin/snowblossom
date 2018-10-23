@@ -286,6 +286,7 @@ message NodeStatus {
   int32 estimated_nodes = 4;
   string node_version = 5;
   map<string, int32> version_map = 6;
+  string network = 7;
 }
 
 // -------------------------------------------------------------------

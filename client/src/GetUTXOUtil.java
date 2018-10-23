@@ -29,10 +29,12 @@ public class GetUTXOUtil
   private UserServiceBlockingStub stub;
 	private long utxo_root_time = 0;
   private ChainHash last_utxo_root = null;
+  private NetworkParams params;
 
-  public GetUTXOUtil(UserServiceBlockingStub stub)
+  public GetUTXOUtil(UserServiceBlockingStub stub, NetworkParams params)
   {
     this.stub = stub;
+    this.params = params;
   }
 
   public synchronized ChainHash getCurrentUtxoRootHash()
@@ -40,7 +42,19 @@ public class GetUTXOUtil
 		
 		if (utxo_root_time + UTXO_ROOT_EXPIRE < System.currentTimeMillis())
 		{
-    	last_utxo_root= new ChainHash(stub.getNodeStatus( NullRequest.newBuilder().build() ).getHeadSummary().getHeader().getUtxoRootHash());
+      NodeStatus ns = stub.getNodeStatus( NullRequest.newBuilder().build() );
+      if (ns.getNetwork().length() > 0)
+      {
+        if (!ns.getNetwork().equals(params.getNetworkName()))
+        {
+          throw new RuntimeException(String.format("Network name mismatch.  Expected %s, got %s",
+            params.getNetworkName(),
+            ns.getNetwork()));
+        }
+
+      }
+
+    	last_utxo_root= new ChainHash(ns.getHeadSummary().getHeader().getUtxoRootHash());
 			utxo_root_time = System.currentTimeMillis();
       logger.log(Level.FINE, "UTXO root hash: " + last_utxo_root);
 		}

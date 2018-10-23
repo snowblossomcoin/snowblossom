@@ -212,6 +212,8 @@ public class SnowUserService extends UserServiceGrpc.UserServiceImplBase
       .setNodeVersion(Globals.VERSION)
       .putAllVersionMap(node.getPeerage().getVersionMap());
 
+    ns.setNetwork( node.getParams().getNetworkName() );
+
     if (node.getBlockIngestor().getHead() != null)
     {
       ns.setHeadSummary(node.getBlockIngestor().getHead());
