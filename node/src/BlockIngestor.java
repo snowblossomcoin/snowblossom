@@ -276,7 +276,7 @@ public class BlockIngestor implements ChainStateSource
       {
         return false;
       }
-      block_pull_map.put(hash, tm);
+      tx_cluster_pull_map.put(hash, tm);
       return true;
     }
   }
