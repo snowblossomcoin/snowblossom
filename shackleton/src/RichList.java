@@ -67,7 +67,7 @@ public class RichList
     asyncStub = UserServiceGrpc.newStub(channel);
     stub = UserServiceGrpc.newBlockingStub(channel);
 
-    get_utxo_util = new GetUTXOUtil(stub);
+    get_utxo_util = new GetUTXOUtil(stub, params);
 
     NodeStatus node_status = stub.getNodeStatus(QueryUtil.nr());
 

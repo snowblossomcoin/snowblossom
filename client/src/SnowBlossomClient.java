@@ -288,7 +288,7 @@ public class SnowBlossomClient
     asyncStub = UserServiceGrpc.newStub(channel);
     blockingStub = UserServiceGrpc.newBlockingStub(channel);
 
-    get_utxo_util = new GetUTXOUtil(blockingStub);
+    get_utxo_util = new GetUTXOUtil(blockingStub, params);
 
     if (config.isSet("wallet_path"))
     {
