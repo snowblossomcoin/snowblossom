@@ -237,6 +237,13 @@ public class SnowBlossomClient
       {
         client.runLoadTest();
       }
+      else if (command.equals("nodestatus"))
+      {
+        NodeStatus ns = client.getNodeStatus();
+        JsonFormat.Printer printer = JsonFormat.printer();
+        System.out.println(printer.print(ns));
+        
+      }
       else
       {
         logger.log(Level.SEVERE, String.format("Unknown command %s.", command));
@@ -612,11 +619,10 @@ public class SnowBlossomClient
     return all;
   }
 
-  /*public ChainHash getCurrentUtxoRootHash()
+  public NodeStatus getNodeStatus()
   {
-    return new ChainHash(blockingStub.getNodeStatus( NullRequest.newBuilder().build() ).getHeadSummary().getHeader().getUtxoRootHash());
-
-  }*/
+    return blockingStub.getNodeStatus( NullRequest.newBuilder().build() );
+  }
 
   public List<TransactionBridge> getSpendable(AddressSpecHash addr)
     throws ValidationException
