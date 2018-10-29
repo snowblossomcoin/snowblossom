@@ -4,7 +4,7 @@ import java.security.Security;
 
 public class Globals
 {
-  public static final String VERSION = "1.4.1";
+  public static final String VERSION = "1.4.1-dev";
 
   public static final int POW_LOOK_PASSES = 6;
 
@@ -35,8 +35,9 @@ public class Globals
   public static final long SNOW_VALUE = 1000000L;
   public static final double SNOW_VALUE_D = SNOW_VALUE;
 
-  public static final int MAX_BLOCK_SIZE = 3800000;
-  public static final int MAX_TX_SIZE    = 1000000;
+  public static final int MAX_BLOCK_SIZE =       3800000;
+  public static final int MAX_TX_SIZE    =       1000000;
+  public static final int LOW_FEE_SIZE_IN_BLOCK = 100000;
 
   public static final int MAX_NODE_ID_SIZE = 8;
 
@@ -50,6 +51,7 @@ public class Globals
 
   // In flakes per byte
   public static final double BASIC_FEE = 2.5;
+  public static final double LOW_FEE = 2.2;
 
 
   // Not a big fan of static global variables

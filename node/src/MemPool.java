@@ -66,11 +66,18 @@ public class MemPool
   private ChainStateSource chain_state_source;
 
   public static int MEM_POOL_MAX = 10000;
+  private final int low_fee_max;
 
   private Object tickle_trigger = new Object();
 
   public MemPool(HashedTrie utxo_hashed_trie, ChainStateSource chain_state_source)
   {
+    this(utxo_hashed_trie, chain_state_source, Globals.LOW_FEE_SIZE_IN_BLOCK); 
+  }
+
+  public MemPool(HashedTrie utxo_hashed_trie, ChainStateSource chain_state_source, int low_fee_max)
+  {
+    this.low_fee_max = low_fee_max;
     this.chain_state_source = chain_state_source;
     this.utxo_hashed_trie = utxo_hashed_trie;
 
@@ -128,25 +135,42 @@ public class MemPool
     }
 
     int size = 0;
+    int low_fee_size = 0;
+
 
     TreeMultimap<Double, TXCluster> priority_map_copy = TreeMultimap.<Double, TXCluster>create();
     priority_map_copy.putAll(priority_map);
 
     while (priority_map_copy.size() > 0)
     {
-      Collection<TXCluster> list = priority_map_copy.asMap().pollLastEntry().getValue();
+      Map.Entry<Double, Collection<TXCluster> > last_entry = priority_map_copy.asMap().pollLastEntry();
+
+      double ratio = last_entry.getKey();
+      boolean low_fee = false;
+      if (ratio < Globals.LOW_FEE) low_fee=true;
+
+      Collection<TXCluster> list = last_entry.getValue();
       for (TXCluster cluster : list)
       {
         if (size + cluster.total_size <= max_size)
         {
-          for (Transaction tx : cluster.tx_list)
+          if ((!low_fee) || (low_fee_size < low_fee_max))
           {
-            ChainHash tx_hash = new ChainHash(tx.getTxHash());
-            if (!included_txs.contains(tx_hash))
+
+            for (Transaction tx : cluster.tx_list)
             {
-              block_list.add(tx);
-              included_txs.add(tx_hash);
-              size += tx.toByteString().size();
+              ChainHash tx_hash = new ChainHash(tx.getTxHash());
+              if (!included_txs.contains(tx_hash))
+              {
+                block_list.add(tx);
+                included_txs.add(tx_hash);
+                int sz = tx.toByteString().size();
+                size += sz;
+                if (low_fee)
+                {
+                  low_fee_size += sz;
+                }
+              }
             }
           }
 

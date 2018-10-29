@@ -307,7 +307,7 @@ public class MemPoolTest
     
     ChainHash utxo_root = utxo_buffer.commit();
 
-    MemPool mem_pool = new MemPool(utxo_trie, new DummyChainState(100));
+    MemPool mem_pool = new MemPool(utxo_trie, new DummyChainState(100), 10000000);
     Assert.assertEquals(0, mem_pool.getTransactionsForBlock(utxo_root, 1048576).size());
 
     TimeRecord tr = new TimeRecord();
