@@ -66,6 +66,10 @@ public class MemPool
   private ChainStateSource chain_state_source;
 
   public static int MEM_POOL_MAX = 10000;
+
+  /** if the mempool has this many transactions already, reject any new low fee transactions */
+  public static int MEM_POOL_MAX_LOW = 5000;
+
   private final int low_fee_max;
 
   private Object tickle_trigger = new Object();
@@ -200,6 +204,16 @@ public class MemPool
     TransactionMempoolInfo info = new TransactionMempoolInfo(tx);
 
     TransactionInner inner = info.inner;
+    double tx_ratio = (double) inner.getFee() / (double)tx.toByteString().size();
+    if (tx_ratio < Globals.LOW_FEE)
+    {
+      if (known_transactions.size() >= MEM_POOL_MAX_LOW)
+      {
+        throw new ValidationException("mempool is too full for low fee transactions");
+      }
+    }
+
+
     TreeSet<String> used_outputs = new TreeSet<>();
     TimeRecord.record(t1, "mempool:p1");
 
