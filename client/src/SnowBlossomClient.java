@@ -668,7 +668,7 @@ public class SnowBlossomClient
     while(true)
     {
       int output_count = 1;
-      long fee = 50;
+      long fee = 7500;
       while (rnd.nextDouble() < 0.5) output_count++;
       //Collections.shuffle(spendable);
 
@@ -709,8 +709,9 @@ public class SnowBlossomClient
       tx_config.addAllOutputs(out_list);
       tx_config.setChangeRandomFromWallet(true);
       tx_config.setInputSpecificList(true);
-      tx_config.setFeeUseEstimate(false);
-      tx_config.setFeeFlat(fee);
+      tx_config.setFeeUseEstimate(true);
+      //tx_config.setFeeUseEstimate(false);
+      //tx_config.setFeeFlat(fee);
       tx_config.setSplitChangeOver(25000000L);
       tx_config.addAllInputs(input_list);
 
