@@ -17,16 +17,17 @@ echo "Installing $release_name node in $snowblossom_home"
 
 # install java
 apt-get update
-apt-get -yq install git openjdk-8-jdk unzip
+apt-get -yq install openjdk-8-jdk unzip
 
 # create a dedicated user, if doesn't exist
 id -u snowblossom &>/dev/null || useradd --home-dir "$snowblossom_home" --create-home --system snowblossom
 
 # download latest release
 cd "$snowblossom_home"
-wget -N "$release"
+wget --continue "$release"
 unzip "$release_file"
-mv -n "$release_name"/* ./
+cp --recursive --no-clobber "$release_name"/* ./
+cp "$release_name"/*.jar ./
 
 # install systemd service and
 # automatically start at boot
