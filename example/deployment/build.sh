@@ -41,6 +41,7 @@ cp "configs/pool-miner.conf" "$name/configs/"
 
 # make logs
 mkdir -p "$name/logs/"
+cp "configs/logging.properties" "$name/configs/"
 touch "$name/logs/logs.placeholder"
 
 # convert line endings to make easily windows editable -_-;
