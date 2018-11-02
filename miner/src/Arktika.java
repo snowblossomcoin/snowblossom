@@ -140,11 +140,15 @@ public class Arktika
 
     subscribe();
 
+    if (!config.getBoolean("nolisten"))
+    {
+
       Server s = ServerBuilder
         .forPort(2311)
         .addService(new Stubo(composit_source, selected_field))
         .build();
       s.start();
+    }
 
     //new QueuePruner().start();
 
