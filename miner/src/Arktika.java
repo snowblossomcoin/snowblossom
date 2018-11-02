@@ -6,6 +6,7 @@ import duckutil.ConfigFile;
 import duckutil.TimeRecord;
 import duckutil.TimeRecordAuto;
 import duckutil.RateReporter;
+import duckutil.MultiAtomicLong;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 import io.grpc.stub.StreamObserver;
@@ -78,7 +79,7 @@ public class Arktika
 
   private final NetworkParams params;
 
-  protected AtomicLong op_count = new AtomicLong(0L);
+  protected MultiAtomicLong op_count = new MultiAtomicLong();
   private long last_stats_time = System.currentTimeMillis();
   private Config config;
 
@@ -232,7 +233,7 @@ public class Arktika
   public void printStats()
   {
     long now = System.currentTimeMillis();
-    long count_long = op_count.getAndSet(0L);
+    long count_long = op_count.sumAndReset();
     double count = count_long;
     rate_report.record(count_long);
 

@@ -107,7 +107,7 @@ public class LayerWorkThread extends Thread
 			  logger.info("Found passable solution: " + str);
 			  submitWork(pw);
 		  }
-		  arktika.op_count.getAndIncrement();
+		  arktika.op_count.add(1L);
     }
     else
     {

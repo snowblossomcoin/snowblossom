@@ -28,6 +28,7 @@ import java.util.Collections;
 import java.util.LinkedList;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicLong;
+import duckutil.MultiAtomicLong;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -65,7 +66,7 @@ public class PoolMiner
   private final FieldScan field_scan;
   private final NetworkParams params;
 
-  private AtomicLong op_count = new AtomicLong(0L);
+  private MultiAtomicLong op_count = new MultiAtomicLong();
   private long last_stats_time = System.currentTimeMillis();
   private Config config;
 
@@ -192,7 +193,7 @@ public class PoolMiner
   public void printStats()
   {
     long now = System.currentTimeMillis();
-    long count_long = op_count.getAndSet(0L);
+    long count_long = op_count.sumAndReset();
     double count = count_long;
     rate_report.record(count_long);
 
@@ -335,7 +336,7 @@ public class PoolMiner
         submitWork(wu, nonce, merkle_proof);
 
       }
-      op_count.getAndIncrement();
+      op_count.add(1L);
     }
 
     private void submitWork(WorkUnit wu, byte[] nonce, SnowMerkleProof merkle_proof) throws Exception

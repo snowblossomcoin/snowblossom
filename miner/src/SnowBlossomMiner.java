@@ -5,6 +5,7 @@ import duckutil.Config;
 import duckutil.ConfigFile;
 import duckutil.TimeRecord;
 import duckutil.TimeRecordAuto;
+import duckutil.MultiAtomicLong;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 import io.grpc.stub.StreamObserver;
@@ -66,7 +67,7 @@ public class SnowBlossomMiner
   private final FieldScan field_scan;
   private final NetworkParams params;
 
-  private AtomicLong op_count = new AtomicLong(0L);
+  private MultiAtomicLong op_count = new MultiAtomicLong();
   private long last_stats_time = System.currentTimeMillis();
   private Config config;
 
@@ -202,7 +203,7 @@ public class SnowBlossomMiner
   public void printStats()
   {
     long now = System.currentTimeMillis();
-    double count = op_count.getAndSet(0L);
+    double count = op_count.sumAndReset();
 
     double time_ms = now - last_stats_time;
     double time_sec = time_ms / 1000.0;
@@ -342,7 +343,7 @@ public class SnowBlossomMiner
         buildBlock(b, nonce, merkle_proof);
 
       }
-      op_count.getAndIncrement();
+      op_count.add(1L);
     }
 
     private void buildBlock(Block b, byte[] nonce, SnowMerkleProof merkle_proof) throws Exception
