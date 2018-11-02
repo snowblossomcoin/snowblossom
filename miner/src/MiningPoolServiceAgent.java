@@ -249,10 +249,16 @@ public class MiningPoolServiceAgent extends MiningPoolServiceGrpc.MiningPoolServ
         {
           share_times.poll();
         }
-        if (share_times.size() >= MrPlow.SHARES_IN_VIEW_FOR_RETARGET)
+        if (share_times.size() >= MrPlow.SHARES_IN_VIEW_FOR_UPTARGET)
         {
           working_diff++;
           share_times.clear();
+        }
+        if (share_times.size() < MrPlow.SHARES_IN_VIEW_FOR_DOWNTARGET)
+        {
+          // Intentionally not clearing the share_times here to avoid 
+          // this being run again on the next share coming in
+          working_diff = Math.max(working_diff - 1, MrPlow.MIN_DIFF);
         }
 
       }

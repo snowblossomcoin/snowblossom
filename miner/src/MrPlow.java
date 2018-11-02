@@ -40,7 +40,8 @@ public class MrPlow
   // inside a single SHARE_VIEW_WINDOW, then move the miner up one difficulty
   // So as it is set, if a miner gets 12 shares inside of 2 minutes, move them up.
   public static final long SHARE_VIEW_WINDOW = 120000L;
-  public static final int SHARES_IN_VIEW_FOR_RETARGET = 12;
+  public static final int SHARES_IN_VIEW_FOR_UPTARGET = 12;
+  public static final int SHARES_IN_VIEW_FOR_DOWNTARGET = 4;
 
   public static ByteString BLOCK_KEY = ByteString.copyFrom(new String("blocks_found").getBytes());
 
