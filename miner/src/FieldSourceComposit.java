@@ -28,14 +28,23 @@ public class FieldSourceComposit extends FieldSource
     holding_set = ImmutableSet.copyOf(total);
   }
 
+
   public void bulkRead(long word_index, ByteBuffer bb) throws java.io.IOException
   {
     int chunk = (int)(word_index / words_per_chunk);
     for(FieldSource fs : sources)
     {
+      
       if (fs.hasChunk(chunk))
       {
-        fs.bulkRead(word_index, bb);
+        if (bb.remaining() == 16)
+        {
+          fs.readWord(word_index, bb);
+        }
+        else
+        {
+          fs.bulkRead(word_index, bb);
+        }
         return;
       }
     }
