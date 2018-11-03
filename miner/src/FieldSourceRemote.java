@@ -24,13 +24,17 @@ import snowblossom.mining.proto.*;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 
+import duckutil.MultiAtomicLong;
+
 import snowblossom.mining.proto.SharedMiningServiceGrpc.SharedMiningServiceBlockingStub;
+import java.text.DecimalFormat;
 
 public class FieldSourceRemote extends FieldSource implements BatchSource
 {
   private ThreadLocal<SharedMiningServiceBlockingStub> stub_local=new ThreadLocal<>();
   SharedMiningServiceBlockingStub stub_one;
   private int field_number;
+  protected MultiAtomicLong call_counter = new MultiAtomicLong();
 
   public FieldSourceRemote(Config config, int layer, int field_number)
   {
@@ -93,10 +97,13 @@ public class FieldSourceRemote extends FieldSource implements BatchSource
     bb.put(bs.toByteArray());
   } 
 
-  /** Shouldn't use this much, just allowed here for proof generation */
   @Override
   public List<ByteString> readWordsBulk(List<Long> indexes)
   {
+    read_counter.add((long)indexes.size());
+    call_counter.add(1L);
+
+    
     return getStub().getWords(GetWordsRequest.newBuilder()
       .addAllWordIndexes(indexes)
       .setField(field_number)
@@ -109,5 +116,25 @@ public class FieldSourceRemote extends FieldSource implements BatchSource
   {
     return false;
   }
+
+  @Override
+  public String getRateString(double elapsed_sec)
+  {
+    double reads = read_counter.sumAndReset();
+    double read_rate = reads / elapsed_sec;
+
+    double calls = call_counter.sumAndReset();
+    double call_rate = calls / elapsed_sec;
+    double network = read_rate * 16.0;
+    double network_mb = network / 1048576.0;
+
+    DecimalFormat df = new DecimalFormat("0.0");
+    return String.format("read_ops/s: %s rpc_ops/s: %s network_bw: %s MB/s", 
+      df.format(read_rate), 
+      df.format(call_rate),
+      df.format(network_mb));
+
+  }
+
 
 }

@@ -263,14 +263,23 @@ public class Arktika
 
     if (count == 0)
     {
-      logger.info("we seem to be stalled, reconnecting to node");
-      try
+      if (getWorkUnit() == null)
       {
-        subscribe();
+
+        logger.info("Stalled.  No valid work unit, reconnecting to pool");
+        try
+        {
+          subscribe();
+        }
+        catch (Throwable t)
+        {
+          logger.info("Exception in subscribe: " + t);
+        }
       }
-      catch (Throwable t)
+      else
       {
-        logger.info("Exception in subscribe: " + t);
+        logger.info("No hashing, and we have a good work unit from the pool.  So probably something else wrong.");
+        logger.info("Probably code EBCAK");
       }
     }
 
@@ -293,7 +302,17 @@ public class Arktika
       queue_report.append(",");
     }
     queue_report.append("}");
+
+    for(int i=0; i<layer_count; i++)
+    {
+      FieldSource fs = all_sources[i];
+      logger.info(String.format("Layer %d - %s", i, fs.getRateString(time_sec)));
+    }
+
+
     logger.info(queue_report.toString());
+
+
 
     logger.info(String.format("Shares: %d (rejected %d) (blocks %d)", share_submit_count.get(), share_reject_count.get(), share_block_count.get()));
   }
