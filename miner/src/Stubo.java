@@ -7,6 +7,8 @@ import com.google.protobuf.ByteString;
 import java.nio.ByteBuffer;
 
 import io.grpc.stub.StreamObserver;
+import java.util.concurrent.atomic.AtomicLong;
+import java.text.DecimalFormat;
 
 public class Stubo extends SharedMiningServiceGrpc.SharedMiningServiceImplBase
 {
@@ -17,6 +19,9 @@ public class Stubo extends SharedMiningServiceGrpc.SharedMiningServiceImplBase
     this.src = src;
     this.field_number = field_number;
   }
+
+  protected AtomicLong call_counter = new AtomicLong();
+  protected AtomicLong read_counter = new AtomicLong();
 
   @Override
   public void getWords(GetWordsRequest req, StreamObserver<GetWordsResponce> observer)
@@ -32,6 +37,10 @@ public class Stubo extends SharedMiningServiceGrpc.SharedMiningServiceImplBase
         }
       }
       GetWordsResponce.Builder builder = GetWordsResponce.newBuilder();
+
+      call_counter.getAndIncrement();
+      read_counter.getAndAdd(req.getWordIndexesCount());
+
 
       for(long x : req.getWordIndexesList())
       {
@@ -49,4 +58,22 @@ public class Stubo extends SharedMiningServiceGrpc.SharedMiningServiceImplBase
     }
 
   }
+  public String getRateString(double elapsed_sec)
+  {
+    double reads = read_counter.getAndSet(0L);
+    double read_rate = reads / elapsed_sec;
+
+    double calls = call_counter.getAndSet(0L);
+    double call_rate = calls / elapsed_sec;
+    double network = read_rate * 16.0;
+    double network_mb = network / 1048576.0;
+
+    DecimalFormat df = new DecimalFormat("0.0");
+    return String.format("read_ops/s: %s rpc_ops/s: %s network_bw: %s MB/s",
+      df.format(read_rate),
+      df.format(call_rate),
+      df.format(network_mb));
+
+  }
+
 }

@@ -103,6 +103,7 @@ public class Arktika
   private ImmutableMap<Integer, FaQueue > layer_to_queue_map;
   protected FieldSource composit_source;
   private final int layer_count;
+  private Stubo stubo;
 
 
   public Arktika(Config config) throws Exception
@@ -141,12 +142,15 @@ public class Arktika
 
     subscribe();
 
+    stubo = new Stubo(composit_source, selected_field);
+
+
     if (!config.getBoolean("nolisten"))
     {
 
       Server s = ServerBuilder
         .forPort(2311)
-        .addService(new Stubo(composit_source, selected_field))
+        .addService(stubo)
         .build();
       s.start();
     }
@@ -306,8 +310,10 @@ public class Arktika
     for(int i=0; i<layer_count; i++)
     {
       FieldSource fs = all_sources[i];
-      logger.info(String.format("Layer %d - %s", i, fs.getRateString(time_sec)));
+      logger.info(String.format("Layer %d: %s", i, fs.getRateString(time_sec)));
     }
+
+    logger.info(String.format("RPC Server: %s", stubo.getRateString(time_sec)));
 
 
     logger.info(queue_report.toString());
