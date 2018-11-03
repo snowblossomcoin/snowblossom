@@ -5,6 +5,7 @@
 * When mempool is half full, reject new low fee transactions
 * MrPool lowers difficulty if share rate is low
 * Switch miners to faster MultiAtomicLong for hash counting
+* Add stats outputs to arktika
 
 ## 1.4.1
 
