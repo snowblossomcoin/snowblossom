@@ -111,7 +111,7 @@ public class MiningPoolServiceAgent extends MiningPoolServiceGrpc.MiningPoolServ
       Validation.checkBlockHeaderBasics( plow.getParams(), formed_header, true );
 
       long shares = 1;
-      int diff_delta = wi.work_diff - MrPlow.MIN_DIFF;
+      int diff_delta = wi.work_diff - plow.getMinDiff();
       shares = 1L << diff_delta;
       long hashes = 1L << wi.work_diff;
 
@@ -228,7 +228,7 @@ public class MiningPoolServiceAgent extends MiningPoolServiceGrpc.MiningPoolServ
   {
     public final GetWorkRequest req;
     public final StreamObserver<WorkUnit> observer;
-    public int working_diff = MrPlow.MIN_DIFF;
+    public int working_diff = plow.getMinDiff();
 
     public LinkedList<Long> share_times = new LinkedList<>();
 
@@ -258,7 +258,7 @@ public class MiningPoolServiceAgent extends MiningPoolServiceGrpc.MiningPoolServ
         {
           // Intentionally not clearing the share_times here to avoid 
           // this being run again on the next share coming in
-          working_diff = Math.max(working_diff - 1, MrPlow.MIN_DIFF);
+          working_diff = Math.max(working_diff - 1, plow.getMinDiff());
         }
 
       }

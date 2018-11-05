@@ -33,7 +33,6 @@ public class MrPlow
 {
   private static final Logger logger = Logger.getLogger("snowblossom.miner");
   
-  public static final int MIN_DIFF=22;
   public static final int BACK_BLOCKS=5; // Roughly how many blocks back to keep shares for PPLNS
 
   // Basically read this as if there are SHARES_IN_VIEW_FOR_RETARGET
@@ -81,6 +80,7 @@ public class MrPlow
   private ShareManager share_manager;
 	private DB db;
   private ReportManager report_manager;
+  private final int min_diff;
 
   public MrPlow(Config config) throws Exception
   {
@@ -92,6 +92,7 @@ public class MrPlow
     config.require("pool_fee");
     config.require("db_type");
     config.require("db_path");
+    min_diff = config.getIntWithDefault("min_diff", 22);
     
     params = NetworkParams.loadFromConfig(config);
 
@@ -147,6 +148,12 @@ public class MrPlow
 
     s.start();
   }
+
+  public int getMinDiff()
+  {
+    return min_diff;
+  }
+
   private void loadDB()
     throws Exception
   {
@@ -215,7 +222,7 @@ public class MrPlow
       Block b = last_block_template;
       if (b!=null)
       {
-        double diff_delta = PowUtil.getDiffForTarget(BlockchainUtil.targetBytesToBigInteger(b.getHeader().getTarget())) - MIN_DIFF;
+        double diff_delta = PowUtil.getDiffForTarget(BlockchainUtil.targetBytesToBigInteger(b.getHeader().getTarget())) - getMinDiff();
 
         long shares_to_keep = Math.round( Math.pow(2, diff_delta) * BACK_BLOCKS);
         share_manager.prune(shares_to_keep);

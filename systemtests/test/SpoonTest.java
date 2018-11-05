@@ -9,6 +9,8 @@ import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 import snowblossom.client.SnowBlossomClient;
 import snowblossom.miner.SnowBlossomMiner;
+import snowblossom.miner.MrPlow;
+import snowblossom.miner.PoolMiner;
 import snowblossom.proto.*;
 import snowblossom.lib.AddressSpecHash;
 import snowblossom.lib.AddressUtil;
@@ -79,6 +81,38 @@ public class SpoonTest
     node.stop();
     node2.stop();
   }
+
+  @Test
+  public void spoonPoolTest() throws Exception
+  {
+    File snow_path = setupSnow();
+
+    Random rnd = new Random();
+    int port = 20000 + rnd.nextInt(30000);
+    SnowBlossomNode node = startNode(port);
+    Thread.sleep(100);
+
+    KeyPair key_pair = KeyUtil.generateECCompressedKey();
+    AddressSpec claim = AddressUtil.getSimpleSpecForKey(key_pair.getPublic(), SignatureUtil.SIG_TYPE_ECDSA_COMPRESSED);
+    AddressSpecHash to_addr = AddressUtil.getHashForSpec(claim);
+
+    KeyPair key_pair2 = KeyUtil.generateECCompressedKey();
+    AddressSpec claim2 = AddressUtil.getSimpleSpecForKey(key_pair.getPublic(), SignatureUtil.SIG_TYPE_ECDSA_COMPRESSED);
+    AddressSpecHash to_addr2 = AddressUtil.getHashForSpec(claim);
+
+    MrPlow plow = startMrPlow(port, to_addr2);
+
+    PoolMiner miner = startPoolMiner(port+1, to_addr, snow_path);
+
+    testMinedBlocks(node);
+
+    miner.stop();
+    Thread.sleep(500);
+    plow.stop();
+    node.stop();
+
+  }
+
 
   @Test
   public void networkReconsileTest() throws Exception
@@ -235,6 +269,25 @@ public class SpoonTest
 
   }
 
+  private MrPlow startMrPlow(int node_port, AddressSpecHash pool_addr) throws Exception
+  {
+    String plow_db_path = test_folder.newFolder().getPath();
+    Map<String, String> config_map = new TreeMap<>();
+    config_map.put("node_host", "localhost");
+    config_map.put("node_port", "" + node_port);
+    config_map.put("db_type", "rocksdb");
+    config_map.put("db_path", plow_db_path +"/plowdb");
+    config_map.put("pool_fee", "0.01");
+    config_map.put("pool_address", pool_addr.toAddressString(new NetworkParamsRegtest()));
+    config_map.put("mining_pool_port", "" +(node_port+1));
+    config_map.put("network", "spoon");
+    config_map.put("min_diff", "11");
+
+    return new MrPlow(new ConfigMem(config_map));
+
+
+  }
+
   private SnowBlossomMiner startMiner(int port, AddressSpecHash mine_to, File snow_path) throws Exception
   {
     Map<String, String> config_map = new TreeMap<>();
@@ -250,6 +303,24 @@ public class SpoonTest
     }
 
     return new SnowBlossomMiner(new ConfigMem(config_map));
+
+  }
+
+  private PoolMiner startPoolMiner(int port, AddressSpecHash mine_to, File snow_path) throws Exception
+  {
+    Map<String, String> config_map = new TreeMap<>();
+    config_map.put("pool_host", "localhost");
+    config_map.put("pool_port", "" + port);
+    config_map.put("threads", "1");
+    config_map.put("mine_to_address", mine_to.toAddressString(new NetworkParamsRegtest()));
+    config_map.put("snow_path", snow_path.getPath());
+    config_map.put("network", "spoon");
+    if (port % 2 == 1)
+    {
+      config_map.put("memfield", "true");
+    }
+
+    return new PoolMiner(new ConfigMem(config_map));
 
   }
 
