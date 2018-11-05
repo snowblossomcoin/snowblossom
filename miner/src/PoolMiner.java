@@ -223,16 +223,27 @@ public class PoolMiner
 
     if (count == 0)
     {
-      logger.info("we seem to be stalled, reconnecting to node");
-      try
+      if (getWorkUnit() == null)
       {
-        subscribe();
+
+        logger.info("Stalled.  No valid work unit, reconnecting to pool");
+        try
+        {
+          subscribe();
+        }
+        catch (Throwable t)
+        {
+          logger.info("Exception in subscribe: " + t);
+        }
       }
-      catch (Throwable t)
+      else
       {
-        logger.info("Exception in subscribe: " + t);
+        logger.info("No hashing, and we have a good work unit from the pool.  So probably something else wrong.");
+        logger.info("Probably code EBCAK");
       }
     }
+
+
 
     if (config.getBoolean("display_timerecord"))
     {
