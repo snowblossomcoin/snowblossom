@@ -229,6 +229,7 @@ public class MiningPoolServiceAgent extends MiningPoolServiceGrpc.MiningPoolServ
     public final GetWorkRequest req;
     public final StreamObserver<WorkUnit> observer;
     public int working_diff = plow.getMinDiff();
+    public long last_shift = 0;
 
     public LinkedList<Long> share_times = new LinkedList<>();
 
@@ -253,13 +254,19 @@ public class MiningPoolServiceAgent extends MiningPoolServiceGrpc.MiningPoolServ
         {
           working_diff++;
           share_times.clear();
+          last_shift = System.currentTimeMillis();
+          // We don't care when the last shift was, if this gets hit, it gets hit
         }
-        /*if (share_times.size() < MrPlow.SHARES_IN_VIEW_FOR_DOWNTARGET)
+        else if (share_times.size() < MrPlow.SHARES_IN_VIEW_FOR_DOWNTARGET)
         {
-          // Intentionally not clearing the share_times here to avoid 
-          // this being run again on the next share coming in
-          working_diff = Math.max(working_diff - 1, plow.getMinDiff());
-        }*/
+          if (last_shift + MrPlow.SHARE_VIEW_WINDOW < System.currentTimeMillis())
+          {
+            // Intentionally not clearing the share_times here to avoid 
+            // this being run again on the next share coming in
+            working_diff = Math.max(working_diff - 1, plow.getMinDiff());
+            last_shift = System.currentTimeMillis();
+          }
+        }
 
       }
 
