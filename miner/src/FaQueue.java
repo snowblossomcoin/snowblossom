@@ -3,6 +3,7 @@ package snowblossom.miner;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.List;
+import duckutil.MultiAtomicLong;
 
 import snowblossom.lib.Globals;
 import java.util.concurrent.Semaphore;
@@ -12,18 +13,18 @@ public class FaQueue
 
   public static final int SLOTS=Globals.POW_LOOK_PASSES;
   private ConcurrentLinkedQueue<PartialWork>[] queues; 
-  private AtomicInteger[] counts;
+  private MultiAtomicLong[] counts;
   public final int max_elements;
 
   public FaQueue(int max_elements)
   {
     this.max_elements = max_elements;
     queues = new ConcurrentLinkedQueue[SLOTS];
-    counts = new AtomicInteger[SLOTS];
+    counts = new MultiAtomicLong[SLOTS];
     for(int i=0; i<SLOTS; i++)
     {
       queues[i] = new ConcurrentLinkedQueue<>();
-      counts[i] = new AtomicInteger(0);
+      counts[i] = new MultiAtomicLong();
     }
   }
 
@@ -31,7 +32,7 @@ public class FaQueue
   {
     int slot = pw.passes_done;
     queues[slot].add(pw);
-    counts[slot].incrementAndGet();
+    counts[slot].add(1L);
   }
 
   /**
@@ -41,7 +42,7 @@ public class FaQueue
   public int size()
   {
     int sz = 0;
-    for(int i=0; i<SLOTS; i++) sz += counts[i].get();
+    for(int i=0; i<SLOTS; i++) sz += counts[i].sum();
     return sz;
   }
 
@@ -61,7 +62,7 @@ public class FaQueue
           PartialWork pw = queues[i].poll();
           if (pw == null) break;
           diff--;
-          counts[i].decrementAndGet();
+          counts[i].add(-1L);
         }
       }
 
@@ -89,7 +90,7 @@ public class FaQueue
         PartialWork pw = queues[i].poll();
         if (pw != null)
         {
-          counts[i].decrementAndGet();
+          counts[i].add(-1L);
           lst.add(pw);
           got++;
         }
@@ -108,7 +109,7 @@ public class FaQueue
       PartialWork pw = queues[i].poll();
       if (pw != null)
       {
-        counts[i].decrementAndGet();
+        counts[i].add(-1L);
         return pw;
       }
     }
@@ -120,7 +121,7 @@ public class FaQueue
     for(int i=0; i<SLOTS; i++)
     {
       queues[i].clear();
-      counts[i].set(0);
+      counts[i].sumAndReset();
     }
   }
 
