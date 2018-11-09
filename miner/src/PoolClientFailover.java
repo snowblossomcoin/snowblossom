@@ -146,7 +146,7 @@ public class PoolClientFailover implements PoolClientFace
   {
     public PoolMonitor()
     {
-      super(30000L);
+      super(60000L);
       setName("PoolMonitor");
       setDaemon(true);
 
@@ -168,6 +168,7 @@ public class PoolClientFailover implements PoolClientFace
           {
             status="no work";
             p.is_active=false;
+            p.pool_client.subscribe();
           }
           else
           {
