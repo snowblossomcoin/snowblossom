@@ -6,6 +6,7 @@
 * MrPool lowers difficulty if share rate is low
 * Switch miners to faster MultiAtomicLong for hash counting
 * Add stats outputs to arktika
+* Abstract pool client interaction into PoolClient class
 
 ## 1.4.1
 

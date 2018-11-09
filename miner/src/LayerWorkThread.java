@@ -159,11 +159,7 @@ public class LayerWorkThread extends Thread
 
 		header.setSnowHash(ByteString.copyFrom(found_hash));
 
-		WorkSubmitRequest.Builder req = WorkSubmitRequest.newBuilder();
-		req.setWorkId(wu.getWorkId());
-		req.setHeader(header.build());
-		
-		SubmitReply reply = arktika.blockingStub.submitWork( req.build());
+    SubmitReply reply = arktika.pool_client.submitWork(wu, header.build());
 		
 		if (PowUtil.lessThanTarget(found_hash, header.getTarget()))
 		{

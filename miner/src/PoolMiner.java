@@ -32,7 +32,7 @@ import duckutil.MultiAtomicLong;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-public class PoolMiner
+public class PoolMiner implements PoolClientOperator
 {
   private static final Logger logger = Logger.getLogger("snowblossom.miner");
 
@@ -60,9 +60,6 @@ public class PoolMiner
 
   private volatile WorkUnit last_work_unit;
 
-  private MiningPoolServiceStub asyncStub;
-  private MiningPoolServiceBlockingStub blockingStub;
-
   private final FieldScan field_scan;
   private final NetworkParams params;
 
@@ -79,26 +76,23 @@ public class PoolMiner
   private AtomicLong share_reject_count = new AtomicLong(0L);
   private AtomicLong share_block_count = new AtomicLong(0L);
 
+  private PoolClientFace pool_client;
+
   public PoolMiner(Config config) throws Exception
   {
     this.config = config;
     logger.info(String.format("Starting PoolMiner version %s", Globals.VERSION));
 
     config.require("snow_path");
-    config.require("pool_host");
 
     params = NetworkParams.loadFromConfig(config);
 
-    snow_path = new File(config.get("snow_path"));
 
-    if ((!config.isSet("mine_to_address")) && (!config.isSet("mine_to_wallet")))
-    {
-      throw new RuntimeException("Config must either specify mine_to_address or mine_to_wallet");
-    }
-    if ((config.isSet("mine_to_address")) && (config.isSet("mine_to_wallet")))
-    {
-      throw new RuntimeException("Config must either specify mine_to_address or mine_to_wallet, not both");
-    }
+    pool_client = new PoolClient(config, this);
+
+    snow_path = new File(config.get("snow_path"));
+    
+    field_scan = new FieldScan(snow_path, params, config);
 
     if (config.getBoolean("display_timerecord"))
     {
@@ -106,86 +100,24 @@ public class PoolMiner
       TimeRecord.setSharedRecord(time_record);
     }
 
+    pool_client.subscribe();
+
     int threads = config.getIntWithDefault("threads", 8);
     logger.info("Starting " + threads + " threads");
 
-    field_scan = new FieldScan(snow_path, params, config);
-    subscribe();
 
     for (int i = 0; i < threads; i++)
     {
       new MinerThread().start();
     }
-    //new Sweeper(this).start();
   }
 
   private ManagedChannel channel;
 
-  private void subscribe() throws Exception
-  {
-    if (channel != null)
-    {
-      channel.shutdownNow();
-      channel = null;
-    }
-
-    String host = config.get("pool_host");
-    int port = config.getIntWithDefault("pool_port", 23380);
-    channel = ManagedChannelBuilder.forAddress(host, port).usePlaintext(true).build();
-
-    asyncStub = MiningPoolServiceGrpc.newStub(channel);
-    blockingStub = MiningPoolServiceGrpc.newBlockingStub(channel);
-
-    AddressSpecHash to_addr = getMineToAddress();
-    String address_str = AddressUtil.getAddressString(params.getAddressPrefix(), to_addr);
-
-    String client_id = null;
-    if (config.isSet("mining_client_id"))
-    {
-      client_id = config.get("mining_client_id");
-    }
-    GetWorkRequest.Builder req = GetWorkRequest.newBuilder();
-    if (client_id != null) req.setClientId(client_id);
-
-    req.setPayToAddress(address_str);
-
-    asyncStub.getWork( req.build(), new WorkUnitEater());
-    logger.info("Subscribed to work");
-
-  }
-
-  private AddressSpecHash getMineToAddress() throws Exception
-  {
-
-    if (config.isSet("mine_to_address"))
-    {
-      String address = config.get("mine_to_address");
-      AddressSpecHash to_addr = new AddressSpecHash(address, params);
-      return to_addr;
-    }
-    if (config.isSet("mine_to_wallet"))
-    {
-      File wallet_path = new File(config.get("mine_to_wallet"));
-      WalletDatabase wallet = WalletUtil.loadWallet(wallet_path, false, params);
-
-      if (wallet.getAddressesCount() == 0)
-      {
-        throw new RuntimeException("Wallet has no addresses");
-      }
-      LinkedList<AddressSpec> specs = new LinkedList<AddressSpec>();
-      specs.addAll(wallet.getAddressesList());
-      Collections.shuffle(specs);
-
-      AddressSpec spec = specs.get(0);
-      AddressSpecHash to_addr = AddressUtil.getHashForSpec(spec);
-      return to_addr;
-    }
-    return null;
-  }
-
   public void stop()
   {
     terminate = true;
+    pool_client.stop();
   }
 
   private volatile boolean terminate = false;
@@ -229,7 +161,7 @@ public class PoolMiner
         logger.info("Stalled.  No valid work unit, reconnecting to pool");
         try
         {
-          subscribe();
+          pool_client.subscribe();
         }
         catch (Throwable t)
         {
@@ -380,11 +312,7 @@ public class PoolMiner
 
       header.setSnowHash(ByteString.copyFrom(found_hash));
 
-      WorkSubmitRequest.Builder req = WorkSubmitRequest.newBuilder();
-      req.setWorkId(wu.getWorkId());
-      req.setHeader(header.build());
-      
-      SubmitReply reply = blockingStub.submitWork( req.build());
+      SubmitReply reply = pool_client.submitWork(wu, header.build());
       
       if (PowUtil.lessThanTarget(found_hash, header.getTarget()))
       {
@@ -430,50 +358,36 @@ public class PoolMiner
     }
   }
 
-  public class WorkUnitEater implements StreamObserver<WorkUnit>
+  @Override
+  public void notifyNewBlock(int block_id){}
+
+  @Override
+  public void notifyNewWorkUnit(WorkUnit wu)
   {
-    public void onCompleted() {}
 
-    public void onError(Throwable t) {}
+    int min_field = wu.getHeader().getSnowField();
 
-    public void onNext(WorkUnit wu)
+    int selected_field = -1;
+
+    try
     {
+      selected_field = field_scan.selectField(min_field);
 
-      int min_field = wu.getHeader().getSnowField();
+      BlockHeader.Builder bh = BlockHeader.newBuilder();
+      bh.mergeFrom(wu.getHeader());
+      bh.setSnowField(selected_field);
 
-      int selected_field = -1;
+      WorkUnit wu_new = WorkUnit.newBuilder()
+        .mergeFrom(wu)
+        .setHeader(bh.build())
+        .build();
 
-      try
-      {
-        selected_field = field_scan.selectField(min_field);
-
-        /*try
-        {
-          field_scan.selectField(min_field + 1);
-        }
-        catch (Throwable t)
-        {
-          logger.log(Level.WARNING, "When the next snow storm occurs, we will be unable to mine.  No higher fields working.");
-        }*/
-
-        // write selected field into block template 
-
-        BlockHeader.Builder bh = BlockHeader.newBuilder();
-        bh.mergeFrom(wu.getHeader());
-        bh.setSnowField(selected_field);
-
-        WorkUnit wu_new = WorkUnit.newBuilder()
-          .mergeFrom(wu)
-          .setHeader(bh.build())
-          .build();
-
-        last_work_unit = wu_new;
-      }
-      catch (Throwable t)
-      {
-        logger.info("Work block load error: " + t.toString());
-        last_work_unit = null;
-      }
+      last_work_unit = wu_new;
+    }
+    catch (Throwable t)
+    {
+      logger.info("Work block load error: " + t.toString());
+      last_work_unit = null;
     }
   }
 }
