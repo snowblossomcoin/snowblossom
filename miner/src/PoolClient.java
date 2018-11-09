@@ -54,15 +54,21 @@ public class PoolClient implements PoolClientFace
   private final NetworkParams params;
   private Config config;
   private PoolClientOperator op;
-
-
+  private String host;
 
   public PoolClient(Config config, PoolClientOperator op) throws Exception
   {
+    this(config.get("pool_host"), config, op);
+
+  }
+
+
+  public PoolClient(String host, Config config, PoolClientOperator op) throws Exception
+  {
+    this.host = host;
     this.config = config;
     this.op = op;
 
-    config.require("pool_host");
     params = NetworkParams.loadFromConfig(config);
 
     if ((!config.isSet("mine_to_address")) && (!config.isSet("mine_to_wallet")))
@@ -88,7 +94,6 @@ public class PoolClient implements PoolClientFace
       channel = null;
     }
 
-    String host = config.get("pool_host");
     int port = config.getIntWithDefault("pool_port", 23380);
     channel = ManagedChannelBuilder.forAddress(host, port).usePlaintext(true).build();
 

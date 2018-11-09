@@ -87,8 +87,14 @@ public class PoolMiner implements PoolClientOperator
 
     params = NetworkParams.loadFromConfig(config);
 
-
-    pool_client = new PoolClient(config, this);
+    if (config.isSet("pool_host_list"))
+    {
+      pool_client = new PoolClientFailover(config, this);
+    }
+    else
+    {
+      pool_client = new PoolClient(config, this);
+    }
 
     snow_path = new File(config.get("snow_path"));
     
