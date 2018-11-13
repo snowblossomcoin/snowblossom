@@ -226,15 +226,39 @@ public class SnowUserService extends UserServiceGrpc.UserServiceImplBase
   @Override
   public void getBlock(RequestBlock req, StreamObserver<Block> responseObserver)
   {
-    Block blk = node.getDB().getBlockMap().get(req.getBlockHash());
-    responseObserver.onNext(blk);
-    responseObserver.onCompleted();
+    if (req.getBlockHash().size() > 0)
+    {
+      Block blk = node.getDB().getBlockMap().get(req.getBlockHash());
+      responseObserver.onNext(blk);
+      responseObserver.onCompleted();
+    }
+    else
+    {
+      ChainHash block_hash = node.getDB().getBlockHashAtHeight(req.getBlockHeight());
+      if (block_hash == null)
+      {
+        responseObserver.onNext(null);
+        responseObserver.onCompleted();
+        return;
+      }
+      Block blk = node.getDB().getBlockMap().get(block_hash.getBytes());
+      responseObserver.onNext(blk);
+      responseObserver.onCompleted();
+    }
   }
 
   @Override
   public void getBlockHeader(RequestBlockHeader req, StreamObserver<BlockHeader> responseObserver)
   {
-    ChainHash block_hash = node.getDB().getBlockHashAtHeight(req.getBlockHeight());
+    ChainHash block_hash = null;
+    if (req.getBlockHash().size() > 0)
+    {
+      block_hash = new ChainHash(req.getBlockHash());
+    }
+    else
+    {
+      block_hash = node.getDB().getBlockHashAtHeight(req.getBlockHeight());
+    }
 
     BlockHeader answer = null;
 

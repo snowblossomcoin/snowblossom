@@ -205,13 +205,19 @@ message TransactionStatus {
 }
 
 message RequestBlock {
-  bytes block_hash = 2;
+  oneof z {
+    bytes block_hash = 2;
+    int32 block_height = 3;
+  }
 }
 message RequestTransaction {
   bytes tx_hash = 1;
 }
 message RequestBlockHeader {
-  int32 block_height = 1;
+  oneof z {
+    int32 block_height = 1;
+    bytes block_hash = 2;
+  }
 }
 
 message SubmitReply {
