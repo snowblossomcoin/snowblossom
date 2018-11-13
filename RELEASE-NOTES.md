@@ -7,6 +7,7 @@
 * Switch miners to faster MultiAtomicLong for hash counting
 * Add stats outputs to arktika
 * Abstract pool client interaction into PoolClient class
+* Enable mining client failover among a list of pools
 
 ## 1.4.1
 
