@@ -130,7 +130,15 @@ public class PoolClient implements PoolClientFace
     if (config.isSet("mine_to_wallet"))
     {
       File wallet_path = new File(config.get("mine_to_wallet"));
+      if (!wallet_path.isDirectory())
+      {
+        throw new RuntimeException("Wallet directory " + wallet_path + " does not exist");
+      }
       WalletDatabase wallet = WalletUtil.loadWallet(wallet_path, false, params);
+      if (wallet == null)
+      {
+        throw new RuntimeException("No wallet found in directory " + wallet_path);
+      }
 
       if (wallet.getAddressesCount() == 0)
       {
