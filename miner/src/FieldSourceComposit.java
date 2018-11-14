@@ -48,7 +48,7 @@ public class FieldSourceComposit extends FieldSource
         return;
       }
     }
-    throw new RuntimeException("oh noes");
+    throw new RuntimeException("Unable to find field for chunk: " + chunk);
 
   }
 
