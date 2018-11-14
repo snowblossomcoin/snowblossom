@@ -109,7 +109,6 @@ public class Arktika implements PoolClientOperator
     this.config = config;
     logger.info(String.format("Starting Arktika version %s", Globals.VERSION));
 
-    config.require("pool_host");
     config.require("selected_field");
     config.require("layer_count");
 
