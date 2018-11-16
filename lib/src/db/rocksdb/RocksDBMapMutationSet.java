@@ -86,9 +86,8 @@ public class RocksDBMapMutationSet extends DBMapMutationSet
   @Override
   public void addAll(TreeMultimap<ByteString, ByteString> map)
   {
-    try
+    try(WriteBatch batch = new WriteBatch())
     {
-      WriteBatch batch = new WriteBatch();
       byte b[]=new byte[0];
 
       for(Map.Entry<ByteString, ByteString> me : map.entries())
@@ -127,9 +126,7 @@ public class RocksDBMapMutationSet extends DBMapMutationSet
 
     LinkedList<ByteString> set = new LinkedList<>();
     int count = 0;
-    RocksIterator it = db.newIterator();
-
-    try
+    try(RocksIterator it = db.newIterator())
     {
       it.seek(dbKey.toByteArray());
 
@@ -146,10 +143,6 @@ public class RocksDBMapMutationSet extends DBMapMutationSet
 
         it.next();
       }
-    }
-    finally
-    {
-      it.dispose();
     }
 
     return set;

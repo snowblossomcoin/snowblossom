@@ -78,9 +78,8 @@ public class RocksDBMap extends DBMap
   @Override
   public void putAll(SortedMap<ByteString, ByteString> m)
   {
-    try
+    try(WriteBatch batch = new WriteBatch())
     {
-      WriteBatch batch = new WriteBatch();
 
       for(Map.Entry<ByteString, ByteString> e : m.entrySet())
       {
