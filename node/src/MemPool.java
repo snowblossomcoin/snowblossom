@@ -18,6 +18,7 @@ import snowblossom.lib.trie.HashedTrie;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import duckutil.PeriodicThread;
 
 
 
@@ -86,6 +87,7 @@ public class MemPool
     this.utxo_hashed_trie = utxo_hashed_trie;
 
     new Tickler().start();
+    new TicklerBroadcast().start();
   }
 
   public synchronized int getMemPoolSize()
@@ -504,7 +506,7 @@ public class MemPool
     }
   }
 
-  private ChainHash tickle_hash = null;
+  private volatile ChainHash tickle_hash = null;
 
   public void tickleBlocks(ChainHash utxo_root_hash)
   {
@@ -520,6 +522,29 @@ public class MemPool
   public void setPeerage(Peerage peerage)
   {
     this.peerage = peerage;
+  }
+
+  public class TicklerBroadcast extends PeriodicThread
+  {
+    public TicklerBroadcast()
+    {
+      super(5000);
+      setName("MemPool/TicklerBroadcast");
+      setDaemon(true);
+    }
+
+    @Override
+    public void runPass() throws Exception
+    {
+      if (peerage != null)
+      {
+        TransactionMempoolInfo info = getRandomPoolTransaction();
+        if (info != null)
+        {
+              peerage.broadcastTransaction(info.tx);
+        }
+      }
+    }
   }
 
   public class Tickler extends Thread
@@ -538,26 +563,14 @@ public class MemPool
         {
           synchronized (tickle_trigger)
           {
-            tickle_trigger.wait(1000);
+            tickle_trigger.wait();
           }
           if (tickle_hash != null)
           {
             rebuildPriorityMap(tickle_hash);
             tickle_hash = null;
           }
-          else
-          {
-            if (peerage != null)
-            {
-              TransactionMempoolInfo info = getRandomPoolTransaction();
-              if (info != null)
-              {
-                peerage.broadcastTransaction(info.tx);
-              }
-            }
-
-          }
-
+          Thread.sleep(5000);
         }
         catch (Throwable t)
         {
