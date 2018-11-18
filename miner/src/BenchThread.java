@@ -69,7 +69,7 @@ public class BenchThread extends Thread
     else
     {
       fs.readWord(getWordIndex(), bb);
-      bb.reset();
+      bb.clear();
 
 
     }
