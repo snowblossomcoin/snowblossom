@@ -12,6 +12,7 @@ public class BenchThread extends Thread
   private Random rnd;
   private ArrayList<Integer> chunks;
   private ByteBuffer bb;
+  private long accum=0;
 
   public BenchThread(FieldSource fs)
   {
@@ -70,7 +71,14 @@ public class BenchThread extends Thread
     {
       fs.readWord(getWordIndex(), bb);
       bb.clear();
-
+      accum+=bb.getLong();
+      accum+=bb.getLong();
+      bb.clear();
+      
+      if (accum == 0L)
+      {
+        System.out.println("PARTY TIME");
+      }
 
     }
     
