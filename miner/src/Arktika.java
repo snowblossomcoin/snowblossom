@@ -141,6 +141,15 @@ public class Arktika implements PoolClientOperator
 
     stubo = new Stubo(composit_source, selected_field);
 
+    if (config.isSet("benchmark_layer"))
+    {
+      startBenchmark();
+      return;
+    }
+
+
+    startFieldWorkers();
+
 
     if (!config.getBoolean("nolisten"))
     {
@@ -153,6 +162,23 @@ public class Arktika implements PoolClientOperator
     }
 
     //new QueuePruner().start();
+
+  }
+
+  public void startBenchmark() throws Exception
+  {
+    int bench_layer = config.getInt("benchmark_layer");
+    config.require("benchmark_threads");
+    int bench_threads = config.getInt("benchmark_threads");
+
+    logger.warning(String.format("STARTING BENCHMARK MODE ON LAYER %d with %d THREADS", bench_layer, bench_threads));
+
+    FieldSource fs = all_sources[bench_layer];
+
+    for(int i=0; i<bench_threads; i++)
+    {
+      new BenchThread(fs).start();
+    }
 
   }
 
@@ -487,6 +513,10 @@ public class Arktika implements PoolClientOperator
     }
     composit_source = new FieldSourceComposit(ImmutableList.copyOf(composit_builder));
 
+  }
+
+  public void startFieldWorkers()
+  {
     long total_words = params.getSnowFieldInfo(selected_field).getLength() / SnowMerkle.HASH_LEN_LONG;
     // START THREADS
     for(int x=0; x<layer_count; x++)

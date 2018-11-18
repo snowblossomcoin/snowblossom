@@ -87,6 +87,12 @@ public class FieldSourceRemote extends FieldSource implements BatchSource
   }
 
   @Override
+  public int getSuggestedBatchSize()
+  {
+    return BatchLayerWorkThread.BATCH_SIZE;
+  }
+
+  @Override
   public void bulkRead(long word_index, ByteBuffer bb) throws java.io.IOException
   {
     if (bb.remaining() != Globals.SNOW_MERKLE_HASH_LEN)

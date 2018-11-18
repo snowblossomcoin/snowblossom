@@ -1,3 +1,7 @@
+## master
+
+* Adding benchmarking features to Arktika
+
 
 ## 1.4.2
 
