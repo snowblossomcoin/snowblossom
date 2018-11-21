@@ -1,6 +1,7 @@
 ## master
 
 * Adding benchmarking features to Arktika
+* Improve error logging in Arktika
 
 
 ## 1.4.2
