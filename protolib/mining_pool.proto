@@ -49,5 +49,6 @@ message GetWordsRequest {
 
 message GetWordsResponce {
   repeated bytes words = 1;
+  bool wrong_field = 2;
 }
 

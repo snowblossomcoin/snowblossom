@@ -109,11 +109,19 @@ public class FieldSourceRemote extends FieldSource implements BatchSource
     read_counter.add((long)indexes.size());
     call_counter.add(1L);
 
-    
-    return getStub().getWords(GetWordsRequest.newBuilder()
-      .addAllWordIndexes(indexes)
-      .setField(field_number)
-      .build()).getWordsList();
+   
+    GetWordsResponce r = getStub().getWords(
+      GetWordsRequest.newBuilder()
+        .addAllWordIndexes(indexes)
+        .setField(field_number)
+        .build());
+
+    if (r.getWrongField())
+    {
+      throw new RuntimeException("Remote side reports wrong field");
+    }
+
+    return r.getWordsList();
   }
 
 

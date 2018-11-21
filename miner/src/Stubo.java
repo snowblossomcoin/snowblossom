@@ -9,9 +9,14 @@ import java.nio.ByteBuffer;
 import io.grpc.stub.StreamObserver;
 import java.util.concurrent.atomic.AtomicLong;
 import java.text.DecimalFormat;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 
 public class Stubo extends SharedMiningServiceGrpc.SharedMiningServiceImplBase
 {
+  private static final Logger logger = Logger.getLogger("snowblossom.miner");
+
   FieldSource src;
   int field_number;
   public Stubo(FieldSource src, int field_number)
@@ -28,15 +33,19 @@ public class Stubo extends SharedMiningServiceGrpc.SharedMiningServiceImplBase
   {
     try
     {
+      GetWordsResponce.Builder builder = GetWordsResponce.newBuilder();
       if (req.getField() > 0)
       {
         if (req.getField() != field_number)
         {
-          throw new java.io.IOException(
-            String.format("Wrong field requested %d.  I have %d", req.getField(), field_number));
+          builder.setWrongField(true);
+          observer.onNext(builder.build());
+          observer.onCompleted();
+          return;
+          
+          
         }
       }
-      GetWordsResponce.Builder builder = GetWordsResponce.newBuilder();
 
       call_counter.getAndIncrement();
       read_counter.getAndAdd(req.getWordIndexesCount());
@@ -53,6 +62,7 @@ public class Stubo extends SharedMiningServiceGrpc.SharedMiningServiceImplBase
     }
     catch(java.io.IOException e)
     {
+      logger.warning("Error from client: " + e);
       observer.onError(e);
       observer.onCompleted();
     }
