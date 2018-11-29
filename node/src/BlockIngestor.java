@@ -72,6 +72,7 @@ public class BlockIngestor implements ChainStateSource
   public boolean ingestBlock(Block blk)
     throws ValidationException
   {
+
     if (time_record != null) time_record.reset();
 
     ChainHash blockhash;

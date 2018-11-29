@@ -2,6 +2,7 @@
 
 * Adding benchmarking features to Arktika
 * Improve error logging in Arktika
+* Add terrible vanity address generator
 
 
 ## 1.4.2

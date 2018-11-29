@@ -67,6 +67,15 @@ java_binary(
 )
 
 java_binary(
+  name = "VanityGen",
+  main_class = "snowblossom.client.VanityGen",
+  runtime_deps = [
+    "//client:client",
+  ]
+)
+
+
+java_binary(
   name = "SnowFall",
   main_class = "snowblossom.lib.SnowFall",
   runtime_deps = [
