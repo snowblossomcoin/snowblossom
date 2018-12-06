@@ -90,6 +90,20 @@ public class Duck32
     return data;
   }
 
+  /**
+   * Never call this.  It does terrible things for the purpose of making
+   * unspendable addresses without keys.
+   */
+  public static String mangleString(String label, String str)
+    throws ValidationException
+  {
+    str = str + "qqqqqqqq";
+    ByteString fulldata = convertBase32ToBytes(str);
+    ByteString data = fulldata.substring(0, Globals.ADDRESS_SPEC_HASH_LEN);
+
+    return encode(label, data);
+  }
+
   private static ByteString applyChecksum(String label, ByteString data)
   {
     MessageDigest md = DigestUtil.getMD();
@@ -117,16 +131,27 @@ public class Duck32
     StringBuilder sb = new StringBuilder(input.length());
     for(int i=0; i<input.length(); i++)
     {
-      sb.append(TO_BECH32_MAP.get( input.charAt(i) ) );
+      char z = input.charAt(i);
+
+      // Should only happen if BigInteger breaks in some strange way
+      if (!TO_BECH32_MAP.containsKey(z)) throw new RuntimeException("Unexpected char: " + z);
+      sb.append(TO_BECH32_MAP.get(z) );
     }
     return sb.toString();
   }
+
+
   private static String convertBech32ToBase32(String input)
+    throws ValidationException
   {
     StringBuilder sb = new StringBuilder(input.length());
     for(int i=0; i<input.length(); i++)
     {
-      sb.append(TO_BASE32_MAP.get( input.charAt(i) ) );
+      char z = input.charAt(i);
+
+      // Can happen if a user gives a bad address with disallowed characters
+      if (!TO_BASE32_MAP.containsKey(z)) throw new ValidationException("Unexpected char: " + z);
+      sb.append(TO_BASE32_MAP.get(z) );
     }
     return sb.toString();
   }
@@ -140,6 +165,7 @@ public class Duck32
   }
 
   private static ByteString convertBase32ToBytes(String encoding)
+    throws ValidationException
   {
     BigInteger big = new BigInteger(convertBech32ToBase32(encoding), 32);
     byte[] data = big.toByteArray();

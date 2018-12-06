@@ -3,6 +3,9 @@
 * Adding benchmarking features to Arktika
 * Improve error logging in Arktika
 * Add terrible vanity address generator
+* Add terrible hole generator that is of no use
+* Added exceptions for invalid characters in address, previously would have probably
+  been a checksum failure
 
 
 ## 1.4.2
