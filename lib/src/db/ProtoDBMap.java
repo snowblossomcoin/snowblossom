@@ -42,6 +42,21 @@ public class ProtoDBMap<M extends Message>
       throw new RuntimeException(e);
     }
   }
+
+  public Map<ByteString, M> getByPrefix(ByteString prefix, int max_reply)
+  {
+    Map<ByteString, ByteString> inner_result = inner.getByPrefix(prefix, max_reply);
+
+    TreeMap<ByteString, ByteString> m = new TreeMap<>(new ByteStringComparator());
+
+    for(Map.Entry<ByteString, ByteString> me : inner_result.entrySet())
+    {
+      m.put(me.getKey(), parser.parseFrom(me.getValue()));
+    }
+
+    return m;
+  }
+
   public List<M> getClosest(ByteString key, int count)
   {
     List<ByteString> list_bs = inner.getClosestKeys(key, count);
@@ -76,4 +91,4 @@ public class ProtoDBMap<M extends Message>
     }
     inner.putAll(sorted);
   }
-}
+} 
