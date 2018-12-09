@@ -6,14 +6,20 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.Message;
 import com.google.protobuf.Parser;
 import snowblossom.lib.trie.ByteStringComparator;
+import snowblossom.lib.HexUtil;
 
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.List;
 import java.util.LinkedList;
+import java.util.logging.Logger;
+import java.util.logging.Level;
+
 
 public class ProtoDBMap<M extends Message>
 {
+  private static final Logger logger = Logger.getLogger("snowblossom.db");
+
   Parser<M> parser;
   DBMap inner;
 
@@ -47,11 +53,18 @@ public class ProtoDBMap<M extends Message>
   {
     Map<ByteString, ByteString> inner_result = inner.getByPrefix(prefix, max_reply);
 
-    TreeMap<ByteString, ByteString> m = new TreeMap<>(new ByteStringComparator());
+    TreeMap<ByteString, M> m = new TreeMap<>(new ByteStringComparator());
 
     for(Map.Entry<ByteString, ByteString> me : inner_result.entrySet())
     {
-      m.put(me.getKey(), parser.parseFrom(me.getValue()));
+      try
+      {
+        m.put(me.getKey(), parser.parseFrom(me.getValue()));
+      }
+      catch(InvalidProtocolBufferException e)
+      {
+        logger.warning(String.format("Invalid db proto in prefix: %s: %s", HexUtil.getHexString(prefix), e.toString()));
+      }
     }
 
     return m;
