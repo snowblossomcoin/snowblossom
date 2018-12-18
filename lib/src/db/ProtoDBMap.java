@@ -33,6 +33,11 @@ public class ProtoDBMap<M extends Message>
   {
     inner.put(key, m.toByteString());
   }
+  public void remove(ByteString key)
+  {
+    inner.remove(key);
+  }
+
 
   public M get(ByteString key)
   {
