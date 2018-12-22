@@ -79,14 +79,33 @@ public class SnowBlossomClient
           logger.log(Level.SEVERE, "Incorrect syntax. Syntax: SnowBlossomClient <config_file> send <amount> <dest_address>");
           System.exit(-1);
         }
-        double val_snow = Double.parseDouble(args[2]);
 
-        long value = (long) (val_snow * Globals.SNOW_VALUE);
+        boolean send_all = false;
+        String val_str = args[2];
+        long value = 0L;
+        double val_snow = 0.0;
+        if (val_str.equals("all"))
+        {
+          send_all = true;
+        }
+        else
+        {
+          val_snow = Double.parseDouble(args[2]);
+          value = (long) (val_snow * Globals.SNOW_VALUE);
+        }
         String to = args[3];
 
         DecimalFormat df = new DecimalFormat("0.000000");
-        logger.info(String.format("Building send of %s to %s", df.format(val_snow), to));
-        client.send(value, to);
+        if (send_all)
+        {
+          logger.info(String.format("Building send of ALL to %s", to));
+        }
+        else
+        {
+          logger.info(String.format("Building send of %s to %s", df.format(val_snow), to));
+
+        }
+        client.send(value, to, send_all);
 
       }
       else if (command.equals("sendlocked"))
@@ -325,7 +344,7 @@ public class SnowBlossomClient
     return getStub().getFeeEstimate(NullRequest.newBuilder().build());
   }
   
-  public void send(long value, String to)
+  public void send(long value, String to, boolean send_all)
     throws Exception
   {
 
@@ -337,6 +356,7 @@ public class SnowBlossomClient
     tx_config.setChangeFreshAddress(true);
     tx_config.setInputConfirmedThenPending(true);
     tx_config.setFeeUseEstimate(true);
+    tx_config.setSendAll(send_all);
 
     TransactionFactoryResult res = TransactionFactory.createTransaction(tx_config.build(), purse.getDB(), this);
 

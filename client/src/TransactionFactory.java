@@ -50,6 +50,19 @@ public class TransactionFactory
       needed_for_outputs += out.getValue();
     }
 
+    if (config.getSendAll())
+    {
+      if (config.getOutputsCount() != 1)
+      {
+        throw new ValidationException("For send_all, there must be exactly one output");
+      }
+      if (outputs.get(0).getValue() != 0L)
+      {
+        throw new ValidationException("For send_all, the one output must have 0 value initially");
+      }
+      
+    }
+
     FeeEstimate fee_estimate = null;
     long fee = 0L;
     if (config.getFeeUseEstimate())
@@ -96,7 +109,7 @@ public class TransactionFactory
     }
 
     long input_total = 0;
-    while(input_total < needed_for_outputs + fee)
+    while((input_total < needed_for_outputs + fee) || (config.getSendAll() && (usable_inputs.size() > 0)))
     {
       if (usable_inputs.size() == 0)
       {
@@ -132,6 +145,15 @@ public class TransactionFactory
         // As we include more inputs, the fee estimation will go up
         fee = (long)(estimateSize(inner.build(), inputs.size(), outputs.size() + 1, claims) * fee_estimate.getFeePerByte());
       }
+    }
+    if (config.getSendAll())
+    {
+      TransactionOutput init_out = outputs.get(0);
+      long out_value = input_total - fee;
+      TransactionOutput new_out = TransactionOutput.newBuilder().mergeFrom(init_out).setValue(out_value).build();
+      outputs.clear();
+      outputs.add(new_out);
+      needed_for_outputs = out_value;
     }
 
     inner.setFee(fee);

@@ -7,6 +7,7 @@
 * Added exceptions for invalid characters in address, previously would have probably
   been a checksum failure
 * Updated 'monitor' command to only print a new line when something is different
+* Added ability to send 'all' to empty a wallet
 
 ## 1.4.2
 
