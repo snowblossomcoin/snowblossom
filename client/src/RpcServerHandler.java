@@ -320,7 +320,8 @@ public class RpcServerHandler
         "fee_flat",
         "fee_use_estimate",
         "extra",
-        "split_change_over");
+        "split_change_over",
+        "send_all");
       Map<String, Object> params = req.getNamedParams();
 
       for(String s : params.keySet())
@@ -338,6 +339,7 @@ public class RpcServerHandler
       tx_config.setInputConfirmedThenPending(true);
       tx_config.setFeeUseEstimate(true);
       tx_config.setSign(true);
+      tx_config.setSendAll(false);
       boolean broadcast = true;
 
       JSONArray output_list = (JSONArray) params.get("outputs");
@@ -350,6 +352,7 @@ public class RpcServerHandler
       if (params.containsKey("input_confirmed_then_pending")) { tx_config.setInputConfirmedThenPending( (boolean) params.get("input_confirmed_then_pending") ); }
       if (params.containsKey("input_confirmed_only")) { tx_config.setInputConfirmedOnly( (boolean) params.get("input_confirmed_only") ); }
       if (params.containsKey("fee_use_estimate")) { tx_config.setFeeUseEstimate( (boolean) params.get("fee_use_estimate") ); }
+      if (params.containsKey("send_all")) { tx_config.setSendAll( (boolean) params.get("send_all")); }
 
       
       if (params.containsKey("extra"))
