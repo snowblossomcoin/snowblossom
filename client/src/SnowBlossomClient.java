@@ -134,6 +134,7 @@ public class SnowBlossomClient
       }
       else if (command.equals("monitor"))
       {
+        BalanceInfo bi_last = null;
         while(true)
         {
           try
@@ -142,7 +143,15 @@ public class SnowBlossomClient
             {
                client = new SnowBlossomClient(config);
             }
-            client.showBalances(false);
+            BalanceInfo bi = client.getBalance();
+            if (!bi.equals(bi_last))
+            {
+
+              System.out.println("Total: " + getBalanceInfoPrint(bi));
+              bi_last = bi;
+
+            }
+
 
           }
           catch(Throwable t)
@@ -151,7 +160,7 @@ public class SnowBlossomClient
             client = null;
 
           }
-          Thread.sleep(60000);
+          Thread.sleep(10000);
         }
       }
       else if (command.equals("rpcserver"))
@@ -765,5 +774,17 @@ public class SnowBlossomClient
         return;
       }
     }
+  }
+
+
+  public static String getBalanceInfoPrint(BalanceInfo info)
+  {
+    DecimalFormat df = new DecimalFormat("0.000000");
+
+    return String.format("%s (%s pending) (%s spendable)", 
+      df.format(info.getConfirmed() / Globals.SNOW_VALUE_D),
+      df.format(info.getUnconfirmed() / Globals.SNOW_VALUE_D),
+      df.format(info.getSpendable() / Globals.SNOW_VALUE_D));
+
   }
 }

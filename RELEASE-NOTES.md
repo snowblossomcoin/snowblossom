@@ -6,7 +6,7 @@
 * Add terrible hole generator that is of no use
 * Added exceptions for invalid characters in address, previously would have probably
   been a checksum failure
-
+* Updated 'monitor' command to only print a new line when something is different
 
 ## 1.4.2
 
