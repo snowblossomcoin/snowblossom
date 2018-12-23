@@ -25,6 +25,7 @@ import java.util.TreeSet;
 import java.util.logging.Logger;
 
 import org.junit.Assert;
+import duckutil.Config;
 
 public class FieldSourceFile extends FieldSource
 {
@@ -34,12 +35,13 @@ public class FieldSourceFile extends FieldSource
   private final FileChannel[] snow_file_channel;
 
   private final ImmutableMap<Long, FileChannel> deck_files;
+
   private final long total_words;
   private final int total_chunk;
 
   private final String name;
 
-  public FieldSourceFile(NetworkParams params, int field_number, File path) throws java.io.IOException
+  public FieldSourceFile(Config conf, int layer, NetworkParams params, int field_number, File path) throws java.io.IOException
   {
     name = path.toString() + "#" + field_number;
 
@@ -54,7 +56,25 @@ public class FieldSourceFile extends FieldSource
 
     Set<Integer> chunks = new TreeSet<Integer>();
 
-    for(int i=0; i< total_chunk; i++)
+		int start =0;
+		int end = total_chunk;
+
+		if (conf.isSet("layer_" + layer + "_range"))
+		{
+
+			List<String> range_lst = conf.getList("layer_" + layer + "_range");
+			if (range_lst.size() != 2)
+			{
+				throw new RuntimeException("Expected range of two numbers.  Example: 0,17");
+			}
+			start = Integer.parseInt(range_lst.get(0));
+			end = Math.min(Integer.parseInt(range_lst.get(1)), end);
+
+			Assert.assertTrue(end >= start);
+			Assert.assertTrue(start >= 0);
+		}
+
+    for(int i=start; i< end; i++)
     {
       String hex = Integer.toString(i, 16);
       while(hex.length() < 4) hex = "0" + hex;

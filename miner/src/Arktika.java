@@ -380,7 +380,7 @@ public class Arktika implements PoolClientOperator
         String path = config.get("layer_" + i + "_path");
       
         FieldSource fs = null;
-        fs = new FieldSourceFile(params, selected_field, new File(path));
+        fs = new FieldSourceFile(config, i, params, selected_field, new File(path));
         disk_sources.add(fs);
         all_sources[i] = fs;
         for(int x : fs.getHoldingSet())
