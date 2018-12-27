@@ -18,6 +18,7 @@ java_library(
     "@jsonrpc2_base//jar",
     "@jsonrpc2_server//jar",
     "@json_smart//jar",
+    "@com_google_protobuf//:protobuf_java_util"
     ],
 )
 

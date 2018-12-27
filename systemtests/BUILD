@@ -11,6 +11,7 @@ java_test(
         "//node",
         "//client:client",
         "//shackleton:shackleton",
-        "@duckutil//:duckutil_lib"
+        "@duckutil//:duckutil_lib",
+        "@build_stack_rules_proto//java:grpc_netty",
     ]
 )

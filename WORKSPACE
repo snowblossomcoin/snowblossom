@@ -1,3 +1,6 @@
+load("@bazel_tools//tools/build_defs/repo:git.bzl", "git_repository") 
+load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
+
 git_repository(
   name = "duckutil",
   remote = "https://github.com/fireduck64/duckutil",
@@ -10,26 +13,29 @@ maven_jar(
   sha1 = "8c3492f7662fa1cbf8ca76a0f5eb1146f7725acd",
 )
 
-
-git_repository(
-  name = "org_pubref_rules_protobuf",
-  remote = "https://github.com/fireduck64/rules_protobuf",
-  tag = "guava-26-android",
+http_archive(
+    name = "build_stack_rules_proto",
+    urls = ["https://github.com/stackb/rules_proto/archive/45c86586f0e381edeb04200c038610aaa84d220e.tar.gz"],
+    sha256 = "6ea9804cbf31f610a180a608118d6c5355d9d1835bcf2e7c29822d349625919e",
+    strip_prefix = "rules_proto-45c86586f0e381edeb04200c038610aaa84d220e",
 )
 
-load("@org_pubref_rules_protobuf//java:rules.bzl", "java_proto_repositories")
-java_proto_repositories()
+load("@build_stack_rules_proto//:deps.bzl", "io_grpc_grpc_java")
+
+io_grpc_grpc_java()
+
+load("@io_grpc_grpc_java//:repositories.bzl", "grpc_java_repositories")
+
+grpc_java_repositories(omit_com_google_protobuf = True)
+
+load("@build_stack_rules_proto//java:deps.bzl", "java_grpc_library")
+
+java_grpc_library()
 
 maven_jar(
   name = "org_rocksdb_rocksdbjni",
   artifact = "org.rocksdb:rocksdbjni:5.14.2",
   sha1 = "a6087318fab540ba0b4c6ff68475ffbedc0b3d10",
-)
-
-maven_jar(
-  name = "junit_junit",
-  artifact = "junit:junit:4.12",
-  sha1 = "2973d150c0dc1fefe998f834810d68f278ea58ec",
 )
 
 maven_jar(
@@ -64,7 +70,6 @@ maven_jar(
   artifact = "com.madgag.spongycastle:core:1.58.0.0",
   sha1 = "e08789f8f1e74f155db8b69c3575b5cb213c156c",
 )
-
 
 maven_jar(
   name = "jsonrpc2_server",
