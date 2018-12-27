@@ -18,7 +18,8 @@ java_library(
     "@jsonrpc2_base//jar",
     "@jsonrpc2_server//jar",
     "@json_smart//jar",
-    "@com_google_protobuf//:protobuf_java_util"
+    "@com_google_protobuf//:protobuf_java_util",
+    "@build_stack_rules_proto//java:grpc_netty",
     ],
 )
 
