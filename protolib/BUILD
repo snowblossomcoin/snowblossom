@@ -11,6 +11,6 @@ proto_library(
 )
 
 java_grpc_library(
-  name = "protolib",
+  name = "protogrpc",
   deps = [":protosrc"],
 )

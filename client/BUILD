@@ -4,7 +4,7 @@ java_library(
   name = "client",
   srcs = glob(["src/**/*.java", "src/*.java"]),
   deps = [
-    "//protolib:protolib",
+    "//protolib:protogrpc",
     "//lib:lib",
     "@commons_codec//jar",
     "@commons_math3//jar",
@@ -28,7 +28,7 @@ java_test(
     deps = [
 		    "//client:client",
         "//lib:lib",
-        "//protolib:protolib",
+        "//protolib:protogrpc",
         "@duckutil//:duckutil_lib",
     ]
 )

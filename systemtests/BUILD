@@ -6,7 +6,7 @@ java_test(
     srcs = glob(["test/**/*.java", "test/*.java"]),
     deps = [
         "//lib:lib",
-        "//protolib:protolib",
+        "//protolib:protogrpc",
         "//miner:miner",
         "//node",
         "//client:client",

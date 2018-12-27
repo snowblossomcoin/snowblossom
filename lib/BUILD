@@ -4,7 +4,7 @@ java_library(
   name = "lib",
   srcs = glob(["src/**/*.java", "src/*.java"]),
   deps = [
-    "//protolib:protolib",
+    "//protolib:protogrpc",
     "@commons_codec//jar",
     "@commons_math3//jar",
     "@bcprov//jar",
@@ -29,7 +29,7 @@ java_test(
     srcs = glob(["test/**/*.java", "test/*.java"]),
     deps = [
         "//lib:lib",
-        "//protolib:protolib",
+        "//protolib:protogrpc",
         "@bcprov//jar",
         "@scprov//jar",
         "@commons_codec//jar",

@@ -4,7 +4,7 @@ java_library(
   name = "miner",
   srcs = glob(["src/**/*.java", "src/*.java"]),
   deps = [
-      "//protolib:protolib",
+      "//protolib:protogrpc",
       "@commons_codec//jar",
       "@commons_math3//jar",
       "@bcprov//jar",
@@ -28,6 +28,6 @@ java_test(
     deps = [
 		    "//miner:miner",
         "//lib:lib",
-        "//protolib:protolib",
+        "//protolib:protogrpc",
     ]
 )

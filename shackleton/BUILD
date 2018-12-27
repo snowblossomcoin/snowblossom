@@ -4,7 +4,7 @@ java_library(
   name = "shackleton",
   srcs = glob(["src/**/*.java", "src/*.java"]),
   deps = [
-      "//protolib:protolib",
+      "//protolib:protogrpc",
       "//lib:lib",
       "//client:client",
       "@commons_codec//jar",
@@ -25,6 +25,6 @@ java_test(
     deps = [
 		  "//shackleton:shackleton",
       "//lib:lib",
-      "//protolib:protolib",
+      "//protolib:protogrpc",
     ]
 )

@@ -4,7 +4,7 @@ java_library(
   name = "node",
   srcs = glob(["src/**/*.java", "src/*.java"]),
   deps = [
-      "//protolib:protolib",
+      "//protolib:protogrpc",
       "@commons_codec//jar",
       "@commons_math3//jar",
       "@junit_junit//jar",
@@ -22,7 +22,7 @@ java_test(
     deps = [
 		    "//node:node",
         "//lib:lib",
-        "//protolib:protolib",
+        "//protolib:protogrpc",
         "@duckutil//:duckutil_lib",
     ]
 )
