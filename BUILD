@@ -6,7 +6,6 @@ java_binary(
   ],
   runtime_deps = [
     "//node",
-    "@build_stack_rules_proto//java:grpc_netty",
   ]
 )
 
@@ -31,7 +30,6 @@ java_binary(
   main_class = "snowblossom.miner.Arktika",
   runtime_deps = [
     "//miner:miner",
-    "@build_stack_rules_proto//java:grpc_netty",
   ]
 )
 java_binary(
@@ -39,7 +37,6 @@ java_binary(
   main_class = "snowblossom.miner.MrPlow",
   runtime_deps = [
     "//miner:miner",
-    "@build_stack_rules_proto//java:grpc_netty",
   ]
 )
 
