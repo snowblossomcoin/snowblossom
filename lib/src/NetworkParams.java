@@ -27,6 +27,7 @@ public abstract class NetworkParams
   public SnowFieldInfo getSnowFieldInfo(int field) {return snow_fields.get(field); }
 
   public abstract String getNetworkName();
+  public abstract int getBIP44CoinNumber();
 
   public abstract String getAddressPrefix();
 

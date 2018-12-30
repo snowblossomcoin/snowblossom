@@ -47,6 +47,9 @@ public class NetworkParamsRegtest extends NetworkParams
   public String getNetworkName() { return "spoon"; }
 
   @Override
+  public int getBIP44CoinNumber() { return 2339; }
+
+  @Override
   public long getBlockTimeTarget() { return 1000L; } //1 second
 
   @Override

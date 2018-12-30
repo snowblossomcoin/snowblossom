@@ -101,3 +101,20 @@ maven_jar(
   sha1 = "1b6c4ff09ce03f3052429139c2a68e295cae6604",
 )
 
+# Used for HD wallet and seed stuff only
+maven_jar(
+  name = "bitcoinj",
+  artifact = "org.bitcoinj:bitcoinj-core:0.14.7",
+  sha1 = "5e58d6921e1d8dfce81525b22c0de97f34be1f5c",
+)
+maven_jar(
+  name = "slf4j_jdk14",
+  artifact = "org.slf4j:slf4j-jdk14:1.7.25",
+  sha1 = "bccda40ebc8067491b32a88f49615a747d20082d",
+)
+maven_jar(
+  name = "slf4j_api",
+  artifact = "org.slf4j:slf4j-api:1.7.25",
+  sha1 = "da76ca59f6a57ee3102f8f9bd9cee742973efa8a",
+)
+

@@ -18,6 +18,9 @@ java_library(
     "@jsonrpc2_server//jar",
     "@json_smart//jar",
     "@com_google_protobuf//:protobuf_java_util",
+    "@bitcoinj//jar",
+    "@slf4j_jdk14//jar",
+    "@slf4j_api//jar",
     ],
 )
 
@@ -30,5 +33,6 @@ java_test(
         "//lib:lib",
         "//protolib:protogrpc",
         "@duckutil//:duckutil_lib",
+        "@bitcoinj//jar",
     ]
 )

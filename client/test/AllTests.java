@@ -8,6 +8,7 @@ import org.junit.runners.Suite.SuiteClasses;
 @SuiteClasses({
   WalletTest.class,
   PurseTest.class,
+  SeedTest.class,
   TransactionFactoryTest.class
 })
 public class AllTests

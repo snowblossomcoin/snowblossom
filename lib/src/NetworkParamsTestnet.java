@@ -48,6 +48,9 @@ public class NetworkParamsTestnet extends NetworkParams
   public String getNetworkName() { return "teapot"; }
 
   @Override
+  public int getBIP44CoinNumber() { return 2339; }
+
+  @Override
   public List<String> getSeedNodes()
   {
     return ImmutableList.of("seed-testnet.snowblossom.org");

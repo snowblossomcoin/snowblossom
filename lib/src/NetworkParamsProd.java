@@ -47,6 +47,9 @@ public class NetworkParamsProd extends NetworkParams
   public String getNetworkName() { return "snowblossom"; }
 
   @Override
+  public int getBIP44CoinNumber() { return 2338; }
+
+  @Override
   public List<String> getSeedNodes()
   {
     return ImmutableList.of("seed.snowblossom.org", "snowday.fun", "node.snowblossom.cluelessperson.com");
