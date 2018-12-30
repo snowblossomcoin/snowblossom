@@ -105,11 +105,35 @@ public class SeedUtil
     return ByteString.copyFrom(getMCode().toSeed( lst, pass));
   }
 
+  public static ByteString getSeedId(NetworkParams params, String seed_str, String pass, int account)
+  {
+    ByteString seed = decodeSeed(seed_str,pass);
+    DeterministicKey dk = HDKeyDerivation.createMasterPrivateKey(seed.toByteArray());
+    DeterministicHierarchy dh = new DeterministicHierarchy(dk);
+
+
+    DeterministicKey dk_acct = dh.get( ImmutableList.of(
+      	new ChildNumber(44,true),
+      	new ChildNumber(params.getBIP44CoinNumber(),true),
+      	new ChildNumber(account,true)
+			),
+      true, true);
+    String xpub = dk_acct.serializePubB58( org.bitcoinj.params.MainNetParams.get() );
+    ByteString seed_id = ByteString.copyFrom(dk_acct.getIdentifier());
+
+    return seed_id;
+
+
+  }
+
   public static WalletKeyPair getKey(NetworkParams params, String seed_str, String pass, int account, int change, int index)
   {
     ByteString seed = decodeSeed(seed_str,pass);
     DeterministicKey dk = HDKeyDerivation.createMasterPrivateKey(seed.toByteArray());
     DeterministicHierarchy dh = new DeterministicHierarchy(dk);
+
+    ByteString seed_id = getSeedId(params, seed_str, pass, 0);
+
 
     DeterministicKey dk_addr = dh.get( ImmutableList.of(
       	new ChildNumber(44,true),
@@ -136,6 +160,8 @@ public class SeedUtil
 			.setPublicKey(public_key)
 			.setPrivateKey(new_key)
 			.setSignatureType(SignatureUtil.SIG_TYPE_ECDSA_COMPRESSED)
+      .setSeedId(seed_id)
+      .setHdPath(dk_addr.getPathAsString())
 			.build();
   }
   

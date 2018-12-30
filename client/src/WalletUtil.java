@@ -34,6 +34,7 @@ public class WalletUtil
   
   public static final String MODE_STANDARD = "standard";
   public static final String MODE_QHARD = "qhard";
+  public static final String MODE_SEED = "seed";
 
   private static final Logger logger = Logger.getLogger("snowblossom.client");
 
@@ -41,8 +42,9 @@ public class WalletUtil
    * 0 - old wallet.db version
    * 2 - merging support, multiple files
    * 3 - network version added
+   * 4 - added seeds
    */
-  public static final int WALLET_DB_VERSION = 3;
+  public static final int WALLET_DB_VERSION = 4;
 
   public static WalletDatabase makeNewDatabase(Config config, NetworkParams params)
   {
@@ -55,14 +57,14 @@ public class WalletUtil
       int count = config.getIntWithDefault("key_count", 8);
       for (int i = 0; i < count; i++)
       {
-        genNewKey(builder, config, params);
+        genNewKey(WalletDatabase.newBuilder().build(), builder, config, params);
       }
     }
 
     return builder.build();
   }
 
-  public static void genNewKey(WalletDatabase.Builder wallet_builder, Config config, NetworkParams params)
+  public static void genNewKey(WalletDatabase existing_wallet, WalletDatabase.Builder wallet_builder, Config config, NetworkParams params)
   {
     if (config.getBoolean("watch_only"))
     {
@@ -93,6 +95,42 @@ public class WalletUtil
       wallet_builder.addAddresses(claim);
       
     }
+    else if (key_mode.equals(MODE_SEED))
+    {
+      String gen_seed = null;
+      int next_index=0;
+      if (existing_wallet.getSeedsCount() == 0)
+      {
+        logger.info("Generating new seed");
+        String seed_str = SeedUtil.generateSeed(12);
+        ByteString seed_id = SeedUtil.getSeedId(params, seed_str, "", 0);
+
+        wallet_builder.putSeeds(seed_str, 
+          SeedStatus.newBuilder()
+            .setSeedId(seed_id)
+            .putAddressIndex(0, next_index)
+            .build());
+        gen_seed = seed_str;
+
+      }
+      else
+      {
+        gen_seed = existing_wallet.getSeedsMap().keySet().iterator().next();
+        next_index= existing_wallet.getSeedsMap().get(gen_seed).getAddressIndexMap().get(0) + 1;
+        ByteString seed_id = existing_wallet.getSeedsMap().get(gen_seed).getSeedId();
+
+        wallet_builder.putSeeds(gen_seed, 
+          SeedStatus.newBuilder()
+            .setSeedId(seed_id)
+            .putAddressIndex(0, next_index)
+            .build());
+      }
+      WalletKeyPair wkp = SeedUtil.getKey(params, gen_seed, "", 0, 0, next_index);
+      wallet_builder.addKeys(wkp);
+      claim = AddressUtil.getSimpleSpecForKey(wkp);
+      wallet_builder.addAddresses(claim);
+      
+    }
     else
     {
       throw new RuntimeException("Unknown key_mode: " + key_mode);
@@ -120,7 +158,7 @@ public class WalletUtil
       partial_new_db.setNetwork(params.getNetworkName());
       for(int i=0; i<to_make; i++)
       {
-        genNewKey(partial_new_db, config, params);
+        genNewKey(existing_db, partial_new_db, config, params);
       }
       WalletDatabase new_db_part = partial_new_db.build();
       saveWallet(new_db_part, wallet_path);
@@ -286,6 +324,7 @@ public class WalletUtil
     HashSet<Transaction> tx_set = new HashSet<>();
     HashMap<String, Boolean> used_addresses = new HashMap<>();
     HashMap<String, Long> address_create_time = new HashMap<>();
+    HashMap<String, SeedStatus> seed_map = new HashMap<>();
 
     for(WalletDatabase src : src_list)
     { 
@@ -295,6 +334,19 @@ public class WalletUtil
 
       used_addresses.putAll(src.getUsedAddressesMap());
       address_create_time.putAll(src.getAddressCreateTimeMap());
+
+      for(String seed : src.getSeedsMap().keySet())
+      {
+        SeedStatus status = src.getSeedsMap().get(seed);
+        if (seed_map.containsKey(seed))
+        {
+          seed_map.put( seed, mergeSeedStatus(status, seed_map.get(seed) ));
+        }
+        else
+        {
+          seed_map.put(seed, status);
+        }
+      }
     }
 
     new_db.addAllKeys(key_set);
@@ -302,8 +354,33 @@ public class WalletUtil
     new_db.addAllTransactions(tx_set);
     new_db.putAllUsedAddresses(used_addresses);
     new_db.putAllAddressCreateTime(address_create_time);
+    new_db.putAllSeeds(seed_map);
 
     return new_db.build();
+  }
+
+  public static SeedStatus mergeSeedStatus(SeedStatus a, SeedStatus b)
+  {
+    if (!a.getSeedId().equals(b.getSeedId())) throw new RuntimeException("Attempt to merge SeedStatus for different seed ids");
+
+    SeedStatus.Builder new_seed = SeedStatus.newBuilder();
+    new_seed.setSeedId(a.getSeedId());
+
+    HashSet<Integer> change_groups = new HashSet<Integer>();
+    change_groups.addAll( a.getAddressIndexMap().keySet());
+    change_groups.addAll( b.getAddressIndexMap().keySet());
+
+    for(int i : change_groups)
+    {
+      int v = Math.max( 
+        a.getAddressIndexOrDefault(i, 0),
+        b.getAddressIndexOrDefault(i, 0)
+        );
+      new_seed.putAddressIndex(i, v);
+    }
+
+    return new_seed.build();
+
   }
 
   public static void saveWallet(WalletDatabase db, File wallet_path)

@@ -110,6 +110,7 @@ public class SeedTest
       new ChildNumber(0,true),
       new ChildNumber(0,true)),
       true, true);
+    System.out.println("Seed ser: " + dk_acct.serializePubB58(org.bitcoinj.params.MainNetParams.get()));
 
     System.out.println("Seed acct: " + dk_acct.toString());
     System.out.println("Seed acct xprv: " + dk_acct.serializePrivB58(org.bitcoinj.params.MainNetParams.get()));
@@ -118,6 +119,9 @@ public class SeedTest
 		for(int i=0; i<100; i++)
 		{
     	WalletKeyPair wkp = SeedUtil.getKey( new NetworkParamsTestnet(), seed, "", 0, c, i);
+      System.out.println("Seed wkp: " + HexUtil.getHexString(wkp.getSeedId()) + " " + wkp.getHdPath());
+      Assert.assertTrue(wkp.getHdPath().startsWith("M/44H/2339H/0H/"));
+      Assert.assertTrue(wkp.getSeedId().size()==20);
 
 			testKeyPair(wkp, "hd");
 		}
@@ -131,7 +135,6 @@ public class SeedTest
 		WalletKeyPair ref = KeyUtil.generateWalletStandardECKey();
 		logger.info(String.format("Reference key pub %d priv %d", ref.getPublicKey().size(), ref.getPrivateKey().size()));
 		logger.info(String.format("testwkp key pub %d priv %d", wkp.getPublicKey().size(), wkp.getPrivateKey().size()));
-
 		
     Random rnd = new Random();
     byte[] b = new byte[Globals.BLOCKCHAIN_HASH_LEN];

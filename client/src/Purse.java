@@ -75,7 +75,7 @@ public class Purse
     {
       WalletDatabase.Builder partial_new_db = WalletDatabase.newBuilder();
       partial_new_db.setVersion(WalletUtil.WALLET_DB_VERSION);
-      WalletUtil.genNewKey(partial_new_db, config, params);
+      WalletUtil.genNewKey(wallet_database, partial_new_db, config, params);
       AddressSpecHash hash = AddressUtil.getHashForSpec(partial_new_db.getAddresses(0));
 
       if (mark_used)

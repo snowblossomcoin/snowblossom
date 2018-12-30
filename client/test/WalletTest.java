@@ -127,7 +127,7 @@ public class WalletTest
     ConfigMem config = new ConfigMem(ImmutableMap.of());
 
     WalletDatabase.Builder builder = WalletDatabase.newBuilder();
-    WalletUtil.genNewKey(builder, config, new NetworkParamsRegtest()); 
+    WalletUtil.genNewKey(WalletDatabase.newBuilder().build(), builder, config, new NetworkParamsRegtest()); 
 
     WalletDatabase a = builder.build();
 

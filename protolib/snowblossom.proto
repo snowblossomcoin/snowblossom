@@ -326,7 +326,13 @@ message WalletDatabase {
   map<string, int64> address_create_time = 5;
   int32 version = 10;
   string network = 11;
-  //CipherKey cipher_key = 11;
+  map<string,SeedStatus> seeds = 12;
+}
+
+message SeedStatus
+{
+  bytes seed_id = 1;
+  map<int32, int32> address_index = 2;
 }
 
 message BalanceInfo {
@@ -340,7 +346,8 @@ message WalletKeyPair
   int32 signature_type = 1;
   bytes public_key = 2;
   bytes private_key = 3;
-  //EncryptedPrivateKey encrypted_private_key = 4;
+  bytes seed_id = 4;
+  string hd_path = 5;
 }
 
 message EncryptedPrivateKey
