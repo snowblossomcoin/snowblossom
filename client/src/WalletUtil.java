@@ -97,6 +97,7 @@ public class WalletUtil
     }
     else if (key_mode.equals(MODE_SEED))
     {
+      existing_wallet = mergeDatabases(ImmutableList.of(existing_wallet, wallet_builder.build()), params);
       String gen_seed = null;
       int next_index=0;
       if (existing_wallet.getSeedsCount() == 0)
