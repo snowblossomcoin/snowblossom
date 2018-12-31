@@ -9,6 +9,8 @@
 * Updated 'monitor' command to only print a new line when something is different
 * Added ability to send 'all' to empty a wallet
 * Update proto rules to new system, requires newer bazel
+* Add BIP44 based seed wallets
+* Switch default wallet type to BIP44
 
 ## 1.4.2
 

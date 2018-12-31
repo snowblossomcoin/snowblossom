@@ -47,7 +47,20 @@ public class Purse
       WalletUtil.saveWallet(wallet_database, wallet_path);
     }
 
+    fillKeyPool();
+  }
+
+  public synchronized boolean fillKeyPool()
+    throws Exception
+  {
+    WalletDatabase old = wallet_database;
     wallet_database = WalletUtil.fillKeyPool(wallet_database, wallet_path, config, params);
+
+    if (!old.equals(wallet_database))
+    {
+      return true;
+    }
+    return false;
 
   }
 

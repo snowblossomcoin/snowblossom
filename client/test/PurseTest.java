@@ -54,6 +54,7 @@ public class PurseTest
 
     TreeMap<String, String> config_settings = new TreeMap<>();
     config_settings.put("key_pool_size", "19");
+    config_settings.put("key_mode", "standard");
     ConfigMem config = new ConfigMem(config_settings);
 
     NetworkParams params = new NetworkParamsRegtest();
@@ -120,6 +121,7 @@ public class PurseTest
 
     TreeMap<String, String> config_settings = new TreeMap<>();
     config_settings.put("key_pool_size", "100");
+    config_settings.put("key_mode","standard");
     ConfigMem config = new ConfigMem(config_settings);
 
     NetworkParams params = new NetworkParamsRegtest();

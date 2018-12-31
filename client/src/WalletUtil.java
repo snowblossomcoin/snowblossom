@@ -74,7 +74,7 @@ public class WalletUtil
     {
       throw new RuntimeException("Unable to create new address on watch only wallet.");
     }
-    String key_mode = config.getWithDefault("key_mode", MODE_STANDARD).toLowerCase();
+    String key_mode = config.getWithDefault("key_mode", MODE_SEED).toLowerCase();
     AddressSpec claim = null;
 
     if ((key_mode.equals(MODE_SEED)) || (gen_seed != null))
@@ -120,7 +120,6 @@ public class WalletUtil
               .build());
 
       }
-      logger.info(String.format("Getting seed key %s %d", gen_seed, next_index));
       WalletKeyPair wkp = SeedUtil.getKey(params, gen_seed, "", 0, 0, next_index);
       wallet_builder.addKeys(wkp);
       claim = AddressUtil.getSimpleSpecForKey(wkp);
@@ -227,7 +226,7 @@ public class WalletUtil
       {
         for(int i = current_idx; i< max_used + gap; i++)
         {
-          logger.info(String.format("Making key for seed %s %d", HexUtil.getHexString(seed_id), i));
+          //logger.info(String.format("Making key for seed %s %d", HexUtil.getHexString(seed_id), i));
           genNewKey(existing_db, partial_new_db, config, params, seed);
           added=true;
         }
