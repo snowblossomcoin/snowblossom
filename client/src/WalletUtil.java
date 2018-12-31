@@ -66,6 +66,10 @@ public class WalletUtil
 
   public static void genNewKey(WalletDatabase existing_wallet, WalletDatabase.Builder wallet_builder, Config config, NetworkParams params)
   {
+    genNewKey(existing_wallet, wallet_builder, config, params, null);
+  }
+  public static void genNewKey(WalletDatabase existing_wallet, WalletDatabase.Builder wallet_builder, Config config, NetworkParams params, String gen_seed)
+  {
     if (config.getBoolean("watch_only"))
     {
       throw new RuntimeException("Unable to create new address on watch only wallet.");
@@ -73,7 +77,57 @@ public class WalletUtil
     String key_mode = config.getWithDefault("key_mode", MODE_STANDARD).toLowerCase();
     AddressSpec claim = null;
 
-    if (key_mode.equals(MODE_STANDARD))
+    if ((key_mode.equals(MODE_SEED)) || (gen_seed != null))
+    {
+      existing_wallet = mergeDatabases(ImmutableList.of(existing_wallet, wallet_builder.build()), params);
+      int next_index=0;
+      if (gen_seed == null)
+      {
+        if (existing_wallet.getSeedsCount() == 0)
+        {
+          logger.info("Generating new seed");
+          String seed_str = SeedUtil.generateSeed(12);
+          ByteString seed_id = SeedUtil.getSeedId(params, seed_str, "", 0);
+
+          wallet_builder.putSeeds(seed_str, 
+            SeedStatus.newBuilder()
+              .setSeedId(seed_id)
+              .putAddressIndex(0, next_index)
+              .build());
+          gen_seed = seed_str;
+        }
+        else
+        {
+          gen_seed = existing_wallet.getSeedsMap().keySet().iterator().next();
+          next_index = existing_wallet.getSeedsMap().get(gen_seed).getAddressIndexOrDefault(0,0) + 1;
+          ByteString seed_id = existing_wallet.getSeedsMap().get(gen_seed).getSeedId();
+
+          wallet_builder.putSeeds(gen_seed, 
+            SeedStatus.newBuilder()
+              .setSeedId(seed_id)
+              .putAddressIndex(0, next_index)
+              .build());
+        }
+      }
+      else
+      {
+        next_index = existing_wallet.getSeedsMap().get(gen_seed).getAddressIndexOrDefault(0,0) + 1;
+        ByteString seed_id = existing_wallet.getSeedsMap().get(gen_seed).getSeedId();
+        wallet_builder.putSeeds(gen_seed, 
+          SeedStatus.newBuilder()
+              .setSeedId(seed_id)
+              .putAddressIndex(0, next_index)
+              .build());
+
+      }
+      logger.info(String.format("Getting seed key %s %d", gen_seed, next_index));
+      WalletKeyPair wkp = SeedUtil.getKey(params, gen_seed, "", 0, 0, next_index);
+      wallet_builder.addKeys(wkp);
+      claim = AddressUtil.getSimpleSpecForKey(wkp);
+      wallet_builder.addAddresses(claim);
+      
+    }
+    else if (key_mode.equals(MODE_STANDARD))
     {
       WalletKeyPair wkp = KeyUtil.generateWalletStandardECKey();
       wallet_builder.addKeys(wkp);
@@ -92,42 +146,6 @@ public class WalletUtil
       wallet_builder.addKeys(k_dstu);
 
       claim = AddressUtil.getMultiSig(3, ImmutableList.of(k_ec, k_rsa, k_dstu));
-      wallet_builder.addAddresses(claim);
-      
-    }
-    else if (key_mode.equals(MODE_SEED))
-    {
-      existing_wallet = mergeDatabases(ImmutableList.of(existing_wallet, wallet_builder.build()), params);
-      String gen_seed = null;
-      int next_index=0;
-      if (existing_wallet.getSeedsCount() == 0)
-      {
-        logger.info("Generating new seed");
-        String seed_str = SeedUtil.generateSeed(12);
-        ByteString seed_id = SeedUtil.getSeedId(params, seed_str, "", 0);
-
-        wallet_builder.putSeeds(seed_str, 
-          SeedStatus.newBuilder()
-            .setSeedId(seed_id)
-            .putAddressIndex(0, next_index)
-            .build());
-        gen_seed = seed_str;
-      }
-      else
-      {
-        gen_seed = existing_wallet.getSeedsMap().keySet().iterator().next();
-        next_index= existing_wallet.getSeedsMap().get(gen_seed).getAddressIndexMap().get(0) + 1;
-        ByteString seed_id = existing_wallet.getSeedsMap().get(gen_seed).getSeedId();
-
-        wallet_builder.putSeeds(gen_seed, 
-          SeedStatus.newBuilder()
-            .setSeedId(seed_id)
-            .putAddressIndex(0, next_index)
-            .build());
-      }
-      WalletKeyPair wkp = SeedUtil.getKey(params, gen_seed, "", 0, 0, next_index);
-      wallet_builder.addKeys(wkp);
-      claim = AddressUtil.getSimpleSpecForKey(wkp);
       wallet_builder.addAddresses(claim);
       
     }
@@ -203,20 +221,19 @@ public class WalletUtil
           }
         }
       }
-      int current_idx = existing_db.getSeedsMap().get(seed).getAddressIndexMap().get(0);
+      int current_idx = existing_db.getSeedsMap().get(seed).getAddressIndexOrDefault(0,0);
       //logger.info(String.format("Seed %d %d %d", max_used, gap, current_idx));
       if (max_used + gap > current_idx)
       {
         for(int i = current_idx; i< max_used + gap; i++)
         {
-          genNewKey(existing_db, partial_new_db, config, params);
+          logger.info(String.format("Making key for seed %s %d", HexUtil.getHexString(seed_id), i));
+          genNewKey(existing_db, partial_new_db, config, params, seed);
           added=true;
         }
       }
     }
-
     return added;
-    
     
   }
 
@@ -463,6 +480,7 @@ public class WalletUtil
 
     watch.mergeFrom(db);
     watch.clearKeys();
+    watch.clearSeeds();
 
     return watch.build();
   }

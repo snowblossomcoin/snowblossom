@@ -257,8 +257,20 @@ public class SnowBlossomClient
 
         logger.info("Imported data:");
         client.printBasicStats(wallet_import.build());
+      }
+      else if (command.equals("import_seed"))
+      {
+        System.out.println("Please enter seed to import:");
+        Scanner scan = new Scanner(System.in);
+        String seed = scan.nextLine().trim();
 
-        
+        SeedUtil.checkSeed(seed);
+        ByteString seed_id = SeedUtil.getSeedId(client.getParams(), seed, "", 0);
+
+        WalletDatabase.Builder wallet_import = WalletDatabase.newBuilder();
+        wallet_import.putSeeds(seed, SeedStatus.newBuilder().setSeedId(seed_id).build());
+        client.getPurse().mergeIn(wallet_import.build());
+        // TODO fill and check, fill and check
 
       }
       else if (command.equals("loadtest"))
@@ -287,6 +299,8 @@ public class SnowBlossomClient
         System.out.println("  export <file> - export wallet to json file");
         System.out.println("  export_watch_only <file> - export wallet to json file with no keys");
         System.out.println("  import <file> - import wallet from json file, merges with existing");
+        System.out.println("  import_seed - prompts for a seed to import");
+        System.out.println("  show_seed - show seeds");
         System.out.println("  rpcserver - run a local rpc server for client commands");
 
         System.exit(-1);
