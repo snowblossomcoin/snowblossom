@@ -108,9 +108,9 @@ maven_jar(
   sha1 = "5e58d6921e1d8dfce81525b22c0de97f34be1f5c",
 )
 maven_jar(
-  name = "slf4j_jdk14",
-  artifact = "org.slf4j:slf4j-jdk14:1.7.25",
-  sha1 = "bccda40ebc8067491b32a88f49615a747d20082d",
+  name = "slf4j_nop",
+  artifact = "org.slf4j:slf4j-nop:1.7.25",
+  sha1 = "8c7708c79afec923de8957b7d4f90177628b9fcd",
 )
 maven_jar(
   name = "slf4j_api",

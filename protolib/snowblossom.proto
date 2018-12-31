@@ -348,6 +348,8 @@ message WalletKeyPair
   bytes private_key = 3;
   bytes seed_id = 4;
   string hd_path = 5;
+  int32 hd_change = 6;
+  int32 hd_index = 7;
 }
 
 message EncryptedPrivateKey

@@ -112,7 +112,6 @@ public class WalletUtil
             .putAddressIndex(0, next_index)
             .build());
         gen_seed = seed_str;
-
       }
       else
       {
@@ -151,23 +150,74 @@ public class WalletUtil
 
     int key_pool = config.getIntWithDefault("key_pool_size", 100);
     int unused = getUnusedAddressCount(existing_db, params);
-    if (unused < key_pool)
+    //if (unused < key_pool)
     {
       int to_make = key_pool - unused;
       WalletDatabase.Builder partial_new_db = WalletDatabase.newBuilder();
       partial_new_db.setVersion(WALLET_DB_VERSION);
       partial_new_db.setNetwork(params.getNetworkName());
+      boolean save= false;
       for(int i=0; i<to_make; i++)
       {
         genNewKey(existing_db, partial_new_db, config, params);
+        save=true;
       }
-      WalletDatabase new_db_part = partial_new_db.build();
-      saveWallet(new_db_part, wallet_path);
+      if (addSeedGapKeys(params, config, existing_db, partial_new_db))
+      {
+        save=true;
+      }
+      if (save)
+      {
+        WalletDatabase new_db_part = partial_new_db.build();
+        saveWallet(new_db_part, wallet_path);
 
-      return mergeDatabases(ImmutableList.of(existing_db, new_db_part), params);
+        return mergeDatabases(ImmutableList.of(existing_db, new_db_part), params);
+      }
 
     }
+
     return existing_db;
+  }
+
+  private static boolean addSeedGapKeys(NetworkParams params, Config config, WalletDatabase existing_db, WalletDatabase.Builder partial_new_db)
+  {
+    int gap = config.getIntWithDefault("seed_gap", 20);
+    
+    existing_db = mergeDatabases(ImmutableList.of(existing_db, partial_new_db.build()), params);
+    boolean added=false;
+
+    for(String seed : existing_db.getSeedsMap().keySet())
+    {
+      ByteString seed_id = existing_db.getSeedsMap().get(seed).getSeedId();
+      int max_used = 0;
+      for(WalletKeyPair wkp : existing_db.getKeysList())
+      {
+        if (wkp.getSeedId().equals(seed_id))
+        {
+          AddressSpec claim = AddressUtil.getSimpleSpecForKey(wkp);
+          
+          String addr = AddressUtil.getAddressString(claim, params);
+          if (existing_db.getUsedAddressesMap().containsKey(addr))
+          {
+            max_used = Math.max(max_used, wkp.getHdIndex());
+          }
+        }
+      }
+      int current_idx = existing_db.getSeedsMap().get(seed).getAddressIndexMap().get(0);
+      //logger.info(String.format("Seed %d %d %d", max_used, gap, current_idx));
+      if (max_used + gap > current_idx)
+      {
+        for(int i = current_idx; i< max_used + gap; i++)
+        {
+          genNewKey(existing_db, partial_new_db, config, params);
+          added=true;
+        }
+      }
+    }
+
+    return added;
+    
+    
   }
 
 

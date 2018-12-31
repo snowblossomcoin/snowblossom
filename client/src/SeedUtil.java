@@ -162,6 +162,8 @@ public class SeedUtil
 			.setSignatureType(SignatureUtil.SIG_TYPE_ECDSA_COMPRESSED)
       .setSeedId(seed_id)
       .setHdPath(dk_addr.getPathAsString())
+      .setHdChange(change)
+      .setHdIndex(index)
 			.build();
   }
   

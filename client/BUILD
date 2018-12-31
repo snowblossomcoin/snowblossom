@@ -19,7 +19,7 @@ java_library(
     "@json_smart//jar",
     "@com_google_protobuf//:protobuf_java_util",
     "@bitcoinj//jar",
-    "@slf4j_jdk14//jar",
+    "@slf4j_nop//jar",
     "@slf4j_api//jar",
     ],
 )
