@@ -11,6 +11,7 @@
 * Update proto rules to new system, requires newer bazel
 * Add BIP44 based seed wallets
 * Switch default wallet type to BIP44
+* Added 'import_seed' and 'show_seed' commands
 
 ## 1.4.2
 
