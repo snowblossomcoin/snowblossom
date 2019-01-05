@@ -18,6 +18,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Map;
 import java.util.TimeZone;
+import java.math.RoundingMode;
 import duckutil.TaskMaster;
 import com.google.protobuf.util.JsonFormat;
 
@@ -174,6 +175,7 @@ public class WebServer
     double block_time_sec = summary.getBlocktimeAverageMs() / 1000.0 ;
     double estimated_hash = Math.pow(2.0, target_diff) / block_time_sec / 1e6;
     DecimalFormat df =new DecimalFormat("0.000");
+    df.setRoundingMode(RoundingMode.FLOOR);
 
     out.println(String.format("difficulty (avg): %s (%s)", df.format(target_diff), df.format(avg_diff)));
     out.println(String.format("estimated network hash rate: %s Mh/s", df.format(estimated_hash)));
