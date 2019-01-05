@@ -28,6 +28,7 @@ import snowblossom.lib.HexUtil;
 import com.google.common.collect.TreeMultimap;
 import java.util.TreeMap;
 import java.util.Map;
+import java.util.Collection;
 
 public class WalletUtil
 {
@@ -291,6 +292,23 @@ public class WalletUtil
       return addr_to_hash_map.get(me.getValue());
     }
     return null;
+  }
+  public static Collection<AddressSpecHash> getAllUnused(WalletDatabase db, NetworkParams params)
+  {
+    TreeMap<String, AddressSpecHash> addr_to_hash_map = new TreeMap<>();
+
+    for(AddressSpec spec : db.getAddressesList())
+    {
+      String addr = AddressUtil.getAddressString(spec, params);
+      addr_to_hash_map.put(addr, AddressUtil.getHashForSpec(spec));
+    }
+    for(String addr : db.getUsedAddressesMap().keySet())
+    {
+      addr_to_hash_map.remove(addr);
+    }
+
+    return addr_to_hash_map.values();
+
   }
 
   public static int getUnusedAddressCount(WalletDatabase db, NetworkParams params)

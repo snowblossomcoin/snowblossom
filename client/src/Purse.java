@@ -54,6 +54,8 @@ public class Purse
     throws Exception
   {
     WalletDatabase old = wallet_database;
+    checkHistory();
+
     wallet_database = WalletUtil.fillKeyPool(wallet_database, wallet_path, config, params);
 
     if (!old.equals(wallet_database))
@@ -62,6 +64,26 @@ public class Purse
     }
     return false;
 
+  }
+
+  /**
+   * See if any of our unused addresses have had past action and if so mark them as used
+   */
+  public void checkHistory()
+    throws Exception
+  {
+    if (client == null) return;
+    for(AddressSpecHash hash : WalletUtil.getAllUnused(wallet_database, params))
+    {
+      if (client.getStub().getAddressHistory(
+        RequestAddress.newBuilder().setAddressSpecHash(hash.getBytes()).build())
+        .getEntriesCount() > 0)
+      {
+        markUsed(hash);
+      }
+
+    }
+    
   }
 
   public WalletDatabase getDB(){return wallet_database;}

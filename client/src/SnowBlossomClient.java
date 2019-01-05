@@ -270,7 +270,6 @@ public class SnowBlossomClient
         WalletDatabase.Builder wallet_import = WalletDatabase.newBuilder();
         wallet_import.putSeeds(seed, SeedStatus.newBuilder().setSeedId(seed_id).build());
         client.getPurse().mergeIn(wallet_import.build());
-        // TODO fill and check, fill and check
         
         while(client.getPurse().fillKeyPool())
         {
