@@ -9,9 +9,11 @@ import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.security.*;
 import java.security.spec.ECGenParameterSpec;
+import java.security.spec.ECParameterSpec;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.RSAKeyGenParameterSpec;
 import java.security.spec.X509EncodedKeySpec;
+import java.security.interfaces.ECPrivateKey;
 import java.util.ArrayList;
 
 public class KeyUtil
@@ -78,6 +80,30 @@ public class KeyUtil
     }
 
   }
+
+  /**
+   * Get the EC curve parameters used by the secp256k1 keys used for HD seeds
+   */
+  public static ECParameterSpec getECHDSpec()
+  {
+    try
+    {
+      ECGenParameterSpec spec = new ECGenParameterSpec("secp256k1");
+      KeyPairGenerator key_gen = KeyPairGenerator.getInstance("ECDSA", Globals.getCryptoProviderName());
+      key_gen.initialize(spec);
+
+      KeyPair pair = key_gen.genKeyPair();
+      ECPrivateKey priv = (ECPrivateKey)pair.getPrivate();
+
+      return priv.getParams();
+    }
+    catch(Exception e)
+    {
+      throw new RuntimeException(e);
+    }
+
+  } 
+
 
   public static KeyPair generateECCompressedKey()
   {

@@ -18,7 +18,11 @@ import org.bitcoinj.crypto.ChildNumber;
 import snowblossom.lib.NetworkParams;
 import snowblossom.lib.SignatureUtil;
 import snowblossom.lib.KeyUtil;
-
+import java.math.BigInteger;
+import java.security.KeyFactory;
+import snowblossom.lib.Globals;
+import java.security.spec.ECPrivateKeySpec;
+import java.security.PrivateKey;
 
 public class SeedUtil
 {
@@ -145,20 +149,24 @@ public class SeedUtil
       true, true);
 
 		ByteString priv_key = ByteString.copyFrom(dk_addr.getPrivKeyBytes());
+    BigInteger priv_bi = dk_addr.getPrivKey();
 
-		// I have done some dumb hacky shit, but this one right here is special
-		// I can't figure out how to convert the formats, so taking an encoding
-    // that I know works, and swaping in the 32 byte private key at byte 33.
-    // why 33?  Because I tried them all and that is where it works.
-    // TODO - fix this disaster
-		WalletKeyPair ref = KeyUtil.generateWalletStandardECKey();
-		int start = 33;
-		ByteString new_key = ref.getPrivateKey().substring(0, start).concat(priv_key).concat(ref.getPrivateKey().substring(start+32));
+    PrivateKey pk = null;
 
+    try
+    {
+
+      ECPrivateKeySpec priv_spec = new ECPrivateKeySpec(priv_bi, KeyUtil.getECHDSpec());
+      KeyFactory kf = KeyFactory.getInstance("ECDSA", Globals.getCryptoProviderName());
+      pk = kf.generatePrivate(priv_spec);
+
+    }
+    catch(Exception e){throw new RuntimeException(e);}
+    
 		ByteString public_key = ByteString.copyFrom(dk_addr.getPubKey());
 		return WalletKeyPair.newBuilder()
 			.setPublicKey(public_key)
-			.setPrivateKey(new_key)
+			.setPrivateKey(ByteString.copyFrom(pk.getEncoded()))
 			.setSignatureType(SignatureUtil.SIG_TYPE_ECDSA_COMPRESSED)
       .setSeedId(seed_id)
       .setHdPath(dk_addr.getPathAsString())

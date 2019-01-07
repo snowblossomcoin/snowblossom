@@ -100,7 +100,7 @@ public class WalletUtil
         else
         {
           gen_seed = existing_wallet.getSeedsMap().keySet().iterator().next();
-          next_index = existing_wallet.getSeedsMap().get(gen_seed).getAddressIndexOrDefault(0,0) + 1;
+          next_index = existing_wallet.getSeedsMap().get(gen_seed).getAddressIndexOrDefault(0,-1) + 1;
           ByteString seed_id = existing_wallet.getSeedsMap().get(gen_seed).getSeedId();
 
           wallet_builder.putSeeds(gen_seed, 
@@ -112,7 +112,7 @@ public class WalletUtil
       }
       else
       {
-        next_index = existing_wallet.getSeedsMap().get(gen_seed).getAddressIndexOrDefault(0,0) + 1;
+        next_index = existing_wallet.getSeedsMap().get(gen_seed).getAddressIndexOrDefault(0,-1) + 1;
         ByteString seed_id = existing_wallet.getSeedsMap().get(gen_seed).getSeedId();
         wallet_builder.putSeeds(gen_seed, 
           SeedStatus.newBuilder()
