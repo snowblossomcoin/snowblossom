@@ -273,6 +273,7 @@ public class SnowBlossomClient
         
         while(client.getPurse().fillKeyPool())
         {
+          client.printBasicStats(client.getPurse().getDB());
           client.showBalances(false);
         }
 
