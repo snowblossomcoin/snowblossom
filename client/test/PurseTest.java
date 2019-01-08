@@ -85,6 +85,7 @@ public class PurseTest
     db = WalletUtil.fillKeyPool(db, empty_sub, config, params);
 
     Purse purse = new Purse(null, empty_sub, config, params);
+    purse.maintainKeys(false);
     ThreadPoolExecutor exec = TaskMaster.getBasicExecutor(100, "test_fresh_race");
 
     TaskMaster<AddressSpecHash> tm = new TaskMaster<>(exec);
@@ -131,6 +132,7 @@ public class PurseTest
     db = WalletUtil.fillKeyPool(db, empty_sub, config, params);
 
     Purse purse = new Purse(null, empty_sub, config, params);
+    purse.maintainKeys(false);
     ThreadPoolExecutor exec = TaskMaster.getBasicExecutor(100, "test_fresh_race");
 
     TaskMaster<AddressSpecHash> tm = new TaskMaster<>(exec);

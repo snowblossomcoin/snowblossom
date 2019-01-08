@@ -270,12 +270,8 @@ public class SnowBlossomClient
         WalletDatabase.Builder wallet_import = WalletDatabase.newBuilder();
         wallet_import.putSeeds(seed, SeedStatus.newBuilder().setSeedId(seed_id).build());
         client.getPurse().mergeIn(wallet_import.build());
-        
-        while(client.getPurse().fillKeyPool())
-        {
-          client.printBasicStats(client.getPurse().getDB());
-          client.showBalances(false);
-        }
+
+        client.getPurse().maintainKeys(true);
 
       }
       else if (command.equals("loadtest"))
@@ -468,6 +464,7 @@ public class SnowBlossomClient
     throws Exception
   {
     purse = new Purse(this, wallet_path, config, params);
+    purse.maintainKeys(false);
 
   }
 

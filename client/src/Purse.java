@@ -47,10 +47,32 @@ public class Purse
       WalletUtil.saveWallet(wallet_database, wallet_path);
     }
 
-    fillKeyPool();
   }
 
-  public synchronized boolean fillKeyPool()
+  /**
+   * Does things like updating used addresses, extending seeds for gap limits
+   * and filling key pool
+   */
+  public synchronized void maintainKeys(boolean print_on_pass)
+    throws Exception
+  {
+		while(fillKeyPool())
+		{
+			if (print_on_pass)
+			{
+				client.printBasicStats(client.getPurse().getDB());
+				client.showBalances(false);
+			}
+			else
+			{
+				if (client!= null) client.getBalance();
+			}
+		}
+
+
+  }
+
+  private synchronized boolean fillKeyPool()
     throws Exception
   {
     WalletDatabase old = wallet_database;
