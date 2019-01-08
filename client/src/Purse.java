@@ -94,17 +94,24 @@ public class Purse
   public void checkHistory()
     throws Exception
   {
-    if (client == null) return;
-    for(AddressSpecHash hash : WalletUtil.getAllUnused(wallet_database, params))
-    {
-      if (client.getStub().getAddressHistory(
-        RequestAddress.newBuilder().setAddressSpecHash(hash.getBytes()).build())
-        .getEntriesCount() > 0)
-      {
-        markUsed(hash);
-      }
+		try
+		{
+			if (client == null) return;
+			for(AddressSpecHash hash : WalletUtil.getAllUnused(wallet_database, params))
+			{
+				if (client.getStub().getAddressHistory(
+					RequestAddress.newBuilder().setAddressSpecHash(hash.getBytes()).build())
+					.getEntriesCount() > 0)
+				{
+					markUsed(hash);
+				}
 
-    }
+    	}
+		}
+		catch(Throwable e)
+		{
+			logger.info("Error from server on checking address.  This is fine, but to get more accuracy on used address, have the node enable addr_idx");
+		}
     
   }
 
