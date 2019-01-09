@@ -304,7 +304,7 @@ public class SnowBlossomClient
         }
         if (missing_keys > 0)
         {
-            System.out.println(String.format("WARNING: THIS WALLLET CONTAINS %d KEYS THAT DO NOT COME FROM SEEDS.  THIS WALLET CAN NOT BE COMPLETELY RESTORED FROM SEEDS", missing_keys));
+            System.out.println(String.format("WARNING: THIS WALLET CONTAINS %d KEYS THAT DO NOT COME FROM SEEDS.  THIS WALLET CAN NOT BE COMPLETELY RESTORED FROM SEEDS", missing_keys));
         }
         else
         {
