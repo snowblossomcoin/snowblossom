@@ -340,6 +340,12 @@ public class SnowUserService extends UserServiceGrpc.UserServiceImplBase
 
 
     }
+    catch(ValidationException e)
+    {
+      observer.onNext(HistoryList.newBuilder().setNotEnabled(true).build());
+      observer.onCompleted();
+
+    }
     catch(Throwable e)
     {
       String addr = AddressUtil.getAddressString(node.getParams().getAddressPrefix(), spec_hash);

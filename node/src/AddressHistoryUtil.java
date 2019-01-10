@@ -50,7 +50,10 @@ public class AddressHistoryUtil
   }
 
   public static HistoryList getHistory(AddressSpecHash spec_hash, DB db, BlockHeightCache cache)
+    throws ValidationException
   {
+    if (db.getAddressHistoryMap() == null) throw new ValidationException("no addr history");
+
     List<ByteString> value_set = db.getAddressHistoryMap().getSet(spec_hash.getBytes(), Globals.ADDRESS_HISTORY_MAX_REPLY);
 
     HistoryList.Builder hist_list = HistoryList.newBuilder();

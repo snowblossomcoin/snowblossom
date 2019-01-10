@@ -273,6 +273,7 @@ message TransactionHashList {
 
 message HistoryList {
   repeated HistoryEntry entries = 1;
+  bool not_enabled = 2;
 }
 message HistoryEntry {
   int32 block_height = 1;
