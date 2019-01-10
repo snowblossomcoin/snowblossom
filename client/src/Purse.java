@@ -53,7 +53,7 @@ public class Purse
    * Does things like updating used addresses, extending seeds for gap limits
    * and filling key pool
    */
-  public synchronized void maintainKeys(boolean print_on_pass)
+  public void maintainKeys(boolean print_on_pass)
     throws Exception
   {
 		while(fillKeyPool())
@@ -99,18 +99,23 @@ public class Purse
 			if (client == null) return;
 			for(AddressSpecHash hash : WalletUtil.getAllUnused(wallet_database, params))
 			{
-				if (client.getStub().getAddressHistory(
-					RequestAddress.newBuilder().setAddressSpecHash(hash.getBytes()).build())
-					.getEntriesCount() > 0)
+        HistoryList hl = client.getStub().getAddressHistory(
+					RequestAddress.newBuilder().setAddressSpecHash(hash.getBytes()).build());
+
+        if (hl.getNotEnabled())
+        {
+          throw new Exception("history not enabled");
+        }
+
+        if (hl.getEntriesCount() > 0)
 				{
 					markUsed(hash);
 				}
-
     	}
 		}
 		catch(Throwable e)
 		{
-			logger.info("Error from server on checking address.  This is fine, but to get more accuracy on used address, have the node enable addr_idx");
+			logger.info("Error from server on checking address.  This is fine, but to get more accuracy on used address, have the node enable addr_index");
 		}
     
   }
