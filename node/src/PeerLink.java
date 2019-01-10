@@ -130,7 +130,7 @@ public class PeerLink implements StreamObserver<PeerMessage>
 
               if (node.getBlockIngestor().reserveTxCluster(tx_id))
               {
-                logger.info("Requesting cluster for tx: " +  tx_id);
+                logger.fine("Requesting cluster for tx: " +  tx_id);
                 writeMessage( PeerMessage.newBuilder()
                   .setReqCluster(
                     RequestTransaction.newBuilder().setTxHash(tx.getTxHash()).build())
@@ -261,7 +261,7 @@ public class PeerLink implements StreamObserver<PeerMessage>
     List<Transaction> tx_list = node.getMemPool().getTxClusterForTransaction(tx_id);
     if (tx_list == null) return;
     
-    logger.info("Sending cluster for " + tx_id + " - " + tx_list.size() + " transactions");
+    logger.fine("Sending cluster for " + tx_id + " - " + tx_list.size() + " transactions");
 
     for(Transaction tx : tx_list)
     {

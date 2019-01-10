@@ -833,6 +833,7 @@ public class SnowBlossomClient
       }
       boolean success = submitTransaction(tx);
       System.out.println("Submit: " + success);
+      Thread.sleep(100);
       if (!success)
       {
         return;
