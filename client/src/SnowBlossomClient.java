@@ -806,6 +806,7 @@ public class SnowBlossomClient
       }
 
       logger.info("Transaction: " + new ChainHash(tx.getTxHash()) + " - " + tx.toByteString().size());
+      TransactionUtil.prettyDisplayTx(tx, System.out, params);
       //logger.info(tx.toString());
 
       boolean sent=false;

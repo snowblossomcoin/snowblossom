@@ -66,7 +66,7 @@ public class MemPool
   private HashedTrie utxo_hashed_trie;
   private ChainStateSource chain_state_source;
 
-  public static int MEM_POOL_MAX = 10000;
+  public static int MEM_POOL_MAX = 20000;
 
   /** if the mempool has this many transactions already, reject any new low fee transactions */
   public static int MEM_POOL_MAX_LOW = 5000;

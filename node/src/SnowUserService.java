@@ -19,12 +19,15 @@ public class SnowUserService extends UserServiceGrpc.UserServiceImplBase
 
   private SnowBlossomNode node;
   private Object tickle_trigger = new Object();
+  private FeeEstimator fee_est;
 
   public SnowUserService(SnowBlossomNode node)
   {
     super();
 
     this.node = node;
+
+    fee_est = new FeeEstimator(node);
 
 
   }
@@ -324,7 +327,8 @@ public class SnowUserService extends UserServiceGrpc.UserServiceImplBase
   @Override
   public void getFeeEstimate(NullRequest null_request, StreamObserver<FeeEstimate> observer)
   {
-    observer.onNext( FeeEstimate.newBuilder().setFeePerByte( Globals.BASIC_FEE ).build() );
+    //observer.onNext( FeeEstimate.newBuilder().setFeePerByte( Globals.BASIC_FEE ).build() );
+    observer.onNext( FeeEstimate.newBuilder().setFeePerByte( fee_est.getFeeEstimate()).build());
     observer.onCompleted();
   }
 
