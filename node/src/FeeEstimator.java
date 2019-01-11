@@ -54,6 +54,8 @@ public class FeeEstimator
       total_fee += TransactionUtil.getInner(tx).getFee();
     }
 
+    logger.fine("Fee test size: " + total_size + " " + test_size);
+
 
     // Clearly not even full
     if (total_size < test_size - 50000)
@@ -74,9 +76,10 @@ public class FeeEstimator
       Transaction tx = tx_list_arr.get(i);
       end_size += tx.toByteString().size();
       end_fee += TransactionUtil.getInner(tx).getFee();
-
     }
     double average_fee = (double) end_fee / (double) end_size;
+
+    logger.fine("Average fee: " + average_fee + " " + end_fee + " " + end_size);
 
     last_fee = Math.max(Globals.BASIC_FEE, average_fee * 1.01);
 

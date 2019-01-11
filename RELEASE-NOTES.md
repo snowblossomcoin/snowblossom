@@ -12,6 +12,9 @@
 * Add BIP44 based seed wallets
 * Switch default wallet type to BIP44
 * Added 'import_seed' and 'show_seed' commands
+* Added dynamic fee estimation based on mempool
+* Notes for wallet type migration: https://wiki.snowblossom.org/index.php/Migrate:_Standard_Keys_to_Seed_Keys
+
 
 ## 1.4.2
 
