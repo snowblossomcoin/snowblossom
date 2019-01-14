@@ -279,6 +279,15 @@ public class Peerage
           learnPeer(pi, true);
 
         }
+        if (node.getParams().getNetworkName().equals("snowblossom"))
+        {
+          PeerInfo pi = PeerInfo.newBuilder()
+            .setHost("snow-tx1.snowblossom.org")
+            .setPort(443)
+            .setLearned(System.currentTimeMillis() - PEER_EXPIRE_TIME + REFRESH_LEARN_TIME)
+            .build();
+          learnPeer(pi, true);
+        }
       }
       catch(Exception e)
       {

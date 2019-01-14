@@ -106,17 +106,19 @@ public class SnowBlossomNode
   {
     if (config.isSet("service_port"))
     {
-      int port = config.getInt("service_port");
-
       user_service = new SnowUserService(this);
       peer_service = new SnowPeerService(this);
 
-      Server s = ServerBuilder
-        .forPort(port)
-        .addService(user_service)
-        .addService(peer_service)
-        .build();
-      s.start();
+      for(String port_str : config.getList("service_port"))
+      {
+        int port = Integer.parseInt(port_str);
+        Server s = ServerBuilder
+          .forPort(port)
+          .addService(user_service)
+          .addService(peer_service)
+          .build();
+        s.start();
+      }
 
       user_service.start();
     }
