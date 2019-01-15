@@ -65,7 +65,7 @@ public class PoolClientFailover implements PoolClientFace
     }
     if (!started)
     {
-      Thread.sleep(1000);
+      Thread.sleep(2500);
       started=true;
       new PoolMonitor().start();
     }
