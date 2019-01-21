@@ -4,6 +4,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.nio.ByteBuffer;
 import java.util.Map;
 import java.util.HashMap;
+import java.util.LinkedList;
 
 
 /**
@@ -12,18 +13,26 @@ import java.util.HashMap;
  */
 public class MagicQueue
 {
-  final LinkedBlockingQueue<ByteBuffer>[] global_buckets;
-  final int max_chunk_size;
-  final ThreadLocal<Map<Integer, ByteBuffer> > local_buff;
+  /**
+   * Collection of ByteBuffers for each bucket, ready to be read
+   */
+  private final LinkedList<ByteBuffer>[] global_buckets;
+  private final int max_chunk_size;
+
+  /**
+   * Each thread accumulatedd data in this map before they are saved
+   * to the global buckets.
+   */
+  private final ThreadLocal<Map<Integer, ByteBuffer> > local_buff;
   
   
   public MagicQueue(int max_chunk_size, int bucket_count)
   {
     this.max_chunk_size = max_chunk_size;
-    global_buckets = new LinkedBlockingQueue[bucket_count];
+    global_buckets = new LinkedList[bucket_count];
     for(int i=0; i<bucket_count; i++)
     {
-      global_buckets[i] = new LinkedBlockingQueue<>();
+      global_buckets[i] = new LinkedList<>();
     }
 
     local_buff = new ThreadLocal<Map<Integer, ByteBuffer>>() {
@@ -34,6 +43,12 @@ public class MagicQueue
   
   }
 
+
+  /**
+   * returns a ByteBuffer that is ready to accepts writes up to data_sizee
+   * as needed.  Might already have data in it.  Can only be used in this thread.
+   * Might not get saved to the global bucket until flush is called.
+   */
   public ByteBuffer openWrite(int bucket, int data_size)
   {
     Map<Integer, ByteBuffer> local = local_buff.get();
@@ -41,7 +56,8 @@ public class MagicQueue
     {
       if (local.get(bucket).remaining() >= data_size) return local.get(bucket);
 
-      global_buckets[bucket].offer(local.get(bucket));
+      writeToBucket(bucket, local.get(bucket));
+      global_buckets[bucket].add(local.get(bucket));
     }
 
     local.put(bucket, ByteBuffer.allocate(max_chunk_size));
@@ -49,9 +65,42 @@ public class MagicQueue
 
   }
 
+  /**
+   * @param data A byte buffer open for writes
+   */
+  private void writeToBucket(int bucket, ByteBuffer data)
+  {
+    LinkedList<ByteBuffer> lst = global_buckets[bucket];
+    synchronized(lst)
+    {
+      ByteBuffer last = lst.peekLast();
+      if ((last != null) && (last.remaining() >= data.position()))
+      {
+        data.flip();
+        last.put(data);
+      }
+      else
+      {
+        lst.add(data);
+      }
+    }
+  }
+
+  /**
+   * Returns null of a ByteBuffer with position 0 and limit set to how much data is there.
+   * ready for reading.
+   */
+
   public ByteBuffer readBucket(int bucket)
   {
-    return global_buckets[bucket].poll();
+    LinkedList<ByteBuffer> lst = global_buckets[bucket];
+    synchronized(lst)
+    {
+      ByteBuffer bb = lst.poll();
+      if (bb == null) return null;
+      bb.flip();
+      return bb;
+    }
   }
 
   public void flushFromLocal()
@@ -60,8 +109,9 @@ public class MagicQueue
     {
       int b = me.getKey();
       ByteBuffer bb = me.getValue();
-      global_buckets[b].offer(bb);
+      writeToBucket(b, bb);
     }
+    local_buff.get().clear();
 
   }
 
