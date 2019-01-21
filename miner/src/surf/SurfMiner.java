@@ -1,4 +1,4 @@
-package snowblossom.miner;
+package snowblossom.miner.surf;
 
 import com.google.protobuf.ByteString;
 import duckutil.Config;
@@ -6,6 +6,7 @@ import duckutil.ConfigFile;
 import duckutil.TimeRecord;
 import duckutil.TimeRecordAuto;
 import duckutil.RateReporter;
+import duckutil.DaemonThreadFactory;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 import io.grpc.stub.StreamObserver;
@@ -16,6 +17,12 @@ import snowblossom.mining.proto.MiningPoolServiceGrpc.MiningPoolServiceStub;
 import snowblossom.mining.proto.MiningPoolServiceGrpc.MiningPoolServiceBlockingStub;
 import snowblossom.lib.trie.HashUtils;
 import snowblossom.client.WalletUtil;
+import snowblossom.miner.PoolClientOperator;
+import snowblossom.miner.PoolClientFace;
+import snowblossom.miner.PoolClientFailover;
+import snowblossom.miner.PoolClient;
+import snowblossom.miner.FieldScan;
+import snowblossom.miner.SnowMerkleProof;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -29,10 +36,14 @@ import java.util.LinkedList;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicLong;
 import duckutil.MultiAtomicLong;
+import duckutil.FusionInitiator;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.SynchronousQueue;
 
-public class PoolMiner implements PoolClientOperator
+public class SurfMiner implements PoolClientOperator
 {
   private static final Logger logger = Logger.getLogger("snowblossom.miner");
 
@@ -41,7 +52,7 @@ public class PoolMiner implements PoolClientOperator
     Globals.addCryptoProvider();
     if (args.length != 1)
     {
-      logger.log(Level.SEVERE, "Incorrect syntax. Syntax: PoolMiner <config_file>");
+      logger.log(Level.SEVERE, "Incorrect syntax. Syntax: SurfMiner <config_file>");
       System.exit(-1);
     }
 
@@ -49,7 +60,7 @@ public class PoolMiner implements PoolClientOperator
 
     LogSetup.setup(config);
 
-    PoolMiner miner = new PoolMiner(config);
+    SurfMiner miner = new SurfMiner(config);
 
     while (true)
     {
@@ -70,20 +81,28 @@ public class PoolMiner implements PoolClientOperator
   private File snow_path;
 
   private TimeRecord time_record;
-  private RateReporter rate_report=new RateReporter();
+  private final RateReporter rate_report=new RateReporter();
 
   private AtomicLong share_submit_count = new AtomicLong(0L);
   private AtomicLong share_reject_count = new AtomicLong(0L);
   private AtomicLong share_block_count = new AtomicLong(0L);
 
-  private final PoolClientFace pool_client;
+  private PoolClientFace pool_client;
+  private final SnowMerkleProof field;
 
-  public PoolMiner(Config config) throws Exception
+  private final ThreadPoolExecutor hash_thread_pool;
+  private final FusionInitiator fusion;
+  private final int total_blocks;
+
+  public SurfMiner(Config config) throws Exception
   {
     this.config = config;
-    logger.info(String.format("Starting PoolMiner version %s", Globals.VERSION));
+    logger.info(String.format("Starting SurfMiner version %s", Globals.VERSION));
 
     config.require("snow_path");
+    config.require("selected_field");
+    config.require("waves");
+    config.require("hash_threads");
 
     params = NetworkParams.loadFromConfig(config);
 
@@ -99,23 +118,33 @@ public class PoolMiner implements PoolClientOperator
     snow_path = new File(config.get("snow_path"));
     
     field_scan = new FieldScan(snow_path, params, config);
+    int f = config.getInt("selected_field");
+    field_scan.requireField(f);
+    field = field_scan.getFieldProof(f);
 
     if (config.getBoolean("display_timerecord"))
     {
       time_record = new TimeRecord();
       TimeRecord.setSharedRecord(time_record);
     }
-
     pool_client.subscribe();
 
-    int threads = config.getIntWithDefault("threads", 8);
-    logger.info("Starting " + threads + " threads");
+    int hash_threads = config.getInt("hash_threads");
+    hash_thread_pool = new ThreadPoolExecutor(hash_threads, hash_threads, 2, TimeUnit.DAYS, new SynchronousQueue<Runnable>(), new DaemonThreadFactory("hash_threads"));
+    
+    int waves = config.getInt("waves");
+    fusion = new FusionInitiator(waves);
+    fusion.start();
 
+    total_blocks = (int) (field.getLength() / Globals.MINE_CHUNK_SIZE);
 
-    for (int i = 0; i < threads; i++)
+    for(int w = 0; w<waves; w++)
     {
-      new MinerThread().start();
+      int start = (total_blocks / waves) * w;
+      new WaveThread(w, start).start();
     }
+
+
   }
 
   public void stop()
@@ -151,7 +180,6 @@ public class PoolMiner implements PoolClientOperator
       block_time_report = String.format("- at this rate %s minutes per share (diff %s)", df.format(min), df.format(diff));
     }
 
-
     logger.info(String.format("15 Second mining rate: %s/sec %s", df.format(rate), block_time_report));
     logger.info(rate_report.getReportShort(df));
 
@@ -161,7 +189,6 @@ public class PoolMiner implements PoolClientOperator
     {
       if (getWorkUnit() == null)
       {
-
         logger.info("Stalled.  No valid work unit, reconnecting to pool");
         try
         {
@@ -179,11 +206,8 @@ public class PoolMiner implements PoolClientOperator
       }
     }
 
-
-
     if (config.getBoolean("display_timerecord"))
     {
-
       TimeRecord old = time_record;
 
       time_record = new TimeRecord();
@@ -203,6 +227,53 @@ public class PoolMiner implements PoolClientOperator
   public FieldScan getFieldScan()
   {
     return field_scan;
+  }
+
+  public class WaveThread extends Thread
+  {
+    private int task_number;
+    private int block;
+    private byte[] block_buff;
+    
+
+    public WaveThread(int task_number, int start_block)
+    {
+      setName("WaveThread{" + task_number + "}");
+      setDaemon(true);
+
+      this.task_number = task_number;
+      this.block = start_block;
+      block_buff = new byte[(int)Globals.MINE_CHUNK_SIZE];
+    }
+    public void run()
+    {
+      ByteBuffer bb = ByteBuffer.wrap(block_buff);
+
+      while(true)
+      {
+        try
+        {
+          fusion.taskWait(task_number);
+          // Reading block
+          bb.clear();
+
+          logger.info("Wave " + task_number + " reading chunk " + block);
+
+          long offset = block * Globals.MINE_CHUNK_SIZE;
+          field.readChunk(offset, bb);
+
+          fusion.taskComplete(task_number);
+
+          block = (block + 1) % total_blocks;
+        }
+        catch(java.io.IOException e)
+        {
+          e.printStackTrace();
+          System.exit(-1);
+        }
+
+      }
+    }
   }
 
   public class MinerThread extends Thread

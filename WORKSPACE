@@ -4,7 +4,7 @@ load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 git_repository(
   name = "duckutil",
   remote = "https://github.com/fireduck64/duckutil",
-  tag = "v1.0.17",
+  tag = "v1.1.0",
 )
 
 maven_jar(

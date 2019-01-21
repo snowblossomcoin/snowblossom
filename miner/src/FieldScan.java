@@ -109,6 +109,14 @@ public class FieldScan
     }
   }
 
+  public synchronized void requireField(int field)
+  {
+    if (!availible_fields.containsKey(field))
+    {
+      throw new RuntimeException(String.format("Field required %d, but we don't have it.", field));
+    }
+  }
+
   public synchronized int selectField(int min_field)
   {
     if (auto_snow != null)

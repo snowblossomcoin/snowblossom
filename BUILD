@@ -33,6 +33,13 @@ java_binary(
   ]
 )
 java_binary(
+  name = "SurfMiner",
+  main_class = "snowblossom.miner.surf.SurfMiner",
+  runtime_deps = [
+    "//miner:miner",
+  ]
+)
+java_binary(
   name = "MrPlow",
   main_class = "snowblossom.miner.MrPlow",
   runtime_deps = [
