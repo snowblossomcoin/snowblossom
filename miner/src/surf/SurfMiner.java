@@ -42,6 +42,7 @@ import java.util.logging.Logger;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.SynchronousQueue;
+import java.util.concurrent.Semaphore;
 
 public class SurfMiner implements PoolClientOperator
 {
@@ -89,10 +90,14 @@ public class SurfMiner implements PoolClientOperator
 
   private PoolClientFace pool_client;
   private final SnowMerkleProof field;
+  private final int selected_field;
 
   private final ThreadPoolExecutor hash_thread_pool;
   private final FusionInitiator fusion;
   private final int total_blocks;
+  private final MagicQueue magic_queue;
+  private final Semaphore start_work_sem = new Semaphore(0);
+  private final int units_in_flight_target = 5000000;
 
   public SurfMiner(Config config) throws Exception
   {
@@ -103,6 +108,8 @@ public class SurfMiner implements PoolClientOperator
     config.require("selected_field");
     config.require("waves");
     config.require("hash_threads");
+
+
 
     params = NetworkParams.loadFromConfig(config);
 
@@ -118,16 +125,20 @@ public class SurfMiner implements PoolClientOperator
     snow_path = new File(config.get("snow_path"));
     
     field_scan = new FieldScan(snow_path, params, config);
-    int f = config.getInt("selected_field");
-    field_scan.requireField(f);
-    field = field_scan.getFieldProof(f);
+    selected_field = config.getInt("selected_field");
+    field_scan.requireField(selected_field);
+    field = field_scan.getFieldProof(selected_field);
 
     if (config.getBoolean("display_timerecord"))
     {
       time_record = new TimeRecord();
       TimeRecord.setSharedRecord(time_record);
     }
+    total_blocks = (int) (field.getLength() / Globals.MINE_CHUNK_SIZE);
+
+    magic_queue = new MagicQueue(config.getIntWithDefault("buffer_size", 500000), total_blocks);
     pool_client.subscribe();
+
 
     int hash_threads = config.getInt("hash_threads");
     hash_thread_pool = new ThreadPoolExecutor(hash_threads, hash_threads, 2, TimeUnit.DAYS, new SynchronousQueue<Runnable>(), new DaemonThreadFactory("hash_threads"));
@@ -136,7 +147,6 @@ public class SurfMiner implements PoolClientOperator
     fusion = new FusionInitiator(waves);
     fusion.start();
 
-    total_blocks = (int) (field.getLength() / Globals.MINE_CHUNK_SIZE);
 
     for(int w = 0; w<waves; w++)
     {
@@ -258,7 +268,10 @@ public class SurfMiner implements PoolClientOperator
           logger.info("Wave " + task_number + " reading chunk " + block);
 
           long offset = block * Globals.MINE_CHUNK_SIZE;
+
           field.readChunk(offset, bb);
+          //process block
+          processBlock(block_buff, block);
 
           fusion.taskComplete(task_number);
 
@@ -272,6 +285,19 @@ public class SurfMiner implements PoolClientOperator
 
       }
     }
+  }
+
+  private void processBlock(byte[] block_data, int block_number)
+  {
+    // For each buffer in magic queue
+    // process next pass
+    // in pass 6, compare to target
+    //  if less than target, submit share
+    //  release work sem
+    // for other passes, enqueue into magic queue
+    // flush magic queue
+
+
   }
 
   public class MinerThread extends Thread
@@ -432,19 +458,17 @@ public class SurfMiner implements PoolClientOperator
   }
 
   @Override
-  public void notifyNewBlock(int block_id){}
+  public void notifyNewBlock(int block_id)
+  {
+    magic_queue.clearAll();
+    start_work_sem.release(units_in_flight_target);
+  }
 
   @Override
   public void notifyNewWorkUnit(WorkUnit wu)
   {
-
-    int min_field = wu.getHeader().getSnowField();
-
-    int selected_field = -1;
-
     try
     {
-      selected_field = field_scan.selectField(min_field);
 
       BlockHeader.Builder bh = BlockHeader.newBuilder();
       bh.mergeFrom(wu.getHeader());

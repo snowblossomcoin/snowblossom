@@ -18,6 +18,7 @@ public class MagicQueue
    */
   private final LinkedList<ByteBuffer>[] global_buckets;
   private final int max_chunk_size;
+  private final int bucket_count;
 
   /**
    * Each thread accumulatedd data in this map before they are saved
@@ -29,6 +30,8 @@ public class MagicQueue
   public MagicQueue(int max_chunk_size, int bucket_count)
   {
     this.max_chunk_size = max_chunk_size;
+    this.bucket_count = bucket_count;
+
     global_buckets = new LinkedList[bucket_count];
     for(int i=0; i<bucket_count; i++)
     {
@@ -112,6 +115,20 @@ public class MagicQueue
       writeToBucket(b, bb);
     }
     local_buff.get().clear();
+
+  }
+
+  /** Might not clear all, some stuff might still be in ThreadLocal buffers */
+  public void clearAll()
+  {
+    for(int i=0; i<bucket_count; i++)
+    {
+      LinkedList<ByteBuffer> lst = global_buckets[i];
+      synchronized(lst)
+      {
+        lst.clear();
+      }
+    }
 
   }
 
