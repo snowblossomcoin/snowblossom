@@ -202,7 +202,6 @@ public class SurfMiner implements PoolClientOperator
       else
       {
         logger.info("No hashing, and we have a good work unit from the pool.  So probably something else wrong.");
-        logger.info("Probably code EBCAK");
       }
     }
 
@@ -234,7 +233,6 @@ public class SurfMiner implements PoolClientOperator
     private int task_number;
     private int block;
     private byte[] block_buff;
-    
 
     public WaveThread(int task_number, int start_block)
     {

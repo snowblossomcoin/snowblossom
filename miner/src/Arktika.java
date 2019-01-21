@@ -245,7 +245,6 @@ public class Arktika implements PoolClientOperator
       else
       {
         logger.info("No hashing, and we have a good work unit from the pool.  So probably something else wrong.");
-        logger.info("Probably code EBCAK");
       }
     }
 
