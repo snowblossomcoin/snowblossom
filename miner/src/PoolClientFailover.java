@@ -155,6 +155,7 @@ public class PoolClientFailover implements PoolClientFace
     public void runPass() throws Exception
     {
       StringBuilder sb = new StringBuilder();
+      long pass_count=0;
 
       boolean active_set=false;
       for(PoolOp p : pools)
@@ -195,7 +196,12 @@ public class PoolClientFailover implements PoolClientFace
         sb.append('\n');
         
       }
-      logger.info("Pool status\n" + sb.toString());
+
+      if (pass_count % 4 == 0)
+      {
+        logger.info("Pool status\n" + sb.toString());
+      }
+      pass_count++;
 
     }
 

@@ -66,7 +66,7 @@ public class SurfMiner implements PoolClientOperator
 
     while (true)
     {
-      Thread.sleep(300000);
+      Thread.sleep(60000);
       miner.printStats();
     }
   }
@@ -285,7 +285,7 @@ public class SurfMiner implements PoolClientOperator
           // Reading block
           bb.clear();
 
-          logger.info("Wave " + task_number + " reading chunk " + block);
+          logger.fine("Wave " + task_number + " reading chunk " + block);
 
           long offset = block * Globals.MINE_CHUNK_SIZE;
 
@@ -478,6 +478,10 @@ public class SurfMiner implements PoolClientOperator
 
     while(b.remaining() > 0)
     {
+      if (b.remaining() % getRecordSize() != 0)
+      {
+        logger.warning(String.format("Mismatch on buffer size: %d %d", b.remaining(), getRecordSize()));
+      }
       int work_id = b.getInt();
       byte pass = b.get();
       long word_idx = b.getLong();
@@ -487,7 +491,7 @@ public class SurfMiner implements PoolClientOperator
       long word_offset = word_idx % WORDS_PER_CHUNK;
       int word_offset_bytes = (int)(word_offset * Globals.SNOW_MERKLE_HASH_LEN);
 
-      logger.info(String.format("pass:%d idx:%d word_off:%d b:%d", pass, word_idx, word_offset, word_offset_bytes));
+      //logger.info(String.format("pass:%d idx:%d word_off:%d b:%d", pass, word_idx, word_offset, word_offset_bytes));
       System.arraycopy(block_data, word_offset_bytes, word_buff, 0, Globals.SNOW_MERKLE_HASH_LEN);
       
       byte[] new_context = PowUtil.getNextContext(context, word_buff, md);
@@ -562,7 +566,8 @@ public class SurfMiner implements PoolClientOperator
         }
       });
     }
-    logger.info(String.format("Running %d buffers for block %d", work_count, block_number));
+
+    logger.fine(String.format("Running %d buffers for block %d", work_count, block_number));
     work_sem.acquire(work_count);
     // For each buffer in magic queue
     // process next pass
