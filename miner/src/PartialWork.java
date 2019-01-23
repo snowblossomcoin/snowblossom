@@ -22,6 +22,7 @@ public class PartialWork implements Comparable<PartialWork>
 
   byte[] word_buff = new byte[SnowMerkle.HASH_LEN];
   ByteBuffer word_bb = ByteBuffer.wrap(word_buff);
+  byte[] tmp_buff = new byte[32];
 
   @VisibleForTesting
   public PartialWork(int pass_no)
@@ -37,7 +38,7 @@ public class PartialWork implements Comparable<PartialWork>
     wu.getHeader().getNonce().copyTo(nonce, 0);
     context = PowUtil.hashHeaderBits(wu.getHeader(), nonce, md);
     
-    next_word_idx = PowUtil.getNextSnowFieldIndex(context, total_words, md);
+    next_word_idx = PowUtil.getNextSnowFieldIndex(context, total_words, md, tmp_buff);
 
   }
 
@@ -68,12 +69,12 @@ public class PartialWork implements Comparable<PartialWork>
   {
     //System.out.println("Pass: " + passes_done);
     Assert.assertTrue(next_word_idx >= 0);
-    context = PowUtil.getNextContext(context, word_buff, md);
+    PowUtil.getNextContext(context, word_buff, md, context);
 
     passes_done++;
     if (passes_done < Globals.POW_LOOK_PASSES)
     {
-      next_word_idx = PowUtil.getNextSnowFieldIndex(context, total_words, md);
+      next_word_idx = PowUtil.getNextSnowFieldIndex(context, total_words, md, tmp_buff);
     }
     else
     {

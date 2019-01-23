@@ -209,6 +209,7 @@ public class PoolMiner implements PoolClientOperator
     Random rnd;
     MessageDigest md = DigestUtil.getMD();
 
+    byte[] tmp_buff = new byte[32];
     byte[] word_buff = new byte[SnowMerkle.HASH_LEN];
     ByteBuffer word_bb = ByteBuffer.wrap(word_buff);
     SnowMerkleProof merkle_proof;
@@ -267,9 +268,9 @@ public class PoolMiner implements PoolClientOperator
         {
           long word_idx;
           ((Buffer)word_bb).clear();
-          word_idx = PowUtil.getNextSnowFieldIndex(context, merkle_proof.getTotalWords(), md);
+          word_idx = PowUtil.getNextSnowFieldIndex(context, merkle_proof.getTotalWords(), md, tmp_buff);
           if (!merkle_proof.readWord(word_idx, word_bb, pass)) { return;}
-          context = PowUtil.getNextContext(context, word_buff, md);
+          PowUtil.getNextContext(context, word_buff, md, context);
         }
       }
 

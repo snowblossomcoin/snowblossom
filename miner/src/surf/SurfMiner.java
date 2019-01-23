@@ -146,7 +146,7 @@ public class SurfMiner implements PoolClientOperator
     }
     total_blocks = (int) (field.getLength() / Globals.MINE_CHUNK_SIZE);
 
-    magic_queue = new MagicQueue(config.getIntWithDefault("buffer_size", 100000), total_blocks);
+    magic_queue = new MagicQueue(config.getIntWithDefault("buffer_size", 10000), total_blocks);
     pool_client.subscribe();
 
     
@@ -315,6 +315,7 @@ public class SurfMiner implements PoolClientOperator
     ByteBuffer word_bb = ByteBuffer.wrap(word_buff);
     int proof_field;
     byte[] nonce = new byte[Globals.NONCE_LENGTH];
+    byte[] tmp_buff = new byte[32];
 
     public WorkStarter()
     {
@@ -356,7 +357,7 @@ public class SurfMiner implements PoolClientOperator
 
       byte[] context = PowUtil.hashHeaderBits(wu.getHeader(), nonce, md);
 
-      long word_idx = PowUtil.getNextSnowFieldIndex(context, field.getTotalWords(), md);
+      long word_idx = PowUtil.getNextSnowFieldIndex(context, field.getTotalWords(), md, tmp_buff);
 
       int block = (int)(word_idx / WORDS_PER_CHUNK);
 
@@ -476,6 +477,7 @@ public class SurfMiner implements PoolClientOperator
 
     byte[] nonce=new byte[Globals.NONCE_LENGTH];
     byte[] context=new byte[Globals.BLOCKCHAIN_HASH_LEN];
+    byte[] tmp_buff=new byte[Globals.BLOCKCHAIN_HASH_LEN];
 
     byte[] word_buff = new byte[SnowMerkle.HASH_LEN];
     MessageDigest md = DigestUtil.getMD();
@@ -499,8 +501,6 @@ public class SurfMiner implements PoolClientOperator
       System.arraycopy(block_data, word_offset_bytes, word_buff, 0, Globals.SNOW_MERKLE_HASH_LEN);
       //logger.info(String.format("Word: %s", HexUtil.getHexString(word_buff)));
       
-      byte[] new_context = PowUtil.getNextContext(context, word_buff, md);
-      byte new_pass = pass; new_pass++;
 
       if (pass == 6)
       {
@@ -538,12 +538,14 @@ public class SurfMiner implements PoolClientOperator
       }
       else
       {
-        long new_word_idx = PowUtil.getNextSnowFieldIndex(new_context, field.getTotalWords(), md);
+        byte new_pass = pass; new_pass++;
+        PowUtil.getNextContext(context, word_buff, md, context);
+        long new_word_idx = PowUtil.getNextSnowFieldIndex(context, field.getTotalWords(), md, tmp_buff);
         int new_block = (int)(new_word_idx / WORDS_PER_CHUNK);
 
         ByteBuffer bucket_buff = magic_queue.openWrite(new_block, getRecordSize()); 
 
-        writeRecord(bucket_buff, work_id, new_pass, new_word_idx, nonce, new_context);
+        writeRecord(bucket_buff, work_id, new_pass, new_word_idx, nonce, context);
 
       }
     }
