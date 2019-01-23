@@ -42,6 +42,7 @@ import java.util.logging.Logger;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.SynchronousQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.Semaphore;
 
 public class SurfMiner implements PoolClientOperator
@@ -65,7 +66,7 @@ public class SurfMiner implements PoolClientOperator
 
     while (true)
     {
-      Thread.sleep(15000);
+      Thread.sleep(300000);
       miner.printStats();
     }
   }
@@ -97,7 +98,9 @@ public class SurfMiner implements PoolClientOperator
   private final int total_blocks;
   private final MagicQueue magic_queue;
   private final Semaphore start_work_sem = new Semaphore(0);
-  private final int units_in_flight_target = 5000000;
+  private final int units_in_flight_target;
+  private LRUCache<Integer, WorkUnit> workunit_cache = new LRUCache<>(250);
+  private final long WORDS_PER_CHUNK = Globals.MINE_CHUNK_SIZE / Globals.SNOW_MERKLE_HASH_LEN;
 
   public SurfMiner(Config config) throws Exception
   {
@@ -108,6 +111,13 @@ public class SurfMiner implements PoolClientOperator
     config.require("selected_field");
     config.require("waves");
     config.require("hash_threads");
+    config.require("work_unit_mem_gb");
+
+    long mem_gb = config.getInt("work_unit_mem_gb");
+    long mem_bytes = mem_gb * 1024L * 1024L * 1024L;
+
+    units_in_flight_target = (int) (mem_bytes / getRecordSize());
+    logger.info("In memory target: " + units_in_flight_target);
 
 
 
@@ -136,12 +146,18 @@ public class SurfMiner implements PoolClientOperator
     }
     total_blocks = (int) (field.getLength() / Globals.MINE_CHUNK_SIZE);
 
-    magic_queue = new MagicQueue(config.getIntWithDefault("buffer_size", 500000), total_blocks);
+    magic_queue = new MagicQueue(config.getIntWithDefault("buffer_size", 100000), total_blocks);
     pool_client.subscribe();
 
+    
 
     int hash_threads = config.getInt("hash_threads");
-    hash_thread_pool = new ThreadPoolExecutor(hash_threads, hash_threads, 2, TimeUnit.DAYS, new SynchronousQueue<Runnable>(), new DaemonThreadFactory("hash_threads"));
+    hash_thread_pool = new ThreadPoolExecutor(hash_threads, hash_threads, 2, TimeUnit.DAYS, new LinkedBlockingQueue<Runnable>(), new DaemonThreadFactory("hash_threads"));
+
+    for(int i=0; i<hash_threads; i++)
+    {
+      new WorkStarter().start();
+    }
     
     int waves = config.getInt("waves");
     fusion = new FusionInitiator(waves);
@@ -153,6 +169,11 @@ public class SurfMiner implements PoolClientOperator
       int start = (total_blocks / waves) * w;
       new WaveThread(w, start).start();
     }
+
+    Thread.sleep(5000);
+    start_work_sem.release(units_in_flight_target);
+
+
 
 
   }
@@ -190,7 +211,6 @@ public class SurfMiner implements PoolClientOperator
       block_time_report = String.format("- at this rate %s minutes per share (diff %s)", df.format(min), df.format(diff));
     }
 
-    logger.info(String.format("15 Second mining rate: %s/sec %s", df.format(rate), block_time_report));
     logger.info(rate_report.getReportShort(df));
 
     last_stats_time = now;
@@ -277,7 +297,7 @@ public class SurfMiner implements PoolClientOperator
 
           block = (block + 1) % total_blocks;
         }
-        catch(java.io.IOException e)
+        catch(Exception e)
         {
           e.printStackTrace();
           System.exit(-1);
@@ -287,33 +307,19 @@ public class SurfMiner implements PoolClientOperator
     }
   }
 
-  private void processBlock(byte[] block_data, int block_number)
-  {
-    // For each buffer in magic queue
-    // process next pass
-    // in pass 6, compare to target
-    //  if less than target, submit share
-    //  release work sem
-    // for other passes, enqueue into magic queue
-    // flush magic queue
-
-
-  }
-
-  public class MinerThread extends Thread
+  public class WorkStarter extends Thread
   {
     Random rnd;
     MessageDigest md = DigestUtil.getMD();
 
     byte[] word_buff = new byte[SnowMerkle.HASH_LEN];
     ByteBuffer word_bb = ByteBuffer.wrap(word_buff);
-    SnowMerkleProof merkle_proof;
     int proof_field;
     byte[] nonce = new byte[Globals.NONCE_LENGTH];
 
-    public MinerThread()
+    public WorkStarter()
     {
-      setName("MinerThread");
+      setName("WorkStarter");
       setDaemon(true);
       rnd = new Random();
 
@@ -335,7 +341,13 @@ public class SurfMiner implements PoolClientOperator
         logger.log(Level.WARNING, "Work Unit is old, not mining it");
         last_work_unit = null;
       }
-      
+
+      if (!start_work_sem.tryAcquire())
+      {
+        // We might be at the end of the work, so flush any in queues
+        magic_queue.flushFromLocal();
+        start_work_sem.acquire();
+      }
 
       try (TimeRecordAuto tra = TimeRecord.openAuto("MinerThread.rndNonce"))
       {
@@ -345,64 +357,73 @@ public class SurfMiner implements PoolClientOperator
 
       byte[] first_hash = PowUtil.hashHeaderBits(wu.getHeader(), nonce, md);
 
-      /**
-       * This is a windows specific improvement since windows likes separete file descriptors
-       *  per thread.
-       */
-      if ((merkle_proof == null) || (proof_field != wu.getHeader().getSnowField()))
-      {
-        merkle_proof = field_scan.getSingleUserFieldProof(wu.getHeader().getSnowField());
-        proof_field = wu.getHeader().getSnowField();
-      }
-
       byte[] context = first_hash;
+      long word_idx = PowUtil.getNextSnowFieldIndex(context, field.getTotalWords(), md);
 
-      try (TimeRecordAuto tra = null)
-      {
-        for (int pass = 0; pass < Globals.POW_LOOK_PASSES; pass++)
-        {
-          long word_idx;
-          ((Buffer)word_bb).clear();
-          word_idx = PowUtil.getNextSnowFieldIndex(context, merkle_proof.getTotalWords(), md);
-          if (!merkle_proof.readWord(word_idx, word_bb, pass)) { return;}
-          context = PowUtil.getNextContext(context, word_buff, md);
-        }
-      }
+      int block = (int)(word_idx / WORDS_PER_CHUNK);
 
-      byte[] found_hash = context;
+      ByteBuffer bucket_buff = magic_queue.openWrite(block, getRecordSize()); 
 
-      if (PowUtil.lessThanTarget(found_hash, wu.getReportTarget()))
-      {
-        String str = HashUtils.getHexString(found_hash);
-        logger.info("Found passable solution: " + str);
-        submitWork(wu, nonce, merkle_proof);
+      writeRecord(bucket_buff, wu.getWorkId(), (byte)0, word_idx, nonce, context);
 
-      }
-      op_count.add(1L);
     }
 
-    private void submitWork(WorkUnit wu, byte[] nonce, SnowMerkleProof merkle_proof) throws Exception
+
+    public void run()
+    {
+      while (!terminate)
+      {
+        boolean err = false;
+        try (TimeRecordAuto tra = TimeRecord.openAuto("MinerThread.runPass"))
+        {
+          runPass();
+        }
+        catch (Throwable t)
+        {
+          err = true;
+          logger.warning("Error: " + t);
+          t.printStackTrace();
+        }
+
+        if (err)
+        {
+
+          try (TimeRecordAuto tra = TimeRecord.openAuto("MinerThread.errorSleep"))
+          {
+            Thread.sleep(5000);
+          }
+          catch (Throwable t)
+          {
+          }
+        }
+      }
+    }
+  }
+    private void submitWork(WorkUnit wu, byte[] nonce) throws Exception
     {
       byte[] first_hash = PowUtil.hashHeaderBits(wu.getHeader(), nonce);
       byte[] context = first_hash;
 
+      MessageDigest md = DigestUtil.getMD();
+
+      byte[] word_buff = new byte[SnowMerkle.HASH_LEN];
+      ByteBuffer word_bb = ByteBuffer.wrap(word_buff);
 
       BlockHeader.Builder header = BlockHeader.newBuilder();
       header.mergeFrom(wu.getHeader());
       header.setNonce(ByteString.copyFrom(nonce));
 
-
       for (int pass = 0; pass < Globals.POW_LOOK_PASSES; pass++)
       {
         ((Buffer)word_bb).clear();
 
-        long word_idx = PowUtil.getNextSnowFieldIndex(context, merkle_proof.getTotalWords());
-        boolean gotData = merkle_proof.readWord(word_idx, word_bb, pass);
+        long word_idx = PowUtil.getNextSnowFieldIndex(context, field.getTotalWords());
+        boolean gotData = field.readWord(word_idx, word_bb, pass);
         if (!gotData)
         {
           logger.log(Level.SEVERE, "readWord returned false on pass " + pass);
         }
-        SnowPowProof proof = merkle_proof.getProof(word_idx);
+        SnowPowProof proof = field.getProof(word_idx);
         header.addPowProof(proof);
         context = PowUtil.getNextContext(context, word_buff);
       }
@@ -427,39 +448,132 @@ public class SurfMiner implements PoolClientOperator
     }
 
 
-    public void run()
+  private int getRecordSize()
+  {
+    return 4+1+8+12+32;
+  }
+
+  private void writeRecord(ByteBuffer bb, int work_id, byte pass, long word_idx, byte[] nonce, byte[] context)
+  {
+    bb.putInt(work_id);
+    bb.put(pass);
+    bb.putLong(word_idx);
+    bb.put(nonce);
+    bb.put(context);
+  }
+
+  private void processBuffer(byte[] block_data, int block_number, ByteBuffer b, Semaphore work_sem)
+  {
+     // in pass 6, compare to target
+    //  if less than target, submit share
+    //  release work sem
+    // for other passes, enqueue into magic queue
+    // flush magic queue
+
+    byte[] nonce=new byte[Globals.NONCE_LENGTH];
+    byte[] context=new byte[Globals.BLOCKCHAIN_HASH_LEN];
+
+    byte[] word_buff = new byte[SnowMerkle.HASH_LEN];
+    MessageDigest md = DigestUtil.getMD();
+
+    while(b.remaining() > 0)
     {
-      while (!terminate)
+      int work_id = b.getInt();
+      byte pass = b.get();
+      long word_idx = b.getLong();
+      b.get(nonce);
+      b.get(context);
+
+      long word_offset = word_idx % WORDS_PER_CHUNK;
+      int word_offset_bytes = (int)(word_offset * Globals.SNOW_MERKLE_HASH_LEN);
+
+      logger.info(String.format("pass:%d idx:%d word_off:%d b:%d", pass, word_idx, word_offset, word_offset_bytes));
+      System.arraycopy(block_data, word_offset_bytes, word_buff, 0, Globals.SNOW_MERKLE_HASH_LEN);
+      
+      byte[] new_context = PowUtil.getNextContext(context, word_buff, md);
+      byte new_pass = pass; new_pass++;
+
+      if (new_pass == 6)
       {
-        boolean err = false;
-        try (TimeRecordAuto tra = TimeRecord.openAuto("MinerThread.runPass"))
+        op_count.add(1L);
+        start_work_sem.release();
+
+        WorkUnit wu = null;
+        synchronized(workunit_cache)
         {
-          runPass();
+          wu = workunit_cache.get(work_id);
         }
-        catch (Throwable t)
+        if (wu == null)
         {
-          err = true;
-          logger.warning("Error: " + t);
+          logger.warning("Pass 6 for unknown work unit");
+        }
+        else
+        {
+
+          if (PowUtil.lessThanTarget(context, wu.getReportTarget()))
+          {
+            String str = HashUtils.getHexString(context);
+            logger.info("Found passable solution: " + str);
+            try
+            {
+            submitWork(wu, nonce);
+            }
+            catch(Throwable t)
+            {
+              logger.warning("Exception in submit: " + t.toString());
+            }
+          }
+
         }
 
-        if (err)
-        {
+      }
+      else
+      {
+        long new_word_idx = PowUtil.getNextSnowFieldIndex(new_context, field.getTotalWords(), md);
+        int new_block = (int)(new_word_idx / WORDS_PER_CHUNK);
 
-          try (TimeRecordAuto tra = TimeRecord.openAuto("MinerThread.errorSleep"))
-          {
-            Thread.sleep(5000);
-          }
-          catch (Throwable t)
-          {
-          }
-        }
+        ByteBuffer bucket_buff = magic_queue.openWrite(new_block, getRecordSize()); 
+
+        writeRecord(bucket_buff, work_id, new_pass, new_word_idx, nonce, new_context);
+
       }
     }
+
+    magic_queue.flushFromLocal();
+    work_sem.release();
   }
+
+  private void processBlock(byte[] block_data, int block_number)
+    throws Exception
+  {
+    Semaphore work_sem = new Semaphore(0);
+    int work_count =0;
+
+    ByteBuffer b = null;
+    while((b = magic_queue.readBucket(block_number)) != null)
+    {
+      final ByteBuffer bb = b;
+      work_count++;
+      hash_thread_pool.execute( new Runnable(){
+
+        public void run()
+        {
+          processBuffer(block_data, block_number, bb, work_sem);
+        }
+      });
+    }
+    logger.info(String.format("Running %d buffers for block %d", work_count, block_number));
+    work_sem.acquire(work_count);
+    // For each buffer in magic queue
+    // process next pass
+
+  }
+
 
   @Override
   public void notifyNewBlock(int block_id)
   {
+    logger.info("New block: " + block_id);
     magic_queue.clearAll();
     start_work_sem.release(units_in_flight_target);
   }
@@ -478,6 +592,11 @@ public class SurfMiner implements PoolClientOperator
         .mergeFrom(wu)
         .setHeader(bh.build())
         .build();
+
+      synchronized(workunit_cache)
+      {
+        workunit_cache.put(wu_new.getWorkId(), wu_new);
+      }
 
       last_work_unit = wu_new;
     }
