@@ -59,8 +59,7 @@ public class MagicQueue
     {
       if (local.get(bucket).remaining() >= data_size) return local.get(bucket);
 
-      writeToBucket(bucket, local.get(bucket));
-      global_buckets[bucket].add(local.get(bucket));
+      writeToBucket( bucket, local.get(bucket) );
     }
 
     local.put(bucket, ByteBuffer.allocate(max_chunk_size));
