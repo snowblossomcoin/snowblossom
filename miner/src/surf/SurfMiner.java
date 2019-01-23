@@ -275,7 +275,6 @@ public class SurfMiner implements PoolClientOperator
     }
     public void run()
     {
-      ByteBuffer bb = ByteBuffer.wrap(block_buff);
 
       while(true)
       {
@@ -283,7 +282,7 @@ public class SurfMiner implements PoolClientOperator
         {
           fusion.taskWait(task_number);
           // Reading block
-          bb.clear();
+          ByteBuffer bb = ByteBuffer.wrap(block_buff);
 
           logger.fine("Wave " + task_number + " reading chunk " + block);
 
@@ -355,9 +354,8 @@ public class SurfMiner implements PoolClientOperator
         wu.getHeader().getNonce().copyTo(nonce, 0);
       }
 
-      byte[] first_hash = PowUtil.hashHeaderBits(wu.getHeader(), nonce, md);
+      byte[] context = PowUtil.hashHeaderBits(wu.getHeader(), nonce, md);
 
-      byte[] context = first_hash;
       long word_idx = PowUtil.getNextSnowFieldIndex(context, field.getTotalWords(), md);
 
       int block = (int)(word_idx / WORDS_PER_CHUNK);
@@ -399,7 +397,7 @@ public class SurfMiner implements PoolClientOperator
       }
     }
   }
-    private void submitWork(WorkUnit wu, byte[] nonce) throws Exception
+    private void submitWork(WorkUnit wu, byte[] nonce, byte[] expected_hash) throws Exception
     {
       byte[] first_hash = PowUtil.hashHeaderBits(wu.getHeader(), nonce);
       byte[] context = first_hash;
@@ -429,6 +427,12 @@ public class SurfMiner implements PoolClientOperator
       }
 
       byte[] found_hash = context;
+
+      if (!ByteString.copyFrom(found_hash).equals(ByteString.copyFrom(expected_hash)))
+      {
+        logger.warning("Submit called with wrong hash");
+      }
+
 
       header.setSnowHash(ByteString.copyFrom(found_hash));
 
@@ -493,11 +497,12 @@ public class SurfMiner implements PoolClientOperator
 
       //logger.info(String.format("pass:%d idx:%d word_off:%d b:%d", pass, word_idx, word_offset, word_offset_bytes));
       System.arraycopy(block_data, word_offset_bytes, word_buff, 0, Globals.SNOW_MERKLE_HASH_LEN);
+      //logger.info(String.format("Word: %s", HexUtil.getHexString(word_buff)));
       
       byte[] new_context = PowUtil.getNextContext(context, word_buff, md);
       byte new_pass = pass; new_pass++;
 
-      if (new_pass == 6)
+      if (pass == 6)
       {
         op_count.add(1L);
         start_work_sem.release();
@@ -520,7 +525,7 @@ public class SurfMiner implements PoolClientOperator
             logger.info("Found passable solution: " + str);
             try
             {
-            submitWork(wu, nonce);
+              submitWork(wu, nonce, context);
             }
             catch(Throwable t)
             {
