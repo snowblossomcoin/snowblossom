@@ -8,8 +8,10 @@ import snowblossom.lib.NetworkParams;
 import snowblossom.lib.NetworkParamsRegtest;
 import snowblossom.lib.NetworkParamsProd;
 import snowblossom.lib.PowUtil;
+import snowblossom.lib.HexUtil;
 
 import java.math.BigInteger;
+import java.util.Random;
 
 public class PowUtilTest
 {
@@ -23,7 +25,6 @@ public class PowUtilTest
     BigInteger target = PowUtil.calcNextTarget(bs, params, System.currentTimeMillis());
 
     Assert.assertEquals(params.getMaxTarget(), target);
-    
   }
 
 
@@ -195,6 +196,33 @@ public class PowUtilTest
     }
   }
 
+  @Test
+  public void testNextWordIndex()
+  {
+    byte[] context=new byte[32];
+    for(int i=0; i<32; i++) context[i]=(byte)i;
+
+    long v = PowUtil.getNextSnowFieldIndex(context, 1024L*1024L*1024L*32L);
+
+    Assert.assertEquals(19323217346L, v);
+
+  }
+
+  @Test
+  public void testGetNextContext()
+  {
+    Random rnd=new Random(9182L);
+    byte[] context=new byte[32];
+    byte[] word=new byte[32];
+    rnd.nextBytes(context);
+    rnd.nextBytes(word);
+
+    byte[] new_context = PowUtil.getNextContext(context, word);
+
+    Assert.assertEquals("db176f021b168412a05904e7e729a072943cc8a4f266a4579654b8aa0fecfb8b", HexUtil.getHexString(new_context));
+
+
+  }
 
 
 }

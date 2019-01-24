@@ -59,7 +59,6 @@ public class PowUtil
     try
     {
       md.update(context);
-      byte[] hash = md.digest();
       md.digest(tmp_buff,0, Globals.BLOCKCHAIN_HASH_LEN);
 
       byte[] longdata = new byte[8];
