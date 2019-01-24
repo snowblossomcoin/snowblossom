@@ -117,8 +117,19 @@ public class PowUtil
 
   public static boolean lessThanTarget(byte[] found_hash, ByteString target)
   {
-      ByteString found = ByteString.copyFrom(found_hash,0, Globals.TARGET_LENGTH);
-      return (ByteStringComparator.compareStatic(found, target) < 0);
+
+    // Quickly reject nonsense
+    for(int i=0; i<8; i++)
+    {
+      // If the target is not zero, done with loop
+      if (target.byteAt(i) != 0) break;
+
+      // If the target is zero, but found is not, fail
+      if (found_hash[i] != 0) return false;
+    }
+    
+    ByteString found = ByteString.copyFrom(found_hash,0, Globals.TARGET_LENGTH);
+    return (ByteStringComparator.compareStatic(found, target) < 0);
   }
 
   public static BigInteger calcNextTarget(BlockSummary prev_summary, NetworkParams params, long clock_time)
