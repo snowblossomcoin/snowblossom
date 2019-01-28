@@ -342,28 +342,41 @@ public class SurfMiner implements PoolClientOperator
         last_work_unit = null;
       }
 
+      int to_start = 0;
+
       if (!start_work_sem.tryAcquire())
       {
         // We might be at the end of the work, so flush any in queues
         magic_queue.flushFromLocal();
         start_work_sem.acquire();
+        to_start++;
+      }
+      else
+      {
+        to_start++;
+        if (start_work_sem.tryAcquire(1000))
+        {
+          to_start+=1000;
+        }
       }
 
-      try (TimeRecordAuto tra = TimeRecord.openAuto("MinerThread.rndNonce"))
+      wu = last_work_unit;
+
+      for(int s =0 ; s<to_start; s++)
       {
         rnd.nextBytes(nonce);
         wu.getHeader().getNonce().copyTo(nonce, 0);
+
+        byte[] context = PowUtil.hashHeaderBits(wu.getHeader(), nonce, md);
+
+        long word_idx = PowUtil.getNextSnowFieldIndex(context, field.getTotalWords(), md, tmp_buff);
+
+        int block = (int)(word_idx / WORDS_PER_CHUNK);
+
+        ByteBuffer bucket_buff = magic_queue.openWrite(block, getRecordSize()); 
+
+        writeRecord(bucket_buff, wu.getWorkId(), (byte)0, word_idx, nonce, context);
       }
-
-      byte[] context = PowUtil.hashHeaderBits(wu.getHeader(), nonce, md);
-
-      long word_idx = PowUtil.getNextSnowFieldIndex(context, field.getTotalWords(), md, tmp_buff);
-
-      int block = (int)(word_idx / WORDS_PER_CHUNK);
-
-      ByteBuffer bucket_buff = magic_queue.openWrite(block, getRecordSize()); 
-
-      writeRecord(bucket_buff, wu.getWorkId(), (byte)0, word_idx, nonce, context);
 
     }
 

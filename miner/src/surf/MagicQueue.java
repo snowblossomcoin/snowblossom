@@ -4,6 +4,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.nio.ByteBuffer;
 import java.util.Map;
 import java.util.HashMap;
+import java.util.TreeMap;
 import java.util.LinkedList;
 
 
@@ -24,7 +25,8 @@ public class MagicQueue
    * Each thread accumulatedd data in this map before they are saved
    * to the global buckets.
    */
-  private final ThreadLocal<Map<Integer, ByteBuffer> > local_buff;
+  //private final ThreadLocal<Map<Integer, ByteBuffer> > local_buff;
+  private final ThreadLocal<ByteBuffer[] > local_buff;
   
   
   public MagicQueue(int max_chunk_size, int bucket_count)
@@ -38,9 +40,12 @@ public class MagicQueue
       global_buckets[i] = new LinkedList<>();
     }
 
-    local_buff = new ThreadLocal<Map<Integer, ByteBuffer>>() {
-      @Override protected Map<Integer,ByteBuffer> initialValue() {
-        return new HashMap<Integer, ByteBuffer>(bucket_count*2+1, 0.5f);  
+    local_buff = new ThreadLocal<ByteBuffer[]>() {
+      @Override protected ByteBuffer[] initialValue() {
+        //return new HashMap<Integer, ByteBuffer>(bucket_count*2+1, 0.5f);  
+        //return new TreeMap<Integer, ByteBuffer>();  
+        return new ByteBuffer[bucket_count];
+
       }
     };
   
@@ -54,16 +59,17 @@ public class MagicQueue
    */
   public ByteBuffer openWrite(int bucket, int data_size)
   {
-    Map<Integer, ByteBuffer> local = local_buff.get();
-    if (local.containsKey(bucket))
+    ByteBuffer[] local = local_buff.get();
+    if (local[bucket] != null)
     {
-      if (local.get(bucket).remaining() >= data_size) return local.get(bucket);
+      if (local[bucket].remaining() >= data_size) return local[bucket];
 
-      writeToBucket( bucket, local.get(bucket) );
+      writeToBucket( bucket, local[bucket] );
     }
 
-    local.put(bucket, ByteBuffer.allocate(max_chunk_size));
-    return local.get(bucket);
+    local[bucket] = ByteBuffer.allocate(max_chunk_size);
+
+    return local[bucket];
 
   }
 
@@ -107,13 +113,16 @@ public class MagicQueue
 
   public void flushFromLocal()
   {
-    for(Map.Entry<Integer,ByteBuffer> me : local_buff.get().entrySet())
+    
+    ByteBuffer[] local = local_buff.get();
+    for(int b=0; b<bucket_count; b++)
     {
-      int b = me.getKey();
-      ByteBuffer bb = me.getValue();
-      writeToBucket(b, bb);
+      if (local[b] != null)
+      {
+        writeToBucket(b, local[b]);
+        local[b]=null;
+      }
     }
-    local_buff.get().clear();
 
   }
 
