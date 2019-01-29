@@ -113,8 +113,8 @@ public class SurfMiner implements PoolClientOperator
     config.require("hash_threads");
     config.require("work_unit_mem_gb");
 
-    long mem_gb = config.getInt("work_unit_mem_gb");
-    long mem_bytes = mem_gb * 1024L * 1024L * 1024L;
+    double mem_gb = config.getDouble("work_unit_mem_gb");
+    long mem_bytes = (long) (mem_gb * 1024L * 1024L * 1024L);
 
     units_in_flight_target = (int) (mem_bytes / getRecordSize());
     logger.info("In memory target: " + units_in_flight_target);
@@ -146,7 +146,7 @@ public class SurfMiner implements PoolClientOperator
     }
     total_blocks = (int) (field.getLength() / Globals.MINE_CHUNK_SIZE);
 
-    magic_queue = new MagicQueue(config.getIntWithDefault("buffer_size", 10000), total_blocks);
+    magic_queue = new MagicQueue(config.getIntWithDefault("buffer_size", 100000), total_blocks);
     pool_client.subscribe();
 
     
@@ -268,6 +268,7 @@ public class SurfMiner implements PoolClientOperator
     {
       setName("WaveThread{" + task_number + "}");
       setDaemon(true);
+      setPriority(8);
 
       this.task_number = task_number;
       this.block = start_block;
@@ -321,6 +322,7 @@ public class SurfMiner implements PoolClientOperator
     {
       setName("WorkStarter");
       setDaemon(true);
+      setPriority(3);
       rnd = new Random();
 
     }
@@ -494,6 +496,7 @@ public class SurfMiner implements PoolClientOperator
 
     byte[] word_buff = new byte[SnowMerkle.HASH_LEN];
     MessageDigest md = DigestUtil.getMD();
+    int to_release = 0;
 
     while(b.remaining() > 0)
     {
@@ -517,8 +520,7 @@ public class SurfMiner implements PoolClientOperator
 
       if (pass == 6)
       {
-        op_count.add(1L);
-        start_work_sem.release();
+        to_release++;
 
         WorkUnit wu = null;
         synchronized(workunit_cache)
@@ -561,6 +563,11 @@ public class SurfMiner implements PoolClientOperator
         writeRecord(bucket_buff, work_id, new_pass, new_word_idx, nonce, context);
 
       }
+    }
+    if (to_release > 0)
+    {
+      start_work_sem.release(to_release);
+      op_count.add((long)to_release);
     }
 
     magic_queue.flushFromLocal();
