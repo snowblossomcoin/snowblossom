@@ -61,8 +61,6 @@ public class PowUtil
       md.update(context);
       md.digest(tmp_buff,0, Globals.BLOCKCHAIN_HASH_LEN);
 
-      byte[] longdata = new byte[8];
-
       tmp_buff[0] = 0;
 
       ByteBuffer bb = ByteBuffer.wrap(tmp_buff);
