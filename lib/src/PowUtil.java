@@ -9,6 +9,7 @@ import snowblossom.lib.trie.HashUtils;
 
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
+import java.nio.Buffer;
 import java.security.MessageDigest;
 import java.text.DecimalFormat;
 import java.util.logging.Logger;
@@ -49,24 +50,22 @@ public class PowUtil
 
   public static long getNextSnowFieldIndex(byte[] context, long word_count)
   {
-    MessageDigest md = DigestUtil.getMD();
-    return getNextSnowFieldIndex(context, word_count, md);
+    PowUtilCtx ctx = new PowUtilCtx();
+    return getNextSnowFieldIndex(context, word_count, ctx);
 
   }
 
-  public static long getNextSnowFieldIndex(byte[] context, long word_count, MessageDigest md, byte[] tmp_buff)
+  public static long getNextSnowFieldIndex(byte[] context, long word_count, PowUtilCtx ctx)
   {
     try
     {
-      md.update(context);
-      md.digest(tmp_buff,0, Globals.BLOCKCHAIN_HASH_LEN);
+      ctx.md.update(context);
+      ctx.md.digest(ctx.out_buff,0, Globals.BLOCKCHAIN_HASH_LEN);
 
-      byte[] longdata = new byte[8];
+      ctx.out_buff[0] = 0;
+      ((Buffer)ctx.out_bb).clear();
 
-      tmp_buff[0] = 0;
-
-      ByteBuffer bb = ByteBuffer.wrap(tmp_buff);
-      long v = bb.getLong();
+      long v = ctx.out_bb.getLong();
 
       return v % word_count;
 
@@ -77,37 +76,24 @@ public class PowUtil
     }
   }
 
-  @Deprecated
-  public static long getNextSnowFieldIndex(byte[] context, long word_count, MessageDigest md)
-  {
-    return getNextSnowFieldIndex(context, word_count, md, new byte[Globals.BLOCKCHAIN_HASH_LEN]);
-  }
-
   public static byte[] getNextContext(byte[] prev_context, byte[] found_data)
   {
-    MessageDigest md = DigestUtil.getMD();
-    return getNextContext(prev_context, found_data, md);
+    PowUtilCtx ctx = new PowUtilCtx();
+    getNextContext(prev_context, found_data, ctx);
+    return ctx.context;
 
-  }
-
-  @Deprecated
-  public static byte[] getNextContext(byte[] prev_context, byte[] found_data, MessageDigest md)
-  {
-      md.update(prev_context);
-      md.update(found_data);
-      return md.digest();
   }
 
   /**
    * Get next context without allocating anything
    */
-  public static void getNextContext(byte[] prev_context, byte[] found_data, MessageDigest md, byte[] new_context)
+  public static void getNextContext(byte[] prev_context, byte[] found_data, PowUtilCtx ctx)
   {
     try
     {
-      md.update(prev_context);
-      md.update(found_data);
-      md.digest(new_context, 0, Globals.BLOCKCHAIN_HASH_LEN);
+      ctx.md.update(prev_context);
+      ctx.md.update(found_data);
+      ctx.md.digest(ctx.context, 0, Globals.BLOCKCHAIN_HASH_LEN);
     }
     catch(java.security.DigestException e)
     {

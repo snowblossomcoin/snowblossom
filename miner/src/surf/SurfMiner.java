@@ -316,7 +316,7 @@ public class SurfMiner implements PoolClientOperator
     ByteBuffer word_bb = ByteBuffer.wrap(word_buff);
     int proof_field;
     byte[] nonce = new byte[Globals.NONCE_LENGTH];
-    byte[] tmp_buff = new byte[32];
+    PowUtilCtx ctx = new PowUtilCtx();
 
     public WorkStarter()
     {
@@ -371,7 +371,7 @@ public class SurfMiner implements PoolClientOperator
 
         byte[] context = PowUtil.hashHeaderBits(wu.getHeader(), nonce, md);
 
-        long word_idx = PowUtil.getNextSnowFieldIndex(context, field.getTotalWords(), md, tmp_buff);
+        long word_idx = PowUtil.getNextSnowFieldIndex(context, field.getTotalWords(), ctx);
 
         int block = (int)(word_idx / WORDS_PER_CHUNK);
 
@@ -491,12 +491,14 @@ public class SurfMiner implements PoolClientOperator
     // flush magic queue
 
     byte[] nonce=new byte[Globals.NONCE_LENGTH];
-    byte[] context=new byte[Globals.BLOCKCHAIN_HASH_LEN];
-    byte[] tmp_buff=new byte[Globals.BLOCKCHAIN_HASH_LEN];
+    //byte[] context=new byte[Globals.BLOCKCHAIN_HASH_LEN];
+    //byte[] tmp_buff=new byte[Globals.BLOCKCHAIN_HASH_LEN];
 
     byte[] word_buff = new byte[SnowMerkle.HASH_LEN];
-    MessageDigest md = DigestUtil.getMD();
+    //MessageDigest md = DigestUtil.getMD();
     int to_release = 0;
+
+    PowUtilCtx ctx = new PowUtilCtx();
 
     while(b.remaining() > 0)
     {
@@ -508,7 +510,7 @@ public class SurfMiner implements PoolClientOperator
       byte pass = b.get();
       long word_idx = b.getLong();
       b.get(nonce);
-      b.get(context);
+      b.get(ctx.context);
 
       long word_offset = word_idx % WORDS_PER_CHUNK;
       int word_offset_bytes = (int)(word_offset * Globals.SNOW_MERKLE_HASH_LEN);
@@ -534,13 +536,13 @@ public class SurfMiner implements PoolClientOperator
         else
         {
 
-          if (PowUtil.lessThanTarget(context, wu.getReportTarget()))
+          if (PowUtil.lessThanTarget(ctx.context, wu.getReportTarget()))
           {
-            String str = HashUtils.getHexString(context);
+            String str = HashUtils.getHexString(ctx.context);
             logger.info("Found passable solution: " + str);
             try
             {
-              submitWork(wu, nonce, context);
+              submitWork(wu, nonce, ctx.context);
             }
             catch(Throwable t)
             {
@@ -554,13 +556,13 @@ public class SurfMiner implements PoolClientOperator
       else
       {
         byte new_pass = pass; new_pass++;
-        PowUtil.getNextContext(context, word_buff, md, context);
-        long new_word_idx = PowUtil.getNextSnowFieldIndex(context, field.getTotalWords(), md, tmp_buff);
+        PowUtil.getNextContext(ctx.context, word_buff, ctx);
+        long new_word_idx = PowUtil.getNextSnowFieldIndex(ctx.context, field.getTotalWords(), ctx);
         int new_block = (int)(new_word_idx / WORDS_PER_CHUNK);
 
         ByteBuffer bucket_buff = magic_queue.openWrite(new_block, getRecordSize()); 
 
-        writeRecord(bucket_buff, work_id, new_pass, new_word_idx, nonce, context);
+        writeRecord(bucket_buff, work_id, new_pass, new_word_idx, nonce, ctx.context);
 
       }
     }
