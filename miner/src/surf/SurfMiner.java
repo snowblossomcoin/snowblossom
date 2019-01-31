@@ -468,6 +468,9 @@ public class SurfMiner implements PoolClientOperator
     }
 
 
+  /**
+   * Should match up with exactly what writeRecord() writes and processBuffer expects
+  */
   private int getRecordSize()
   {
     return 4+1+8+12+32;
@@ -475,11 +478,11 @@ public class SurfMiner implements PoolClientOperator
 
   private void writeRecord(ByteBuffer bb, int work_id, byte pass, long word_idx, byte[] nonce, byte[] context)
   {
-    bb.putInt(work_id);
-    bb.put(pass);
-    bb.putLong(word_idx);
-    bb.put(nonce);
-    bb.put(context);
+    bb.putInt(work_id);  //4 bytes
+    bb.put(pass);        //1 byte
+    bb.putLong(word_idx);//8 bytes
+    bb.put(nonce);       //12 bytes
+    bb.put(context);     //32 bytes
   }
 
   private void processBuffer(byte[] block_data, int block_number, ByteBuffer b, Semaphore work_sem)
