@@ -363,6 +363,13 @@ public class SurfMiner implements PoolClientOperator
       }
 
       wu = last_work_unit;
+      if (wu == null)
+      {
+        
+        logger.info("Work unit is null, unable to start units")
+        start_work_sem.release(to_start);
+        return;
+      }
 
       for(int s =0 ; s<to_start; s++)
       {
