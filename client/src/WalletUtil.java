@@ -48,6 +48,10 @@ public class WalletUtil
   public static final int WALLET_DB_VERSION = 4;
 
   public static WalletDatabase makeNewDatabase(Config config, NetworkParams params)
+	{
+		return makeNewDatabase(config, params, null);
+	}
+  public static WalletDatabase makeNewDatabase(Config config, NetworkParams params, String import_seed)
   {
     WalletDatabase.Builder builder = WalletDatabase.newBuilder();
     builder.setVersion(WALLET_DB_VERSION);
@@ -55,10 +59,18 @@ public class WalletUtil
 
     if (!config.getBoolean("watch_only"))
     {
-      int count = config.getIntWithDefault("key_count", 8);
-      for (int i = 0; i < count; i++)
+      if (import_seed != null)
       {
-        genNewKey(WalletDatabase.newBuilder().build(), builder, config, params);
+     		ByteString seed_id = SeedUtil.getSeedId(params, import_seed, "", 0);
+      	builder.putSeeds(import_seed, SeedStatus.newBuilder().setSeedId(seed_id).build());
+      }
+      else
+      {
+        int count = config.getIntWithDefault("key_count", 8);
+        for (int i = 0; i < count; i++)
+        {
+          genNewKey(WalletDatabase.newBuilder().build(), builder, config, params);
+        }
       }
     }
 

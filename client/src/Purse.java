@@ -14,6 +14,7 @@ import java.util.List;
 import snowblossom.lib.TransactionBridge;
 
 import com.google.common.collect.ImmutableList;
+import com.google.protobuf.ByteString;
 
 
 /** Where you keep your wallet i
@@ -34,6 +35,11 @@ public class Purse
   public Purse(SnowBlossomClient client, File wallet_path, Config config, NetworkParams params)
     throws Exception
   {
+    this(client, wallet_path, config, params, null);
+  }
+  public Purse(SnowBlossomClient client, File wallet_path, Config config, NetworkParams params, String import_seed)
+    throws Exception
+  {
     this.wallet_path = wallet_path;
     this.config = config;
     this.params = params;
@@ -43,8 +49,19 @@ public class Purse
     if (wallet_database == null)
     {
       logger.log(Level.WARNING, String.format("Directory %s does not contain wallet, creating new wallet", wallet_path.getPath()));
-      wallet_database = WalletUtil.makeNewDatabase(config, params);
+      wallet_database = WalletUtil.makeNewDatabase(config, params, import_seed);
       WalletUtil.saveWallet(wallet_database, wallet_path);
+    }
+    else
+    {
+      if (import_seed != null)
+      {
+        ByteString seed_id = SeedUtil.getSeedId(client.getParams(), import_seed, "", 0);
+        WalletDatabase.Builder wallet_import = WalletDatabase.newBuilder();
+        wallet_import.putSeeds(import_seed, SeedStatus.newBuilder().setSeedId(seed_id).build());
+        mergeIn(wallet_import.build());
+      }
+
     }
 
   }

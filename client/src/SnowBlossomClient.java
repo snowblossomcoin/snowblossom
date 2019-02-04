@@ -53,8 +53,32 @@ public class SnowBlossomClient
     ConfigFile config = new ConfigFile(args[0]);
 
     LogSetup.setup(config);
+    SnowBlossomClient client = null;
+    if ((args.length == 2) && (args[1].equals("import_seed")))
+    {
+        System.out.println("Please enter seed to import:");
+        Scanner scan = new Scanner(System.in);
+        String seed = scan.nextLine().trim();
 
-    SnowBlossomClient client = new SnowBlossomClient(config);
+        SeedUtil.checkSeed(seed);
+
+        client = new SnowBlossomClient(config, seed);
+
+        /*
+        ByteString seed_id = SeedUtil.getSeedId(client.getParams(), seed, "", 0);
+
+        WalletDatabase.Builder wallet_import = WalletDatabase.newBuilder();
+        wallet_import.putSeeds(seed, SeedStatus.newBuilder().setSeedId(seed_id).build());
+        */
+
+    }
+    else
+    {
+      client = new SnowBlossomClient(config);
+
+    }
+
+
 
     if (args.length == 1)
     {
@@ -260,17 +284,6 @@ public class SnowBlossomClient
       }
       else if (command.equals("import_seed"))
       {
-        System.out.println("Please enter seed to import:");
-        Scanner scan = new Scanner(System.in);
-        String seed = scan.nextLine().trim();
-
-        SeedUtil.checkSeed(seed);
-        ByteString seed_id = SeedUtil.getSeedId(client.getParams(), seed, "", 0);
-
-        WalletDatabase.Builder wallet_import = WalletDatabase.newBuilder();
-        wallet_import.putSeeds(seed, SeedStatus.newBuilder().setSeedId(seed_id).build());
-        client.getPurse().mergeIn(wallet_import.build());
-
         client.getPurse().maintainKeys(true);
 
       }
@@ -289,7 +302,7 @@ public class SnowBlossomClient
       {
         
         WalletDatabase db = client.getPurse().getDB();
-        SeedReport sr = WalletUtils.getSeedReport(db);
+        SeedReport sr = WalletUtil.getSeedReport(db);
 
         for(String seed : sr.seeds)
         {
@@ -343,6 +356,10 @@ public class SnowBlossomClient
 
   public SnowBlossomClient(Config config) throws Exception
   {
+    this(config, null);
+  }
+  public SnowBlossomClient(Config config, String import_seed) throws Exception
+  {
     this.config = config;
     logger.info(String.format("Starting SnowBlossomClient version %s", Globals.VERSION));
     config.require("node_host");
@@ -363,7 +380,7 @@ public class SnowBlossomClient
     if (config.isSet("wallet_path"))
     {
       wallet_path = new File(config.get("wallet_path"));
-      loadWallet();
+      loadWallet(import_seed);
     }
 
   }
@@ -453,10 +470,10 @@ public class SnowBlossomClient
 
   }
 
-  public void loadWallet()
+  public void loadWallet(String import_seed)
     throws Exception
   {
-    purse = new Purse(this, wallet_path, config, params);
+    purse = new Purse(this, wallet_path, config, params, import_seed);
     purse.maintainKeys(false);
 
   }
