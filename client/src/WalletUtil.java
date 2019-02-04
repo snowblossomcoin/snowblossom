@@ -524,7 +524,6 @@ public class WalletUtil
       {
         throw new ValidationException("Signature check failure on keypair: " + pair);
       }
-      
     }
 
     LinkedList<AddressSpecHash> addresses = new LinkedList<>();
@@ -533,8 +532,27 @@ public class WalletUtil
     {
       addresses.add( AddressUtil.getHashForSpec(spec) );
     }
-
     return addresses;
-    
+  }
+
+  public static SeedReport getSeedReport(WalletDatabase db)
+  {
+		SeedReport sr = new SeedReport();
+
+		HashSet<ByteString> seed_ids = new HashSet<>();
+		for(String seed : db.getSeedsMap().keySet())
+		{
+			sr.seeds.add(seed);
+			seed_ids.add(db.getSeedsMap().get(seed).getSeedId());
+
+		}
+		sr.missing_keys = 0;
+		for(WalletKeyPair wkp : db.getKeysList())
+		{
+			ByteString id = wkp.getSeedId();
+			if (!seed_ids.contains(id)) sr.missing_keys++;
+		}
+
+		return sr;
   }
 }

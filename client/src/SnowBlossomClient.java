@@ -287,24 +287,17 @@ public class SnowBlossomClient
       }
       else if (command.equals("show_seed"))
       {
+        
         WalletDatabase db = client.getPurse().getDB();
-        HashSet<ByteString> seed_ids = new HashSet<>();
-        for(String seed : db.getSeedsMap().keySet())
-        {
-          
-          System.out.println("Seed: " + seed);
-          seed_ids.add(db.getSeedsMap().get(seed).getSeedId());
+        SeedReport sr = WalletUtils.getSeedReport(db);
 
-        }
-        int missing_keys = 0;
-        for(WalletKeyPair wkp : db.getKeysList())
+        for(String seed : sr.seeds)
         {
-          ByteString id = wkp.getSeedId();
-          if (!seed_ids.contains(id)) missing_keys++;
+          System.out.println("Seed: " + seed);
         }
-        if (missing_keys > 0)
+        if (sr.missing_keys > 0)
         {
-            System.out.println(String.format("WARNING: THIS WALLET CONTAINS %d KEYS THAT DO NOT COME FROM SEEDS.  THIS WALLET CAN NOT BE COMPLETELY RESTORED FROM SEEDS", missing_keys));
+            System.out.println(String.format("WARNING: THIS WALLET CONTAINS %d KEYS THAT DO NOT COME FROM SEEDS.  THIS WALLET CAN NOT BE COMPLETELY RESTORED FROM SEEDS", sr.missing_keys));
         }
         else
         {
