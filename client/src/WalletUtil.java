@@ -178,7 +178,7 @@ public class WalletUtil
       return existing_db;
     }
 
-    int key_pool = config.getIntWithDefault("key_pool_size", 100);
+    int key_pool = config.getIntWithDefault("key_pool_size", 10);
     int unused = getUnusedAddressCount(existing_db, params);
     //if (unused < key_pool)
     {
