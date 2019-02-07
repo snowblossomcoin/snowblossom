@@ -79,7 +79,7 @@ public class SeedUtil
 
   public static ImmutableList<String> getWordsFromSeed(String str)
   {
-    Scanner scan = new Scanner(str);
+    Scanner scan = new Scanner(str.toLowerCase());
     LinkedList<String> lst = new LinkedList<>();
     while(scan.hasNext())
     {
