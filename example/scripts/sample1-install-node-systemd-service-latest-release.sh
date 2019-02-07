@@ -17,7 +17,7 @@ echo "Installing $release_name node in $snowblossom_home"
 
 # install java
 apt-get update
-apt-get -yq install openjdk-8-jdk unzip
+apt-get -yq install openjdk-8-jdk-headless unzip
 
 # create a dedicated user, if doesn't exist
 id -u snowblossom &>/dev/null || useradd --home-dir "$snowblossom_home" --create-home --system snowblossom

@@ -26,10 +26,12 @@ mkdir -p "$name/configs"
 #node
 cp ../../bazel-bin/SnowBlossomNode_deploy.jar "$name"/
 cp "configs/node.conf" "$name/configs/"
+cp "configs/node-testnet.conf" "$name/configs/"
 
 #client
 cp ../../bazel-bin/SnowBlossomClient_deploy.jar "$name"/
 cp "configs/client.conf" "$name/configs/"
+cp "configs/client-testnet.conf" "$name/configs/"
 
 #miner
 #cp ../../bazel-bin/SnowBlossomMiner_deploy.jar "$name"/

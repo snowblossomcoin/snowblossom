@@ -1,0 +1,11 @@
+[Unit]
+Description=Snowblossom Testnet Node
+After=network.target
+
+[Service]
+User=snowblossom
+WorkingDirectory=/var/snowblossom
+ExecStart=/var/snowblossom/node-testnet.sh
+
+[Install]
+WantedBy=multi-user.target
