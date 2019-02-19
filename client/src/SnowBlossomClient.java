@@ -82,6 +82,7 @@ public class SnowBlossomClient
 
     if (args.length == 1)
     {
+      client.maintainKeys();
       client.showBalances(false);
 
       client.printBasicStats(client.getPurse().getDB());
@@ -95,6 +96,7 @@ public class SnowBlossomClient
     if (args.length > 1)
     {
       String command = args[1];
+      client.maintainKeys();
 
       if (command.equals("send"))
       {
@@ -134,6 +136,7 @@ public class SnowBlossomClient
       }
       else if (command.equals("sendlocked"))
       {
+        client.maintainKeys();
         if (args.length < 6)
         {
           logger.log(Level.SEVERE, "Incorrect syntax. Syntax: SnowBlossomClient <config_file> sendlocked <amount> <dest_address> <fbo_address> <block>");
@@ -154,11 +157,12 @@ public class SnowBlossomClient
  
       else if (command.equals("balance"))
       {
-            client.showBalances(true);
-
+        client.maintainKeys();
+        client.showBalances(true);
       }
       else if (command.equals("getfresh"))
       {
+        client.maintainKeys();
         boolean mark_used = false;
         boolean generate_now = false;
         if (args.length > 2)
@@ -177,6 +181,7 @@ public class SnowBlossomClient
       }
       else if (command.equals("monitor"))
       {
+        client.maintainKeys();
         BalanceInfo bi_last = null;
         while(true)
         {
@@ -208,6 +213,7 @@ public class SnowBlossomClient
       }
       else if (command.equals("rpcserver"))
       {
+        client.maintainKeys();
         JsonRpcServer json_server = new JsonRpcServer(config, true);
         RpcServerHandler server_handler = new RpcServerHandler(client);
         server_handler.registerHandlers(json_server);
@@ -289,6 +295,7 @@ public class SnowBlossomClient
       }
       else if (command.equals("loadtest"))
       {
+        client.maintainKeys();
         client.runLoadTest();
       }
       else if (command.equals("nodestatus"))
@@ -474,8 +481,12 @@ public class SnowBlossomClient
     throws Exception
   {
     purse = new Purse(this, wallet_path, config, params, import_seed);
-    purse.maintainKeys(false);
 
+  }
+  public void maintainKeys()
+    throws Exception
+  {
+    purse.maintainKeys(false);
   }
 
   public void printBasicStats(WalletDatabase db)
