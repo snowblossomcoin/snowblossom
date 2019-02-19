@@ -181,7 +181,6 @@ public class SnowBlossomClient
       }
       else if (command.equals("monitor"))
       {
-        client.maintainKeys();
         BalanceInfo bi_last = null;
         while(true)
         {
@@ -360,6 +359,7 @@ public class SnowBlossomClient
   private Config config;
   private ThreadPoolExecutor exec;
   private GetUTXOUtil get_utxo_util;
+  private boolean maintain_keys_done = false;
 
   public SnowBlossomClient(Config config) throws Exception
   {
@@ -487,6 +487,7 @@ public class SnowBlossomClient
     throws Exception
   {
     purse.maintainKeys(false);
+    maintain_keys_done = true;
   }
 
   public void printBasicStats(WalletDatabase db)
@@ -563,7 +564,12 @@ public class SnowBlossomClient
   }
 
   public BalanceInfo getBalance()
+    throws Exception
   {
+    if (!maintain_keys_done)
+    {
+      maintainKeys();
+    }
     TaskMaster<BalanceInfo> tm = new TaskMaster(exec);
 
     for(AddressSpec claim : purse.getDB().getAddressesList())
@@ -698,6 +704,10 @@ public class SnowBlossomClient
   public List<TransactionBridge> getAllSpendable()
     throws Exception
   {
+    if (!maintain_keys_done)
+    {
+      maintainKeys();
+    }
     LinkedList<TransactionBridge> all = new LinkedList<>();
     for(AddressSpec claim : purse.getDB().getAddressesList())
     {
