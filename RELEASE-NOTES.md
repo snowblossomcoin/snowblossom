@@ -2,6 +2,7 @@
 
 * Adding SurfMiner using new wave mining method
 * Updating Arktika, PoolMiner and SurfMiner to use fewer memory allocations
+* Allows Arktika to read a single blob snowfield just like PoolMiner and SurfMiner
 
 ## 1.5.0
 

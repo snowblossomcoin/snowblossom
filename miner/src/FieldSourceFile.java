@@ -40,6 +40,7 @@ public class FieldSourceFile extends FieldSource
   private final int total_chunk;
 
   private final String name;
+  private final boolean using_blob_file;
 
   public FieldSourceFile(Config conf, int layer, NetworkParams params, int field_number, File path) throws java.io.IOException
   {
@@ -74,16 +75,30 @@ public class FieldSourceFile extends FieldSource
 			Assert.assertTrue(start >= 0);
 		}
 
-    for(int i=start; i< end; i++)
+    File blob_file = new File(new File(path, base), String.format("%s.snow", base));
+    if (blob_file.exists())
     {
-      String hex = Integer.toString(i, 16);
-      while(hex.length() < 4) hex = "0" + hex;
-      File f = new File(new File(path, base), String.format("%s.snow.%s", base, hex));
-      if (f.exists())
+      using_blob_file=true;
+      for(int i=start; i< end; i++)
       {
-        snow_file[i] = new RandomAccessFile(f, "r");
+        snow_file[i] = new RandomAccessFile(blob_file, "r");
         snow_file_channel[i] = snow_file[i].getChannel();
-        chunks.add(i);
+      }
+    }
+    else
+    {
+      using_blob_file=false;
+      for(int i=start; i< end; i++)
+      {
+        String hex = Integer.toString(i, 16);
+        while(hex.length() < 4) hex = "0" + hex;
+        File f = new File(new File(path, base), String.format("%s.snow.%s", base, hex));
+        if (f.exists())
+        {
+          snow_file[i] = new RandomAccessFile(f, "r");
+          snow_file_channel[i] = snow_file[i].getChannel();
+          chunks.add(i);
+        }
       }
     }
 
@@ -147,13 +162,19 @@ public class FieldSourceFile extends FieldSource
   @Override
   public void bulkRead(long word_index, ByteBuffer bb) throws java.io.IOException
   {
-    
-    int chunk =  (int)(word_index / words_per_chunk);
-    long word_offset = word_index % words_per_chunk;
-
-    Assert.assertTrue(hasChunk(chunk));
-
-    long read_offset = word_offset * SnowMerkle.HASH_LEN_LONG;
+    long read_offset = 0;
+    int chunk = 0;
+    if (using_blob_file)
+    {
+      chunk =  (int)(word_index / words_per_chunk);
+      read_offset = word_index * SnowMerkle.HASH_LEN_LONG;
+    }
+    else
+    {
+      chunk =  (int)(word_index / words_per_chunk);
+      long word_offset = word_index % words_per_chunk;
+      read_offset = word_offset * SnowMerkle.HASH_LEN_LONG;
+    }
     ChannelUtil.readFully( snow_file_channel[chunk], bb, read_offset);
   }
 
