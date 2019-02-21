@@ -83,6 +83,7 @@ public class FieldSourceFile extends FieldSource
       {
         snow_file[i] = new RandomAccessFile(blob_file, "r");
         snow_file_channel[i] = snow_file[i].getChannel();
+        chunks.add(i);
       }
     }
     else
