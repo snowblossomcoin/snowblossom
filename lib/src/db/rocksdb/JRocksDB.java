@@ -78,6 +78,7 @@ public class JRocksDB extends DBProvider
     options.setIncreaseParallelism(16);
     options.setCreateIfMissing(true);
     options.setAllowMmapReads(true);
+    options.setKeepLogFileNum(5);
     //options.setAllowMmapWrites(true);
 
     return RocksDB.open(options, path);
