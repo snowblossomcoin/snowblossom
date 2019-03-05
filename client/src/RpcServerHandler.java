@@ -226,9 +226,22 @@ public class RpcServerHandler
     protected JSONObject processRequest(JSONRPC2Request req, MessageContext ctx)
       throws Exception
     {
+      Map<String, Object> params = req.getNamedParams();
 
       JSONObject reply = new JSONObject();
-      List<TransactionBridge> bridges = client.getAllSpendable();
+      List<TransactionBridge> bridges = null;
+      
+      if ((params != null) && (params.containsKey("address")))
+      {
+        String address = (String)params.get("address");
+        AddressSpecHash hash = new AddressSpecHash(address, client.getParams());
+        bridges = client.getSpendable(hash);
+      }
+      else
+      {
+        bridges = client.getAllSpendable();
+      }
+      
 
       JSONArray unspent = new JSONArray();
       for(TransactionBridge br : bridges)

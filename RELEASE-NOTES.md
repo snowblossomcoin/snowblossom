@@ -4,6 +4,7 @@
 * Updating Arktika, PoolMiner and SurfMiner to use fewer memory allocations
 * Allows Arktika to read a single blob snowfield just like PoolMiner and SurfMiner
 * Change rocksdb log retention to 5 files
+* In client jsonrpc get_unspent add optional parameter to specify address to query
 
 ## 1.5.0
 
