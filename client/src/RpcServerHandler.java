@@ -234,6 +234,8 @@ public class RpcServerHandler
       }
       RequestBlock.Builder req_block = RequestBlock.newBuilder();
 
+      boolean as_json = false;
+
       if (params.containsKey("height"))
       {
         int height = (int) (long) params.get("height");
@@ -249,6 +251,10 @@ public class RpcServerHandler
       {
         throw new Exception("Must specify 'height' or 'hash'");
       }
+      if (params.containsKey("send_json"))
+      {
+        as_json = (boolean) params.get("send_json");
+      }
 
       Block blk = client.getStub().getBlock(req_block.build());
 
@@ -256,7 +262,14 @@ public class RpcServerHandler
 
       if (blk.getHeader().getSnowHash().size() > 0 )
       {
-        reply.put("block_data", HexUtil.getHexString( blk.toByteString() ));
+        if (as_json)
+        {
+          reply.put("block", RpcUtil.protoToJson(blk));
+        }
+        else
+        {
+          reply.put("block_data", HexUtil.getHexString( blk.toByteString() ));
+        }
         reply.put("block_header", RpcUtil.protoToJson(blk.getHeader()));
       }
 
