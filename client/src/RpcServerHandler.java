@@ -43,6 +43,7 @@ public class RpcServerHandler
 		json_server.register(new GetUnspentHandler());
     json_server.register(new GetStatusHandler());
     json_server.register(new ImportWalletHandler());
+    json_server.register(new GetBlockHandler());
 
   }
 
@@ -214,6 +215,57 @@ public class RpcServerHandler
     }
 
   }
+
+  public class GetBlockHandler extends JsonRequestHandler
+  {
+    public String[] handledRequests()
+    {
+      return new String[]{"get_block"};
+    }
+
+    @Override
+    protected JSONObject processRequest(JSONRPC2Request req, MessageContext ctx)
+      throws Exception
+    {
+      Map<String, Object> params = req.getNamedParams();
+      if (params == null)
+      {
+        throw new Exception("Must specify 'height' or 'hash'");
+      }
+      RequestBlock.Builder req_block = RequestBlock.newBuilder();
+
+      if (params.containsKey("height"))
+      {
+        int height = (int) (long) params.get("height");
+        req_block.setBlockHeight(height);
+      }
+      else if (params.containsKey("hash"))
+      {
+        String hash_str = (String) params.get("hash");
+        ChainHash ch = new ChainHash(hash_str);
+        req_block.setBlockHash(ch.getBytes());
+      }
+      else
+      {
+        throw new Exception("Must specify 'height' or 'hash'");
+      }
+
+      Block blk = client.getStub().getBlock(req_block.build());
+
+      JSONObject reply = new JSONObject();
+
+      if (blk.getHeader().getSnowHash().size() > 0 )
+      {
+        reply.put("block_data", HexUtil.getHexString( blk.toByteString() ));
+        reply.put("block_header", RpcUtil.protoToJson(blk.getHeader()));
+      }
+
+      return reply;
+ 
+    }
+
+  }
+
 
   public class GetUnspentHandler extends JsonRequestHandler
   {
