@@ -6,6 +6,7 @@
 * Change rocksdb log retention to 5 files
 * In client jsonrpc get_unspent add optional parameter to specify address to query
 * In client jsonrpc add get_block by height or hash
+* Switch to SecureRandom for seed generation since Random only uses a 64-bit seed
 
 ## 1.5.0
 

@@ -23,6 +23,7 @@ import java.security.KeyFactory;
 import snowblossom.lib.Globals;
 import java.security.spec.ECPrivateKeySpec;
 import java.security.PrivateKey;
+import java.security.SecureRandom;
 
 public class SeedUtil
 {
@@ -48,7 +49,7 @@ public class SeedUtil
 
   public static String generateSeed(int words)
   {
-    Random rnd = new Random();
+    Random rnd = new SecureRandom();
     int bc = 0;
     if (words == 12) bc=16;
     if (words == 18) bc=24;
