@@ -18,6 +18,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Map;
 import java.util.TimeZone;
+import java.util.LinkedList;
 import java.math.RoundingMode;
 import duckutil.TaskMaster;
 import com.google.protobuf.util.JsonFormat;
@@ -72,6 +73,16 @@ public class WebServer
           displayStatus(out);
           return;
         }
+
+	if (search.startsWith("load-"))
+	{
+	  try
+	  {
+	    displayAjax(out, Integer.parseInt(search.substring(5)));
+	    return;
+	  } catch(Throwable e){}
+	}
+
         try
         {
           int block_num = Integer.parseInt(search);
@@ -190,6 +201,14 @@ public class WebServer
 
     out.println("</pre>");
 
+    out.println("<h2>Calculator</h2>");
+    out.println("<table style='width: 270px;'><tr><td>Hashrate</td><td><input type='text' id='hashrate' size=12 onChange='updateCalc();' onkeyup='updateCalc();'> kH/s</td></tr>");
+    out.println("<tr><td>Per Hour</td><td><input type='text' id='hash1' value='0' size=12 disabled> Snow</td></tr>");
+    out.println("<tr><td>Per Day</td><td><input type='text' id='hash2' value='0' size=12 disabled> Snow</td></tr>");
+    out.println("<tr><td>Per Month</td><td><input type='text' id='hash3' value='0' size=12 disabled> Snow</td></tr>");
+    out.println("</table>");
+    out.println("<script>window.avgdiff=" + df.format(avg_diff) + ";</script>");
+    
     out.println("<h2>Vote Status</h2>");
     out.println("<pre>");
     shackleton.getVoteTracker().getVotingReport(node_status, out);
@@ -198,8 +217,10 @@ public class WebServer
 
     out.println("<h2>Recent Blocks</h2>");
     int min = Math.max(0, header.getBlockHeight()-75);
-    out.println("<table border='0' cellspacing='0'>");
-    out.println("<thead><tr><th>Height</th><th>Hash</th><th>Tx</th><th>Size</th><th>Miner</th><th>Timestamp</th></tr></thead>");
+
+    out.println("<table class='table table-hover' id='blocktable'>");
+    out.println("<thead><tr><th>Height</th><th>Hash</th><th>Tx</th><th>Size</th><th>Miner</th><th>Remark</th><th>Timestamp</th></tr></thead>");
+
     for(int h=header.getBlockHeight(); h>=min; h--)
     {
       BlockHeader blk_head = shackleton.getStub().getBlockHeader(RequestBlockHeader.newBuilder().setBlockHeight(h).build());
@@ -207,7 +228,19 @@ public class WebServer
       out.println(getBlockSummaryLine(hash));
     }
     out.println("</table>");
+    out.println("<a onclick='loadMore();' id='lmore'>Show more ...</a>");
+    out.println("<script> window.lastblock=" + (min - 1) + "; </script>");
+  }
 
+  private void displayAjax(PrintStream out, int endblock)
+  {
+    int min=endblock - 100;
+    for(int h=endblock; h > min; h--)
+    {
+      BlockHeader blk_head = shackleton.getStub().getBlockHeader(RequestBlockHeader.newBuilder().setBlockHeight(h).build());
+      ChainHash hash = new ChainHash(blk_head.getSnowHash());
+      out.println(getBlockSummaryLine(hash));
+    }
   }
 
   private String getBlockSummaryLine(ChainHash hash)
@@ -219,12 +252,12 @@ public class WebServer
         return block_summary_lines.get(hash);
       }
     }
-      
+
     NetworkParams params = shackleton.getParams();
 
     int tx_count = 0;
-    int size =0;
-    String link = String.format(" <a href='/?search=%s'>B</a>", hash);
+    int size = 0;
+    String link = String.format(" <a href='/?search=%s'> %s </a>", hash, hash.toString());
 
     Block blk = shackleton.getStub().getBlock(RequestBlock.newBuilder().setBlockHash(hash.getBytes()).build());
     tx_count = blk.getTransactionsCount();
@@ -237,7 +270,7 @@ public class WebServer
     String miner = miner_addr;
     if (remark.length() > 0)
     {
-      miner = miner_addr + " - " + remark;
+      miner = miner_addr;
     }
 
     SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm");
@@ -245,10 +278,10 @@ public class WebServer
 
     Date resultdate = new Date(blk.getHeader().getTimestamp());
 
-    String s = String.format("<tr><td>%d</td><td>%s %s</td><td>%d</td><td>%d</td><td>%s</td><td>%s</td></tr>",
-        blk.getHeader().getBlockHeight(), 
-        hash.toString(), link,
-        tx_count, size, miner, sdf.format(resultdate) + " UTC");
+    String s = String.format("<tr><td>%d</td><td>%s</td><td>%d</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>",
+        blk.getHeader().getBlockHeight(),
+        link,
+        tx_count, ((int)(size / 1024)) + "kB", "<a href='/?search=" + miner + "'>" + miner + "</a>", remark, sdf.format(resultdate) + " UTC");
 
     synchronized(block_summary_lines)
     {
@@ -256,6 +289,7 @@ public class WebServer
     }
     return s;
   }
+
   private void displayBlockByNumber(PrintStream out, int block_number)
     throws ValidationException
   {
@@ -316,35 +350,65 @@ public class WebServer
 
       out.flush();
 
-      for(Transaction tx : blk.getTransactionsList())
+      for(Transaction tx : blk.getTransactionsList()) 
       {
-        TransactionUtil.prettyDisplayTx(tx, out, shackleton.getParams());
-        out.println();
+            LinkedList<Double> inValues = new LinkedList<Double>();
+            try 
+	    {
+                for(TransactionInput in : TransactionUtil.getInner(tx).getInputsList()) 
+		{
+                  int idx = in.getSrcTxOutIdx();
+                  Transaction txo = shackleton.getStub().getTransaction( RequestTransaction.newBuilder().setTxHash(in.getSrcTxId()).build());
+                  TransactionInner innero = TransactionUtil.getInner(txo);
+                  TransactionOutput outo = innero.getOutputs(idx);
+                  double value = outo.getValue() / Globals.SNOW_VALUE_D;
+                  inValues.addLast(value);
+                }
+            } catch(Exception e) 
+	    {
+                out.println(e);
+            }
+
+            TransactionUtil.prettyDisplayTxHTML(tx, out, shackleton.getParams(), inValues);
+            out.println();
       }
-      out.println("</pre>");
   }
 
   private void displayTransaction(PrintStream out, Transaction tx)
     throws ValidationException
   {
-      out.println("<pre>");
-      out.println("Found transaction");
-      TransactionUtil.prettyDisplayTx(tx, out, shackleton.getParams());
-      out.println("");
-      out.println("Transaction status:");
+	out.println("<pre>");
+	out.println("Found transaction");
+	LinkedList<Double> inValues = new LinkedList<Double>();
+	try {
+		for(TransactionInput in : TransactionUtil.getInner(tx).getInputsList()) {
+			int idx = in.getSrcTxOutIdx();
+			Transaction txo = shackleton.getStub().getTransaction( RequestTransaction.newBuilder().setTxHash(in.getSrcTxId()).build());
+			TransactionInner innero = TransactionUtil.getInner(txo);
+			TransactionOutput outo = innero.getOutputs(idx);
+			double value = outo.getValue() / Globals.SNOW_VALUE_D;
+			inValues.addLast(value);
+		}
+	} catch(Exception e) {
+		out.println(e);
+	}
 
-      try
-      {
-        TransactionStatus status = shackleton.getStub().getTransactionStatus(RequestTransaction.newBuilder().setTxHash(tx.getTxHash()).build());
-        JsonFormat.Printer printer = JsonFormat.printer();
-        out.println(printer.print(status));
-      }
-      catch(com.google.protobuf.InvalidProtocolBufferException e)
-      {
-        throw new ValidationException(e);
-      }
+	TransactionUtil.prettyDisplayTxHTML(tx, out, shackleton.getParams(), inValues);
+	out.println("");
+	out.println("Transaction status:");
 
-      out.println("</pre>");
+	try
+	{
+		TransactionStatus status = shackleton.getStub().getTransactionStatus(RequestTransaction.newBuilder().setTxHash(tx.getTxHash()).build());
+		JsonFormat.Printer printer = JsonFormat.printer();
+		out.println(printer.print(status));
+	}
+	catch(com.google.protobuf.InvalidProtocolBufferException e)
+	{
+		throw new ValidationException(e);
+	}
+
+	out.println("</pre>");
 
       
   }
@@ -359,11 +423,13 @@ public class WebServer
       t.getResponseHeaders().add("Content-Language", "en-US");
       ByteArrayOutputStream b_out = new ByteArrayOutputStream();
       PrintStream print_out = new PrintStream(b_out);
+
+      boolean useajax = t.getRequestURI().getQuery() != null && t.getRequestURI().getQuery().contains("load-");
       try
       {
-        addHeader(print_out);
+        if(!useajax) addHeader(print_out);
         innerHandle(t, print_out);
-        addFooter(print_out);
+        if(!useajax) addFooter(print_out);
       }
       catch(Throwable e)
       {
@@ -383,17 +449,34 @@ public class WebServer
       NetworkParams params = shackleton.getParams();
       out.println("<html>");
       out.println("<head>");
+      out.println("<meta charset='UTF-8'>");
       out.println("<title>" + params.getNetworkName() + " explorer</title>");
       out.println("<link rel='stylesheet' type='text/css' href='https://snowblossom.org/style-fixed.css' />");
       out.println("<link REL='SHORTCUT ICON' href='https://snowblossom.org/snow-icon.png' />");
+
+      out.println("<link rel='stylesheet' href='https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css' integrity='sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u' crossorigin='anonymous'>");
+      out.println("<link rel='stylesheet' href='https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css' integrity='sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp' crossorigin='anonymous'>");
+      out.println("<script src='https://code.jquery.com/jquery-1.12.4.min.js' integrity='sha256-ZosEbRLbNQzLpnKIkEdrPv7lOy9C27hHQ+Xp8a4MxAQ=' crossorigin='anonymous'></script>");
+      out.println("<script src='https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js' integrity='sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa' crossorigin='anonymous'></script>");
+
+      out.println("<style type='text/css'>");
+      out.println("input {text-align: right;}");
+      out.println("</style>");
+      out.println("<script>");
+      out.println("window.doscroll = false; function loadMore() { if(window.doscroll) return; window.doscroll = true; $('#lmore').hide(); $.ajax( { url: '?search=load-' + window.lastblock, success: function (data) { $('#blocktable').append(data); $('#lmore').show(); }}); window.lastblock -= 100; setTimeout(function() {window.doscroll = false;}, 2000); };");
+      out.println("$(window).scroll(function() { if(window.doscroll) return; if($(window).scrollTop() + 3000 > $(document).height()) {loadMore();}}); ");
+      out.println("function updateCalc() {var hour = 50 * 3600 * parseFloat($('#hashrate').val()) / Math.pow(2,(window.avgdiff-10));$('#hash1').val(hour.toFixed(3));$('#hash2').val((hour*24).toFixed(3));$('#hash3').val((hour*24*30).toFixed(3));}");
+      out.println("");
+      out.println("</script>");
       out.println("</head>");
       out.println("<body>");
-      out.print("<a href='/'>House</a>");
+      out.print("<a href='/'>Home</a><br />");
       out.print("<form name='query' action='/' method='GET'>");
       out.print("<input type='text' name='search' size='45' value=''>");
-      out.println("<input type='submit' value='Search'>");
+      out.println("<input type='submit' value='Search'></form>");
       out.println("<br>");
     }
+
     private void addFooter(PrintStream out)
     {
       out.println("</body>");
