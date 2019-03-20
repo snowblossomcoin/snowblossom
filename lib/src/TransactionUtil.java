@@ -425,4 +425,90 @@ public class TransactionUtil
     
   }
 
+  /* Outputs transaction with HTML
+   * inValues - The snow amounts for the transaction inputs in question so they can be displayed */
+  public static void prettyDisplayTxHTML(Transaction tx, PrintStream out, NetworkParams params, LinkedList<Double> inValues)
+    throws ValidationException
+  {
+    out.println("<table class='table' style='max-width: 1400px;'><tr><th colspan=2>");
+
+    ChainHash tx_hash = new ChainHash(tx.getTxHash());
+    out.println("Transaction: " + tx_hash + " size: " + tx.toByteString().size());
+    TreeSet<String> sign_set=new TreeSet<>();
+    DecimalFormat df = new DecimalFormat("0.000000");
+    DecimalFormat df_short = new DecimalFormat("0.00");
+
+    for(SignatureEntry se : tx.getSignaturesList())
+    {
+      String key = "" + se.getClaimIdx() + ":" + se.getKeyIdx();
+      sign_set.add(key);
+    }
+
+    TransactionInner inner = getInner(tx);
+
+    out.println("</th></tr><tr><th>Inputs</th><th>Outputs</th></tr><tr><td style='width: 50%;'>");
+
+    if (inner.getIsCoinbase())
+    {
+      CoinbaseExtras extras = inner.getCoinbaseExtras();
+      out.print("  Coinbase - height: ");
+      out.print(extras.getBlockHeight());
+      out.print("<br /> remark: <b>");
+      out.print(HexUtil.getSafeString(extras.getRemarks()));
+      out.println("</b>");
+      if (extras.getMotionsApprovedCount() > 0)
+      {
+        out.print("<br />    Motions Approved:" );
+        for(int i : extras.getMotionsApprovedList())
+        {
+          out.print(' ');
+          out.print(i);
+        }
+        out.println("<br />");
+      }
+      if (extras.getMotionsRejectedCount() > 0)
+      {
+        out.print("<br />    Motions Rejected:" );
+        for(int i : extras.getMotionsRejectedList())
+        {
+          out.print(' ');
+          out.print(i);
+        }
+        out.println("<br />");
+      }
+    }
+
+    for(TransactionInput in : inner.getInputsList())
+    {
+      String address = AddressUtil.getAddressString(params.getAddressPrefix(), new AddressSpecHash( in.getSpecHash()));
+      ChainHash src_tx = new ChainHash(in.getSrcTxId());
+      int idx = in.getSrcTxOutIdx();
+      double amount = inValues.get(0);
+      inValues.removeFirst();
+      out.println(String.format("<a href='/?search=%s'>%s</a> <b>%s</b><br />", address, address, df.format(amount)));
+    }
+    out.println("</td><td style='width: 50%;'>");
+    for(TransactionOutput o : inner.getOutputsList())
+    {
+      String address =  AddressUtil.getAddressString(params.getAddressPrefix(), new AddressSpecHash( o.getRecipientSpecHash()));
+      double value = o.getValue() / Globals.SNOW_VALUE_D;
+
+      out.println(String.format("<a href='/?search=%s'>%s</a> <b>%s</b><br />", address, address, df.format(value)));
+    }
+
+    out.println("</td></tr><td colspan=2>");
+
+    double fee_flakes = inner.getFee();
+    double fee_flakes_per_byte = fee_flakes / tx.toByteString().size();
+
+    out.println(String.format("  Fee: %s (%s flakes per byte)",
+      df.format( inner.getFee() / Globals.SNOW_VALUE_D),
+      df_short.format( fee_flakes_per_byte )
+      ));
+    if (inner.getExtra().size() > 0)
+    {
+      out.println("  Extra: " + HexUtil.getSafeString(inner.getExtra()));
+    }
+    out.println("</td></table>");
+  }
 }
