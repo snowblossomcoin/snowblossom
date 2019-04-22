@@ -316,6 +316,30 @@ public class SnowBlossomClient
         }
 
       }
+      else if (command.equals("audit_log_init"))
+      {
+        if (args.length != 3)
+        {
+          System.out.println("Syntax: audit_log_init <msg>");
+          System.exit(-1);
+        }
+        String msg = args[2];
+
+        System.out.println(AuditLog.init(client, msg));
+        
+      }
+      else if (command.equals("audit_log_record"))
+      {
+        if (args.length != 3)
+        {
+          System.out.println("Syntax: audit_log_record <msg>");
+          System.exit(-1);
+        }
+        String msg = args[2];
+
+        System.out.println(AuditLog.recordLog(client, msg));
+       
+      }
       else
       {
         logger.log(Level.SEVERE, String.format("Unknown command %s.", command));
@@ -334,6 +358,8 @@ public class SnowBlossomClient
         System.out.println("  import_seed - prompts for a seed to import");
         System.out.println("  show_seed - show seeds");
         System.out.println("  rpcserver - run a local rpc server for client commands");
+        System.out.println("  audit_log_init <msg> - initialize a new audit log chain");
+        System.out.println("  audit_log_record <msg> - record next audit log in chain");
 
         System.exit(-1);
       }
