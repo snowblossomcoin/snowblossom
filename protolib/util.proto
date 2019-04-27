@@ -51,3 +51,18 @@ message TransactionFactoryResult {
   int64 fee = 3;
   int32 signatures_added = 4;
 }
+
+message AuditLogReport {
+  repeated AuditLogChain chains = 1;
+}
+
+message AuditLogChain {
+  repeated AuditLogItem items = 1;
+}
+
+message AuditLogItem {
+  bytes tx_hash = 1;
+  int32 confirmed_height = 2;
+  bytes log_msg = 3;
+}
+

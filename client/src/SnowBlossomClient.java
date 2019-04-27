@@ -340,6 +340,19 @@ public class SnowBlossomClient
         System.out.println(AuditLog.recordLog(client, msg));
        
       }
+      else if (command.equals("audit_log_report"))
+      {
+        if (args.length != 3)
+        {
+          System.out.println("Syntax: audit_log_report <address>");
+          System.exit(-1);
+        }
+       
+        AddressSpecHash audit_log_hash = AddressUtil.getHashForAddress(client.getParams().getAddressPrefix(), args[2]);
+
+        AuditLogReport report = AuditLog.getAuditReport(client, audit_log_hash);
+        System.out.println(report);
+      }
       else
       {
         logger.log(Level.SEVERE, String.format("Unknown command %s.", command));
@@ -360,6 +373,7 @@ public class SnowBlossomClient
         System.out.println("  rpcserver - run a local rpc server for client commands");
         System.out.println("  audit_log_init <msg> - initialize a new audit log chain");
         System.out.println("  audit_log_record <msg> - record next audit log in chain");
+        System.out.println("  audit_log_report <address> - get a report of audit log on address");
 
         System.exit(-1);
       }
