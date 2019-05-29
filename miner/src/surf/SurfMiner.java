@@ -100,7 +100,9 @@ public class SurfMiner implements PoolClientOperator
   private final Semaphore start_work_sem = new Semaphore(0);
   private final int units_in_flight_target;
   private LRUCache<Integer, WorkUnit> workunit_cache = new LRUCache<>(250);
-  private final long WORDS_PER_CHUNK = Globals.MINE_CHUNK_SIZE / Globals.SNOW_MERKLE_HASH_LEN;
+  private final long words_per_chunk;
+  private final long chunk_size;
+
 
   public SurfMiner(Config config) throws Exception
   {
@@ -112,6 +114,10 @@ public class SurfMiner implements PoolClientOperator
     config.require("waves");
     config.require("hash_threads");
     config.require("work_unit_mem_gb");
+
+    long chunk_size_mb = config.getIntWithDefault("chunk_size_mb", 1024);
+    chunk_size = chunk_size_mb * 1024*1024;
+    words_per_chunk = chunk_size / Globals.SNOW_MERKLE_HASH_LEN;
 
     double mem_gb = config.getDouble("work_unit_mem_gb");
     long mem_bytes = (long) (mem_gb * 1024L * 1024L * 1024L);
@@ -144,7 +150,7 @@ public class SurfMiner implements PoolClientOperator
       time_record = new TimeRecord();
       TimeRecord.setSharedRecord(time_record);
     }
-    total_blocks = (int) (field.getLength() / Globals.MINE_CHUNK_SIZE);
+    total_blocks = (int) (field.getLength() / chunk_size);
 
     magic_queue = new MagicQueue(config.getIntWithDefault("buffer_size", 100000), total_blocks);
     pool_client.subscribe();
@@ -272,7 +278,7 @@ public class SurfMiner implements PoolClientOperator
 
       this.task_number = task_number;
       this.block = start_block;
-      block_buff = new byte[(int)Globals.MINE_CHUNK_SIZE];
+      block_buff = new byte[(int)chunk_size];
     }
     public void run()
     {
@@ -287,7 +293,7 @@ public class SurfMiner implements PoolClientOperator
 
           logger.fine("Wave " + task_number + " reading chunk " + block);
 
-          long offset = block * Globals.MINE_CHUNK_SIZE;
+          long offset = block * chunk_size;
 
           field.readChunk(offset, bb);
           //process block
@@ -379,7 +385,7 @@ public class SurfMiner implements PoolClientOperator
 
         long word_idx = PowUtil.getNextSnowFieldIndex(context, field.getTotalWords(), md, tmp_buff);
 
-        int block = (int)(word_idx / WORDS_PER_CHUNK);
+        int block = (int)(word_idx / words_per_chunk);
 
         ByteBuffer bucket_buff = magic_queue.openWrite(block, getRecordSize()); 
 
@@ -519,7 +525,7 @@ public class SurfMiner implements PoolClientOperator
       b.get(nonce);
       b.get(context);
 
-      long word_offset = word_idx % WORDS_PER_CHUNK;
+      long word_offset = word_idx % words_per_chunk;
       int word_offset_bytes = (int)(word_offset * Globals.SNOW_MERKLE_HASH_LEN);
 
       //logger.info(String.format("pass:%d idx:%d word_off:%d b:%d", pass, word_idx, word_offset, word_offset_bytes));
@@ -565,7 +571,7 @@ public class SurfMiner implements PoolClientOperator
         byte new_pass = pass; new_pass++;
         PowUtil.getNextContext(context, word_buff, md, context);
         long new_word_idx = PowUtil.getNextSnowFieldIndex(context, field.getTotalWords(), md, tmp_buff);
-        int new_block = (int)(new_word_idx / WORDS_PER_CHUNK);
+        int new_block = (int)(new_word_idx / words_per_chunk);
 
         ByteBuffer bucket_buff = magic_queue.openWrite(new_block, getRecordSize()); 
 
