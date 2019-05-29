@@ -155,8 +155,11 @@ public class SurfMiner implements PoolClientOperator
     logger.info("Total blocks: " + total_blocks);
     logger.info("In memory target: " + units_in_flight_target);
 
-    magic_queue = new MagicQueue(config.getIntWithDefault("buffer_size", 100000), total_blocks);
+    magic_queue = new MagicQueue(config.getIntWithDefault("buffer_size", getRecordSize()*100), total_blocks);
     pool_client.subscribe();
+
+    // Waiting for pool client to settle
+    Thread.sleep(5000);
 
     
 
@@ -179,7 +182,6 @@ public class SurfMiner implements PoolClientOperator
       new WaveThread(w, start).start();
     }
 
-    Thread.sleep(5000);
     start_work_sem.release(units_in_flight_target);
 
 
@@ -294,7 +296,7 @@ public class SurfMiner implements PoolClientOperator
           // Reading block
           ByteBuffer bb = ByteBuffer.wrap(block_buff);
 
-          logger.info("Wave " + task_number + " reading chunk " + block);
+          logger.fine("Wave " + task_number + " reading chunk " + block);
 
           long offset = block * chunk_size;
 
@@ -365,9 +367,11 @@ public class SurfMiner implements PoolClientOperator
       else
       {
         to_start++;
-        if (start_work_sem.tryAcquire(1000))
+        int n = 16;
+        while(start_work_sem.tryAcquire(n) && (n < 1000000))
         {
-          to_start+=1000;
+          to_start+=n;
+          n=n*2;
         }
       }
 
@@ -379,6 +383,13 @@ public class SurfMiner implements PoolClientOperator
         return;
       }
 
+      //logger.info("Starting " + to_start + " work units");
+      int dist[]=null;
+      /*if (to_start > 100)
+      {
+        dist=new int[total_blocks];
+      }*/
+
       for(int s =0 ; s<to_start; s++)
       {
         rnd.nextBytes(nonce);
@@ -389,10 +400,24 @@ public class SurfMiner implements PoolClientOperator
         long word_idx = PowUtil.getNextSnowFieldIndex(context, field.getTotalWords(), md, tmp_buff);
 
         int block = (int)(word_idx / words_per_chunk);
+        if (dist != null) dist[block]++;
 
         ByteBuffer bucket_buff = magic_queue.openWrite(block, getRecordSize()); 
 
         writeRecord(bucket_buff, wu.getWorkId(), (byte)0, word_idx, nonce, context);
+      }
+      if (dist != null)
+      {
+        StringBuilder sb = new StringBuilder();
+
+        for(int i=0; i<total_blocks; i++)
+        {
+          sb.append(dist[i] + ",");
+        }
+        logger.info("Dist: " + sb.toString());
+
+        magic_queue.flushFromLocal();
+
       }
 
     }
@@ -597,12 +622,15 @@ public class SurfMiner implements PoolClientOperator
   {
     Semaphore work_sem = new Semaphore(0);
     int work_count =0;
+    long work_units = 0;
+
 
     ByteBuffer b = null;
     while((b = magic_queue.readBucket(block_number)) != null)
     {
       final ByteBuffer bb = b;
       work_count++;
+      work_units += b.remaining() / getRecordSize();
       hash_thread_pool.execute( new Runnable(){
 
         public void run()
@@ -612,7 +640,7 @@ public class SurfMiner implements PoolClientOperator
       });
     }
 
-    logger.info(String.format("Running %d buffers for block %d", work_count, block_number));
+    //logger.info(String.format("Running %d buffers for block %d - %d work units", work_count, block_number, work_units));
     work_sem.acquire(work_count);
     // For each buffer in magic queue
     // process next pass

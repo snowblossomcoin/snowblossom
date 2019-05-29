@@ -95,7 +95,7 @@ public class MagicQueue
   }
 
   /**
-   * Returns null of a ByteBuffer with position 0 and limit set to how much data is there.
+   * Returns null or a ByteBuffer with position 0 and limit set to how much data is there.
    * ready for reading.
    */
 
