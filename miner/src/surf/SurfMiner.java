@@ -116,8 +116,10 @@ public class SurfMiner implements PoolClientOperator
     config.require("work_unit_mem_gb");
 
     long chunk_size_mb = config.getIntWithDefault("chunk_size_mb", 1024);
+    logger.info("Using chunk_size_mb: " + chunk_size_mb);
     chunk_size = chunk_size_mb * 1024*1024;
     words_per_chunk = chunk_size / Globals.SNOW_MERKLE_HASH_LEN;
+    
 
     double mem_gb = config.getDouble("work_unit_mem_gb");
     long mem_bytes = (long) (mem_gb * 1024L * 1024L * 1024L);
