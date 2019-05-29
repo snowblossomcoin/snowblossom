@@ -612,7 +612,7 @@ public class SurfMiner implements PoolClientOperator
       });
     }
 
-    logger.fine(String.format("Running %d buffers for block %d", work_count, block_number));
+    logger.info(String.format("Running %d buffers for block %d", work_count, block_number));
     work_sem.acquire(work_count);
     // For each buffer in magic queue
     // process next pass
