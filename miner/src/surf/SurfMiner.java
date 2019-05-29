@@ -294,7 +294,7 @@ public class SurfMiner implements PoolClientOperator
           // Reading block
           ByteBuffer bb = ByteBuffer.wrap(block_buff);
 
-          logger.fine("Wave " + task_number + " reading chunk " + block);
+          logger.log("Wave " + task_number + " reading chunk " + block);
 
           long offset = block * chunk_size;
 
