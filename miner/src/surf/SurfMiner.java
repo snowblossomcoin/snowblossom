@@ -116,7 +116,6 @@ public class SurfMiner implements PoolClientOperator
     config.require("work_unit_mem_gb");
 
     long chunk_size_mb = config.getIntWithDefault("chunk_size_mb", 1024);
-    logger.info("Using chunk_size_mb: " + chunk_size_mb);
     chunk_size = chunk_size_mb * 1024*1024;
     words_per_chunk = chunk_size / Globals.SNOW_MERKLE_HASH_LEN;
     
@@ -125,7 +124,6 @@ public class SurfMiner implements PoolClientOperator
     long mem_bytes = (long) (mem_gb * 1024L * 1024L * 1024L);
 
     units_in_flight_target = (int) (mem_bytes / getRecordSize());
-    logger.info("In memory target: " + units_in_flight_target);
 
 
 
@@ -153,6 +151,9 @@ public class SurfMiner implements PoolClientOperator
       TimeRecord.setSharedRecord(time_record);
     }
     total_blocks = (int) (field.getLength() / chunk_size);
+    logger.info("Using chunk_size_mb: " + chunk_size_mb);
+    logger.info("Total blocks: " + total_blocks);
+    logger.info("In memory target: " + units_in_flight_target);
 
     magic_queue = new MagicQueue(config.getIntWithDefault("buffer_size", 100000), total_blocks);
     pool_client.subscribe();
