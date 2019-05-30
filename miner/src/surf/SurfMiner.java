@@ -102,6 +102,7 @@ public class SurfMiner implements PoolClientOperator
   private LRUCache<Integer, WorkUnit> workunit_cache = new LRUCache<>(250);
   private final long words_per_chunk;
   private final long chunk_size;
+  private final Object cache_lock;
 
 
   public SurfMiner(Config config) throws Exception
@@ -114,6 +115,14 @@ public class SurfMiner implements PoolClientOperator
     config.require("waves");
     config.require("hash_threads");
     config.require("work_unit_mem_gb");
+    if (config.getBoolean("cache_lock"))
+    {
+      cache_lock = new Object();
+    }
+    else
+    {
+      cache_lock = null;
+    }
 
     long chunk_size_mb = config.getIntWithDefault("chunk_size_mb", 1024);
     chunk_size = chunk_size_mb * 1024*1024;
@@ -302,7 +311,17 @@ public class SurfMiner implements PoolClientOperator
 
           field.readChunk(offset, bb);
           //process block
-          processBlock(block_buff, block);
+          if (cache_lock != null)
+          {
+            synchronized(cache_lock)
+            {
+              processBlock(block_buff, block);
+            }
+          }
+          else
+          {
+            processBlock(block_buff, block);
+          }
 
           fusion.taskComplete(task_number);
 
