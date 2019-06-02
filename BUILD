@@ -76,6 +76,16 @@ java_binary(
 )
 
 java_binary(
+  name = "IceLeaf",
+  main_class = "snowblossom.iceleaf.IceLeaf",
+  runtime_deps = [
+    "//iceleaf:iceleaf",
+  ]
+)
+
+
+
+java_binary(
   name = "VanityGen",
   main_class = "snowblossom.client.VanityGen",
   runtime_deps = [
