@@ -8,6 +8,7 @@
 * In client jsonrpc add get_block by height or hash
 * Switch to SecureRandom for seed generation since Random only uses a 64-bit seed
 * Adding audit log mode: https://wiki.snowblossom.org/index.php/Audit_Log_Mode
+* Calculator on explorer
 
 ## 1.5.0
 
