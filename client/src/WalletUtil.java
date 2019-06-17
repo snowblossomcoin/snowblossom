@@ -62,7 +62,8 @@ public class WalletUtil
       if (import_seed != null)
       {
      		ByteString seed_id = SeedUtil.getSeedId(params, import_seed, "", 0);
-      	builder.putSeeds(import_seed, SeedStatus.newBuilder().setSeedId(seed_id).build());
+     		String seed_xpub = SeedUtil.getSeedXpub(params, import_seed, "", 0);
+      	builder.putSeeds(import_seed, SeedStatus.newBuilder().setSeedId(seed_id).setSeedXpub(seed_xpub).build());
       }
       else
       {
@@ -101,10 +102,12 @@ public class WalletUtil
           logger.info("Generating new seed");
           String seed_str = SeedUtil.generateSeed(12);
           ByteString seed_id = SeedUtil.getSeedId(params, seed_str, "", 0);
+          String seed_xpub = SeedUtil.getSeedXpub(params, seed_str, "", 0);
 
           wallet_builder.putSeeds(seed_str, 
             SeedStatus.newBuilder()
               .setSeedId(seed_id)
+              .setSeedXpub(seed_xpub)
               .putAddressIndex(0, next_index)
               .build());
           gen_seed = seed_str;
@@ -114,10 +117,16 @@ public class WalletUtil
           gen_seed = existing_wallet.getSeedsMap().keySet().iterator().next();
           next_index = existing_wallet.getSeedsMap().get(gen_seed).getAddressIndexOrDefault(0,-1) + 1;
           ByteString seed_id = existing_wallet.getSeedsMap().get(gen_seed).getSeedId();
+          String seed_xpub = existing_wallet.getSeedsMap().get(gen_seed).getSeedXpub();
+          if ((seed_xpub == null) || (seed_xpub.length() == 0))
+          {
+            seed_xpub = SeedUtil.getSeedXpub(params, gen_seed, "", 0);
+          }
 
           wallet_builder.putSeeds(gen_seed, 
             SeedStatus.newBuilder()
               .setSeedId(seed_id)
+              .setSeedXpub(seed_xpub)
               .putAddressIndex(0, next_index)
               .build());
         }
@@ -126,9 +135,16 @@ public class WalletUtil
       {
         next_index = existing_wallet.getSeedsMap().get(gen_seed).getAddressIndexOrDefault(0,-1) + 1;
         ByteString seed_id = existing_wallet.getSeedsMap().get(gen_seed).getSeedId();
+        String seed_xpub = existing_wallet.getSeedsMap().get(gen_seed).getSeedXpub();
+        if ((seed_xpub == null) || (seed_xpub.length() == 0))
+        {
+          seed_xpub = SeedUtil.getSeedXpub(params, gen_seed, "", 0);
+        }
+
         wallet_builder.putSeeds(gen_seed, 
           SeedStatus.newBuilder()
               .setSeedId(seed_id)
+              .setSeedXpub(seed_xpub)
               .putAddressIndex(0, next_index)
               .build());
 
@@ -463,6 +479,9 @@ public class WalletUtil
     SeedStatus.Builder new_seed = SeedStatus.newBuilder();
     new_seed.setSeedId(a.getSeedId());
 
+    if ((a.getSeedXpub() != null) && (a.getSeedXpub().length() > 0)) new_seed.setSeedXpub(a.getSeedXpub());
+    else new_seed.setSeedXpub(b.getSeedXpub());
+
     HashSet<Integer> change_groups = new HashSet<Integer>();
     change_groups.addAll( a.getAddressIndexMap().keySet());
     change_groups.addAll( b.getAddressIndexMap().keySet());
@@ -554,7 +573,8 @@ public class WalletUtil
 		HashSet<ByteString> seed_ids = new HashSet<>();
 		for(String seed : db.getSeedsMap().keySet())
 		{
-			sr.seeds.add(seed);
+      String xpub=db.getSeedsMap().get(seed).getSeedXpub();
+      sr.seeds.put(seed, xpub);
 			seed_ids.add(db.getSeedsMap().get(seed).getSeedId());
 
 		}

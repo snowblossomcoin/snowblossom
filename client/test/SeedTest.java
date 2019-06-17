@@ -115,13 +115,22 @@ public class SeedTest
     System.out.println("Seed acct: " + dk_acct.toString());
     System.out.println("Seed acct xprv: " + dk_acct.serializePrivB58(org.bitcoinj.params.MainNetParams.get()));
 
+    String xpub = SeedUtil.getSeedXpub( new NetworkParamsTestnet(), seed, "", 0);
+
 		for(int c=0; c<2; c++)
 		for(int i=0; i<100; i++)
 		{
     	WalletKeyPair wkp = SeedUtil.getKey( new NetworkParamsTestnet(), seed, "", 0, c, i);
+
       System.out.println("Seed wkp: " + HexUtil.getHexString(wkp.getSeedId()) + " " + wkp.getHdPath());
       Assert.assertTrue(wkp.getHdPath().startsWith("M/44H/2339H/0H/"));
       Assert.assertTrue(wkp.getSeedId().size()==20);
+
+      AddressSpecHash addr = SeedUtil.getAddress(new NetworkParamsTestnet(), xpub, c, i);
+
+      AddressSpecHash wkp_addr = AddressUtil.getHashForSpec(AddressUtil.getSimpleSpecForKey(wkp));
+
+      Assert.assertEquals(addr, wkp_addr);
 
 			testKeyPair(wkp, "hd");
 		}

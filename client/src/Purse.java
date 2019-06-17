@@ -57,8 +57,9 @@ public class Purse
       if (import_seed != null)
       {
         ByteString seed_id = SeedUtil.getSeedId(client.getParams(), import_seed, "", 0);
+        String seed_xpub = SeedUtil.getSeedXpub(client.getParams(), import_seed, "", 0);
         WalletDatabase.Builder wallet_import = WalletDatabase.newBuilder();
-        wallet_import.putSeeds(import_seed, SeedStatus.newBuilder().setSeedId(seed_id).build());
+        wallet_import.putSeeds(import_seed, SeedStatus.newBuilder().setSeedId(seed_id).setSeedXpub(seed_xpub).build());
         mergeIn(wallet_import.build());
       }
 

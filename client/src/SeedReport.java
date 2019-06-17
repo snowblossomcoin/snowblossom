@@ -1,16 +1,15 @@
 package snowblossom.client;
 
-import java.util.List;
-import java.util.ArrayList;
+import java.util.TreeMap;
 
 public class SeedReport
 {
-  List<String> seeds;
+  TreeMap<String, String> seeds;
   int missing_keys;
 
   public SeedReport()
   {
-    seeds = new ArrayList<>();
+    seeds = new TreeMap<>();
   }
 
 }

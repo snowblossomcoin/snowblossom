@@ -9,6 +9,7 @@
 * Switch to SecureRandom for seed generation since Random only uses a 64-bit seed
 * Adding audit log mode: https://wiki.snowblossom.org/index.php/Audit_Log_Mode
 * Calculator on explorer
+* Add xpub support for seed based wallets.  TODO: watch-only mode for xpubs
 
 ## 1.5.0
 

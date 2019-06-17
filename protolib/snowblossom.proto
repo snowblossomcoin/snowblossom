@@ -334,6 +334,7 @@ message SeedStatus
 {
   bytes seed_id = 1;
   map<int32, int32> address_index = 2;
+  string seed_xpub = 3;
 }
 
 message BalanceInfo {

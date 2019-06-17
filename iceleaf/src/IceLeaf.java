@@ -11,6 +11,7 @@ public class IceLeaf
 {
   public static void main(String args[]) throws Exception
   {
+    System.out.println(System.getProperty("user.home"));
     new IceLeaf();
 
   }
@@ -36,9 +37,15 @@ public class IceLeaf
 
       f.setContentPane(tab_pane);
 
+      // Run a node?
       tab_pane.add("Node", new JPanel());
-      tab_pane.add("Client", new JPanel());
-      tab_pane.add("History", new JPanel());
+
+      // Which node to use for client data
+      tab_pane.add("NodeClient", new JPanel());
+
+
+      // Wallets to load
+      tab_pane.add("Wallets", new JPanel());
 
 
     }

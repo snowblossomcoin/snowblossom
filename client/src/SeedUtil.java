@@ -18,6 +18,8 @@ import org.bitcoinj.crypto.ChildNumber;
 import snowblossom.lib.NetworkParams;
 import snowblossom.lib.SignatureUtil;
 import snowblossom.lib.KeyUtil;
+import snowblossom.lib.AddressSpecHash;
+import snowblossom.lib.AddressUtil;
 import java.math.BigInteger;
 import java.security.KeyFactory;
 import snowblossom.lib.Globals;
@@ -123,11 +125,49 @@ public class SeedUtil
       	new ChildNumber(account,true)
 			),
       true, true);
+
     String xpub = dk_acct.serializePubB58( org.bitcoinj.params.MainNetParams.get() );
     ByteString seed_id = ByteString.copyFrom(dk_acct.getIdentifier());
 
     return seed_id;
+  }
 
+  public static String getSeedXpub(NetworkParams params, String seed_str, String pass, int account)
+  {
+    ByteString seed = decodeSeed(seed_str,pass);
+    DeterministicKey dk = HDKeyDerivation.createMasterPrivateKey(seed.toByteArray());
+    DeterministicHierarchy dh = new DeterministicHierarchy(dk);
+
+
+    DeterministicKey dk_acct = dh.get( ImmutableList.of(
+      	new ChildNumber(44,true),
+      	new ChildNumber(params.getBIP44CoinNumber(),true),
+      	new ChildNumber(account,true)
+			),
+      true, true);
+
+    String xpub = dk_acct.serializePubB58( org.bitcoinj.params.MainNetParams.get() );
+    return xpub;
+  }
+
+
+  public static AddressSpecHash getAddress(NetworkParams params, String xpub, int change, int index)
+  {
+    DeterministicKey account_key = DeterministicKey.deserializeB58(xpub, org.bitcoinj.params.MainNetParams.get());
+
+    DeterministicHierarchy dh = new DeterministicHierarchy(account_key);
+
+    DeterministicKey dk_addr = dh.get( ImmutableList.of(
+      new ChildNumber(change,false),
+      new ChildNumber(index,false)
+    ), true, true);
+
+
+		ByteString public_key = ByteString.copyFrom(dk_addr.getPubKey());
+
+    AddressSpec addr_spec = AddressUtil.getSimpleSpecForKey(public_key, SignatureUtil.SIG_TYPE_ECDSA_COMPRESSED);
+
+    return AddressUtil.getHashForSpec(addr_spec);
 
   }
 

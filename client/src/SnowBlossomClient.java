@@ -302,9 +302,10 @@ public class SnowBlossomClient
         WalletDatabase db = client.getPurse().getDB();
         SeedReport sr = WalletUtil.getSeedReport(db);
 
-        for(String seed : sr.seeds)
+        for(Map.Entry<String, String>  seed : sr.seeds.entrySet())
         {
-          System.out.println("Seed: " + seed);
+          System.out.println("Public: " + seed.getValue());
+          System.out.println("Seed: " + seed.getKey());
         }
         if (sr.missing_keys > 0)
         {
