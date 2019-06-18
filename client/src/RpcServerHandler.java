@@ -44,6 +44,7 @@ public class RpcServerHandler
     json_server.register(new GetStatusHandler());
     json_server.register(new ImportWalletHandler());
     json_server.register(new GetBlockHandler());
+    json_server.register(new GetXpubAddressHandler());
 
   }
 
@@ -177,6 +178,41 @@ public class RpcServerHandler
 
   }
 
+  public class GetXpubAddressHandler extends JsonRequestHandler
+  {
+    public String[] handledRequests()
+    {
+      return new String[]{"get_xpub_address"};
+    }
+
+    @Override
+    protected JSONObject processRequest(JSONRPC2Request req, MessageContext ctx)
+      throws Exception
+    {
+      String xpub = RpcUtil.requireString(req, "xpub");
+      Map<String, Object> params = req.getNamedParams();
+
+
+      JSONObject reply = new JSONObject();
+      int chain=0;
+      if (params.containsKey("chain"))
+      {
+        chain = (int) (long) params.get("chain");
+      }
+      int index = (int) (long) params.get("index");
+
+      AddressSpecHash addr = SeedUtil.getAddress(client.getParams(), xpub, chain, index );
+
+      reply.put("address", addr.toAddressString(client.getParams()));
+
+
+      return reply;
+ 
+    }
+
+
+  }
+
   public class GetTxHandler extends JsonRequestHandler
   {
     public String[] handledRequests()
@@ -196,19 +232,17 @@ public class RpcServerHandler
       if (tx == null)
       {
         throw new Exception("Unknown transaction: " + tx_hash);
-
       }
 
-        TransactionInner inner = TransactionUtil.getInner(tx);
+      TransactionInner inner = TransactionUtil.getInner(tx);
 
-        reply.put("tx_hash", HexUtil.getHexString(tx.getTxHash()));
-        reply.put("tx_data", HexUtil.getHexString(tx.toByteString()));
-        reply.put("fee", inner.getFee());
+      reply.put("tx_hash", HexUtil.getHexString(tx.getTxHash()));
+      reply.put("tx_data", HexUtil.getHexString(tx.toByteString()));
+      reply.put("fee", inner.getFee());
 
-        TransactionStatus status = client.getStub().getTransactionStatus(RequestTransaction.newBuilder().setTxHash(tx_hash.getBytes()).build());
+      TransactionStatus status = client.getStub().getTransactionStatus(RequestTransaction.newBuilder().setTxHash(tx_hash.getBytes()).build());
 
-        reply.put("status", RpcUtil.protoToJson(status));
-
+      reply.put("status", RpcUtil.protoToJson(status));
 
       return reply;
  
