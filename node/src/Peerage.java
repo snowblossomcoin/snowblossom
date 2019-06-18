@@ -494,9 +494,14 @@ public class Peerage
     }
   }
 
-  private ByteString getNodeId()
+  private ByteString internal_node_id;
+  private synchronized ByteString getNodeId()
   {
-    ByteString id = node.getDB().getSpecialMap().get("node_id");
+    
+    // If we use the DB, then nodes will have the same ID if the DB
+    // is cloned for whatever reason
+    //ByteString id = node.getDB().getSpecialMap().get("node_id");
+    ByteString id = internal_node_id;
     if (id == null)
     {
       Random rnd = new Random();
@@ -504,6 +509,7 @@ public class Peerage
       rnd.nextBytes(b);
       id = ByteString.copyFrom(b);
       node.getDB().getSpecialMap().put("node_id", id);
+      internal_node_id = id;
     }
 
     return id;

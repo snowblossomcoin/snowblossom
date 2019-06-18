@@ -19,6 +19,7 @@ import java.util.LinkedList;
 import java.util.List;
 import com.google.protobuf.util.JsonFormat;
 import net.minidev.json.parser.JSONParser;
+import com.google.protobuf.ByteString;
 
 import com.google.common.collect.ImmutableSet;
 
@@ -45,6 +46,7 @@ public class RpcServerHandler
     json_server.register(new ImportWalletHandler());
     json_server.register(new GetBlockHandler());
     json_server.register(new GetXpubAddressHandler());
+    json_server.register(new GetAddressBalanceHandler());
 
   }
 
@@ -177,6 +179,70 @@ public class RpcServerHandler
     }
 
   }
+
+  public class GetAddressBalanceHandler extends JsonRequestHandler
+  {
+    public String[] handledRequests()
+    {
+      return new String[]{"get_address_balance"};
+    }
+
+    @Override
+    protected JSONObject processRequest(JSONRPC2Request req, MessageContext ctx)
+      throws Exception
+    {
+      String address = RpcUtil.requireString(req, "address");
+      AddressSpecHash hash = new AddressSpecHash(address, client.getParams());
+      JSONObject reply = new JSONObject();
+
+      BalanceInfo bi = client.getBalance(hash);
+      JSONObject balance_obj = new JSONObject();
+      
+      balance_obj.put("flake_confirmed", bi.getConfirmed());
+      balance_obj.put("flake_unconfirmed", bi.getUnconfirmed());
+      balance_obj.put("flake_spendable", bi.getSpendable());
+
+      balance_obj.put("confirmed_snow", bi.getConfirmed() / Globals.SNOW_VALUE_D);
+      balance_obj.put("unconfirmed_snow", bi.getUnconfirmed() / Globals.SNOW_VALUE_D);
+      balance_obj.put("spendable_snow", bi.getSpendable() / Globals.SNOW_VALUE_D);
+
+      reply.put("balance", balance_obj);
+
+      HistoryList hl = client.getStub().getAddressHistory(
+        RequestAddress.newBuilder().setAddressSpecHash(hash.getBytes()).build());
+
+      int transactions=0;
+      long total_received=0;
+      for(HistoryEntry he : hl.getEntriesList())
+      {
+        transactions++;
+        ByteString tx_hash = he.getTxHash();
+        Transaction tx = client.getStub().getTransaction( RequestTransaction.newBuilder().setTxHash(tx_hash).build());
+        TransactionInner tx_inner = TransactionUtil.getInner(tx);
+
+        for(TransactionOutput tx_out : tx_inner.getOutputsList())
+        {
+          if ( hash.equals(tx_out.getRecipientSpecHash()))
+          {
+            total_received += tx_out.getValue();
+          }
+
+        }
+
+      }
+      JSONObject history = new JSONObject();
+      history.put("transaction_count", transactions);
+      history.put("flake_total_received", total_received);
+      history.put("total_received_snow", total_received / Globals.SNOW_VALUE_D);
+
+      reply.put("history", history);
+ 
+      return reply;
+    }
+
+
+  }
+
 
   public class GetXpubAddressHandler extends JsonRequestHandler
   {
@@ -386,8 +452,12 @@ public class RpcServerHandler
       reply.put("node_status", RpcUtil.protoToJson(node_status));
 
       BalanceInfo balance_info = client.getBalance();
+      
+      JSONObject balance_obj = new JSONObject();
 
-      JSONObject balance_obj = RpcUtil.protoToJson(balance_info);
+      balance_obj.put("flake_confirmed", balance_info.getConfirmed());
+      balance_obj.put("flake_unconfirmed", balance_info.getUnconfirmed());
+      balance_obj.put("flake_spendable", balance_info.getSpendable());
 
       balance_obj.put("confirmed_snow", balance_info.getConfirmed() / Globals.SNOW_VALUE_D);
       balance_obj.put("unconfirmed_snow", balance_info.getUnconfirmed() / Globals.SNOW_VALUE_D);

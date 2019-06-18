@@ -51,6 +51,8 @@ public class SnowBlossomClient
     }
 
     ConfigFile config = new ConfigFile(args[0]);
+    
+    config.require("wallet_path");
 
     LogSetup.setup(config);
     SnowBlossomClient client = null;
@@ -416,6 +418,7 @@ public class SnowBlossomClient
     blockingStub = UserServiceGrpc.newBlockingStub(channel);
 
     get_utxo_util = new GetUTXOUtil(blockingStub, params);
+
 
     if (config.isSet("wallet_path"))
     {

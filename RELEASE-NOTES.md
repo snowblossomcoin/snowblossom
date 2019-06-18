@@ -10,6 +10,8 @@
 * Adding audit log mode: https://wiki.snowblossom.org/index.php/Audit_Log_Mode
 * Calculator on explorer
 * Add xpub support for seed based wallets.  TODO: watch-only mode for xpubs
+* RPC get status returns balance matching other balance results
+* Add get_address_balance RPC
 
 ## 1.5.0
 
