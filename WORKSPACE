@@ -15,9 +15,9 @@ maven_jar(
 
 http_archive(
     name = "build_stack_rules_proto",
-    urls = ["https://snowblossom.org/deps/rules_proto/f5d6eea6a4528bef3c1d3a44d486b51a214d61c2.tar.gz"],
-    sha256 = "128c4486b1707db917411c6e448849dd76ea3b8ba704f9e0627d9b01f2ee45fe",
-    strip_prefix = "rules_proto-f5d6eea6a4528bef3c1d3a44d486b51a214d61c2",
+    urls = ["https://github.com/stackb/rules_proto/archive/78d64b7317a332ee884ad7fcd0506d78f2a402cb.tar.gz"],
+    sha256 = "7f7fc55f1cfe8b28f95f1feb8ea42f21310cbbf3c1ee5015dfc15c604f6593f1",
+    strip_prefix = "rules_proto-78d64b7317a332ee884ad7fcd0506d78f2a402cb",
 )
 
 load("@build_stack_rules_proto//:deps.bzl", "io_grpc_grpc_java")
