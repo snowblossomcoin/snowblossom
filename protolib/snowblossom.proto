@@ -184,6 +184,9 @@ message PeerChainTip {
   repeated PeerInfo peers = 3;
   string version = 4;
 }
+
+
+
 message PeerInfo {
   string host = 1;
   int32 port = 2;
@@ -192,6 +195,9 @@ message PeerInfo {
   int64 learned = 5;
   string version = 6;
   bytes node_id = 7;
+  bool tls = 8;
+  bytes node_snow_address = 9; //Used for TLS
+
 }
 
 message TransactionStatus {
@@ -368,5 +374,20 @@ message CipherKey
   bytes salt = 3;
   bytes public_key = 4;
 
+}
+
+
+message SignedMessage {
+  bytes payload = 1; //A serialized SignedMessagePayload
+  bytes signature = 2;
+}
+
+message SignedMessagePayload {
+  AddressSpec claim = 1;
+  int64 timestamp = 2;
+  bytes snow_block_hash = 3;
+  oneof z {
+    bytes tls_public_key = 5;
+  }
 }
 

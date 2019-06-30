@@ -8,6 +8,7 @@ java_library(
     "@commons_codec//jar",
     "@commons_math3//jar",
     "@bcprov//jar",
+    "@bcpkix//jar",
     "@scprov//jar",
     "@sccore//jar",
     "@junit_junit//jar",
@@ -20,6 +21,8 @@ java_library(
     "@json_smart//jar",
     "@com_google_protobuf//:protobuf_java_util",
     "@build_stack_rules_proto//java:grpc_netty",
+    "@netty_tcnative//jar",
+    "@io_netty_netty_handler//jar",
     ],
 )
 

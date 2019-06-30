@@ -49,6 +49,8 @@ public class Globals
 
   public static final long MINE_CHUNK_SIZE = 1024L*1024L*1024L;
 
+  public static final String NODE_ADDRESS_STRING = "node";
+
   // In flakes per byte
   public static final double BASIC_FEE = 2.5;
   public static final double LOW_FEE = 2.2;

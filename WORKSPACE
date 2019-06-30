@@ -54,7 +54,17 @@ maven_jar(
   artifact = "org.apache.commons:commons-math3:3.6.1",
   sha1 = "e4ba98f1d4b3c80ec46392f25e094a6a2e58fcbf",
 )
+maven_jar(
+  name = "netty_tcnative",
+  artifact = "io.netty:netty-tcnative-boringssl-static:2.0.15.Final",
+  sha1 = "8310b263ddbe3ffa021cdb7963bfdba3f9c50f8d",
+)
 
+maven_jar(
+  name = "bcpkix",
+  artifact = "org.bouncycastle:bcpkix-jdk15on:1.60",
+  sha1 = "d0c46320fbc07be3a24eb13a56cee4e3d38e0c75",
+)
 maven_jar(
   name = "bcprov",
   artifact = "org.bouncycastle:bcprov-jdk15on:1.60",
