@@ -35,7 +35,7 @@ public class LogSetup
     }
     else
     {
-      log_props.setProperty(".level", "INFO");
+      log_props.setProperty(".level", "FINE");
       log_props.setProperty("io.level", "SEVERE");
     }
 
