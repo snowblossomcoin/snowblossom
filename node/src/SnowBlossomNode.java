@@ -81,9 +81,9 @@ public class SnowBlossomNode
     loadUtxoDB();
     loadWidgets();
 
-    startWidgets();
-
     startServices();
+
+    startWidgets();
   }
 
   public void stop()
@@ -113,6 +113,7 @@ public class SnowBlossomNode
 
   private void startWidgets()
   {
+    logger.info("Widget start");
     peerage.start();
     new TimeWatcher().start();
   }
@@ -175,9 +176,9 @@ public class SnowBlossomNode
       }
     }
 
-
     service_ports = ImmutableList.copyOf(ports);
     tls_service_ports = ImmutableList.copyOf(tls_ports);
+    logger.info("Ports: " + service_ports + " " + tls_service_ports);
 
     user_service.start();
   }

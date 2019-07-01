@@ -345,7 +345,7 @@ public class Peerage
       setDaemon(true);
     }
 
-    long last_learn_time = System.currentTimeMillis();
+    long last_learn_time = 0L;
     long save_peer_time = System.currentTimeMillis();
 
     public void run()
