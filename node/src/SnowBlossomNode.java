@@ -2,6 +2,7 @@ package snowblossom.node;
 
 import duckutil.Config;
 import duckutil.ConfigFile;
+import duckutil.ConfigMem;
 import io.grpc.Server;
 import io.grpc.ServerBuilder;
 import snowblossom.lib.db.DB;
@@ -10,9 +11,20 @@ import snowblossom.lib.trie.TrieDBMap;
 import snowblossom.lib.db.lobstack.LobstackDB;
 import snowblossom.lib.db.rocksdb.JRocksDB;
 import snowblossom.lib.*;
+import snowblossom.proto.WalletDatabase;
+import snowblossom.lib.tls.CertGen;
+
+import java.util.TreeMap;
+import java.util.LinkedList;
+import io.netty.handler.ssl.SslContext;
 
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.io.File;
+import io.grpc.netty.NettyServerBuilder;
+
+import snowblossom.client.WalletUtil;
+import com.google.common.collect.ImmutableList;
 
 public class SnowBlossomNode
 {
@@ -49,6 +61,10 @@ public class SnowBlossomNode
   private HashedTrie utxo_hashed_trie;
   private Peerage peerage;
   private BlockHeightCache block_height_cache;
+
+  private ImmutableList<Integer> service_ports;
+  private ImmutableList<Integer> tls_service_ports;
+  private AddressSpecHash node_tls_address;
 
   private volatile boolean terminate;
 
@@ -104,14 +120,18 @@ public class SnowBlossomNode
   private void startServices()
     throws Exception
   {
+    user_service = new SnowUserService(this);
+    peer_service = new SnowPeerService(this);
+    LinkedList<Integer> ports = new LinkedList<>();
+    LinkedList<Integer> tls_ports = new LinkedList<>();
+
+
     if (config.isSet("service_port"))
     {
-      user_service = new SnowUserService(this);
-      peer_service = new SnowPeerService(this);
-
       for(String port_str : config.getList("service_port"))
       {
         int port = Integer.parseInt(port_str);
+        ports.add(port);
         Server s = ServerBuilder
           .forPort(port)
           .addService(user_service)
@@ -119,9 +139,47 @@ public class SnowBlossomNode
           .build();
         s.start();
       }
-
-      user_service.start();
     }
+
+    if (config.isSet("tls_service_port"))
+    {
+      config.require("tls_key_path");
+      TreeMap<String, String> wallet_config_map = new TreeMap<>();
+      wallet_config_map.put("wallet_path", config.get("tls_key_path"));
+      wallet_config_map.put("key_count", "1");
+      wallet_config_map.put("key_mode", WalletUtil.MODE_STANDARD);
+      ConfigMem config_wallet = new ConfigMem(wallet_config_map);
+      File wallet_path = new File(config_wallet.get("wallet_path"));
+
+      WalletDatabase wallet_db = WalletUtil.loadWallet(wallet_path, true, params);
+			if (wallet_db == null)
+			{
+				logger.log(Level.WARNING, String.format("Directory %s does not contain tls keys, creating new keys", wallet_path.getPath()));
+				wallet_db = WalletUtil.makeNewDatabase(config_wallet, params);
+				WalletUtil.saveWallet(wallet_db, wallet_path);
+			}
+      node_tls_address = AddressUtil.getHashForSpec(wallet_db.getAddresses(0));
+
+      SslContext ssl_ctx = CertGen.getServerSSLContext(wallet_db);
+      for(String port_str : config.getList("tls_service_port"))
+      {
+        int port = Integer.parseInt(port_str);
+        tls_ports.add(port);
+        Server s = NettyServerBuilder
+          .forPort(port)
+          .addService(user_service)
+          .addService(peer_service)
+          .sslContext(ssl_ctx)
+          .build();
+        s.start();
+      }
+    }
+
+
+    service_ports = ImmutableList.copyOf(ports);
+    tls_service_ports = ImmutableList.copyOf(tls_ports);
+
+    user_service.start();
   }
 
 
@@ -196,4 +254,8 @@ public class SnowBlossomNode
   public Peerage getPeerage(){return peerage;}
   public SnowUserService getUserService() {return user_service;}
   public BlockHeightCache getBlockHeightCache() {return block_height_cache; }
+  public ImmutableList<Integer> getServicePorts() {return service_ports;}
+  public ImmutableList<Integer> getTlsServicePorts() {return tls_service_ports;}
+  public AddressSpecHash getTlsAddress(){return node_tls_address;}
+
 }

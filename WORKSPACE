@@ -39,6 +39,12 @@ maven_jar(
 )
 
 maven_jar(
+  name = "weupnp",
+  artifact = "org.bitlet:weupnp:0.1.4",
+  sha1 = "b99cd791ede89b7c17426e6c51a0f171dc925def",
+)
+
+maven_jar(
   name = "commons_codec",
   artifact = "commons-codec:commons-codec:1.11",
   sha1 = "3acb4705652e16236558f0f4f2192cc33c3bd189",
@@ -56,10 +62,9 @@ maven_jar(
 )
 maven_jar(
   name = "netty_tcnative",
-  artifact = "io.netty:netty-tcnative-boringssl-static:2.0.15.Final",
-  sha1 = "8310b263ddbe3ffa021cdb7963bfdba3f9c50f8d",
+  artifact = "io.netty:netty-tcnative-boringssl-static:2.0.25.Final",
+  sha1 = "185980556f9f083b5339825f19c9641c6c879417",
 )
-
 maven_jar(
   name = "bcpkix",
   artifact = "org.bouncycastle:bcpkix-jdk15on:1.60",

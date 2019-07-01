@@ -251,6 +251,7 @@ public class Peerage
   }
 
   public void connectPeer(String host, int port)
+    throws Exception
   {
     new PeerClient(node, PeerInfo.newBuilder().setHost(host).setPort(port).build());
   }
@@ -450,7 +451,14 @@ public class Peerage
           int idx = rnd.nextInt(options.size());
           PeerInfo pi = options.get(idx);
           logger.log(Level.FINE, "Selected peer: " + PeerUtil.getString(pi) + " " + pi);
-          new PeerClient(node, pi);
+          try
+          {
+            new PeerClient(node, pi);
+          }
+          catch(Exception e)
+          {
+            logger.log(Level.INFO, "Error with peer: " + PeerUtil.getString(pi), e);
+          }
         }
       }
 
@@ -523,41 +531,66 @@ public class Peerage
 
     Set<String> self_names = new TreeSet<>();
 
-    if (node.getConfig().isSet("service_port"))
+    try{
+      String ipv4_host = NetUtil.getUrlLine("http://ipv4-lookup.snowblossom.org/myip");
+      advertise_hosts.add(ipv4_host);
+    }
+    catch(Throwable t){}
+
+    try{
+      String ipv6_host = NetUtil.getUrlLine("http://ipv6-lookup.snowblossom.org/myip");
+      advertise_hosts.add(ipv6_host);
+    }
+    catch(Throwable t){}
+
+    if (node.getServicePorts() != null)
     {
-
-      try{
-        String ipv4_host = NetUtil.getUrlLine("http://ipv4-lookup.snowblossom.org/myip");
-        advertise_hosts.add(ipv4_host);
-      }
-      catch(Throwable t){}
-
-      try{
-        String ipv6_host = NetUtil.getUrlLine("http://ipv6-lookup.snowblossom.org/myip");
-        advertise_hosts.add(ipv6_host);
-      }
-      catch(Throwable t){}
-
-      ByteString node_id = getNodeId();
-
-      int port = node.getConfig().getInt("service_port");
-      for(String host : advertise_hosts)
+      for(int port : node.getServicePorts())
       {
-        PeerInfo pi = PeerInfo.newBuilder()
-          .setHost(host)
-          .setPort(port)
-          .setLearned(System.currentTimeMillis())
-          .setVersion(Globals.VERSION)
-          .setNodeId(node_id)
-          .build();
+        ByteString node_id = getNodeId();
 
-        self_peers.add(pi);
+        for(String host : advertise_hosts)
+        {
+          PeerInfo pi = PeerInfo.newBuilder()
+            .setHost(host)
+            .setPort(port)
+            .setLearned(System.currentTimeMillis())
+            .setVersion(Globals.VERSION)
+            .setNodeId(node_id)
+            .setTls(false)
+            .build();
 
-        self_names.add(PeerUtil.getString(pi));
+          self_peers.add(pi);
 
+          self_names.add(PeerUtil.getString(pi));
+        }
       }
+    }
+    if (node.getTlsServicePorts() != null)
+    {
+      for(int port : node.getTlsServicePorts())
+      {
+        ByteString node_id = getNodeId();
 
-		}
+        for(String host : advertise_hosts)
+        {
+          PeerInfo pi = PeerInfo.newBuilder()
+            .setHost(host)
+            .setPort(port)
+            .setLearned(System.currentTimeMillis())
+            .setVersion(Globals.VERSION)
+            .setNodeId(node_id)
+            .setTls(true)
+            .setNodeSnowAddress(node.getTlsAddress().getBytes())
+            .build();
+
+          self_peers.add(pi);
+
+          self_names.add(PeerUtil.getString(pi));
+        }
+      }
+    }
+ 
     self_peer_names = ImmutableSet.copyOf(self_names);
     self_peer_info = ImmutableList.copyOf(self_peers);
 
