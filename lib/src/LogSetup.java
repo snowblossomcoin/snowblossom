@@ -8,10 +8,13 @@ import java.util.logging.Handler;
 import java.util.logging.LogManager;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.Properties;
 
 public class LogSetup
 {
   private static final Logger logger = Logger.getLogger("snowblossom.logsetup");
+
+  private static Properties log_props = new Properties();
 
   public static void setup(Config config)
     throws java.io.IOException
@@ -21,6 +24,7 @@ public class LogSetup
     {
       try
       {
+        log_props.load(new FileInputStream(config.get("log_config_file")));
         LogManager.getLogManager().readConfiguration(new FileInputStream(config.get("log_config_file")));
       }
       catch (Exception e)
@@ -29,6 +33,12 @@ public class LogSetup
       }
       
     }
+    else
+    {
+      log_props.setProperty(".level", "INFO");
+      log_props.setProperty("io.level", "SEVERE");
+    }
+
     
 
   
@@ -50,9 +60,9 @@ public class LogSetup
           String name = s;
           while(name.length() > 0)
           {
-            if (lm.getProperty(name +".level") != null)
+            if (log_props.getProperty(name +".level") != null)
             {
-              Level lvl = Level.parse(lm.getProperty(name +".level"));
+              Level lvl = Level.parse(log_props.getProperty(name +".level"));
               logger.fine(String.format("Setting level for %s to %s based on %s", s, lvl, name));
               m.setLevel(lvl);
               break;
