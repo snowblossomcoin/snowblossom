@@ -34,29 +34,24 @@ public class PeerClient
         .useTransportSecurity()
         .sslContext(ssl_ctx)
         .build();
-
     }
     else
     {
-
       channel = ManagedChannelBuilder
         .forAddress(info.getHost(), info.getPort())
         .usePlaintext(true)
         .build();
-
     }
     PeerLink link = null;
 
     try
     {
-
       PeerServiceStub asyncStub = PeerServiceGrpc.newStub(channel);
 
       link = new PeerLink(node, PeerUtil.getString(info), info);
       StreamObserver<PeerMessage> sink = asyncStub.subscribePeering(link);
       link.setSink(sink);
       link.setChannel(channel);
-
     }
     catch(Throwable t)
     {

@@ -42,11 +42,14 @@ public class SnowBlossomNode
     ConfigFile config = new ConfigFile(args[0]);
     
     LogSetup.setup(config);
+    //LogSetup.listLoggers();
 
     new SnowBlossomNode(config);
     while(true)
     {
       Thread.sleep(2500);
+      LogSetup.fixLevels();
+      //LogSetup.listLoggers();
     }
   }
 
@@ -113,7 +116,7 @@ public class SnowBlossomNode
 
   private void startWidgets()
   {
-    logger.info("Widget start");
+    logger.fine("Widget start");
     peerage.start();
     new TimeWatcher().start();
   }

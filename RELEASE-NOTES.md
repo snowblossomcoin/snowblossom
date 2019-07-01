@@ -12,6 +12,8 @@
 * Add xpub support for seed based wallets.  TODO: watch-only mode for xpubs
 * RPC get status returns balance matching other balance results
 * Add get_address_balance RPC
+* Add optional TLS service port
+* Fixed log levels so that they are respected for things outside of snowblossom
 
 ## 1.5.0
 
