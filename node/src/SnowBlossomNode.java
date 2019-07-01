@@ -160,6 +160,7 @@ public class SnowBlossomNode
 				WalletUtil.saveWallet(wallet_db, wallet_path);
 			}
       node_tls_address = AddressUtil.getHashForSpec(wallet_db.getAddresses(0));
+      logger.info("My TLS address: " + AddressUtil.getAddressString(Globals.NODE_ADDRESS_STRING, node_tls_address));
 
       SslContext ssl_ctx = CertGen.getServerSSLContext(wallet_db);
       for(String port_str : config.getList("tls_service_port"))
