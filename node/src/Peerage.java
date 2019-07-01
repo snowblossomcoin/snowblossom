@@ -49,6 +49,7 @@ public class Peerage
     peer_rumor_list = new HashMap<String,PeerInfo>();
 
     ByteString peer_data = node.getDB().getSpecialMap().get("peerlist");
+    logger.info(String.format("Peer database size: %d", peer_data.size()));
     if (peer_data != null)
     {
       try
