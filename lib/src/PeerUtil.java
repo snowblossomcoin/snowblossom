@@ -38,6 +38,7 @@ public class PeerUtil
 
   public static boolean isSane(PeerInfo a)
   {
+    if (a.toByteString().size() > 8192) return false;
     if (a.getHost().length() < 1) return false;
     if (a.getHost().length() > 255) return false;
     if (a.getPort() <= 0) return false;

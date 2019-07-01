@@ -57,7 +57,14 @@ public class Peerage
         PeerList db_peer_list = PeerList.parseFrom(peer_data);
         for(PeerInfo info : db_peer_list.getPeersList())
         {
-          learnPeer(info, true);
+          if (PeerUtil.isSane(info))
+          {
+            learnPeer(info, true);
+          }
+          else
+          {
+            logger.warning("Not sane peer: " + info);
+          }
         }
         logger.info(String.format("Loaded %d peers from database", peer_rumor_list.size()));
 
