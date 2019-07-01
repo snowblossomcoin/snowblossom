@@ -49,12 +49,12 @@ public class Peerage
     peer_rumor_list = new HashMap<String,PeerInfo>();
 
     ByteString peer_data = node.getDB().getSpecialMap().get("peerlist");
-    logger.info(String.format("Peer database size: %d", peer_data.size()));
     if (peer_data != null)
     {
       try
       {
         PeerList db_peer_list = PeerList.parseFrom(peer_data);
+        logger.info(String.format("Peer database size: %d bytes, %d entries", peer_data.size(), db_peer_list.getPeersCount()));
         for(PeerInfo info : db_peer_list.getPeersList())
         {
           if (PeerUtil.isSane(info))
@@ -316,7 +316,7 @@ public class Peerage
     {
       if (info.getLearned() + PEER_EXPIRE_TIME < System.currentTimeMillis()) return;
     }
-    if (info.getNodeId().size() > Globals.MAX_NODE_ID_SIZE) return; 
+    if (!PeerUtil.isSane(info)) return;
 
     synchronized(peer_rumor_list)
     {
