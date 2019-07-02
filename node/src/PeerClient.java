@@ -22,7 +22,7 @@ public class PeerClient
     throws Exception
   {
     ManagedChannel channel;
-    if (info.getTls())
+    if (info.getConnectionType().equals(PeerInfo.ConnectionType.GRPC_TLS))
     {
       AddressSpecHash node_address = new AddressSpecHash(info.getNodeSnowAddress());
       SslContext ssl_ctx = GrpcSslContexts.forClient()
@@ -35,12 +35,16 @@ public class PeerClient
         .sslContext(ssl_ctx)
         .build();
     }
-    else
+    else if (info.getConnectionType().equals(PeerInfo.ConnectionType.GRPC_TCP))
     {
       channel = ManagedChannelBuilder
         .forAddress(info.getHost(), info.getPort())
         .usePlaintext(true)
         .build();
+    }
+    else
+    {
+      throw new Exception("Unknown connection type: " + info.getConnectionType());
     }
     PeerLink link = null;
 

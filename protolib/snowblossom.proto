@@ -195,8 +195,13 @@ message PeerInfo {
   int64 learned = 5;
   string version = 6;
   bytes node_id = 7;
-  bool tls = 8;
+  //bool tls = 8; bad idea, using enum
   bytes node_snow_address = 9; //Used for TLS
+  enum ConnectionType {
+    GRPC_TCP = 0;
+    GRPC_TLS = 1;
+  }
+  ConnectionType connection_type = 10;
 
 }
 

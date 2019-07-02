@@ -565,7 +565,7 @@ public class Peerage
             .setLearned(System.currentTimeMillis())
             .setVersion(Globals.VERSION)
             .setNodeId(node_id)
-            .setTls(false)
+            .setConnectionType(PeerInfo.ConnectionType.GRPC_TCP)
             .build();
 
           self_peers.add(pi);
@@ -588,7 +588,7 @@ public class Peerage
             .setLearned(System.currentTimeMillis())
             .setVersion(Globals.VERSION)
             .setNodeId(node_id)
-            .setTls(true)
+            .setConnectionType(PeerInfo.ConnectionType.GRPC_TLS)
             .setNodeSnowAddress(node.getTlsAddress().getBytes())
             .build();
 
