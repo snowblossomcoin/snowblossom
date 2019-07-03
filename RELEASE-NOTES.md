@@ -1,4 +1,4 @@
-## master
+## 1.5.1
 
 * Adding SurfMiner using new wave mining method
 * Updating Arktika, PoolMiner and SurfMiner to use fewer memory allocations
