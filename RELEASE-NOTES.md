@@ -1,3 +1,7 @@
+## master
+
+* Skip merging PeerInfo entries, really not needed
+
 ## 1.5.1
 
 * Adding SurfMiner using new wave mining method

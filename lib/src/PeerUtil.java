@@ -15,12 +15,10 @@ public class PeerUtil
 
     if (a.getLearned() > b.getLearned())
     {
-      n.mergeFrom(b);
       n.mergeFrom(a);
     }
     else
     {
-      n.mergeFrom(a);
       n.mergeFrom(b);
     }
 
