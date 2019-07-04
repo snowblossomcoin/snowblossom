@@ -1,7 +1,7 @@
 ## master
 
 * Skip merging PeerInfo entries, really not needed
-* Adding support for host_uri in configs
+* Adding support for host_uri in configs.  See https://wiki.snowblossom.org/index.php/ConfigOption/node_uri
 
 ## 1.5.1
 
