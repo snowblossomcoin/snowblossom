@@ -328,11 +328,9 @@ public class SpoonTest
   private SnowBlossomClient startClient(int port) throws Exception
   {
     Map<String, String> config_map = new TreeMap<>();
-    config_map.put("node_host", "localhost");
-    config_map.put("node_port", "" + port);
+    config_map.put("node_uri", "grpc://localhost:" + port);
     config_map.put("network", "spoon");
 
     return new SnowBlossomClient(new ConfigMem(config_map));
-
   }
 }

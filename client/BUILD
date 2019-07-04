@@ -21,6 +21,8 @@ java_library(
     "@bitcoinj//jar",
     "@slf4j_nop//jar",
     "@slf4j_api//jar",
+    "@io_grpc_grpc_java//netty",
+    "@io_netty_netty_handler//:io_netty_netty_handler",
     ],
 )
 

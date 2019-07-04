@@ -15,6 +15,7 @@ import snowblossom.proto.UserServiceGrpc.UserServiceBlockingStub;
 import snowblossom.proto.UserServiceGrpc.UserServiceStub;
 import snowblossom.lib.trie.HashUtils;
 import snowblossom.client.WalletUtil;
+import snowblossom.client.StubUtil;
 
 
 import java.io.File;
@@ -82,7 +83,6 @@ public class SnowBlossomMiner
     logger.info(String.format("Starting SnowBlossomMiner version %s", Globals.VERSION));
 
     config.require("snow_path");
-    config.require("node_host");
 
     params = NetworkParams.loadFromConfig(config);
 
@@ -125,9 +125,7 @@ public class SnowBlossomMiner
       channel = null;
     }
 
-    String host = config.get("node_host");
-    int port = config.getIntWithDefault("node_port", params.getDefaultPort());
-    channel = ManagedChannelBuilder.forAddress(host, port).usePlaintext(true).build();
+    channel = StubUtil.openChannel(config, params);
 
     asyncStub = UserServiceGrpc.newStub(channel);
     blockingStub = UserServiceGrpc.newBlockingStub(channel);

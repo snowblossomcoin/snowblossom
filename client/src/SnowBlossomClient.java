@@ -404,21 +404,17 @@ public class SnowBlossomClient
   {
     this.config = config;
     logger.info(String.format("Starting SnowBlossomClient version %s", Globals.VERSION));
-    config.require("node_host");
-
-    String host = config.get("node_host");
     params = NetworkParams.loadFromConfig(config);
-    int port = config.getIntWithDefault("node_port", params.getDefaultPort());
+
+    ManagedChannel channel = StubUtil.openChannel(config, params);
 
     exec = TaskMaster.getBasicExecutor(64,"client_lookup");
 
-    ManagedChannel channel = ManagedChannelBuilder.forAddress(host, port).usePlaintext(true).build();
 
     asyncStub = UserServiceGrpc.newStub(channel);
     blockingStub = UserServiceGrpc.newBlockingStub(channel);
 
     get_utxo_util = new GetUTXOUtil(blockingStub, params);
-
 
     if (config.isSet("wallet_path"))
     {

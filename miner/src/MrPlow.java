@@ -15,6 +15,7 @@ import snowblossom.proto.UserServiceGrpc.UserServiceStub;
 import snowblossom.lib.db.DB;
 import snowblossom.lib.db.lobstack.LobstackDB;
 import snowblossom.lib.db.rocksdb.JRocksDB;
+import snowblossom.client.StubUtil;
 
 import io.grpc.Server;
 import io.grpc.ServerBuilder;
@@ -87,7 +88,6 @@ public class MrPlow
     this.config = config;
     logger.info(String.format("Starting MrPlow version %s", Globals.VERSION));
 
-    config.require("node_host");
     config.require("pool_address");
     config.require("pool_fee");
     config.require("db_type");
@@ -236,9 +236,7 @@ public class MrPlow
       channel = null;
     }
 
-    String host = config.get("node_host");
-    int port = config.getIntWithDefault("node_port", params.getDefaultPort());
-    channel = ManagedChannelBuilder.forAddress(host, port).usePlaintext(true).build();
+    channel = StubUtil.openChannel(config, params);
 
     asyncStub = UserServiceGrpc.newStub(channel);
     blockingStub = UserServiceGrpc.newBlockingStub(channel);

@@ -15,6 +15,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import snowblossom.client.GetUTXOUtil;
+import snowblossom.client.StubUtil;
 
 
 /** Yes a penguin taught me french back in antacrtica */
@@ -55,13 +56,10 @@ public class Shackleton
     this.config = config;
 
     web_server = new WebServer(config, this);
-    config.require("node_host");
 
     params = NetworkParams.loadFromConfig(config);
 
-    String host = config.get("node_host");
-    int port = config.getIntWithDefault("node_port", params.getDefaultPort());
-    ManagedChannel channel = ManagedChannelBuilder.forAddress(host, port).usePlaintext(true).build();
+    ManagedChannel channel = StubUtil.openChannel(config, params);
 
     asyncStub = UserServiceGrpc.newStub(channel);
     blockingStub = UserServiceGrpc.newBlockingStub(channel);

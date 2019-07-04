@@ -25,7 +25,13 @@ public class AddressSpecHash implements Comparable<AddressSpecHash>
   public AddressSpecHash(String address, NetworkParams params)
     throws ValidationException
   {
-    AddressSpecHash o = AddressUtil.getHashForAddress( params.getAddressPrefix(), address);
+    this(address, params.getAddressPrefix());
+  }
+
+  public AddressSpecHash(String address, String prefix)
+    throws ValidationException
+  {
+    AddressSpecHash o = AddressUtil.getHashForAddress( prefix, address);
     bytes = o.getBytes();
 
     if (bytes.size() != Globals.ADDRESS_SPEC_HASH_LEN)
@@ -33,6 +39,7 @@ public class AddressSpecHash implements Comparable<AddressSpecHash>
       throw new ValidationException("Address length wrong");
     }
   }
+
 
   public AddressSpecHash(String str)
   {

@@ -1,6 +1,7 @@
 ## master
 
 * Skip merging PeerInfo entries, really not needed
+* Adding support for host_uri in configs
 
 ## 1.5.1
 

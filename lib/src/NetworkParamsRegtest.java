@@ -57,8 +57,11 @@ public class NetworkParamsRegtest extends NetworkParams
   {
     return ImmutableList.of("seed-regtest.snowblossom.org");
   }
+  @Override
   public int getDefaultPort() { return 2340; }
 
+  @Override
+  public int getDefaultTlsPort() { return 2350; }
 
   @Override
   public int getActivationHeightTxOutRequirements() { return 1000; }

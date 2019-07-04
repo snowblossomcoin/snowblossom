@@ -50,6 +50,7 @@ public abstract class NetworkParams
 
   public abstract List<String> getSeedNodes();
   public int getDefaultPort() { return 2338; }
+  public int getDefaultTlsPort() { return 2348; }
 
   public int getActivationHeightTxOutRequirements() { return Integer.MAX_VALUE; }
   public int getActivationHeightTxOutExtras() { return Integer.MAX_VALUE; }

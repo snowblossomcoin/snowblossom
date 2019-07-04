@@ -17,6 +17,7 @@ import java.util.HashMap;
 import java.util.Map;
 import com.google.common.collect.TreeMultimap;
 import snowblossom.client.GetUTXOUtil;
+import snowblossom.client.StubUtil;
 
 import java.text.DecimalFormat;
 import com.google.protobuf.ByteString;
@@ -56,13 +57,10 @@ public class RichList
   { 
     this.config = config;
 
-    config.require("node_host");
 
     params = NetworkParams.loadFromConfig(config);
 
-    String host = config.get("node_host");
-    int port = config.getIntWithDefault("node_port", params.getDefaultPort());
-    ManagedChannel channel = ManagedChannelBuilder.forAddress(host, port).usePlaintext(true).build();
+    ManagedChannel channel = StubUtil.openChannel(config, params);
 
     asyncStub = UserServiceGrpc.newStub(channel);
     stub = UserServiceGrpc.newBlockingStub(channel);

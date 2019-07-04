@@ -59,6 +59,9 @@ public class NetworkParamsTestnet extends NetworkParams
   public int getDefaultPort() { return 2339; }
 
   @Override
+  public int getDefaultTlsPort() { return 2349; }
+
+  @Override
   public ByteString getBlockZeroRemark() { return ByteString.copyFrom(new String("testnet2-20180516").getBytes()); }
 
   @Override
