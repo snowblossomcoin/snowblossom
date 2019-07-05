@@ -4,12 +4,14 @@ import io.grpc.ManagedChannelBuilder;
 import java.net.URI;
 import java.io.ByteArrayInputStream;
 import java.util.Properties;
+import java.util.List;
 
 import io.netty.handler.ssl.SslContext;
 import io.grpc.netty.GrpcSslContexts;
 import snowblossom.lib.tls.SnowTrustManagerFactorySpi;
 import io.grpc.netty.NettyChannelBuilder;
 
+import io.grpc.stub.StreamObserver;
 
 import duckutil.Config;
 import snowblossom.lib.NetworkParams;
@@ -18,12 +20,39 @@ import snowblossom.lib.Globals;
 import snowblossom.proto.UserServiceGrpc;
 import snowblossom.proto.UserServiceGrpc.UserServiceBlockingStub;
 import snowblossom.proto.UserServiceGrpc.UserServiceStub;
+import snowblossom.proto.NodeStatus;
+import snowblossom.proto.NullRequest;
+
+import java.util.logging.Logger;
+import java.util.logging.Level;
+
 
 public class StubUtil
 {
+  private static final Logger logger = Logger.getLogger("snowblossom.client");
+
   public static ManagedChannel openChannel(Config config, NetworkParams params)
     throws Exception
   {
+    if (config.isSet("node_seed"))
+    {
+
+      if (config.isSet("node_uri"))
+      {
+        throw new Exception("node_uri and node_seed are mutually exclusive. Pick one.");
+      }
+      if (config.isSet("node_host"))
+      {
+        throw new Exception("node_host and node_seed are mutually exclusive. Pick one.");
+      }
+
+      if (config.isSet("node_port"))
+      {
+        throw new Exception("node_port is only for node_host, not node_uri");
+      }
+ 
+      return findFastestChannel( params.getSeedUris(), params);
+    }
 		if (config.isSet("node_uri"))
     {
       if (config.isSet("node_host"))
@@ -33,7 +62,12 @@ public class StubUtil
 
       if (config.isSet("node_port"))
       {
-        throw new Exception("node_port is only for node_host, not node_url");
+        throw new Exception("node_port is only for node_host, not node_uri");
+      }
+      List<String> uri_list = config.getList("node_uri");
+      if (uri_list.size() > 1)
+      {
+        return findFastestChannel(uri_list, params);
       }
       return openChannel(config.get("node_uri"), params);
     }
@@ -47,7 +81,7 @@ public class StubUtil
       return openChannel(uri, params);
     }
 
-    throw new Exception("Must have either 'node_uri' or 'node_host'");
+    return findFastestChannel( params.getSeedUris(), params);
   }
 
   public static ManagedChannel openChannel(String uri, NetworkParams params)
@@ -124,6 +158,112 @@ public class StubUtil
   public static UserServiceStub getAsyncStub(ManagedChannel channel)
   {
     return UserServiceGrpc.newStub(channel);
+  }
+
+
+  public static ManagedChannel findFastestChannel(List<String> uris, NetworkParams params)
+    throws Exception
+  {
+    ChannelMonitor mon = new ChannelMonitor();
+
+    for(String uri : uris)
+    {
+      try
+      {
+        logger.log(Level.FINE, "Starting uri check: " + uri);
+        ManagedChannel mc = openChannel(uri, params);
+        UserServiceStub stub = getAsyncStub(mc);
+
+        stub.getNodeStatus(NullRequest.newBuilder().build(), new StatusObserver(mon, mc, uri));
+      }
+      catch(Exception e)
+      {
+        logger.log(Level.FINE, "Error on uri: " + uri, e);
+      }
+    }
+
+    String uri = mon.getUri();
+    ManagedChannel channel = mon.getManagedChannel();
+
+    logger.log(Level.INFO, "Selected node: " + uri);
+
+    return channel;
+
+  }
+
+  public static class ChannelMonitor
+  {
+    private ManagedChannel mc;
+    private String uri;
+    private NodeStatus ns;
+
+    public synchronized void setMonitor(NodeStatus ns, ManagedChannel mc, String uri)
+    {
+      if (this.ns == null)
+      {
+        this.ns = ns;
+        this.mc = mc;
+        this.uri = uri;
+      }
+      this.notifyAll();
+    }
+
+    public synchronized NodeStatus getNodeStatus()
+      throws InterruptedException
+    {
+      while(ns == null)
+      {
+        this.wait();
+      }
+      return ns;
+    }
+    public synchronized String getUri()
+      throws InterruptedException
+    {
+      while(uri == null)
+      {
+        this.wait();
+      }
+      return uri;
+    }
+    public synchronized ManagedChannel getManagedChannel()
+      throws InterruptedException
+    {
+      while(mc == null)
+      {
+        this.wait();
+      }
+      return mc;
+    }
+  }
+
+  public static class StatusObserver implements StreamObserver<NodeStatus>
+  {
+    private ManagedChannel mc;
+    private String uri;
+    private ChannelMonitor mon;
+
+    public StatusObserver(ChannelMonitor mon, ManagedChannel mc, String uri)
+    {
+      this.mc = mc;
+      this.uri = uri;
+      this.mon = mon;
+
+    }
+    public void onNext(NodeStatus ns)
+    {
+      mon.setMonitor(ns, mc, uri);
+    }
+    public void onError(Throwable t)
+    {
+      logger.log(Level.FINE, "Error on uri: " + uri, t);
+
+    }
+    public void onCompleted()
+    {
+
+    }
+
   }
 
 }

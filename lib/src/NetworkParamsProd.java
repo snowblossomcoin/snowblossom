@@ -52,8 +52,14 @@ public class NetworkParamsProd extends NetworkParams
   @Override
   public List<String> getSeedNodes()
   {
-    return ImmutableList.of("seed.snowblossom.org", "snowday.fun", "node.snowblossom.cluelessperson.com");
+    return ImmutableList.of(
+      "seed.snowblossom.org", 
+      "snowday.fun", 
+      "node.snowblossom.cluelessperson.com",
+      "snow-a.1209k.com",
+      "snow-b.1209k.com");
   }
+
   @Override
   public int getDefaultPort() { return 2338; }
   

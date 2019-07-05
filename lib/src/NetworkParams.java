@@ -6,6 +6,7 @@ import duckutil.Config;
 
 import java.math.BigInteger;
 import java.util.List;
+import java.util.LinkedList;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.logging.Level;
@@ -49,6 +50,17 @@ public abstract class NetworkParams
   public long getMaxClockSkewMs() { return 45000; }
 
   public abstract List<String> getSeedNodes();
+  public List<String> getSeedUris()
+  {
+    LinkedList<String> lst = new LinkedList<>();
+    for(String node : getSeedNodes())
+    {
+      lst.add(String.format("grpc+tls://%s", node));
+    }
+    return lst;
+  }
+
+
   public int getDefaultPort() { return 2338; }
   public int getDefaultTlsPort() { return 2348; }
 
