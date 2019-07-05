@@ -61,6 +61,16 @@ public class NetworkParamsProd extends NetworkParams
   }
 
   @Override
+  public List<String> getSeedUris()
+  {
+    return ImmutableList.of(
+      "grpc+tls://snow-a.1209k.com?key=node:eaws55vusncn05dedphrval0apyfw7vg7s22ldlg",
+      "grpc+tls://snow-b.1209k.com?key=node:nzfjcdmdafus4t7wwec0mvejm3u8m5dkmen7nyew",
+      "grpc+tls://snow-tx1.snowblossom.org?key=node:fgmfupck7seaq8t2gl6plzs5vh7nyl6656wscgq3",
+      "grpc+tls://snow-de1.snowblossom.org?key=node:plv8gca5ucqm0w34l3y0pwcpg8vj2u9qu530q50d");
+  }
+
+  @Override
   public int getDefaultPort() { return 2338; }
   
   // Fill in hash of bitcoin block 523850 when it occurs, in hex replacing the zeros to start mainnet
