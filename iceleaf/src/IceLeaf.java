@@ -11,6 +11,7 @@ import java.awt.GridBagConstraints;
 import snowblossom.lib.Globals;
 import java.util.prefs.Preferences;
 import snowblossom.iceleaf.components.*;
+import java.io.File;
 
 public class IceLeaf
 {
@@ -22,7 +23,6 @@ public class IceLeaf
   }
 
   protected Preferences ice_leaf_prefs;
-
 
   public IceLeaf()
   {
@@ -48,28 +48,28 @@ public class IceLeaf
       f.setContentPane(tab_pane);
 
       // Run a node?
-      tab_pane.add("Node", assembleNodePanel());
+      tab_pane.add("Settings", assembleSettingsPanel());
 
       // Which node to use for client data
       tab_pane.add("NodeClient", new JPanel());
 
       // Wallets to load
       tab_pane.add("Wallets", new JPanel());
+      tab_pane.add("Node", assembleNodePanel());
 
     }
 
-    public JPanel assembleNodePanel()
+    public JPanel assembleSettingsPanel()
     {
       GridBagLayout grid_bag = new GridBagLayout();
       JPanel panel = new JPanel(grid_bag);
 
       {
         GridBagConstraints c = new GridBagConstraints();
-        c.weightx = 1.0;
-        c.weighty= 1.0;
+        c.weightx = 0.0;
+        c.weighty= 0.0;
         c.gridheight = 1;
-        c.anchor = GridBagConstraints.  NORTHWEST;
-
+        c.anchor = GridBagConstraints.NORTHWEST;
 
         c.gridwidth = GridBagConstraints.REMAINDER;
 
@@ -78,17 +78,59 @@ public class IceLeaf
         c.gridwidth = 1;
         panel.add(new JLabel("Service Port"), c);
         c.gridwidth = GridBagConstraints.REMAINDER;
-        panel.add(new PersistentComponentTextField(ice_leaf_prefs, "", "node_service_port", "2880"),c);
+        panel.add(new PersistentComponentTextField(ice_leaf_prefs, "", "node_service_port", "2338",8),c);
 
+        c.gridwidth = 1;
+        panel.add(new JLabel("TLS Service Port"), c);
+        c.gridwidth = GridBagConstraints.REMAINDER;
+        panel.add(new PersistentComponentTextField(ice_leaf_prefs, "", "node_tls_service_port", "2348",8),c);
+
+
+        c.gridwidth = 1;
+        panel.add(new JLabel("Node DB Directory"), c);
+        c.gridwidth = GridBagConstraints.REMAINDER;
+        File default_node_db_path = new File(SystemUtil.getNodeDataDirectory(), "node_db");
+        panel.add(new PersistentComponentTextField(ice_leaf_prefs, "", "node_db_path", default_node_db_path.toString(),60),c);
+
+        c.gridwidth = 1;
+        panel.add(new JLabel("Node TLS Key Directory"), c);
+        c.gridwidth = GridBagConstraints.REMAINDER;
+        File default_node_tls_key_path = new File(SystemUtil.getNodeDataDirectory(), "node_tls_key");
+        panel.add(new PersistentComponentTextField(ice_leaf_prefs, "", "node_tls_key_path", default_node_tls_key_path.toString(),60),c);
 
       }
-     
+
+      return panel;
+
+    }
+    public JPanel assembleNodePanel()
+    {
+      GridBagLayout grid_bag = new GridBagLayout();
+      JPanel panel = new JPanel(grid_bag);
+
+        GridBagConstraints c = new GridBagConstraints();
+        c.weightx = 0.0;
+        c.weighty= 0.0;
+        c.gridheight = 1;
+        c.anchor = GridBagConstraints.NORTHWEST;
+
+      if (ice_leaf_prefs.getBoolean("node_run_local", false))
+      {
+        panel.add(new JLabel("Starting local node"), c);
+
+      }
+      else
+      {
+        panel.add(new JLabel("Local node disabled"), c);
+
+      }
+
 
 
       return panel;
 
+    }    
 
-    }
   }
 
 }

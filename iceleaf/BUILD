@@ -7,5 +7,6 @@ java_library(
     "//protolib:protogrpc",
     "//lib:lib",
     "//client:client",
+    "//node:node",
     ],
 )

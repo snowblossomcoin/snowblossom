@@ -21,6 +21,7 @@ public class PersistentComponentCheckBox extends JCheckBox implements ChangeList
 
     this.addChangeListener(this);
 
+    stateChanged(null);
 
   }
 
