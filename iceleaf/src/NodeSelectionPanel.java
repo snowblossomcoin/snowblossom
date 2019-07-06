@@ -31,6 +31,9 @@ public class NodeSelectionPanel
   protected PersistentComponentTextArea list_box;
 
   protected ManagedChannel channel;
+  private PersistentComponentCheckBox box_local;
+  private PersistentComponentCheckBox box_seed;
+  private PersistentComponentCheckBox box_list;
 
 
   public NodeSelectionPanel(IceLeaf ice_leaf)
@@ -55,9 +58,9 @@ public class NodeSelectionPanel
     panel.add(new JLabel("Select node sources to use.  The checked node sets will be considered.  The fastest will be used."), c);
 
 
-    PersistentComponentCheckBox box_local = new PersistentComponentCheckBox(ice_leaf_prefs, "local", "node_selection_local", true);
-    PersistentComponentCheckBox box_seed = new PersistentComponentCheckBox(ice_leaf_prefs, "seed", "node_selection_seed", true);
-    PersistentComponentCheckBox box_list = new PersistentComponentCheckBox(ice_leaf_prefs, "list", "node_selection_list", false);
+    box_local = new PersistentComponentCheckBox(ice_leaf_prefs, "local", "node_selection_local", true);
+    box_seed = new PersistentComponentCheckBox(ice_leaf_prefs, "seed", "node_selection_seed", true);
+    box_list = new PersistentComponentCheckBox(ice_leaf_prefs, "list", "node_selection_list", false);
 
 
     panel.add(box_local, c);
@@ -191,9 +194,17 @@ public class NodeSelectionPanel
       }
 
     }
+
+    private volatile String last_state="";
     public void stateChanged(ChangeEvent e)
     {
-      this.wake();
+      String state = "" + box_local.isSelected() + box_seed.isSelected() + box_list.isSelected();
+
+      if (!state.equals(last_state))
+      {
+        last_state = state;
+        this.wake();
+      }
     }
      
 
