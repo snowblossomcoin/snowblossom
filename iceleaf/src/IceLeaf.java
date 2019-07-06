@@ -9,6 +9,8 @@ import java.awt.GridBagLayout;
 import java.awt.GridBagConstraints;
 
 import snowblossom.lib.Globals;
+import snowblossom.lib.NetworkParams;
+import snowblossom.lib.NetworkParamsProd;
 import java.util.prefs.Preferences;
 import snowblossom.iceleaf.components.*;
 import java.io.File;
@@ -28,6 +30,7 @@ public class IceLeaf
   protected NodeSelectionPanel node_select_panel;
 
   public Preferences getPrefs() { return ice_leaf_prefs;}
+  public NetworkParams getParams() { return new NetworkParamsProd(); }
 
 
   public IceLeaf()
