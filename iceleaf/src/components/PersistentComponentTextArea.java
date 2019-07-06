@@ -18,10 +18,9 @@ public class PersistentComponentTextArea extends JTextArea implements DocumentLi
     this.prefs = iprefs;
     this.pref_path = ipath;
 
-    this.value = prefs.get(pref_path, default_value);
+    this.value = prefs.get(pref_path, null);
 
     this.getDocument().addDocumentListener(this);
-    
 
     updateInternal();
   }

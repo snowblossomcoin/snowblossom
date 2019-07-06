@@ -19,7 +19,7 @@ public class PersistentComponentTextField extends JTextField implements ActionLi
     this.prefs = iprefs;
     this.pref_path = ipath;
 
-    this.value = prefs.get(pref_path, default_value);
+    this.value = prefs.get(pref_path, null);
 
     this.addActionListener(this);
     this.getDocument().addDocumentListener(this);

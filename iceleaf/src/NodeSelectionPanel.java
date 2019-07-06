@@ -8,10 +8,17 @@ import javax.swing.SwingUtilities;
 import java.awt.GridBagLayout;
 import java.awt.GridBagConstraints;
 import java.util.prefs.Preferences;
-import javax.swing.ButtonGroup;
-import javax.swing.JRadioButton;
 
 import snowblossom.iceleaf.components.PersistentComponentTextArea;
+import snowblossom.iceleaf.components.PersistentComponentCheckBox;
+import java.util.TreeSet;
+import duckutil.PeriodicThread;
+import java.util.Scanner;
+import snowblossom.client.StubUtil;
+import javax.swing.event.ChangeListener;
+import javax.swing.event.ChangeEvent;
+import io.grpc.ManagedChannel;
+
 
 public class NodeSelectionPanel
 {
@@ -23,9 +30,7 @@ public class NodeSelectionPanel
   protected JTextArea status_box;
   protected PersistentComponentTextArea list_box;
 
-  protected JRadioButton butt_local;
-  protected JRadioButton butt_seed;
-  protected JRadioButton butt_list;
+  protected ManagedChannel channel;
 
 
   public NodeSelectionPanel(IceLeaf ice_leaf)
@@ -47,22 +52,19 @@ public class NodeSelectionPanel
 
     c.gridwidth = GridBagConstraints.REMAINDER;
 
-    panel.add(new JLabel("Select node to use"), c);
+    panel.add(new JLabel("Select node sources to use.  The checked node sets will be considered.  The fastest will be used."), c);
 
-    ButtonGroup bg = new ButtonGroup();
 
-    butt_local = new JRadioButton("local");
-    butt_seed = new JRadioButton("seed");
-    butt_list = new JRadioButton("list");
+    PersistentComponentCheckBox box_local = new PersistentComponentCheckBox(ice_leaf_prefs, "local", "node_selection_local", true);
+    PersistentComponentCheckBox box_seed = new PersistentComponentCheckBox(ice_leaf_prefs, "seed", "node_selection_seed", true);
+    PersistentComponentCheckBox box_list = new PersistentComponentCheckBox(ice_leaf_prefs, "list", "node_selection_list", false);
 
-    bg.add(butt_local);
-    bg.add(butt_seed);
-    bg.add(butt_list);
 
-    panel.add(butt_local, c);
-    panel.add(butt_seed, c);
+    panel.add(box_local, c);
+    panel.add(box_seed, c);
+
     c.gridwidth = 1;
-    panel.add(butt_list, c);
+    panel.add(box_list, c);
 
     c.weightx=1.0;
     c.weighty=1.0;
@@ -95,7 +97,13 @@ public class NodeSelectionPanel
     panel.add(message_box,c);
 
     setStatusBox("Startup"); 
+    ChannelMaintThread cmt = new ChannelMaintThread();
+
+    box_local.addChangeListener(cmt);
+    box_seed.addChangeListener(cmt);
+    box_list.addChangeListener(cmt);
     
+    cmt.start();
 
   }
 
@@ -124,6 +132,70 @@ public class NodeSelectionPanel
     });
   }
 
+  public class ChannelMaintThread extends PeriodicThread implements ChangeListener
+  {
+    public ChannelMaintThread()
+    {
+      super(300000);
+    }
+    public void runPass() throws Exception
+    {
+      sleep(20);
+      setStatusBox("Reconnecting");
+      try
+      {
+        TreeSet<String> options = new TreeSet<>();
+        if (ice_leaf_prefs.getBoolean("node_selection_local", true))
+        {
+          String uri = String.format("grpc://localhost:%s",ice_leaf_prefs.get("node_service_port", null));
+          options.add(uri);
+        }
+        if (ice_leaf_prefs.getBoolean("node_selection_seed", true))
+        {
+          for(String uri : ice_leaf.getParams().getSeedUris())
+          {
+            options.add(uri);
+          }
+        }
+        if (ice_leaf_prefs.getBoolean("node_selection_list", false))
+        {
+          Scanner scan = new Scanner(list_box.getText());
+          while(scan.hasNext())
+          {
+            options.add(scan.next());
+          }
+        }
+        StringBuilder msg = new StringBuilder();
+        msg.append("Node option list:\n");
+        for(String uri : options)
+        {
+          msg.append(uri);
+          msg.append('\n');
+        }
+        setMessageBox(msg.toString());
 
+        long t1 = System.currentTimeMillis();
 
+        StubUtil.ChannelMonitor mon = StubUtil.findFastestChannelMonitor(options, ice_leaf.getParams());
+        long t2 = System.currentTimeMillis();
+        if (mon != null)
+        {
+          channel = mon.getManagedChannel();
+          setStatusBox(String.format("Connected to %s and checked in %s ms",mon.getUri(), t2-t1));
+        }
+
+      }
+      catch(Throwable t)
+      {
+        setMessageBox(t.toString());
+      }
+
+    }
+    public void stateChanged(ChangeEvent e)
+    {
+      this.wake();
+    }
+     
+
+  }
 }

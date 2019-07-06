@@ -17,7 +17,7 @@ public class PersistentComponentCheckBox extends JCheckBox implements ChangeList
     this.prefs = iprefs;
     this.pref_path = ipath;
 
-    this.value = prefs.getBoolean(pref_path, default_value);
+    this.value = prefs.getBoolean(pref_path, !default_value);
 
     this.addChangeListener(this);
 
@@ -34,9 +34,5 @@ public class PersistentComponentCheckBox extends JCheckBox implements ChangeList
     }
     
   }
-
-
-
-
 
 }

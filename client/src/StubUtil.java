@@ -5,6 +5,7 @@ import java.net.URI;
 import java.io.ByteArrayInputStream;
 import java.util.Properties;
 import java.util.List;
+import java.util.Collection;
 
 import io.netty.handler.ssl.SslContext;
 import io.grpc.netty.GrpcSslContexts;
@@ -160,12 +161,18 @@ public class StubUtil
     return UserServiceGrpc.newStub(channel);
   }
 
+  public static ManagedChannel findFastestChannel(Collection<String> uris, NetworkParams params)
+    throws Exception
+  {
+    return findFastestChannelMonitor(uris, params).getManagedChannel();
+  }
 
-  public static ManagedChannel findFastestChannel(List<String> uris, NetworkParams params)
+  public static ChannelMonitor findFastestChannelMonitor(Collection<String> uris, NetworkParams params)
     throws Exception
   {
     ChannelMonitor mon = new ChannelMonitor();
 
+    int option_count =0;
     for(String uri : uris)
     {
       try
@@ -175,19 +182,27 @@ public class StubUtil
         UserServiceStub stub = getAsyncStub(mc);
 
         stub.getNodeStatus(NullRequest.newBuilder().build(), new StatusObserver(mon, mc, uri));
+        option_count++;
       }
       catch(Exception e)
       {
         logger.log(Level.FINE, "Error on uri: " + uri, e);
       }
     }
+    if (option_count == 0)
+    {
+      throw new Exception("No valid URIs to select from");
+    }
 
     String uri = mon.getUri();
-    ManagedChannel channel = mon.getManagedChannel();
+    if (uri == null)
+    {
+      throw new Exception("No nodes returned within timeout");
+    }
 
     logger.log(Level.INFO, "Selected node: " + uri);
 
-    return channel;
+    return mon;
 
   }
 
@@ -196,6 +211,7 @@ public class StubUtil
     private ManagedChannel mc;
     private String uri;
     private NodeStatus ns;
+    public static final int TIMEOUT_MS=60000;
 
     public synchronized void setMonitor(NodeStatus ns, ManagedChannel mc, String uri)
     {
@@ -211,27 +227,27 @@ public class StubUtil
     public synchronized NodeStatus getNodeStatus()
       throws InterruptedException
     {
-      while(ns == null)
+      if(ns == null)
       {
-        this.wait();
+        this.wait(TIMEOUT_MS);
       }
       return ns;
     }
     public synchronized String getUri()
       throws InterruptedException
     {
-      while(uri == null)
+      if(uri == null)
       {
-        this.wait();
+        this.wait(TIMEOUT_MS);
       }
       return uri;
     }
     public synchronized ManagedChannel getManagedChannel()
       throws InterruptedException
     {
-      while(mc == null)
+      if(mc == null)
       {
-        this.wait();
+        this.wait(TIMEOUT_MS);
       }
       return mc;
     }
