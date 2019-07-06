@@ -8,5 +8,6 @@ java_library(
     "//lib:lib",
     "//client:client",
     "//node:node",
+    "@duckutil//:duckutil_lib",
     ],
 )

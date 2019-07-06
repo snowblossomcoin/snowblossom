@@ -3,3 +3,4 @@ bazel-*
 .project/
 .project-data-dir/
 example/deployment/snowblossom-*
+*.swp

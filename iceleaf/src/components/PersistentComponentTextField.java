@@ -24,6 +24,9 @@ public class PersistentComponentTextField extends JTextField implements ActionLi
     this.addActionListener(this);
     this.getDocument().addDocumentListener(this);
     this.setColumns(cols);
+    
+
+    updateInternal();
   }
 
   private void updateInternal()

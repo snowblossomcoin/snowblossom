@@ -18,16 +18,23 @@ public class IceLeaf
   public static void main(String args[]) throws Exception
   {
     System.out.println(System.getProperty("user.home"));
+    Globals.addCryptoProvider();
     new IceLeaf();
 
   }
 
   protected Preferences ice_leaf_prefs;
+  protected NodePanel node_panel;
+
+  public Preferences getPrefs() { return ice_leaf_prefs;}
+
 
   public IceLeaf()
   {
 
     ice_leaf_prefs = Preferences.userNodeForPackage(this.getClass());
+
+    node_panel = new NodePanel(this);
 
     SwingUtilities.invokeLater(new WindowSetup());
 
@@ -55,7 +62,10 @@ public class IceLeaf
 
       // Wallets to load
       tab_pane.add("Wallets", new JPanel());
-      tab_pane.add("Node", assembleNodePanel());
+
+      node_panel.setup();
+
+      tab_pane.add("Node", node_panel.getPanel());
 
     }
 
@@ -72,7 +82,6 @@ public class IceLeaf
         c.anchor = GridBagConstraints.NORTHWEST;
 
         c.gridwidth = GridBagConstraints.REMAINDER;
-
         panel.add(new PersistentComponentCheckBox(ice_leaf_prefs, "Run local node", "node_run_local", false), c);
         
         c.gridwidth = 1;
@@ -98,38 +107,14 @@ public class IceLeaf
         File default_node_tls_key_path = new File(SystemUtil.getNodeDataDirectory(), "node_tls_key");
         panel.add(new PersistentComponentTextField(ice_leaf_prefs, "", "node_tls_key_path", default_node_tls_key_path.toString(),60),c);
 
+        c.gridwidth = GridBagConstraints.REMAINDER;
+        panel.add(new PersistentComponentCheckBox(ice_leaf_prefs, "Node transaction index", "node_tx_index", true), c);
+        panel.add(new PersistentComponentCheckBox(ice_leaf_prefs, "Node address index", "node_addr_index", true), c);
       }
 
       return panel;
 
     }
-    public JPanel assembleNodePanel()
-    {
-      GridBagLayout grid_bag = new GridBagLayout();
-      JPanel panel = new JPanel(grid_bag);
-
-        GridBagConstraints c = new GridBagConstraints();
-        c.weightx = 0.0;
-        c.weighty= 0.0;
-        c.gridheight = 1;
-        c.anchor = GridBagConstraints.NORTHWEST;
-
-      if (ice_leaf_prefs.getBoolean("node_run_local", false))
-      {
-        panel.add(new JLabel("Starting local node"), c);
-
-      }
-      else
-      {
-        panel.add(new JLabel("Local node disabled"), c);
-
-      }
-
-
-
-      return panel;
-
-    }    
 
   }
 
