@@ -25,6 +25,7 @@ public class IceLeaf
 
   protected Preferences ice_leaf_prefs;
   protected NodePanel node_panel;
+  protected NodeSelectionPanel node_select_panel;
 
   public Preferences getPrefs() { return ice_leaf_prefs;}
 
@@ -35,6 +36,7 @@ public class IceLeaf
     ice_leaf_prefs = Preferences.userNodeForPackage(this.getClass());
 
     node_panel = new NodePanel(this);
+    node_select_panel = new NodeSelectionPanel(this);
 
     SwingUtilities.invokeLater(new WindowSetup());
 
@@ -57,15 +59,16 @@ public class IceLeaf
       // Run a node?
       tab_pane.add("Settings", assembleSettingsPanel());
 
-      // Which node to use for client data
-      tab_pane.add("NodeClient", new JPanel());
-
       // Wallets to load
       tab_pane.add("Wallets", new JPanel());
 
       node_panel.setup();
 
       tab_pane.add("Node", node_panel.getPanel());
+
+      // Which node to use for client data
+      node_select_panel.setup();
+      tab_pane.add("Node Selection", node_select_panel.getPanel());
 
     }
 

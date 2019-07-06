@@ -4,6 +4,7 @@ import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.JLabel;
 import javax.swing.JTextArea;
+import javax.swing.JProgressBar;
 import javax.swing.SwingUtilities;
 import java.awt.GridBagLayout;
 import java.awt.GridBagConstraints;
@@ -24,6 +25,7 @@ public class NodePanel
 	protected Preferences ice_leaf_prefs;
   protected SnowBlossomNode node;
 
+  protected JProgressBar progress;
   protected JTextArea message_box;
   protected JTextArea status_box;
   protected boolean start_attempt;
@@ -57,6 +59,9 @@ public class NodePanel
 			panel.add(new JLabel("Local node disabled"), c);
 
 		}
+
+    progress = new JProgressBar(0,0);
+    panel.add(progress, c);
 
     c.weightx=1.0;
     c.weighty=1.0;
@@ -101,8 +106,12 @@ public class NodePanel
         if ( node.getPeerage().getHighestSeenHeader() != null)
         {
           net_height = node.getPeerage().getHighestSeenHeader().getBlockHeight();
+          
         }
-        sb.append("Height: " + node.getBlockIngestor().getHeight() + " out of " + net_height +"\n");
+        int height = node.getBlockIngestor().getHeight();
+        setProgressBar(height, net_height);
+
+        sb.append("Height: " + height + " out of " + net_height +"\n");
         sb.append("Peers: " + node.getPeerage().getConnectedPeerCount() +"\n");
         sb.append("Node TLS key: " + AddressUtil.getAddressString(Globals.NODE_ADDRESS_STRING, node.getTlsAddress()) +"\n");
 
@@ -119,6 +128,20 @@ public class NodePanel
     }
 
   }
+
+  public void setProgressBar(int curr, int net)
+  {
+    int enet = Math.max(net, curr);
+    SwingUtilities.invokeLater(new Runnable() {
+      public void run()
+      {
+        progress.setMaximum(enet);
+        progress.setValue(curr);
+      }
+    });
+  }
+
+
 
   public void setMessageBox(String text)
   {
