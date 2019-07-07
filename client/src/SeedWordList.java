@@ -2,6 +2,8 @@ package snowblossom.client;
 
 import com.google.common.collect.ImmutableList;
 import java.util.LinkedList;
+import java.util.List;
+import java.util.Random;
 
 public class SeedWordList
 {
@@ -2071,6 +2073,23 @@ public class SeedWordList
     }
 
     return word_list;
+
+  }
+
+  public static String getNonsense(int count)
+  {
+    Random rnd = new Random();
+    List<String> w = getWordList();
+
+    StringBuilder sb = new StringBuilder();
+    for(int i=0;i<count; i++)
+    {
+      if (i>0) sb.append(" ");
+      sb.append(w.get( rnd.nextInt(w.size()) ));
+
+    }
+    return sb.toString();
+
 
   }
 

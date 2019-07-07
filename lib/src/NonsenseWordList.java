@@ -19,6 +19,7 @@ public class NonsenseWordList
     {
       LinkedList<String> words = new LinkedList<>();
 
+      words.add("braif");
       words.add("zogbe");
       words.add("prodslung");
       words.add("lentam");
