@@ -15,6 +15,12 @@ import java.util.prefs.Preferences;
 import snowblossom.iceleaf.components.*;
 import java.io.File;
 
+
+import snowblossom.proto.UserServiceGrpc.UserServiceBlockingStub;
+import snowblossom.proto.UserServiceGrpc.UserServiceStub;
+
+
+
 public class IceLeaf
 {
   public static void main(String args[]) throws Exception
@@ -28,10 +34,13 @@ public class IceLeaf
   protected Preferences ice_leaf_prefs;
   protected NodePanel node_panel;
   protected NodeSelectionPanel node_select_panel;
+  protected WalletPanel wallet_panel;
+  protected MakeWalletPanel make_wallet_panel;
 
   public Preferences getPrefs() { return ice_leaf_prefs;}
   public NetworkParams getParams() { return new NetworkParamsProd(); }
-
+  public UserServiceBlockingStub getStub(){return node_select_panel.getStub();}
+  public UserServiceStub getAsyncStub(){return node_select_panel.getAsyncStub();}
 
   public IceLeaf()
   {
@@ -40,6 +49,8 @@ public class IceLeaf
 
     node_panel = new NodePanel(this);
     node_select_panel = new NodeSelectionPanel(this);
+    wallet_panel = new WalletPanel(this);
+    make_wallet_panel = new MakeWalletPanel(this);
 
     SwingUtilities.invokeLater(new WindowSetup());
 
@@ -58,20 +69,19 @@ public class IceLeaf
       JTabbedPane tab_pane = new JTabbedPane();
 
       f.setContentPane(tab_pane);
-
-      // Run a node?
-      tab_pane.add("Settings", assembleSettingsPanel());
-
-      // Wallets to load
-      tab_pane.add("Wallets", new JPanel());
-
       node_panel.setup();
-
-      tab_pane.add("Node", node_panel.getPanel());
-
-      // Which node to use for client data
       node_select_panel.setup();
+      wallet_panel.setup();
+      make_wallet_panel.setup();
+
+      JPanel settings_panel = assembleSettingsPanel();
+
+
+      tab_pane.add("Wallets", wallet_panel.getPanel());
+      tab_pane.add("Make Wallet", make_wallet_panel.getPanel());
       tab_pane.add("Node Selection", node_select_panel.getPanel());
+      tab_pane.add("Node", node_panel.getPanel());
+      tab_pane.add("Settings", settings_panel);
 
     }
 

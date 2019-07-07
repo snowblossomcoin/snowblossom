@@ -19,6 +19,9 @@ import javax.swing.event.ChangeListener;
 import javax.swing.event.ChangeEvent;
 import io.grpc.ManagedChannel;
 
+import snowblossom.proto.UserServiceGrpc.UserServiceBlockingStub;
+import snowblossom.proto.UserServiceGrpc.UserServiceStub;
+
 
 public class NodeSelectionPanel
 {
@@ -30,11 +33,13 @@ public class NodeSelectionPanel
   protected JTextArea status_box;
   protected PersistentComponentTextArea list_box;
 
-  protected ManagedChannel channel;
   private PersistentComponentCheckBox box_local;
   private PersistentComponentCheckBox box_seed;
   private PersistentComponentCheckBox box_list;
 
+  protected volatile ManagedChannel channel;
+  protected volatile UserServiceBlockingStub blocking_stub;
+  protected volatile UserServiceStub async_stub;
 
   public NodeSelectionPanel(IceLeaf ice_leaf)
   {
@@ -135,6 +140,10 @@ public class NodeSelectionPanel
     });
   }
 
+  public ManagedChannel getManagedChannel(){return channel;}
+  public UserServiceBlockingStub getStub(){return blocking_stub;}
+  public UserServiceStub getAsyncStub(){return async_stub;}
+
   public class ChannelMaintThread extends PeriodicThread implements ChangeListener
   {
     public ChannelMaintThread()
@@ -184,6 +193,9 @@ public class NodeSelectionPanel
         if (mon != null)
         {
           channel = mon.getManagedChannel();
+          blocking_stub = StubUtil.getBlockingStub(channel);
+          async_stub = StubUtil.getAsyncStub(channel);
+
           setStatusBox(String.format("Connected to %s and checked in %s ms",mon.getUri(), t2-t1));
         }
 
