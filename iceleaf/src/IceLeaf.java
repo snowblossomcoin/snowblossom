@@ -97,6 +97,12 @@ public class IceLeaf
         c.gridheight = 1;
         c.anchor = GridBagConstraints.NORTHWEST;
 
+        c.gridwidth = 1;
+        panel.add(new JLabel("Wallet Directory"), c);
+        c.gridwidth = GridBagConstraints.REMAINDER;
+        File default_wallet_path = new File(SystemUtil.getImportantDataDirectory(), "wallets");
+        panel.add(new PersistentComponentTextField(ice_leaf_prefs, "", "wallet_path", default_wallet_path.toString(),60),c);
+
         c.gridwidth = GridBagConstraints.REMAINDER;
         panel.add(new PersistentComponentCheckBox(ice_leaf_prefs, "Run local node", "node_run_local", false), c);
         

@@ -1,5 +1,6 @@
 package snowblossom.iceleaf;
 
+import java.io.File;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.JLabel;
@@ -26,7 +27,12 @@ import snowblossom.lib.NonsenseWordList;
 import snowblossom.client.SeedWordList;
 import javax.swing.ButtonGroup;
 import javax.swing.JRadioButton;
+import java.io.PrintStream;
+import java.io.FileOutputStream;
+import snowblossom.client.SeedUtil;
+import snowblossom.client.WalletUtil;
 
+import snowblossom.proto.WalletDatabase;
 
 public class MakeWalletPanel
 {
@@ -66,8 +72,7 @@ public class MakeWalletPanel
 
     panel.add(new JLabel("Name for new wallet: "), c);
     name_field = new JTextField();
-    name_field.setColumns(25);
-    name_field.setText("meow");
+    name_field.setColumns(12);
     panel.add(name_field, c);
 
     c.gridwidth = GridBagConstraints.REMAINDER;
@@ -92,12 +97,12 @@ public class MakeWalletPanel
     c.gridwidth=1;
     panel.add(import_seed_button, c);
     import_field = new JTextField();
-    import_field.setColumns(20);
+    import_field.setColumns(40);
     c.gridwidth = GridBagConstraints.REMAINDER;
     panel.add(import_field, c);
 
     make_wallet_button = new JButton("Make wallet");
-    make_wallet_button.addActionListener( new RandomButtonAction());
+    make_wallet_button.addActionListener( new MakeWalletAction());
     panel.add(make_wallet_button, c);
 
     c.gridwidth = GridBagConstraints.REMAINDER;
@@ -115,30 +120,6 @@ public class MakeWalletPanel
 		return panel;
   }
 
-  public class WalletUpdateThread extends PeriodicThread
-  {
-    public WalletUpdateThread()
-    {
-      super(5000);
-    }
-
-    public void runPass() throws Exception
-    {
-      /*try
-      {
-
-      }
-      catch(Exception e)
-      {
-        String text = e.toString();
-        setMessageBox(text);
-       
-      }*/
-
-    }
-
-  }
-
   public void setMessageBox(String text)
   {
     SwingUtilities.invokeLater(new Runnable() {
@@ -148,6 +129,103 @@ public class MakeWalletPanel
       }
     });
   }
+  public class MakeWalletAction implements ActionListener
+  {
+    public void actionPerformed(ActionEvent e)
+    {
+      new MakeWalletThread().start();
+  
+    }
+  }
+
+  public class MakeWalletThread extends Thread
+  {
+    public void run()
+    {
+      try
+      {
+        String name = name_field.getText().trim();
+        if (name.length()==0)
+        {
+          throw new Exception("Name must be set");
+        }
+        setMessageBox("Creating wallet: " + name);
+
+        String wallet_base_path = ice_leaf_prefs.get("wallet_path", null);
+        if (wallet_base_path == null) throw new Exception("wallet_path is null");
+        File wallet_path = new File(wallet_base_path, name);
+        if (wallet_path.exists()) throw new Exception("Already exists: " + wallet_path);
+        if (!wallet_path.mkdirs()) throw new Exception("Unable to create: " + wallet_path);
+
+        File wallet_config = new File(wallet_path, "wallet.conf");
+        File wallet_db_path = new File(wallet_path, "db");
+        PrintStream config_out = new PrintStream(new FileOutputStream(wallet_config));
+
+
+        TreeMap<String, String> config_map = new TreeMap<>();
+        config_map.put("wallet_db_path", wallet_db_path.getPath());
+
+        String seed_to_import = null;
+
+        if (seed_button.isSelected())
+        {
+          config_out.println("key_mode=seed");
+          config_map.put("key_mode", "seed");
+          seed_to_import = SeedUtil.generateSeed(12);
+        }
+        else if (old_std_button.isSelected())
+        {
+          config_out.println("key_mode=standard");
+          config_map.put("key_mode", "standard");
+        }
+        else if (qhard_button.isSelected())
+        {
+          config_out.println("key_mode=qhard");
+          config_map.put("key_mode", "qhard");
+          config_map.put("key_count", "1");
+        }
+        else if (import_seed_button.isSelected())
+        {
+          config_out.println("key_mode=seed");
+          config_map.put("key_mode", "seed");
+
+          seed_to_import = import_field.getText();
+
+        }
+        else
+        {
+          throw new Exception("No mode button selected");
+        }
+        config_out.close();
+
+        setMessageBox("Generating wallet");
+
+        WalletDatabase db = WalletUtil.makeNewDatabase(new ConfigMem(config_map), ice_leaf.getParams(), seed_to_import);
+        WalletUtil.saveWallet(db, wallet_db_path);
+
+        if (seed_button.isSelected())
+        {
+          setMessageBox(String.format("Wallet %s created with seed:\n%s", name, seed_to_import));
+        }
+        else
+        {
+          setMessageBox(String.format("Wallet %s created", name));
+        }
+
+        name_field.setText("");
+        
+      }
+      catch(Throwable t)
+      {
+        setMessageBox(t.toString());
+
+      }
+
+    }
+
+  }
+
+
 
   public class RandomButtonAction implements ActionListener
   {
@@ -158,8 +236,6 @@ public class MakeWalletPanel
       sb.append("-");
       sb.append(SeedWordList.getNonsense(1));
       name_field.setText(sb.toString());
-      setMessageBox(sb.toString());
-
     }
   }
 }
