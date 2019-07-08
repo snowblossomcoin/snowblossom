@@ -18,6 +18,7 @@ import snowblossom.lib.AddressUtil;
 import duckutil.PeriodicThread;
 import duckutil.ConfigMem;
 import java.util.TreeMap;
+import java.io.File;
 
 public class WalletPanel
 {
@@ -26,6 +27,7 @@ public class WalletPanel
   protected IceLeaf ice_leaf;
 
   protected JTextArea message_box;
+  protected WalletUpdateThread update_thread;
 
 
   public WalletPanel(IceLeaf ice_leaf)
@@ -52,6 +54,8 @@ public class WalletPanel
     message_box = new JTextArea();
     message_box.setEditable(false);
     panel.add(message_box,c);
+    update_thread = new WalletUpdateThread();
+    update_thread.start();
 
   }
 
@@ -60,25 +64,57 @@ public class WalletPanel
 		return panel;
   }
 
+  public void wake()
+  {
+    update_thread.wake();
+  }
+  
+
   public class WalletUpdateThread extends PeriodicThread
   {
     public WalletUpdateThread()
     {
-      super(5000);
+      super(15000);
     }
 
     public void runPass() throws Exception
     {
-      /*try
+      try
       {
+        String wallet_base_path = ice_leaf_prefs.get("wallet_path", null);
+        if (wallet_base_path == null) throw new Exception("wallet_path is null");
+        File base_file = new File(wallet_base_path);
+
+        StringBuilder sb = new StringBuilder();
+
+        if (base_file.exists() && base_file.isDirectory())
+        for(File wallet_dir : base_file.listFiles())
+        {
+          File config_file = new File(wallet_dir, "wallet.conf");
+          File db_dir = new File(wallet_dir, "db");
+          String name = wallet_dir.getName();
+
+          if (config_file.exists())
+          if (config_file.isFile())
+          if (db_dir.exists())
+          if (db_dir.isDirectory())
+          if (db_dir.list().length > 0)
+          {
+            sb.append("Wallet: " + name + "\n");
+          }
+        }
+
+        setMessageBox(sb.toString());
+
+
 
       }
-      catch(Exception e)
+      catch(Throwable e)
       {
         String text = e.toString();
         setMessageBox(text);
        
-      }*/
+      }
 
     }
 

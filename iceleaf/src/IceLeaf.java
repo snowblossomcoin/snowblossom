@@ -25,9 +25,9 @@ public class IceLeaf
 {
   public static void main(String args[]) throws Exception
   {
-    System.out.println(System.getProperty("user.home"));
     Globals.addCryptoProvider();
-    new IceLeaf();
+
+    new IceLeaf(new NetworkParamsProd(), null);
 
   }
 
@@ -36,16 +36,22 @@ public class IceLeaf
   protected NodeSelectionPanel node_select_panel;
   protected WalletPanel wallet_panel;
   protected MakeWalletPanel make_wallet_panel;
+  protected NetworkParams params;
 
   public Preferences getPrefs() { return ice_leaf_prefs;}
-  public NetworkParams getParams() { return new NetworkParamsProd(); }
+  public NetworkParams getParams() { return params; }
   public UserServiceBlockingStub getStub(){return node_select_panel.getStub();}
   public UserServiceStub getAsyncStub(){return node_select_panel.getAsyncStub();}
+  public WalletPanel getWalletPanel(){return wallet_panel;}
 
-  public IceLeaf()
+  public IceLeaf(NetworkParams params, Preferences prefs)
   {
-
-    ice_leaf_prefs = Preferences.userNodeForPackage(this.getClass());
+    this.params = params;
+    this.ice_leaf_prefs = prefs;
+    if (ice_leaf_prefs == null)
+    {
+      ice_leaf_prefs = Preferences.userNodeForPackage(this.getClass());
+    }
 
     node_panel = new NodePanel(this);
     node_select_panel = new NodeSelectionPanel(this);
@@ -63,7 +69,12 @@ public class IceLeaf
       JFrame f=new JFrame();
       f.setVisible(true);
       f.setDefaultCloseOperation( f.EXIT_ON_CLOSE);
-      f.setTitle("SnowBlossom - IceLeaf " + Globals.VERSION);
+      String title = "SnowBlossom - IceLeaf " + Globals.VERSION;
+      if (!params.getNetworkName().equals("snowblossom"))
+      {
+        title = title + " - " + params.getNetworkName();
+      }
+      f.setTitle(title);
       f.setSize(800, 600);
 
       JTabbedPane tab_pane = new JTabbedPane();
@@ -100,7 +111,7 @@ public class IceLeaf
         c.gridwidth = 1;
         panel.add(new JLabel("Wallet Directory"), c);
         c.gridwidth = GridBagConstraints.REMAINDER;
-        File default_wallet_path = new File(SystemUtil.getImportantDataDirectory(), "wallets");
+        File default_wallet_path = new File(SystemUtil.getImportantDataDirectory(params), "wallets");
         panel.add(new PersistentComponentTextField(ice_leaf_prefs, "", "wallet_path", default_wallet_path.toString(),60),c);
 
         c.gridwidth = GridBagConstraints.REMAINDER;
@@ -109,24 +120,24 @@ public class IceLeaf
         c.gridwidth = 1;
         panel.add(new JLabel("Service Port"), c);
         c.gridwidth = GridBagConstraints.REMAINDER;
-        panel.add(new PersistentComponentTextField(ice_leaf_prefs, "", "node_service_port", "2338",8),c);
+        panel.add(new PersistentComponentTextField(ice_leaf_prefs, "", "node_service_port", ""+params.getDefaultPort(),8),c);
 
         c.gridwidth = 1;
         panel.add(new JLabel("TLS Service Port"), c);
         c.gridwidth = GridBagConstraints.REMAINDER;
-        panel.add(new PersistentComponentTextField(ice_leaf_prefs, "", "node_tls_service_port", "2348",8),c);
+        panel.add(new PersistentComponentTextField(ice_leaf_prefs, "", "node_tls_service_port", ""+params.getDefaultTlsPort(),8),c);
 
 
         c.gridwidth = 1;
         panel.add(new JLabel("Node DB Directory"), c);
         c.gridwidth = GridBagConstraints.REMAINDER;
-        File default_node_db_path = new File(SystemUtil.getNodeDataDirectory(), "node_db");
+        File default_node_db_path = new File(SystemUtil.getNodeDataDirectory(params), "node_db");
         panel.add(new PersistentComponentTextField(ice_leaf_prefs, "", "node_db_path", default_node_db_path.toString(),60),c);
 
         c.gridwidth = 1;
         panel.add(new JLabel("Node TLS Key Directory"), c);
         c.gridwidth = GridBagConstraints.REMAINDER;
-        File default_node_tls_key_path = new File(SystemUtil.getNodeDataDirectory(), "node_tls_key");
+        File default_node_tls_key_path = new File(SystemUtil.getNodeDataDirectory(params), "node_tls_key");
         panel.add(new PersistentComponentTextField(ice_leaf_prefs, "", "node_tls_key_path", default_node_tls_key_path.toString(),60),c);
 
         c.gridwidth = GridBagConstraints.REMAINDER;

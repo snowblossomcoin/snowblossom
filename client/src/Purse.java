@@ -78,7 +78,7 @@ public class Purse
 		{
 			if (print_on_pass)
 			{
-				client.printBasicStats(client.getPurse().getDB());
+				WalletUtil.printBasicStats(getDB());
 				client.showBalances(false);
 			}
 			else
@@ -202,7 +202,7 @@ public class Purse
     throws Exception
   {
     boolean mark_used = broadcast;
-    AddressSpecHash change = client.getPurse().getUnusedAddress(mark_used, false);
+    AddressSpecHash change = getUnusedAddress(mark_used, false);
 
     List<TransactionBridge> spendable = client.getAllSpendable();
 

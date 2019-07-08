@@ -29,10 +29,11 @@ public class NodePanel
   protected JTextArea message_box;
   protected JTextArea status_box;
   protected boolean start_attempt;
-
+  protected IceLeaf ice_leaf;
 
   public NodePanel(IceLeaf ice_leaf)
   {
+    this.ice_leaf = ice_leaf;
 		ice_leaf_prefs = ice_leaf.getPrefs();
 	}
 
@@ -170,8 +171,9 @@ public class NodePanel
     start_attempt=true;
     TreeMap<String, String> config_map = new TreeMap();
 
-    config_map.put("service_port", ice_leaf_prefs.get("node_service_port", "2338"));
-    config_map.put("tls_service_port", ice_leaf_prefs.get("node_tls_service_port", "2348"));
+    config_map.put("network", ice_leaf.getParams().getNetworkName());
+    config_map.put("service_port", ice_leaf_prefs.get("node_service_port", null));
+    config_map.put("tls_service_port", ice_leaf_prefs.get("node_tls_service_port", null));
 
     config_map.put("db_path", ice_leaf_prefs.get("node_db_path", null));
     config_map.put("db_type", "rocksdb");

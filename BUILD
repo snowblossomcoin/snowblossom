@@ -83,6 +83,14 @@ java_binary(
   ]
 )
 
+java_binary(
+  name = "IceLeafTestnet",
+  main_class = "snowblossom.iceleaf.IceLeafTestnet",
+  runtime_deps = [
+    "//iceleaf:iceleaf",
+  ]
+)
+
 
 
 java_binary(

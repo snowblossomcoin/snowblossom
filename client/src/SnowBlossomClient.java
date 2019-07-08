@@ -79,7 +79,7 @@ public class SnowBlossomClient
       client.maintainKeys();
       client.showBalances(false);
 
-      client.printBasicStats(client.getPurse().getDB());
+      WalletUtil.printBasicStats(client.getPurse().getDB());
 
       System.out.println("Here is an unused address:");
       AddressSpecHash hash  = client.getPurse().getUnusedAddress(false, false);
@@ -279,7 +279,7 @@ public class SnowBlossomClient
         client.getPurse().mergeIn(wallet_import.build());
 
         logger.info("Imported data:");
-        client.printBasicStats(wallet_import.build());
+        WalletUtil.printBasicStats(wallet_import.build());
       }
       else if (command.equals("import_seed"))
       {
@@ -520,36 +520,6 @@ public class SnowBlossomClient
   {
     purse.maintainKeys(false);
     maintain_keys_done = true;
-  }
-
-  public void printBasicStats(WalletDatabase db)
-    throws ValidationException
-  {
-    int total_keys = db.getKeysCount();
-    int total_addresses = db.getAddressesCount();
-    int used_addresses = db.getUsedAddressesCount();
-    int unused_addresses = total_addresses - used_addresses;
-
-    System.out.println(String.format("Wallet Keys: %d, Addresses: %d, Fresh pool: %d", total_keys, total_addresses, unused_addresses));
-
-    TreeMap<String, Integer> address_type_map = new TreeMap<>();
-    for(AddressSpec spec : db.getAddressesList())
-    {
-      String type = AddressUtil.getAddressSpecTypeSummary(spec);
-      if (address_type_map.containsKey(type))
-      {
-        address_type_map.put(type, 1 + address_type_map.get(type));
-      }
-      else
-      {
-        address_type_map.put(type, 1);
-      } 
-    }
-    for(Map.Entry<String, Integer> me : address_type_map.entrySet())
-    {
-      System.out.println("  " + me.getKey() + ": " + me.getValue());
-    }
-
   }
 
   public BalanceInfo getBalance(AddressSpecHash hash)

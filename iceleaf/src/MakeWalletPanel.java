@@ -46,7 +46,7 @@ public class MakeWalletPanel
   protected JButton random_name_button;
   protected JRadioButton seed_button = new JRadioButton("HD Seed - secp256k1");
   protected JRadioButton old_std_button = new JRadioButton("Old Standard - secp256k1");
-  protected JRadioButton qhard_button = new JRadioButton("QHard - secp256k1 + rsa8192 + DSTU4145");
+  protected JRadioButton qhard_button = new JRadioButton("QHard - secp256k1 + rsa8192 + dstu4145");
   protected JRadioButton import_seed_button = new JRadioButton("Import seed");
   protected JButton make_wallet_button;
 
@@ -164,6 +164,9 @@ public class MakeWalletPanel
 
         TreeMap<String, String> config_map = new TreeMap<>();
         config_map.put("wallet_db_path", wallet_db_path.getPath());
+        config_map.put("network", ice_leaf.getParams().getNetworkName());
+
+        config_out.println("network=" + ice_leaf.getParams().getNetworkName());
 
         String seed_to_import = null;
 
@@ -213,6 +216,7 @@ public class MakeWalletPanel
         }
 
         name_field.setText("");
+        ice_leaf.getWalletPanel().wake();
         
       }
       catch(Throwable t)
