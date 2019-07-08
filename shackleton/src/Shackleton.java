@@ -16,6 +16,8 @@ import java.util.logging.Logger;
 
 import snowblossom.client.GetUTXOUtil;
 import snowblossom.client.StubUtil;
+import snowblossom.client.StubHolder;
+
 
 
 /** Yes a penguin taught me french back in antacrtica */
@@ -63,7 +65,7 @@ public class Shackleton
 
     asyncStub = UserServiceGrpc.newStub(channel);
     blockingStub = UserServiceGrpc.newBlockingStub(channel);
-    get_utxo_util = new GetUTXOUtil(blockingStub, params);
+    get_utxo_util = new GetUTXOUtil(new StubHolder(channel), params);
     
     web_server.start();
 

@@ -425,7 +425,7 @@ public class SnowBlossomClient
       exec = TaskMaster.getBasicExecutor(64,"client_lookup");
     }
 
-    get_utxo_util = new GetUTXOUtil(this.stub_holder.getBlockingStub(), params);
+    get_utxo_util = new GetUTXOUtil(this.stub_holder, params);
 
     if (config.isSet("wallet_path"))
     {

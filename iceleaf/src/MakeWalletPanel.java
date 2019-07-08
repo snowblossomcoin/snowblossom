@@ -163,7 +163,7 @@ public class MakeWalletPanel
 
 
         TreeMap<String, String> config_map = new TreeMap<>();
-        config_map.put("wallet_db_path", wallet_db_path.getPath());
+        config_map.put("wallet_path", wallet_db_path.getPath());
         config_map.put("network", ice_leaf.getParams().getNetworkName());
 
         config_out.println("network=" + ice_leaf.getParams().getNetworkName());

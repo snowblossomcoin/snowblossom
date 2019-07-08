@@ -18,6 +18,7 @@ import java.util.Map;
 import com.google.common.collect.TreeMultimap;
 import snowblossom.client.GetUTXOUtil;
 import snowblossom.client.StubUtil;
+import snowblossom.client.StubHolder;
 
 import java.text.DecimalFormat;
 import com.google.protobuf.ByteString;
@@ -62,10 +63,11 @@ public class RichList
 
     ManagedChannel channel = StubUtil.openChannel(config, params);
 
+
     asyncStub = UserServiceGrpc.newStub(channel);
     stub = UserServiceGrpc.newBlockingStub(channel);
 
-    get_utxo_util = new GetUTXOUtil(stub, params);
+    get_utxo_util = new GetUTXOUtil(new StubHolder(channel), params);
 
     NodeStatus node_status = stub.getNodeStatus(QueryUtil.nr());
 

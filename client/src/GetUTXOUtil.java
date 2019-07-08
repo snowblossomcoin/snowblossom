@@ -26,14 +26,14 @@ public class GetUTXOUtil
   // never change for that given input pair
   private LRUCache<String, List<TransactionBridge> > spendable_cache = new LRUCache<>(1000);
 
-  private UserServiceBlockingStub stub;
+  private StubHolder stub_holder;
 	private long utxo_root_time = 0;
   private ChainHash last_utxo_root = null;
   private NetworkParams params;
 
-  public GetUTXOUtil(UserServiceBlockingStub stub, NetworkParams params)
+  public GetUTXOUtil(StubHolder stub_holder, NetworkParams params)
   {
-    this.stub = stub;
+    this.stub_holder = stub_holder;
     this.params = params;
   }
 
@@ -42,7 +42,7 @@ public class GetUTXOUtil
 		
 		if (utxo_root_time + UTXO_ROOT_EXPIRE < System.currentTimeMillis())
 		{
-      NodeStatus ns = stub.getNodeStatus( NullRequest.newBuilder().build() );
+      NodeStatus ns = getStub().getNodeStatus( NullRequest.newBuilder().build() );
       if (ns.getNetwork().length() > 0)
       {
         if (!ns.getNetwork().equals(params.getNetworkName()))
@@ -61,6 +61,11 @@ public class GetUTXOUtil
 		return last_utxo_root;
   }
 
+  private UserServiceBlockingStub getStub()
+  {
+    return stub_holder.getBlockingStub();
+  }
+
   public Map<String, TransactionBridge> getSpendableWithMempool(AddressSpecHash addr)
 		throws ValidationException
   {
@@ -73,10 +78,10 @@ public class GetUTXOUtil
         bridge_map.put(b.getKeyString(), b);
     }
 
-    for(ByteString tx_hash : stub.getMempoolTransactionList(
+    for(ByteString tx_hash : getStub().getMempoolTransactionList(
       RequestAddress.newBuilder().setAddressSpecHash(addr.getBytes()).build()).getTxHashesList())
     { 
-      Transaction tx = stub.getTransaction(RequestTransaction.newBuilder().setTxHash(tx_hash).build());
+      Transaction tx = getStub().getTransaction(RequestTransaction.newBuilder().setTxHash(tx_hash).build());
 
       TransactionInner inner = TransactionUtil.getInner(tx);
 
@@ -131,7 +136,7 @@ public class GetUTXOUtil
 			if (lst != null) return lst;
 		}
 
-		List<TransactionBridge> lst = getSpendableValidatedStatic(addr, stub, utxo_root.getBytes());
+		List<TransactionBridge> lst = getSpendableValidatedStatic(addr, getStub(), utxo_root.getBytes());
 		
 		lst = ImmutableList.copyOf(lst);
 		synchronized(spendable_cache)

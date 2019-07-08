@@ -10,6 +10,7 @@ import java.awt.GridBagLayout;
 import java.awt.GridBagConstraints;
 import java.util.prefs.Preferences;
 
+import snowblossom.client.SnowBlossomClient;
 import snowblossom.node.SnowBlossomNode;
 import snowblossom.lib.Globals;
 import snowblossom.lib.AddressSpecHash;
@@ -17,8 +18,12 @@ import snowblossom.lib.AddressUtil;
 
 import duckutil.PeriodicThread;
 import duckutil.ConfigMem;
+import duckutil.ConfigFile;
+import duckutil.ConfigCat;
+import duckutil.Config;
 import java.util.TreeMap;
 import java.io.File;
+
 
 public class WalletPanel
 {
@@ -28,6 +33,8 @@ public class WalletPanel
 
   protected JTextArea message_box;
   protected WalletUpdateThread update_thread;
+
+  protected TreeMap<String, SnowBlossomClient> client_map = new TreeMap<>();
 
 
   public WalletPanel(IceLeaf ice_leaf)
@@ -81,6 +88,14 @@ public class WalletPanel
     {
       try
       {
+        if (ice_leaf.getStubHolder().getBlockingStub()==null)
+        {
+          Thread.sleep(1000);
+        }
+        if (ice_leaf.getStubHolder().getBlockingStub()==null)
+        {
+          throw new Exception("Channel not yet open");
+        }
         String wallet_base_path = ice_leaf_prefs.get("wallet_path", null);
         if (wallet_base_path == null) throw new Exception("wallet_path is null");
         File base_file = new File(wallet_base_path);
@@ -100,23 +115,63 @@ public class WalletPanel
           if (db_dir.isDirectory())
           if (db_dir.list().length > 0)
           {
-            sb.append("Wallet: " + name + "\n");
+            sb.append("Wallet: " + getWalletSummary(name, db_dir, config_file) +"\n");
           }
         }
 
         setMessageBox(sb.toString());
 
-
-
       }
       catch(Throwable e)
       {
-        String text = e.toString();
+        String text = ErrorUtil.getThrowInfo(e);
         setMessageBox(text);
        
       }
 
     }
+
+  }
+
+  private String getWalletSummary(String name, File db_dir, File config_file)
+    throws Exception
+  {
+    SnowBlossomClient client = loadWallet(name, db_dir, config_file);
+    setMessageBox("Maintaining: " + name);
+    client.maintainKeys();
+
+    AddressSpecHash hash  = client.getPurse().getUnusedAddress(false, false);
+    String addr = AddressUtil.getAddressString(client.getParams().getAddressPrefix(), hash);
+
+    return String.format("%s - %s - %s", 
+      name, 
+      SnowBlossomClient.getBalanceInfoPrint(client.getBalance()),
+      addr
+      );
+  }
+
+
+  private SnowBlossomClient loadWallet(String name, File db_dir, File config_file)
+    throws Exception
+  {
+    synchronized(client_map)
+    {
+      if (client_map.containsKey(name)) return client_map.get(name);
+    }
+    TreeMap<String, String> config_map = new TreeMap<>();
+    config_map.put("wallet_path", db_dir.getPath());
+    config_map.put("network", ice_leaf.getParams().getNetworkName());
+		Config conf = new ConfigCat(new ConfigMem(config_map), new ConfigFile(config_file.getPath()));
+
+	  SnowBlossomClient client = new SnowBlossomClient(conf, null, ice_leaf.getStubHolder());
+
+    synchronized(client_map)
+    {
+      client_map.put(name, client);
+    }
+    return client;
+
+
 
   }
 
