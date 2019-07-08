@@ -31,6 +31,7 @@ public class WalletPanel
 	protected Preferences ice_leaf_prefs;
   protected IceLeaf ice_leaf;
 
+  protected JTextArea wallet_box;
   protected JTextArea message_box;
   protected WalletUpdateThread update_thread;
 
@@ -58,6 +59,10 @@ public class WalletPanel
     c.weightx=1.0;
     c.weighty=1.0;
  
+    wallet_box = new JTextArea();
+    wallet_box.setEditable(false);
+    panel.add(wallet_box,c);
+
     message_box = new JTextArea();
     message_box.setEditable(false);
     panel.add(message_box,c);
@@ -92,9 +97,11 @@ public class WalletPanel
         {
           if (ice_leaf.getStubHolder().getBlockingStub()==null)
           {
+            setMessageBox("Waiting for open channel");
             Thread.sleep(100);
           }
         }
+        setMessageBox("Loading wallets");
         if (ice_leaf.getStubHolder().getBlockingStub()==null)
         {
           throw new Exception("Channel not yet open");
@@ -122,7 +129,8 @@ public class WalletPanel
           }
         }
 
-        setMessageBox(sb.toString());
+        setWalletBox(sb.toString());
+        setMessageBox("");
 
       }
       catch(Throwable e)
@@ -176,6 +184,16 @@ public class WalletPanel
 
 
 
+  }
+
+  public void setWalletBox(String text)
+  {
+    SwingUtilities.invokeLater(new Runnable() {
+      public void run()
+      {
+        wallet_box.setText(text);
+      }
+    });
   }
 
   public void setMessageBox(String text)
