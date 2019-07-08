@@ -88,9 +88,12 @@ public class WalletPanel
     {
       try
       {
-        if (ice_leaf.getStubHolder().getBlockingStub()==null)
+        for(int i=0;i<25; i++)
         {
-          Thread.sleep(1000);
+          if (ice_leaf.getStubHolder().getBlockingStub()==null)
+          {
+            Thread.sleep(100);
+          }
         }
         if (ice_leaf.getStubHolder().getBlockingStub()==null)
         {
