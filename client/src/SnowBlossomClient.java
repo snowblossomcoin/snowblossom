@@ -383,38 +383,49 @@ public class SnowBlossomClient
     }
   }
 
+  private static ThreadPoolExecutor exec;
 
-  private final UserServiceStub asyncStub;
-  private final UserServiceBlockingStub blockingStub;
+  private final StubHolder stub_holder;
 
 	private final NetworkParams params;
 
   private File wallet_path;
   private Purse purse;
   private Config config;
-  private ThreadPoolExecutor exec;
   private GetUTXOUtil get_utxo_util;
   private boolean maintain_keys_done = false;
 
   public SnowBlossomClient(Config config) throws Exception
   {
-    this(config, null);
+    this(config, null, null);
   }
   public SnowBlossomClient(Config config, String import_seed) throws Exception
+  {
+    this(config, import_seed, null);
+  }
+  public SnowBlossomClient(Config config, String import_seed, StubHolder stub_holder) throws Exception
   {
     this.config = config;
     logger.info(String.format("Starting SnowBlossomClient version %s", Globals.VERSION));
     params = NetworkParams.loadFromConfig(config);
 
-    ManagedChannel channel = StubUtil.openChannel(config, params);
+    if (stub_holder == null)
+    {
 
-    exec = TaskMaster.getBasicExecutor(64,"client_lookup");
+      ManagedChannel channel = StubUtil.openChannel(config, params);
+      this.stub_holder = new StubHolder(channel);
+    }
+    else
+    {
+      this.stub_holder = stub_holder;
+    }
+    
+    if (exec==null)
+    {
+      exec = TaskMaster.getBasicExecutor(64,"client_lookup");
+    }
 
-
-    asyncStub = UserServiceGrpc.newStub(channel);
-    blockingStub = UserServiceGrpc.newBlockingStub(channel);
-
-    get_utxo_util = new GetUTXOUtil(blockingStub, params);
+    get_utxo_util = new GetUTXOUtil(this.stub_holder.getBlockingStub(), params);
 
     if (config.isSet("wallet_path"))
     {
@@ -428,7 +439,7 @@ public class SnowBlossomClient
   public NetworkParams getParams(){return params;}
   public Config getConfig(){return config;}
 
-  public UserServiceBlockingStub getStub(){ return blockingStub; }
+  public UserServiceBlockingStub getStub(){ return stub_holder.getBlockingStub(); }
 
   public FeeEstimate getFeeEstimate()
   {
@@ -460,7 +471,7 @@ public class SnowBlossomClient
 
     //logger.info(tx.toString());
 
-    System.out.println(blockingStub.submitTransaction(tx));
+    System.out.println(stub_holder.getBlockingStub().submitTransaction(tx));
 
   }
   public void sendLocked(long value, String to, String fbo, int block)
@@ -492,7 +503,7 @@ public class SnowBlossomClient
 
     //logger.info(tx.toString());
 
-    System.out.println(blockingStub.submitTransaction(tx));
+    System.out.println(stub_holder.getBlockingStub().submitTransaction(tx));
 
   }
 
@@ -500,7 +511,7 @@ public class SnowBlossomClient
   public void sendOrException(Transaction tx)
     throws Exception
   {
-    SubmitReply res = blockingStub.submitTransaction(tx);
+    SubmitReply res = stub_holder.getBlockingStub().submitTransaction(tx);
 
     if (!res.getSuccess())
     {
@@ -726,7 +737,7 @@ public class SnowBlossomClient
 
   public NodeStatus getNodeStatus()
   {
-    return blockingStub.getNodeStatus( NullRequest.newBuilder().build() );
+    return stub_holder.getBlockingStub().getNodeStatus( NullRequest.newBuilder().build() );
   }
 
   public List<TransactionBridge> getSpendable(AddressSpecHash addr)
@@ -743,7 +754,7 @@ public class SnowBlossomClient
 
   public boolean submitTransaction(Transaction tx)
   {
-    SubmitReply reply = blockingStub.submitTransaction(tx);
+    SubmitReply reply = stub_holder.getBlockingStub().submitTransaction(tx);
 
     return reply.getSuccess();
   }

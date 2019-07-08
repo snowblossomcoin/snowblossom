@@ -16,8 +16,7 @@ import snowblossom.iceleaf.components.*;
 import java.io.File;
 
 
-import snowblossom.proto.UserServiceGrpc.UserServiceBlockingStub;
-import snowblossom.proto.UserServiceGrpc.UserServiceStub;
+import snowblossom.client.StubHolder;
 
 
 
@@ -40,8 +39,7 @@ public class IceLeaf
 
   public Preferences getPrefs() { return ice_leaf_prefs;}
   public NetworkParams getParams() { return params; }
-  public UserServiceBlockingStub getStub(){return node_select_panel.getStub();}
-  public UserServiceStub getAsyncStub(){return node_select_panel.getAsyncStub();}
+  public StubHolder getStubHolder(){return node_select_panel.getStubHolder();}
   public WalletPanel getWalletPanel(){return wallet_panel;}
 
   public IceLeaf(NetworkParams params, Preferences prefs)

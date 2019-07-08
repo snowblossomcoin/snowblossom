@@ -21,6 +21,7 @@ import io.grpc.ManagedChannel;
 
 import snowblossom.proto.UserServiceGrpc.UserServiceBlockingStub;
 import snowblossom.proto.UserServiceGrpc.UserServiceStub;
+import snowblossom.client.StubHolder;
 
 
 public class NodeSelectionPanel
@@ -38,13 +39,13 @@ public class NodeSelectionPanel
   private PersistentComponentCheckBox box_list;
 
   protected volatile ManagedChannel channel;
-  protected volatile UserServiceBlockingStub blocking_stub;
-  protected volatile UserServiceStub async_stub;
+  protected StubHolder stub_holder;
 
   public NodeSelectionPanel(IceLeaf ice_leaf)
   {
     this.ice_leaf = ice_leaf;
 		ice_leaf_prefs = ice_leaf.getPrefs();
+    stub_holder = new StubHolder();
 	}
 
 	public void setup()
@@ -141,8 +142,7 @@ public class NodeSelectionPanel
   }
 
   public ManagedChannel getManagedChannel(){return channel;}
-  public UserServiceBlockingStub getStub(){return blocking_stub;}
-  public UserServiceStub getAsyncStub(){return async_stub;}
+  public StubHolder getStubHolder(){return stub_holder;}
 
   public class ChannelMaintThread extends PeriodicThread implements ChangeListener
   {
@@ -193,8 +193,7 @@ public class NodeSelectionPanel
         if (mon != null)
         {
           channel = mon.getManagedChannel();
-          blocking_stub = StubUtil.getBlockingStub(channel);
-          async_stub = StubUtil.getAsyncStub(channel);
+          stub_holder.update(channel);
 
           setStatusBox(String.format("Connected to %s and checked in %s ms",mon.getUri(), t2-t1));
         }
