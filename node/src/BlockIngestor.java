@@ -3,6 +3,7 @@ package snowblossom.node;
 import com.google.protobuf.ByteString;
 import duckutil.TimeRecord;
 import duckutil.TimeRecordAuto;
+import duckutil.LRUCache;
 import snowblossom.lib.*;
 import snowblossom.lib.db.DB;
 import snowblossom.proto.Block;

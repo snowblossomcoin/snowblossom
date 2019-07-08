@@ -37,6 +37,7 @@ import java.util.Random;
 import java.util.concurrent.atomic.AtomicLong;
 import duckutil.MultiAtomicLong;
 import duckutil.FusionInitiator;
+import duckutil.LRUCache;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.concurrent.ThreadPoolExecutor;
