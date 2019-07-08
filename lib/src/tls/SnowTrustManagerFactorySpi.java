@@ -76,7 +76,7 @@ public class SnowTrustManagerFactorySpi extends TrustManagerFactorySpi
    * If we don't override the extended trust manager
    * then even if we define everything in X509TrustManager
    * we still get cert failures on hostname validation with recent
-   * grpc/netty.  shrug.
+   * grpc/netty.  ¯\_(ツ)_/¯
    */ 
   public class SnowTrustManager extends X509ExtendedTrustManager
   {
