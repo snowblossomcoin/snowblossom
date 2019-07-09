@@ -332,6 +332,18 @@ public class TransactionUtil
     return AddressUtil.getHashForSpec(lst.pop());
   }
 
+  public static String prettyDisplayTx(Transaction tx, NetworkParams params)
+    throws ValidationException
+  {
+    ByteArrayOutputStream bout = new ByteArrayOutputStream();
+    PrintStream pout = new PrintStream(bout);
+
+    prettyDisplayTx(tx, pout, params);
+    pout.close();
+
+    return new String(bout.toByteArray());
+
+  }
   public static void prettyDisplayTx(Transaction tx, PrintStream out, NetworkParams params)
     throws ValidationException
   {

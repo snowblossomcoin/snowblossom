@@ -5,7 +5,7 @@ import java.util.Collection;
 import duckutil.PeriodicThread;
 import javax.swing.SwingUtilities;
 
-public class WalletComboBox extends JComboBox
+public class WalletComboBox extends JComboBox<String>
 {
   private IceLeaf ice_leaf;
   protected TreeSet<String> current_select_box_items=new TreeSet<>();

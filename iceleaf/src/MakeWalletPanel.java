@@ -61,13 +61,12 @@ public class MakeWalletPanel
 		GridBagLayout grid_bag = new GridBagLayout();
 		panel = new JPanel(grid_bag);
 
-
-			GridBagConstraints c = new GridBagConstraints();
-			c.weightx = 0.0;
-			c.weighty= 0.0;
-			c.gridheight = 1;
-      c.gridwidth = 1;
-			c.anchor = GridBagConstraints.NORTHWEST;
+    GridBagConstraints c = new GridBagConstraints();
+    c.weightx = 0.0;
+    c.weighty= 0.0;
+    c.gridheight = 1;
+    c.gridwidth = 1;
+    c.anchor = GridBagConstraints.NORTHWEST;
 
 
     panel.add(new JLabel("Name for new wallet: "), c);

@@ -78,6 +78,7 @@ java_binary(
 java_binary(
   name = "IceLeaf",
   main_class = "snowblossom.iceleaf.IceLeaf",
+  resources = glob(["iceleaf/resources/*.txt"]), 
   runtime_deps = [
     "//iceleaf:iceleaf",
   ]

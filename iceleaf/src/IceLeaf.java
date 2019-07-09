@@ -5,6 +5,7 @@ import javax.swing.JTabbedPane;
 import javax.swing.JPanel;
 import javax.swing.JLabel;
 import javax.swing.SwingUtilities;
+import javax.swing.UIManager;
 import java.awt.GridBagLayout;
 import java.awt.GridBagConstraints;
 
@@ -18,8 +19,8 @@ import java.util.LinkedList;
 
 
 import snowblossom.client.StubHolder;
-
-
+import java.awt.Font;
+import javax.swing.plaf.FontUIResource;
 
 public class IceLeaf
 {
@@ -68,6 +69,15 @@ public class IceLeaf
   {
     public void run()
     {
+      try
+      {
+        UIManager.setLookAndFeel(new javax.swing.plaf.nimbus.NimbusLookAndFeel());
+      }
+      catch(Exception e)
+      {
+        e.printStackTrace();
+      }
+
       JFrame f=new JFrame();
       f.setVisible(true);
       f.setDefaultCloseOperation( f.EXIT_ON_CLOSE);
@@ -97,6 +107,7 @@ public class IceLeaf
       tab_pane.add("Node Selection", node_select_panel.getPanel());
       tab_pane.add("Node", node_panel.getPanel());
       tab_pane.add("Settings", settings_panel);
+      
 
     }
 
@@ -154,5 +165,17 @@ public class IceLeaf
     }
 
   }
+	public static void setUIFont(Font f) 
+  {
+    for(Object key : UIManager.getDefaults().keySet())
+		{
+      Font orig = UIManager.getFont(key);
+      if (orig != null)
+      {
+        Font font = new Font(f.getFontName(), orig.getStyle(), f.getSize());
+        UIManager.put(key, new FontUIResource(font));
+			}
+		}
+	}
 
 }
