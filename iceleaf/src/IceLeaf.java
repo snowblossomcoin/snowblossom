@@ -14,6 +14,7 @@ import snowblossom.lib.NetworkParamsProd;
 import java.util.prefs.Preferences;
 import snowblossom.iceleaf.components.*;
 import java.io.File;
+import java.util.LinkedList;
 
 
 import snowblossom.client.StubHolder;
@@ -35,12 +36,14 @@ public class IceLeaf
   protected NodeSelectionPanel node_select_panel;
   protected WalletPanel wallet_panel;
   protected MakeWalletPanel make_wallet_panel;
+  protected SendPanel send_panel;
   protected NetworkParams params;
 
   public Preferences getPrefs() { return ice_leaf_prefs;}
   public NetworkParams getParams() { return params; }
   public StubHolder getStubHolder(){return node_select_panel.getStubHolder();}
   public WalletPanel getWalletPanel(){return wallet_panel;}
+  public SendPanel getSendPanel(){return send_panel;}
 
   public IceLeaf(NetworkParams params, Preferences prefs)
   {
@@ -55,6 +58,7 @@ public class IceLeaf
     node_select_panel = new NodeSelectionPanel(this);
     wallet_panel = new WalletPanel(this);
     make_wallet_panel = new MakeWalletPanel(this);
+    send_panel = new SendPanel(this);
 
     SwingUtilities.invokeLater(new WindowSetup());
 
@@ -73,7 +77,7 @@ public class IceLeaf
         title = title + " - " + params.getNetworkName();
       }
       f.setTitle(title);
-      f.setSize(800, 600);
+      f.setSize(950, 600);
 
       JTabbedPane tab_pane = new JTabbedPane();
 
@@ -82,11 +86,13 @@ public class IceLeaf
       node_select_panel.setup();
       wallet_panel.setup();
       make_wallet_panel.setup();
+      send_panel.setup();
 
       JPanel settings_panel = assembleSettingsPanel();
 
 
       tab_pane.add("Wallets", wallet_panel.getPanel());
+      tab_pane.add("Send", send_panel.getPanel());
       tab_pane.add("Make Wallet", make_wallet_panel.getPanel());
       tab_pane.add("Node Selection", node_select_panel.getPanel());
       tab_pane.add("Node", node_panel.getPanel());
@@ -110,7 +116,7 @@ public class IceLeaf
         panel.add(new JLabel("Wallet Directory"), c);
         c.gridwidth = GridBagConstraints.REMAINDER;
         File default_wallet_path = new File(SystemUtil.getImportantDataDirectory(params), "wallets");
-        panel.add(new PersistentComponentTextField(ice_leaf_prefs, "", "wallet_path", default_wallet_path.toString(),60),c);
+        panel.add(new PersistentComponentTextField(ice_leaf_prefs, "", "wallet_path", default_wallet_path.toString(),40),c);
 
         c.gridwidth = GridBagConstraints.REMAINDER;
         panel.add(new PersistentComponentCheckBox(ice_leaf_prefs, "Run local node", "node_run_local", false), c);
@@ -130,13 +136,13 @@ public class IceLeaf
         panel.add(new JLabel("Node DB Directory"), c);
         c.gridwidth = GridBagConstraints.REMAINDER;
         File default_node_db_path = new File(SystemUtil.getNodeDataDirectory(params), "node_db");
-        panel.add(new PersistentComponentTextField(ice_leaf_prefs, "", "node_db_path", default_node_db_path.toString(),60),c);
+        panel.add(new PersistentComponentTextField(ice_leaf_prefs, "", "node_db_path", default_node_db_path.toString(),40),c);
 
         c.gridwidth = 1;
         panel.add(new JLabel("Node TLS Key Directory"), c);
         c.gridwidth = GridBagConstraints.REMAINDER;
         File default_node_tls_key_path = new File(SystemUtil.getNodeDataDirectory(params), "node_tls_key");
-        panel.add(new PersistentComponentTextField(ice_leaf_prefs, "", "node_tls_key_path", default_node_tls_key_path.toString(),60),c);
+        panel.add(new PersistentComponentTextField(ice_leaf_prefs, "", "node_tls_key_path", default_node_tls_key_path.toString(),40),c);
 
         c.gridwidth = GridBagConstraints.REMAINDER;
         panel.add(new PersistentComponentCheckBox(ice_leaf_prefs, "Node transaction index", "node_tx_index", true), c);

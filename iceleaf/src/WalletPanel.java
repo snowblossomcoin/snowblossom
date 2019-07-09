@@ -23,6 +23,9 @@ import duckutil.ConfigCat;
 import duckutil.Config;
 import java.util.TreeMap;
 import java.io.File;
+import java.util.Collection;
+import java.util.LinkedList;
+import com.google.common.collect.ImmutableList;
 
 
 public class WalletPanel
@@ -36,6 +39,7 @@ public class WalletPanel
   protected WalletUpdateThread update_thread;
 
   protected TreeMap<String, SnowBlossomClient> client_map = new TreeMap<>();
+  protected LinkedList<PeriodicThread> wake_threads = new LinkedList<>(); 
 
 
   public WalletPanel(IceLeaf ice_leaf)
@@ -78,7 +82,10 @@ public class WalletPanel
 
   public void wake()
   {
-    update_thread.wake();
+    if (update_thread != null)
+    {
+      update_thread.wake();
+    }
   }
   
 
@@ -131,6 +138,10 @@ public class WalletPanel
 
         setWalletBox(sb.toString());
         setMessageBox("");
+        synchronized(wake_threads)
+        {
+          for(PeriodicThread p : wake_threads) p.wake();
+        }
 
       }
       catch(Throwable e)
@@ -140,6 +151,15 @@ public class WalletPanel
        
       }
 
+    }
+
+  }
+
+  public void addWakeThread(PeriodicThread p)
+  {
+    synchronized(wake_threads)
+    {
+      wake_threads.add(p);
     }
 
   }
@@ -161,6 +181,21 @@ public class WalletPanel
       );
   }
 
+  public Collection<String> getNames()
+  {
+    synchronized(client_map)
+    {
+      return ImmutableList.copyOf(client_map.keySet());
+    }
+  }
+
+  public SnowBlossomClient getWallet(String name)
+  {
+    synchronized(client_map)
+    {
+      return client_map.get(name);
+    }
+  }
 
   private SnowBlossomClient loadWallet(String name, File db_dir, File config_file)
     throws Exception
