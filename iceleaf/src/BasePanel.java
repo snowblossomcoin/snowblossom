@@ -42,6 +42,7 @@ import snowblossom.proto.WalletDatabase;
 import snowblossom.proto.BalanceInfo;
 import javax.swing.JScrollPane;
 import javax.swing.JComponent;
+import java.awt.Font;
 
 public abstract class BasePanel
 {
@@ -65,6 +66,9 @@ public abstract class BasePanel
     panel.setBackground(ice_leaf.getBGColor());
 		status_box = new JTextArea();
 		message_box = new JTextArea();
+
+    status_box.setFont(new Font("Hack", 0, 12));
+    message_box.setFont(new Font("Hack", 0, 12));
 
 	}
 

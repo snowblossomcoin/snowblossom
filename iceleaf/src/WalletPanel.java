@@ -30,7 +30,6 @@ import com.google.common.collect.ImmutableList;
 
 public class WalletPanel extends BasePanel
 {
-  protected JTextArea wallet_box;
   protected WalletUpdateThread update_thread;
 
   protected TreeMap<String, SnowBlossomClient> client_map = new TreeMap<>();
@@ -53,12 +52,6 @@ public class WalletPanel extends BasePanel
 			c.anchor = GridBagConstraints.NORTHWEST;
 
     c.gridwidth = GridBagConstraints.REMAINDER;
-    c.weightx=0.0;
-    c.weighty=0.0;
- 
-    wallet_box = new JTextArea();
-    wallet_box.setEditable(false);
-    panel.add(wallet_box,c);
 
     update_thread = new WalletUpdateThread();
     update_thread.start();
@@ -117,7 +110,7 @@ public class WalletPanel extends BasePanel
           if (db_dir.isDirectory())
           if (db_dir.list().length > 0)
           {
-            sb.append("Wallet: " + getWalletSummary(name, db_dir, config_file) +"\n");
+            sb.append("Wallet: " + getWalletSummary(name, db_dir, config_file) +"\n\n");
           }
         }
 
@@ -159,7 +152,7 @@ public class WalletPanel extends BasePanel
     AddressSpecHash hash  = client.getPurse().getUnusedAddress(false, false);
     String addr = AddressUtil.getAddressString(client.getParams().getAddressPrefix(), hash);
 
-    return String.format("%s - %s - %s", 
+    return String.format("%s - %s\n    %s", 
       name, 
       SnowBlossomClient.getBalanceInfoPrint(client.getBalance()),
       addr
@@ -208,12 +201,7 @@ public class WalletPanel extends BasePanel
 
   public void setWalletBox(String text)
   {
-    SwingUtilities.invokeLater(new Runnable() {
-      public void run()
-      {
-        wallet_box.setText(text);
-      }
-    });
+    setStatusBox(text);
   }
 
 
