@@ -42,6 +42,7 @@ import snowblossom.proto.WalletDatabase;
 import snowblossom.proto.BalanceInfo;
 import javax.swing.JScrollPane;
 import javax.swing.JComponent;
+import snowblossom.client.WalletUtil;
 
 public class AddressPanel extends BasePanel
 {
@@ -112,10 +113,11 @@ public class AddressPanel extends BasePanel
 
         WalletDatabase db = client.getPurse().getDB();
 
-        for(AddressSpec claim : db.getAddressesList())
+        for(AddressSpecHash hash : WalletUtil.getAddressesByAge(db, ice_leaf.getParams()))
         {
-          String address = AddressUtil.getAddressString(claim, ice_leaf.getParams());
-          AddressSpecHash hash = AddressUtil.getHashForSpec(claim);
+          
+
+          String address = hash.toAddressString(ice_leaf.getParams());
           boolean used = db.getUsedAddressesMap().containsKey(address);
           BalanceInfo bi = client.getBalance(hash);
           String bi_print = SnowBlossomClient.getBalanceInfoPrint(bi);

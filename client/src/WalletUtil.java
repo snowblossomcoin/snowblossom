@@ -289,6 +289,25 @@ public class WalletUtil
 
   }
 
+  public static Collection<AddressSpecHash> getAddressesByAge(WalletDatabase db, NetworkParams params)
+  {
+    TreeMultimap<Long, AddressSpecHash> age_map = TreeMultimap.create();
+    for(AddressSpec spec : db.getAddressesList())
+    {
+      String addr = AddressUtil.getAddressString(spec, params);
+      long tm = 0;
+      if (db.getAddressCreateTimeMap().containsKey(addr))
+      {
+        tm = db.getAddressCreateTimeMap().get(addr);
+      }
+      age_map.put(tm, AddressUtil.getHashForSpec(spec));
+
+    }
+
+    return age_map.values();
+
+  }
+
   public static AddressSpecHash getOldestUnused(WalletDatabase db, NetworkParams params)
   {
     TreeMap<String, Long> unused = new TreeMap<>();
