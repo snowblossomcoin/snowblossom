@@ -45,6 +45,7 @@ public class IceLeaf
   protected AddressPanel address_panel;
   protected NetworkParams params;
   protected SettingsPanel settings_panel;
+  protected IceLeaf ice_leaf;
 
   public Preferences getPrefs() { return ice_leaf_prefs;}
   public NetworkParams getParams() { return params; }
@@ -53,10 +54,13 @@ public class IceLeaf
   public SendPanel getSendPanel(){return send_panel;}
 
   public Color getBGColor(){return new Color(204,204,255);}
+  public Color getTextAreaBGColor(){return new Color(220,220,220);}
 
   private Font fixed_font;
+  private Font var_font;
 
   public Font getFixedFont(){return fixed_font;}
+  public Font getVariableFont(){return var_font;}
   
 
   public IceLeaf(NetworkParams params, Preferences prefs)
@@ -64,6 +68,7 @@ public class IceLeaf
   {
     this.params = params;
     this.ice_leaf_prefs = prefs;
+    this.ice_leaf = this;
     if (ice_leaf_prefs == null)
     {
       ice_leaf_prefs = Preferences.userNodeForPackage(this.getClass());
@@ -92,6 +97,8 @@ public class IceLeaf
       {
         fixed_font = Font.createFont(Font.TRUETYPE_FONT, 
           IceLeaf.class.getResourceAsStream("/iceleaf/resources/font/Hack-Regular.ttf"));
+        var_font = new Font("Verdana", 0, 12);
+
         //IceLeaf.setUIFont(new Font("Verdana", 0, 12));
         //UIManager.setLookAndFeel(new javax.swing.plaf.nimbus.NimbusLookAndFeel());
       }
@@ -158,6 +165,8 @@ public class IceLeaf
       tab_pane.add("Node Selection", node_select_panel.getPanel());
       tab_pane.add("Node", node_panel.getPanel());
       tab_pane.add("Settings", settings_panel.getPanel());
+
+      UIUtil.applyLook(f, ice_leaf);
       
     }
 

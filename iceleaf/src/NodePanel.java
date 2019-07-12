@@ -8,6 +8,7 @@ import javax.swing.JProgressBar;
 import javax.swing.SwingUtilities;
 import java.awt.GridBagLayout;
 import java.awt.GridBagConstraints;
+import java.awt.Dimension;
 import java.util.prefs.Preferences;
 
 import snowblossom.node.SnowBlossomNode;

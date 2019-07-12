@@ -67,11 +67,11 @@ public abstract class BasePanel
 		status_box = new JTextArea();
 		message_box = new JTextArea();
 
-    if (ice_leaf.getFixedFont() != null)
+    /*if (ice_leaf.getFixedFont() != null)
     {
       status_box.setFont(ice_leaf.getFixedFont().deriveFont(0,12));
       message_box.setFont(ice_leaf.getFixedFont().deriveFont(0,12));
-    }
+    }*/
 
 	}
 
