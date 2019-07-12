@@ -30,7 +30,7 @@ public class SettingsPanel extends BasePanel
 			panel.add(new JLabel("Wallet Directory"), c);
 			c.gridwidth = GridBagConstraints.REMAINDER;
 			File default_wallet_path = new File(SystemUtil.getImportantDataDirectory(params), "wallets");
-			panel.add(new PersistentComponentTextField(ice_leaf_prefs, "", "wallet_path", default_wallet_path.toString(),40),c);
+			panel.add(new PersistentComponentTextField(ice_leaf_prefs, "", "wallet_path", default_wallet_path.toString(),70),c);
 
 			c.gridwidth = GridBagConstraints.REMAINDER;
 			panel.add(new PersistentComponentCheckBox(ice_leaf_prefs, "Run local node", "node_run_local", false), c);
@@ -50,13 +50,13 @@ public class SettingsPanel extends BasePanel
 			panel.add(new JLabel("Node DB Directory"), c);
 			c.gridwidth = GridBagConstraints.REMAINDER;
 			File default_node_db_path = new File(SystemUtil.getNodeDataDirectory(params), "node_db");
-			panel.add(new PersistentComponentTextField(ice_leaf_prefs, "", "node_db_path", default_node_db_path.toString(),40),c);
+			panel.add(new PersistentComponentTextField(ice_leaf_prefs, "", "node_db_path", default_node_db_path.toString(),70),c);
 
 			c.gridwidth = 1;
 			panel.add(new JLabel("Node TLS Key Directory"), c);
 			c.gridwidth = GridBagConstraints.REMAINDER;
 			File default_node_tls_key_path = new File(SystemUtil.getNodeDataDirectory(params), "node_tls_key");
-			panel.add(new PersistentComponentTextField(ice_leaf_prefs, "", "node_tls_key_path", default_node_tls_key_path.toString(),40),c);
+			panel.add(new PersistentComponentTextField(ice_leaf_prefs, "", "node_tls_key_path", default_node_tls_key_path.toString(),70),c);
 
 			c.gridwidth = GridBagConstraints.REMAINDER;
 			panel.add(new PersistentComponentCheckBox(ice_leaf_prefs, "Node transaction index", "node_tx_index", true), c);
