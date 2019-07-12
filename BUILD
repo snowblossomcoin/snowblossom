@@ -78,7 +78,7 @@ java_binary(
 java_binary(
   name = "IceLeaf",
   main_class = "snowblossom.iceleaf.IceLeaf",
-  resources = glob(["iceleaf/resources/*.txt"]), 
+  resources = [ "//iceleaf:resources" ], 
   runtime_deps = [
     "//iceleaf:iceleaf",
   ]
@@ -87,6 +87,7 @@ java_binary(
 java_binary(
   name = "IceLeafTestnet",
   main_class = "snowblossom.iceleaf.IceLeafTestnet",
+  resources = [ "//iceleaf:resources" ], 
   runtime_deps = [
     "//iceleaf:iceleaf",
   ]

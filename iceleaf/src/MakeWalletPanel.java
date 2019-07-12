@@ -34,13 +34,8 @@ import snowblossom.client.WalletUtil;
 
 import snowblossom.proto.WalletDatabase;
 
-public class MakeWalletPanel
+public class MakeWalletPanel extends BasePanel
 {
-  private JPanel panel;
-	protected Preferences ice_leaf_prefs;
-  protected IceLeaf ice_leaf;
-
-  protected JTextArea message_box;
   protected JTextField name_field;
   protected JTextField import_field;
   protected JButton random_name_button;
@@ -52,14 +47,12 @@ public class MakeWalletPanel
 
   public MakeWalletPanel(IceLeaf ice_leaf)
   {
-    this.ice_leaf = ice_leaf;
-		ice_leaf_prefs = ice_leaf.getPrefs();
+    super(ice_leaf);
 	}
 
-	public void setup()
+  @Override
+	public void setupPanel()
 	{
-		GridBagLayout grid_bag = new GridBagLayout();
-		panel = new JPanel(grid_bag);
 
     GridBagConstraints c = new GridBagConstraints();
     c.weightx = 0.0;
@@ -104,30 +97,8 @@ public class MakeWalletPanel
     make_wallet_button.addActionListener( new MakeWalletAction());
     panel.add(make_wallet_button, c);
 
-    c.gridwidth = GridBagConstraints.REMAINDER;
-    c.weightx=1.0;
-    c.weighty=1.0;
- 
-    message_box = new JTextArea();
-    message_box.setEditable(false);
-    panel.add(message_box,c);
-
   }
 
-  public JPanel getPanel()
-  {
-		return panel;
-  }
-
-  public void setMessageBox(String text)
-  {
-    SwingUtilities.invokeLater(new Runnable() {
-      public void run()
-      {
-        message_box.setText(text);
-      }
-    });
-  }
   public class MakeWalletAction implements ActionListener
   {
     public void actionPerformed(ActionEvent e)

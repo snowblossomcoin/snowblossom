@@ -24,14 +24,8 @@ import snowblossom.proto.UserServiceGrpc.UserServiceStub;
 import snowblossom.client.StubHolder;
 
 
-public class NodeSelectionPanel
+public class NodeSelectionPanel extends BasePanel
 {
-  private JPanel panel;
-	protected Preferences ice_leaf_prefs;
-  protected IceLeaf ice_leaf;
-
-  protected JTextArea message_box;
-  protected JTextArea status_box;
   protected PersistentComponentTextArea list_box;
 
   private PersistentComponentCheckBox box_local;
@@ -43,15 +37,13 @@ public class NodeSelectionPanel
 
   public NodeSelectionPanel(IceLeaf ice_leaf)
   {
-    this.ice_leaf = ice_leaf;
-		ice_leaf_prefs = ice_leaf.getPrefs();
+    super(ice_leaf);
     stub_holder = new StubHolder();
 	}
 
-	public void setup()
+  @Override
+	public void setupPanel()
 	{
-		GridBagLayout grid_bag = new GridBagLayout();
-		panel = new JPanel(grid_bag);
 
 			GridBagConstraints c = new GridBagConstraints();
 			c.weightx = 0.0;
@@ -75,8 +67,6 @@ public class NodeSelectionPanel
     c.gridwidth = 1;
     panel.add(box_list, c);
 
-    c.weightx=1.0;
-    c.weighty=1.0;
 
     StringBuilder sb_list_default = new StringBuilder();
     for(String uri : ice_leaf.getParams().getSeedUris())
@@ -87,23 +77,11 @@ public class NodeSelectionPanel
 
     list_box = new PersistentComponentTextArea(ice_leaf_prefs, "", "select_node_list_box",sb_list_default.toString());
     list_box.setRows(8);
-    list_box.setColumns(120);
+    list_box.setColumns(40);
 
 
     c.gridwidth = GridBagConstraints.REMAINDER;
     panel.add(list_box, c);
-
-    status_box = new JTextArea();
-    status_box.setEditable(false);
-    //status_box.setColumns(100);
-    //status_box.setLineWrap(true);
-    panel.add(status_box, c);
- 
-    message_box = new JTextArea();
-    message_box.setEditable(false);
-    //message_box.setColumns(100);
-    //message_box.setLineWrap(true);
-    panel.add(message_box,c);
 
     setStatusBox("Startup"); 
     ChannelMaintThread cmt = new ChannelMaintThread();
@@ -114,31 +92,6 @@ public class NodeSelectionPanel
     
     cmt.start();
 
-  }
-
-  public JPanel getPanel()
-  {
-		return panel;
-  }
-
-  public void setMessageBox(String text)
-  {
-    SwingUtilities.invokeLater(new Runnable() {
-      public void run()
-      {
-        message_box.setText(text);
-      }
-    });
-  }
-
-  public void setStatusBox(String text)
-  {
-    SwingUtilities.invokeLater(new Runnable() {
-      public void run()
-      {
-        status_box.setText(text);
-      }
-    });
   }
 
   public ManagedChannel getManagedChannel(){return channel;}
@@ -184,7 +137,7 @@ public class NodeSelectionPanel
           msg.append(uri);
           msg.append('\n');
         }
-        setMessageBox(msg.toString());
+        setMessageBox(msg.toString().trim());
 
         long t1 = System.currentTimeMillis();
 

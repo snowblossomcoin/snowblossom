@@ -28,14 +28,9 @@ import java.util.LinkedList;
 import com.google.common.collect.ImmutableList;
 
 
-public class WalletPanel
+public class WalletPanel extends BasePanel
 {
-  private JPanel panel;
-	protected Preferences ice_leaf_prefs;
-  protected IceLeaf ice_leaf;
-
   protected JTextArea wallet_box;
-  protected JTextArea message_box;
   protected WalletUpdateThread update_thread;
 
   protected TreeMap<String, SnowBlossomClient> client_map = new TreeMap<>();
@@ -44,14 +39,12 @@ public class WalletPanel
 
   public WalletPanel(IceLeaf ice_leaf)
   {
-    this.ice_leaf = ice_leaf;
-		ice_leaf_prefs = ice_leaf.getPrefs();
+    super(ice_leaf);
 	}
 
-	public void setup()
+  @Override
+	public void setupPanel()
 	{
-		GridBagLayout grid_bag = new GridBagLayout();
-		panel = new JPanel(grid_bag);
 
 			GridBagConstraints c = new GridBagConstraints();
 			c.weightx = 0.0;
@@ -60,24 +53,16 @@ public class WalletPanel
 			c.anchor = GridBagConstraints.NORTHWEST;
 
     c.gridwidth = GridBagConstraints.REMAINDER;
-    c.weightx=1.0;
-    c.weighty=1.0;
+    c.weightx=0.0;
+    c.weighty=0.0;
  
     wallet_box = new JTextArea();
     wallet_box.setEditable(false);
     panel.add(wallet_box,c);
 
-    message_box = new JTextArea();
-    message_box.setEditable(false);
-    panel.add(message_box,c);
     update_thread = new WalletUpdateThread();
     update_thread.start();
 
-  }
-
-  public JPanel getPanel()
-  {
-		return panel;
   }
 
   public void wake()
@@ -136,7 +121,7 @@ public class WalletPanel
           }
         }
 
-        setWalletBox(sb.toString());
+        setWalletBox(sb.toString().trim());
         setMessageBox("");
         synchronized(wake_threads)
         {
@@ -231,14 +216,5 @@ public class WalletPanel
     });
   }
 
-  public void setMessageBox(String text)
-  {
-    SwingUtilities.invokeLater(new Runnable() {
-      public void run()
-      {
-        message_box.setText(text);
-      }
-    });
-  }
 
 }

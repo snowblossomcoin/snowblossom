@@ -19,29 +19,20 @@ import duckutil.PeriodicThread;
 import duckutil.ConfigMem;
 import java.util.TreeMap;
 
-public class NodePanel
+public class NodePanel extends BasePanel
 {
-  private JPanel panel;
-	protected Preferences ice_leaf_prefs;
   protected SnowBlossomNode node;
-
   protected JProgressBar progress;
-  protected JTextArea message_box;
-  protected JTextArea status_box;
   protected boolean start_attempt;
-  protected IceLeaf ice_leaf;
 
   public NodePanel(IceLeaf ice_leaf)
   {
-    this.ice_leaf = ice_leaf;
-		ice_leaf_prefs = ice_leaf.getPrefs();
+    super(ice_leaf);
 	}
 
-	public void setup()
+  @Override
+	public void setupPanel()
 	{
-		GridBagLayout grid_bag = new GridBagLayout();
-		panel = new JPanel(grid_bag);
-
 			GridBagConstraints c = new GridBagConstraints();
 			c.weightx = 0.0;
 			c.weighty= 0.0;
@@ -64,27 +55,6 @@ public class NodePanel
     progress = new JProgressBar(0,0);
     panel.add(progress, c);
 
-    c.weightx=1.0;
-    c.weighty=1.0;
-    status_box = new JTextArea();
-    status_box.setEditable(false);
-    //status_box.setColumns(100);
-    //status_box.setLineWrap(true);
-    panel.add(status_box, c);
- 
-    message_box = new JTextArea();
-    message_box.setEditable(false);
-    //message_box.setColumns(100);
-    //message_box.setLineWrap(true);
-    panel.add(message_box,c);
-
-    
-
-  }
-
-  public JPanel getPanel()
-  {
-		return panel;
   }
 
   public class NodeUpdateThread extends PeriodicThread
@@ -116,7 +86,7 @@ public class NodePanel
         sb.append("Peers: " + node.getPeerage().getConnectedPeerCount() +"\n");
         sb.append("Node TLS key: " + AddressUtil.getAddressString(Globals.NODE_ADDRESS_STRING, node.getTlsAddress()) +"\n");
 
-        setStatusBox(sb.toString());
+        setStatusBox(sb.toString().trim());
 
       }
       catch(Exception e)
@@ -143,26 +113,6 @@ public class NodePanel
   }
 
 
-
-  public void setMessageBox(String text)
-  {
-    SwingUtilities.invokeLater(new Runnable() {
-      public void run()
-      {
-        message_box.setText(text);
-      }
-    });
-  }
-
-  public void setStatusBox(String text)
-  {
-    SwingUtilities.invokeLater(new Runnable() {
-      public void run()
-      {
-        status_box.setText(text);
-      }
-    });
-  }
 
 
   private void startNode()

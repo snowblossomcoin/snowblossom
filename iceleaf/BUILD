@@ -11,3 +11,9 @@ java_library(
     "@duckutil//:duckutil_lib",
     ],
 )
+
+filegroup(
+  name = "resources",
+  srcs = glob(["resources/*"]),
+)
+
