@@ -1,34 +1,31 @@
 package snowblossom.client;
 
 import com.google.common.collect.ImmutableList;
-import duckutil.Config;
-import duckutil.AtomicFileOutputStream;
-import snowblossom.lib.AddressUtil;
-import snowblossom.lib.KeyUtil;
-import snowblossom.lib.NetworkParams;
-import snowblossom.lib.AddressSpecHash;
-import snowblossom.lib.ValidationException;
-import snowblossom.lib.SignatureUtil;
-import snowblossom.lib.ChainHash;
-import snowblossom.proto.*;
-
+import com.google.common.collect.TreeMultimap;
 import com.google.protobuf.ByteString;
-
-
-import java.util.logging.Logger;
-import java.util.logging.Level;
+import duckutil.AtomicFileOutputStream;
+import duckutil.Config;
 import java.io.File;
 import java.io.FileInputStream;
-import java.util.HashSet;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Random;
-import java.util.LinkedList;
-import snowblossom.lib.HexUtil;
-import com.google.common.collect.TreeMultimap;
-import java.util.TreeMap;
-import java.util.Map;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Random;
+import java.util.TreeMap;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import snowblossom.lib.AddressSpecHash;
+import snowblossom.lib.AddressUtil;
+import snowblossom.lib.ChainHash;
+import snowblossom.lib.HexUtil;
+import snowblossom.lib.KeyUtil;
+import snowblossom.lib.NetworkParams;
+import snowblossom.lib.SignatureUtil;
+import snowblossom.lib.ValidationException;
+import snowblossom.proto.*;
 
 public class WalletUtil
 {

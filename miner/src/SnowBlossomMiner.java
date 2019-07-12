@@ -3,35 +3,30 @@ package snowblossom.miner;
 import com.google.protobuf.ByteString;
 import duckutil.Config;
 import duckutil.ConfigFile;
+import duckutil.MultiAtomicLong;
 import duckutil.TimeRecord;
 import duckutil.TimeRecordAuto;
-import duckutil.MultiAtomicLong;
 import io.grpc.ManagedChannel;
-import io.grpc.ManagedChannelBuilder;
 import io.grpc.stub.StreamObserver;
-import snowblossom.lib.*;
-import snowblossom.proto.*;
-import snowblossom.proto.UserServiceGrpc.UserServiceBlockingStub;
-import snowblossom.proto.UserServiceGrpc.UserServiceStub;
-import snowblossom.lib.trie.HashUtils;
-import snowblossom.client.WalletUtil;
-import snowblossom.client.StubUtil;
-
-
 import java.io.File;
-import java.io.FileInputStream;
 import java.math.BigInteger;
-import java.nio.ByteBuffer;
 import java.nio.Buffer;
+import java.nio.ByteBuffer;
 import java.security.MessageDigest;
 import java.text.DecimalFormat;
 import java.util.Collections;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Random;
-import java.util.concurrent.atomic.AtomicLong;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.List;
+import snowblossom.client.StubUtil;
+import snowblossom.client.WalletUtil;
+import snowblossom.lib.*;
+import snowblossom.lib.trie.HashUtils;
+import snowblossom.proto.*;
+import snowblossom.proto.UserServiceGrpc.UserServiceBlockingStub;
+import snowblossom.proto.UserServiceGrpc.UserServiceStub;
 
 public class SnowBlossomMiner
 {

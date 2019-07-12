@@ -2,8 +2,8 @@ package snowblossom.lib;
 
 import com.google.common.collect.ImmutableList;
 import java.util.LinkedList;
-import java.util.Random;
 import java.util.List;
+import java.util.Random;
 
 public class NonsenseWordList
 {

@@ -1,21 +1,19 @@
 package snowblossom.node;
 
+import com.google.common.collect.ImmutableList;
 import com.google.protobuf.ByteString;
-import snowblossom.proto.*;
-import snowblossom.lib.*;
-import snowblossom.lib.trie.HashUtils;
-
 import java.math.BigInteger;
 import java.security.MessageDigest;
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.TreeMap;
-import java.util.ArrayList;
-import org.junit.Assert;
 import java.util.Random;
-
-import com.google.common.collect.ImmutableList;
+import java.util.TreeMap;
+import org.junit.Assert;
+import snowblossom.lib.*;
+import snowblossom.lib.trie.HashUtils;
+import snowblossom.proto.*;
 
 /**
  * This class creates new blocks for miners to work on

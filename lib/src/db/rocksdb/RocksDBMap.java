@@ -1,17 +1,16 @@
 package snowblossom.lib.db.rocksdb;
 
 import com.google.protobuf.ByteString;
-import snowblossom.lib.db.DBMap;
-import org.rocksdb.RocksDB;
-import org.rocksdb.RocksDBException;
-import org.rocksdb.WriteBatch;
-import org.rocksdb.RocksIterator;
-
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.SortedMap;
-import java.util.List;
-import java.util.LinkedList;
-import java.util.HashMap;
+import org.rocksdb.RocksDB;
+import org.rocksdb.RocksDBException;
+import org.rocksdb.RocksIterator;
+import org.rocksdb.WriteBatch;
+import snowblossom.lib.db.DBMap;
 import snowblossom.lib.db.DBTooManyResultsException;
 
 public class RocksDBMap extends DBMap

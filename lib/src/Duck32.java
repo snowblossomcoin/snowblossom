@@ -2,12 +2,10 @@ package snowblossom.lib;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.protobuf.ByteString;
-import org.junit.Assert;
-
 import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.util.TreeMap;
-
+import org.junit.Assert;
 
 /**
  * Kinda like bech32, but with code I can actually understand.

@@ -1,40 +1,28 @@
 package snowblossom.client;
 
-import com.google.protobuf.ByteString;
+import com.google.protobuf.util.JsonFormat;
+import duckutil.AtomicFileOutputStream;
 import duckutil.Config;
 import duckutil.ConfigFile;
-import io.grpc.ManagedChannel;
-import io.grpc.ManagedChannelBuilder;
-import snowblossom.lib.*;
-import org.junit.Assert;
-import snowblossom.proto.*;
-import snowblossom.util.proto.*;
-import snowblossom.proto.UserServiceGrpc.UserServiceBlockingStub;
-import java.util.concurrent.atomic.AtomicLong;
-import snowblossom.proto.UserServiceGrpc.UserServiceStub;
-import snowblossom.trie.proto.TrieNode;
-
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.Callable;
 import duckutil.TaskMaster;
-import java.io.PrintStream;
 import duckutil.jsonrpc.JsonRpcServer;
-import snowblossom.lib.trie.HashUtils;
-
+import io.grpc.ManagedChannel;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.Reader;
 import java.io.InputStreamReader;
-import duckutil.AtomicFileOutputStream;
-import java.nio.file.FileSystems;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
+import java.io.PrintStream;
+import java.io.Reader;
 import java.text.DecimalFormat;
 import java.util.*;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import com.google.protobuf.util.JsonFormat;
+import snowblossom.lib.*;
+import snowblossom.proto.*;
+import snowblossom.proto.UserServiceGrpc.UserServiceBlockingStub;
+import snowblossom.util.proto.*;
 
 public class SnowBlossomClient
 {

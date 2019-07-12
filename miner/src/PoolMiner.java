@@ -3,34 +3,24 @@ package snowblossom.miner;
 import com.google.protobuf.ByteString;
 import duckutil.Config;
 import duckutil.ConfigFile;
+import duckutil.MultiAtomicLong;
+import duckutil.RateReporter;
 import duckutil.TimeRecord;
 import duckutil.TimeRecordAuto;
-import duckutil.RateReporter;
-import io.grpc.ManagedChannel;
-import io.grpc.ManagedChannelBuilder;
-import io.grpc.stub.StreamObserver;
-import snowblossom.lib.*;
-import snowblossom.proto.*;
-import snowblossom.mining.proto.*;
-import snowblossom.mining.proto.MiningPoolServiceGrpc.MiningPoolServiceStub;
-import snowblossom.mining.proto.MiningPoolServiceGrpc.MiningPoolServiceBlockingStub;
-import snowblossom.lib.trie.HashUtils;
-import snowblossom.client.WalletUtil;
-
 import java.io.File;
-import java.io.FileInputStream;
 import java.math.BigInteger;
-import java.nio.ByteBuffer;
 import java.nio.Buffer;
+import java.nio.ByteBuffer;
 import java.security.MessageDigest;
 import java.text.DecimalFormat;
-import java.util.Collections;
-import java.util.LinkedList;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicLong;
-import duckutil.MultiAtomicLong;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import snowblossom.lib.*;
+import snowblossom.lib.trie.HashUtils;
+import snowblossom.mining.proto.*;
+import snowblossom.proto.*;
 
 public class PoolMiner implements PoolClientOperator
 {

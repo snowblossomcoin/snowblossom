@@ -2,11 +2,6 @@ package snowblossom.lib;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.protobuf.ByteString;
-import org.junit.Assert;
-import snowblossom.proto.AddressSpec;
-import snowblossom.proto.SigSpec;
-import snowblossom.proto.WalletKeyPair;
-
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.PrintStream;
@@ -14,6 +9,10 @@ import java.security.MessageDigest;
 import java.security.PublicKey;
 import java.util.List;
 import java.util.Set;
+import org.junit.Assert;
+import snowblossom.proto.AddressSpec;
+import snowblossom.proto.SigSpec;
+import snowblossom.proto.WalletKeyPair;
 
 public class AddressUtil
 {

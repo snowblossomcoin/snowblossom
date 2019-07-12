@@ -1,21 +1,15 @@
 package snowblossom.miner;
 
-import java.security.MessageDigest;
-
+import com.google.protobuf.ByteString;
 import duckutil.TimeRecord;
 import duckutil.TimeRecordAuto;
 import java.nio.ByteBuffer;
-
-import com.google.protobuf.ByteString;
-
-import org.junit.Assert;
-
-import snowblossom.lib.*;
-import snowblossom.proto.*;
-
+import java.security.MessageDigest;
 import java.util.LinkedList;
 import java.util.List;
-
+import org.junit.Assert;
+import snowblossom.lib.*;
+import snowblossom.proto.*;
 
 public class ProofGen
 {

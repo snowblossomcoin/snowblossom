@@ -2,16 +2,14 @@ package snowblossom.node;
 
 import io.grpc.ManagedChannel;
 import io.grpc.stub.StreamObserver;
-import snowblossom.proto.*;
-import snowblossom.lib.*;
-
+import java.util.List;
 import java.util.Random;
 import java.util.TreeMap;
-import java.util.List;
-import java.util.HashSet;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import snowblossom.lib.*;
+import snowblossom.proto.*;
 
 /**
  * This class exists to present a single view of a peer regardless

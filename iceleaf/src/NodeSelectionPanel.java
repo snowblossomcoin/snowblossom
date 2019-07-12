@@ -1,28 +1,17 @@
 package snowblossom.iceleaf;
 
-import javax.swing.JFrame;
-import javax.swing.JPanel;
-import javax.swing.JLabel;
-import javax.swing.JTextArea;
-import javax.swing.SwingUtilities;
-import java.awt.GridBagLayout;
-import java.awt.GridBagConstraints;
-import java.util.prefs.Preferences;
-
-import snowblossom.iceleaf.components.PersistentComponentTextArea;
-import snowblossom.iceleaf.components.PersistentComponentCheckBox;
-import java.util.TreeSet;
 import duckutil.PeriodicThread;
-import java.util.Scanner;
-import snowblossom.client.StubUtil;
-import javax.swing.event.ChangeListener;
-import javax.swing.event.ChangeEvent;
 import io.grpc.ManagedChannel;
-
-import snowblossom.proto.UserServiceGrpc.UserServiceBlockingStub;
-import snowblossom.proto.UserServiceGrpc.UserServiceStub;
+import java.awt.GridBagConstraints;
+import java.util.Scanner;
+import java.util.TreeSet;
+import javax.swing.JLabel;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 import snowblossom.client.StubHolder;
-
+import snowblossom.client.StubUtil;
+import snowblossom.iceleaf.components.PersistentComponentCheckBox;
+import snowblossom.iceleaf.components.PersistentComponentTextArea;
 
 public class NodeSelectionPanel extends BasePanel
 {

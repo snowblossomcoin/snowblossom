@@ -1,8 +1,7 @@
 package snowblossom.miner;
 
-import snowblossom.proto.*;
 import snowblossom.mining.proto.*;
-
+import snowblossom.proto.*;
 
 public interface PoolClientFace
 {

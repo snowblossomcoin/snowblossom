@@ -1,23 +1,22 @@
 package snowblossom.node;
 
 import com.google.protobuf.ByteString;
+import duckutil.LRUCache;
 import duckutil.TimeRecord;
 import duckutil.TimeRecordAuto;
-import duckutil.LRUCache;
+import java.io.FileOutputStream;
+import java.io.PrintStream;
+import java.math.BigInteger;
+import java.text.DecimalFormat;
+import java.util.HashMap;
+import java.util.logging.Logger;
 import snowblossom.lib.*;
 import snowblossom.lib.db.DB;
+import snowblossom.lib.trie.HashUtils;
 import snowblossom.proto.Block;
 import snowblossom.proto.BlockHeader;
 import snowblossom.proto.BlockSummary;
 import snowblossom.proto.Transaction;
-import snowblossom.lib.trie.HashUtils;
-
-import java.io.FileOutputStream;
-import java.io.PrintStream;
-import java.math.BigInteger;
-import java.util.HashMap;
-import java.util.logging.Logger;
-import java.text.DecimalFormat;
 
 /**
  * This class takes in new blocks, validates them and stores them in the db.

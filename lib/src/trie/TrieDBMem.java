@@ -1,10 +1,8 @@
 package snowblossom.lib.trie;
 
 import com.google.protobuf.ByteString;
-import snowblossom.trie.proto.TrieNode;
-
 import java.util.HashMap;
-
+import snowblossom.trie.proto.TrieNode;
 
 public class TrieDBMem extends TrieDB
 {

@@ -2,19 +2,16 @@ package snowblossom.lib;
 
 import com.google.common.collect.ImmutableList;
 import com.google.protobuf.ByteString;
-import snowblossom.proto.*;
-
+import com.google.protobuf.CodedInputStream;
+import com.google.protobuf.CodedOutputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.security.KeyPair;
 import java.security.MessageDigest;
 import java.security.Signature;
 import java.text.DecimalFormat;
 import java.util.*;
-
-import com.google.protobuf.CodedInputStream;
-import com.google.protobuf.CodedOutputStream;
-import java.io.ByteArrayOutputStream;
-
+import snowblossom.proto.*;
 
 public class TransactionUtil
 {

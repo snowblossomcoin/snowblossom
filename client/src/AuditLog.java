@@ -1,13 +1,12 @@
 package snowblossom.client;
 
+import com.google.protobuf.ByteString;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedList;
 import snowblossom.lib.*;
 import snowblossom.proto.*;
 import snowblossom.util.proto.*;
-import com.google.protobuf.ByteString;
-
-import java.util.LinkedList;
-import java.util.HashMap;
-import java.util.HashSet;
 
 public class AuditLog
 {

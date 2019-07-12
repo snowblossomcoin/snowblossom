@@ -1,28 +1,20 @@
 package snowblossom.client;
 
+import com.google.common.collect.ImmutableSet;
+import com.google.protobuf.ByteString;
+import com.google.protobuf.util.JsonFormat;
 import com.thetransactioncompany.jsonrpc2.JSONRPC2Request;
-import com.thetransactioncompany.jsonrpc2.JSONRPC2Response;
-import com.thetransactioncompany.jsonrpc2.server.RequestHandler;
 import com.thetransactioncompany.jsonrpc2.server.MessageContext;
-
-import net.minidev.json.JSONObject;
-import net.minidev.json.JSONArray;
-
-import snowblossom.proto.*;
-import snowblossom.util.proto.*;
-import snowblossom.lib.*;
-import duckutil.jsonrpc.JsonRpcServer;
 import duckutil.jsonrpc.JsonRequestHandler;
-import java.util.Map;
-import java.util.TreeMap;
+import duckutil.jsonrpc.JsonRpcServer;
 import java.util.LinkedList;
 import java.util.List;
-import com.google.protobuf.util.JsonFormat;
-import net.minidev.json.parser.JSONParser;
-import com.google.protobuf.ByteString;
-
-import com.google.common.collect.ImmutableSet;
-
+import java.util.Map;
+import net.minidev.json.JSONArray;
+import net.minidev.json.JSONObject;
+import snowblossom.lib.*;
+import snowblossom.proto.*;
+import snowblossom.util.proto.*;
 
 public class RpcServerHandler
 {

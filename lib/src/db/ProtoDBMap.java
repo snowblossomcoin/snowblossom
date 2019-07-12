@@ -5,16 +5,13 @@ import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.Message;
 import com.google.protobuf.Parser;
-import snowblossom.lib.trie.ByteStringComparator;
-import snowblossom.lib.HexUtil;
-
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
-import java.util.List;
-import java.util.LinkedList;
 import java.util.logging.Logger;
-import java.util.logging.Level;
-
+import snowblossom.lib.HexUtil;
+import snowblossom.lib.trie.ByteStringComparator;
 
 public class ProtoDBMap<M extends Message>
 {

@@ -4,24 +4,20 @@ import com.google.common.collect.ImmutableMap;
 import com.google.protobuf.ByteString;
 import duckutil.TimeRecord;
 import duckutil.TimeRecordAuto;
-import org.junit.Assert;
-import snowblossom.lib.ChannelUtil;
-import snowblossom.lib.Globals;
-import snowblossom.lib.SnowMerkle;
-import snowblossom.proto.SnowPowProof;
-
 import java.io.File;
 import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.security.MessageDigest;
-import java.text.NumberFormat;
-import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.TreeMap;
 import java.util.logging.Logger;
-
+import org.junit.Assert;
+import snowblossom.lib.ChannelUtil;
+import snowblossom.lib.Globals;
+import snowblossom.lib.SnowMerkle;
+import snowblossom.proto.SnowPowProof;
 
 public class SnowMerkleProof
 {

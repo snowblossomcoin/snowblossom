@@ -1,14 +1,13 @@
 package snowblossom.lib.db.lobstack;
 
 import com.google.protobuf.ByteString;
-import snowblossom.lib.db.DBMap;
-import lobstack.Lobstack;
-import snowblossom.lib.HexUtil;
-
 import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.SortedMap;
+import lobstack.Lobstack;
+import snowblossom.lib.HexUtil;
+import snowblossom.lib.db.DBMap;
 
 public class LobstackDBMap extends DBMap
 {

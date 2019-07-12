@@ -4,13 +4,12 @@ import com.google.protobuf.ByteString;
 import com.google.protobuf.CodedInputStream;
 import duckutil.TimeRecord;
 import duckutil.TimeRecordAuto;
-import org.junit.Assert;
-import snowblossom.proto.*;
-import snowblossom.lib.trie.HashedTrie;
-
 import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.util.*;
+import org.junit.Assert;
+import snowblossom.lib.trie.HashedTrie;
+import snowblossom.proto.*;
 
 public class Validation
 {

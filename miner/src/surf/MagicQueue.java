@@ -1,12 +1,10 @@
 package snowblossom.miner.surf;
 
-import java.util.concurrent.LinkedBlockingQueue;
 import java.nio.ByteBuffer;
-import java.util.Map;
 import java.util.HashMap;
-import java.util.TreeMap;
 import java.util.LinkedList;
-
+import java.util.Map;
+import java.util.TreeMap;
 
 /**
  * Data optimization based on guesses about how NUMA works

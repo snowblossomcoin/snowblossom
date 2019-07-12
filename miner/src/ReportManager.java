@@ -1,16 +1,14 @@
 package snowblossom.miner;
 
-import java.util.TreeMap;
-import duckutil.RateReporter;
-import java.text.DecimalFormat;
 import duckutil.AtomicFileOutputStream;
+import duckutil.RateReporter;
 import java.io.PrintStream;
-import java.io.File;
-import java.util.logging.Logger;
-import java.util.logging.Level;
+import java.text.DecimalFormat;
 import java.util.Map;
+import java.util.TreeMap;
 import java.util.TreeSet;
-
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import net.minidev.json.JSONObject;
 
 public class ReportManager

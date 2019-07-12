@@ -1,51 +1,42 @@
 package snowblossom.lib.tls;
 
-import java.security.KeyPair;
-import java.security.KeyStore;
-import java.security.cert.X509Certificate;
-import java.security.cert.Certificate;
-import java.security.PrivateKey;
-import org.bouncycastle.cert.X509v3CertificateBuilder;
-
-import org.bouncycastle.asn1.x500.X500Name;
-import java.math.BigInteger;
-import org.bouncycastle.asn1.x509.SubjectPublicKeyInfo;
-import java.util.Date;
-import org.bouncycastle.asn1.ASN1Sequence;
-
-import org.bouncycastle.operator.DefaultDigestAlgorithmIdentifierFinder;
-import org.bouncycastle.operator.DefaultSignatureAlgorithmIdentifierFinder;
-import org.bouncycastle.asn1.x509.AlgorithmIdentifier;
-import org.bouncycastle.operator.bc.BcECContentSignerBuilder;
-import org.bouncycastle.operator.bc.BcRSAContentSignerBuilder;
-import org.bouncycastle.crypto.util.PrivateKeyFactory;
-import org.bouncycastle.crypto.params.AsymmetricKeyParameter;
-import org.bouncycastle.operator.ContentSigner;
-import org.bouncycastle.cert.X509CertificateHolder;
-import org.bouncycastle.cert.jcajce.JcaX509CertificateConverter;
-import java.io.ByteArrayOutputStream;
-import java.io.OutputStreamWriter;
-
 import com.google.protobuf.ByteString;
-import org.bouncycastle.util.io.pem.PemObject;
-import org.bouncycastle.util.io.pem.PemWriter;
-import org.bouncycastle.asn1.x509.GeneralNames;
-import org.bouncycastle.asn1.x509.GeneralName;
-import org.bouncycastle.asn1.ASN1ObjectIdentifier;
 import io.grpc.netty.GrpcSslContexts;
 import io.netty.handler.ssl.SslContext;
-
-import snowblossom.proto.WalletKeyPair;
-import snowblossom.proto.WalletDatabase;
-import snowblossom.proto.AddressSpec;
-import snowblossom.lib.KeyUtil;
+import java.io.ByteArrayOutputStream;
+import java.io.OutputStreamWriter;
+import java.math.BigInteger;
+import java.security.KeyPair;
+import java.security.PrivateKey;
+import java.security.cert.Certificate;
+import java.security.cert.X509Certificate;
+import java.util.Date;
+import org.bouncycastle.asn1.ASN1ObjectIdentifier;
+import org.bouncycastle.asn1.ASN1Sequence;
+import org.bouncycastle.asn1.x500.X500Name;
+import org.bouncycastle.asn1.x509.AlgorithmIdentifier;
+import org.bouncycastle.asn1.x509.SubjectPublicKeyInfo;
+import org.bouncycastle.cert.X509CertificateHolder;
+import org.bouncycastle.cert.X509v3CertificateBuilder;
+import org.bouncycastle.cert.jcajce.JcaX509CertificateConverter;
+import org.bouncycastle.crypto.params.AsymmetricKeyParameter;
+import org.bouncycastle.crypto.util.PrivateKeyFactory;
+import org.bouncycastle.operator.ContentSigner;
+import org.bouncycastle.operator.DefaultDigestAlgorithmIdentifierFinder;
+import org.bouncycastle.operator.DefaultSignatureAlgorithmIdentifierFinder;
+import org.bouncycastle.operator.bc.BcECContentSignerBuilder;
+import org.bouncycastle.operator.bc.BcRSAContentSignerBuilder;
+import org.bouncycastle.util.io.pem.PemObject;
+import org.bouncycastle.util.io.pem.PemWriter;
 import snowblossom.lib.AddressSpecHash;
 import snowblossom.lib.AddressUtil;
 import snowblossom.lib.Globals;
+import snowblossom.lib.KeyUtil;
+import snowblossom.proto.AddressSpec;
 import snowblossom.proto.SignedMessage;
 import snowblossom.proto.SignedMessagePayload;
-
-import java.util.Random;
+import snowblossom.proto.WalletDatabase;
+import snowblossom.proto.WalletKeyPair;
 
 public class CertGen
 {

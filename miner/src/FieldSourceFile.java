@@ -2,30 +2,19 @@ package snowblossom.miner;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.protobuf.ByteString;
-import duckutil.TimeRecord;
-import duckutil.TimeRecordAuto;
-import org.junit.Assert;
-import snowblossom.lib.*;
-import snowblossom.proto.SnowPowProof;
-
+import duckutil.Config;
 import java.io.File;
 import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
-import java.security.MessageDigest;
-import java.text.NumberFormat;
-import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.List;
-import java.util.TreeMap;
-import java.util.Set;
 import java.util.Map;
+import java.util.Set;
+import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.logging.Logger;
-
 import org.junit.Assert;
-import duckutil.Config;
+import snowblossom.lib.*;
 
 public class FieldSourceFile extends FieldSource
 {

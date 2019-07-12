@@ -1,12 +1,10 @@
 package snowblossom.miner;
 
-import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.List;
 import duckutil.MultiAtomicLong;
-
-import snowblossom.lib.Globals;
+import java.util.List;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.Semaphore;
+import snowblossom.lib.Globals;
 
 public class FaQueue
 {

@@ -1,9 +1,9 @@
 package snowblossom.iceleaf.components;
+import java.awt.Dimension;
 import java.util.prefs.Preferences;
 import javax.swing.JTextArea;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
-import java.awt.Dimension;
 
 public class PersistentComponentTextArea extends JTextArea implements DocumentListener
 {

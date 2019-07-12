@@ -1,30 +1,20 @@
 package snowblossom.iceleaf;
 
+import java.awt.Color;
+import java.awt.Font;
+import java.io.InputStream;
+import java.util.prefs.Preferences;
+import javax.imageio.ImageIO;
 import javax.swing.JFrame;
 import javax.swing.JTabbedPane;
-import javax.swing.JPanel;
-import javax.swing.JLabel;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
-import java.awt.GridBagLayout;
-import java.awt.GridBagConstraints;
-
+import javax.swing.plaf.FontUIResource;
+import snowblossom.client.StubHolder;
+import snowblossom.iceleaf.components.*;
 import snowblossom.lib.Globals;
 import snowblossom.lib.NetworkParams;
 import snowblossom.lib.NetworkParamsProd;
-import java.util.prefs.Preferences;
-import snowblossom.iceleaf.components.*;
-import java.io.File;
-import java.util.LinkedList;
-
-
-import snowblossom.client.StubHolder;
-import java.awt.Font;
-import javax.swing.plaf.FontUIResource;
-import javax.imageio.ImageIO;
-import java.io.InputStream;
-import java.awt.Color;
-
 
 public class IceLeaf
 {

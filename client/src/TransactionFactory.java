@@ -1,22 +1,19 @@
 package snowblossom.client;
 
 
-import snowblossom.util.proto.*;
-import snowblossom.proto.*;
-import snowblossom.lib.*;
-
+import com.google.common.collect.TreeMultimap;
+import com.google.protobuf.ByteString;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.Collections;
-import java.util.List;
-import java.util.TreeMap;
-import java.util.Random;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.text.DecimalFormat;
-
-import com.google.protobuf.ByteString;
-import com.google.common.collect.TreeMultimap;
+import java.util.List;
+import java.util.Random;
+import java.util.TreeMap;
+import snowblossom.lib.*;
+import snowblossom.proto.*;
+import snowblossom.util.proto.*;
 
 public class TransactionFactory
 {

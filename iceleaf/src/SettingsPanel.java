@@ -1,11 +1,10 @@
 package snowblossom.iceleaf;
 
-import javax.swing.JLabel;
 import java.awt.GridBagConstraints;
-import snowblossom.iceleaf.components.*;
 import java.io.File;
+import javax.swing.JLabel;
+import snowblossom.iceleaf.components.*;
 import snowblossom.lib.NetworkParams;
-
 
 public class SettingsPanel extends BasePanel
 {

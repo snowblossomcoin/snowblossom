@@ -1,15 +1,12 @@
 package snowblossom.miner;
 
-import snowblossom.proto.*;
-import snowblossom.mining.proto.*;
-
-import java.util.ArrayList;
 import duckutil.Config;
 import duckutil.LRUCache;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
 import duckutil.PeriodicThread;
+import java.util.ArrayList;
+import java.util.logging.Logger;
+import snowblossom.mining.proto.*;
+import snowblossom.proto.*;
 
 public class PoolClientFailover implements PoolClientFace
 {

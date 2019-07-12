@@ -1,33 +1,20 @@
 package snowblossom.miner;
 
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableList;
-import java.util.Set;
-import java.util.Map;
-import java.nio.channels.FileChannel;
-
-import java.nio.ByteBuffer;
-import snowblossom.lib.Globals;
-import snowblossom.lib.SnowMerkle;
-import java.util.logging.Logger;
-import duckutil.Config;
-
-import java.util.TreeSet;
-import java.util.List;
-import java.util.ArrayList;
+import com.google.common.collect.ImmutableSet;
 import com.google.protobuf.ByteString;
-
-import org.junit.Assert;
-
-import snowblossom.mining.proto.*;
-
+import duckutil.Config;
+import duckutil.MultiAtomicLong;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
-
-import duckutil.MultiAtomicLong;
-
-import snowblossom.mining.proto.SharedMiningServiceGrpc.SharedMiningServiceBlockingStub;
+import java.nio.ByteBuffer;
 import java.text.DecimalFormat;
+import java.util.List;
+import java.util.TreeSet;
+import org.junit.Assert;
+import snowblossom.lib.Globals;
+import snowblossom.mining.proto.*;
+import snowblossom.mining.proto.SharedMiningServiceGrpc.SharedMiningServiceBlockingStub;
 
 public class FieldSourceRemote extends FieldSource implements BatchSource
 {

@@ -1,31 +1,30 @@
 package snowblossom.client;
 
-import org.bitcoinj.crypto.MnemonicCode;
-
-import java.io.ByteArrayInputStream;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Scanner;
-import java.util.Random;
 import com.google.common.collect.ImmutableList;
 import com.google.protobuf.ByteString;
-import snowblossom.lib.ValidationException;
-import snowblossom.proto.*;
-import org.bitcoinj.crypto.HDKeyDerivation;
-import org.bitcoinj.crypto.DeterministicKey;
-import org.bitcoinj.crypto.DeterministicHierarchy;
-import org.bitcoinj.crypto.ChildNumber;
-import snowblossom.lib.NetworkParams;
-import snowblossom.lib.SignatureUtil;
-import snowblossom.lib.KeyUtil;
-import snowblossom.lib.AddressSpecHash;
-import snowblossom.lib.AddressUtil;
+import java.io.ByteArrayInputStream;
 import java.math.BigInteger;
 import java.security.KeyFactory;
-import snowblossom.lib.Globals;
-import java.security.spec.ECPrivateKeySpec;
 import java.security.PrivateKey;
 import java.security.SecureRandom;
+import java.security.spec.ECPrivateKeySpec;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Random;
+import java.util.Scanner;
+import org.bitcoinj.crypto.ChildNumber;
+import org.bitcoinj.crypto.DeterministicHierarchy;
+import org.bitcoinj.crypto.DeterministicKey;
+import org.bitcoinj.crypto.HDKeyDerivation;
+import org.bitcoinj.crypto.MnemonicCode;
+import snowblossom.lib.AddressSpecHash;
+import snowblossom.lib.AddressUtil;
+import snowblossom.lib.Globals;
+import snowblossom.lib.KeyUtil;
+import snowblossom.lib.NetworkParams;
+import snowblossom.lib.SignatureUtil;
+import snowblossom.lib.ValidationException;
+import snowblossom.proto.*;
 
 public class SeedUtil
 {

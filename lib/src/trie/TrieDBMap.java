@@ -2,12 +2,10 @@ package snowblossom.lib.trie;
 
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
-import snowblossom.lib.db.DBMap;
-import snowblossom.trie.proto.TrieNode;
-
 import java.util.Map;
 import java.util.TreeMap;
-
+import snowblossom.lib.db.DBMap;
+import snowblossom.trie.proto.TrieNode;
 
 public class TrieDBMap extends TrieDB
 {

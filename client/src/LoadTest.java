@@ -1,14 +1,12 @@
 package snowblossom.client;
 
-import java.util.LinkedList;
-import snowblossom.proto.*;
-import snowblossom.lib.*;
-import snowblossom.util.proto.*;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import java.util.SplittableRandom;
 import java.util.Collections;
-
+import java.util.LinkedList;
+import java.util.SplittableRandom;
+import java.util.logging.Logger;
+import snowblossom.lib.*;
+import snowblossom.proto.*;
+import snowblossom.util.proto.*;
 
 public class LoadTest
 {

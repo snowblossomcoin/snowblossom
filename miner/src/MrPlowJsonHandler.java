@@ -1,22 +1,17 @@
 package snowblossom.miner;
 
-import com.thetransactioncompany.jsonrpc2.JSONRPC2Request;
-import com.thetransactioncompany.jsonrpc2.JSONRPC2Response;
-import com.thetransactioncompany.jsonrpc2.server.RequestHandler;
-import com.thetransactioncompany.jsonrpc2.server.MessageContext;
-
-import net.minidev.json.JSONObject;
-
-import snowblossom.proto.*;
-import snowblossom.lib.*;
-import duckutil.jsonrpc.JsonRpcServer;
-import duckutil.jsonrpc.JsonRequestHandler;
-
 import com.google.protobuf.ByteString;
-import java.util.List;
-import java.util.TreeMap;
-import java.util.Map;
+import com.thetransactioncompany.jsonrpc2.JSONRPC2Request;
+import com.thetransactioncompany.jsonrpc2.server.MessageContext;
+import duckutil.jsonrpc.JsonRequestHandler;
+import duckutil.jsonrpc.JsonRpcServer;
 import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
+import net.minidev.json.JSONObject;
+import snowblossom.lib.*;
+import snowblossom.proto.*;
 
 public class MrPlowJsonHandler
 {

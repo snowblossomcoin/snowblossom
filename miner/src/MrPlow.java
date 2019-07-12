@@ -4,31 +4,27 @@ import com.google.protobuf.ByteString;
 import duckutil.Config;
 import duckutil.ConfigFile;
 import duckutil.TimeRecord;
+import duckutil.jsonrpc.JsonRpcServer;
 import io.grpc.ManagedChannel;
-import io.grpc.ManagedChannelBuilder;
-import io.grpc.stub.StreamObserver;
-import snowblossom.lib.*;
-import snowblossom.proto.*;
-import snowblossom.mining.proto.*;
-import snowblossom.proto.UserServiceGrpc.UserServiceBlockingStub;
-import snowblossom.proto.UserServiceGrpc.UserServiceStub;
-import snowblossom.lib.db.DB;
-import snowblossom.lib.db.lobstack.LobstackDB;
-import snowblossom.lib.db.rocksdb.JRocksDB;
-import snowblossom.client.StubUtil;
-
 import io.grpc.Server;
 import io.grpc.ServerBuilder;
-
-
+import io.grpc.stub.StreamObserver;
 import java.math.BigInteger;
 import java.text.DecimalFormat;
+import java.util.List;
+import java.util.TreeMap;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.TreeMap;
-import java.util.List;
-import duckutil.jsonrpc.JsonRpcServer;
+import snowblossom.client.StubUtil;
+import snowblossom.lib.*;
+import snowblossom.lib.db.DB;
+import snowblossom.lib.db.lobstack.LobstackDB;
+import snowblossom.lib.db.rocksdb.JRocksDB;
+import snowblossom.mining.proto.*;
+import snowblossom.proto.*;
+import snowblossom.proto.UserServiceGrpc.UserServiceBlockingStub;
+import snowblossom.proto.UserServiceGrpc.UserServiceStub;
 
 public class MrPlow
 {

@@ -1,8 +1,8 @@
 package snowblossom.iceleaf;
-import javax.swing.JComboBox;
-import java.util.TreeSet;
-import java.util.Collection;
 import duckutil.PeriodicThread;
+import java.util.Collection;
+import java.util.TreeSet;
+import javax.swing.JComboBox;
 import javax.swing.SwingUtilities;
 
 public class WalletComboBox extends JComboBox<String>

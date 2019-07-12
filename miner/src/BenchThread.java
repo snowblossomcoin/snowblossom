@@ -1,9 +1,8 @@
 package snowblossom.miner;
 
-import java.util.Random;
-import java.util.ArrayList;
 import java.nio.ByteBuffer;
-
+import java.util.ArrayList;
+import java.util.Random;
 import snowblossom.lib.SnowMerkle;
 
 public class BenchThread extends Thread

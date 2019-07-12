@@ -2,13 +2,12 @@ package snowblossom.lib.trie;
 
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
-import org.junit.Assert;
-import org.rocksdb.*;
-import snowblossom.trie.proto.TrieNode;
-
 import java.io.File;
 import java.util.Map;
 import java.util.TreeMap;
+import org.junit.Assert;
+import org.rocksdb.*;
+import snowblossom.trie.proto.TrieNode;
 
 public class TrieDBRocks extends TrieDB
 {

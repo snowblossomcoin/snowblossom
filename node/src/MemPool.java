@@ -5,22 +5,19 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.TreeMultimap;
 import com.google.protobuf.ByteString;
+import duckutil.PeriodicThread;
 import duckutil.TimeRecord;
+import java.util.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.junit.Assert;
 import snowblossom.lib.*;
+import snowblossom.lib.trie.HashedTrie;
 import snowblossom.proto.BlockHeader;
 import snowblossom.proto.Transaction;
 import snowblossom.proto.TransactionInner;
 import snowblossom.proto.TransactionInput;
 import snowblossom.proto.TransactionOutput;
-import snowblossom.lib.trie.HashedTrie;
-
-import java.util.*;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import duckutil.PeriodicThread;
-
-
 
 /**
  * This class has the potential to be the most complex here.  

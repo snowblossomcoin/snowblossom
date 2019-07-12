@@ -1,15 +1,12 @@
 package snowblossom.miner;
 
-import snowblossom.mining.proto.WorkUnit;
-import snowblossom.lib.*;
-import java.nio.ByteBuffer;
-import java.util.Random;
-import java.security.MessageDigest;
-
-import org.junit.Assert;
-
 import com.google.common.annotations.VisibleForTesting;
-
+import java.nio.ByteBuffer;
+import java.security.MessageDigest;
+import java.util.Random;
+import org.junit.Assert;
+import snowblossom.lib.*;
+import snowblossom.mining.proto.WorkUnit;
 
 public class PartialWork implements Comparable<PartialWork>
 {

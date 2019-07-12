@@ -1,10 +1,10 @@
 package snowblossom.miner.surf;
 
-import java.util.Random;
-import java.nio.ByteBuffer;
 import duckutil.FusionInitiator;
-import java.util.concurrent.Semaphore;
+import java.nio.ByteBuffer;
 import java.text.DecimalFormat;
+import java.util.Random;
+import java.util.concurrent.Semaphore;
 
 public class MagicQueueLoadTest
 {

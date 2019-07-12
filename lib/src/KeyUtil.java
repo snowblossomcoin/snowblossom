@@ -1,20 +1,19 @@
 package snowblossom.lib;
 
 import com.google.protobuf.ByteString;
-import org.bouncycastle.asn1.*;
-import org.junit.Assert;
-import snowblossom.proto.WalletKeyPair;
-
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.security.*;
+import java.security.interfaces.ECPrivateKey;
 import java.security.spec.ECGenParameterSpec;
 import java.security.spec.ECParameterSpec;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.RSAKeyGenParameterSpec;
 import java.security.spec.X509EncodedKeySpec;
-import java.security.interfaces.ECPrivateKey;
 import java.util.ArrayList;
+import org.bouncycastle.asn1.*;
+import org.junit.Assert;
+import snowblossom.proto.WalletKeyPair;
 
 public class KeyUtil
 {

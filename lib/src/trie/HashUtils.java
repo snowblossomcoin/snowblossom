@@ -2,16 +2,13 @@ package snowblossom.lib.trie;
 
 import com.google.common.collect.ImmutableList;
 import com.google.protobuf.ByteString;
-import org.apache.commons.codec.binary.Hex;
-
 import java.security.MessageDigest;
-import java.util.List;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.TreeMap;
 import snowblossom.lib.HexUtil;
-
-import snowblossom.trie.proto.TrieNode;
 import snowblossom.trie.proto.ChildEntry;
+import snowblossom.trie.proto.TrieNode;
 
 public class HashUtils
 {

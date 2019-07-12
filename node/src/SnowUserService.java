@@ -2,14 +2,12 @@ package snowblossom.node;
 
 import com.google.protobuf.ByteString;
 import io.grpc.stub.StreamObserver;
-import snowblossom.proto.*;
-import snowblossom.lib.*;
-import snowblossom.trie.proto.TrieNode;
-
 import java.util.LinkedList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
+import snowblossom.lib.*;
+import snowblossom.proto.*;
+import snowblossom.trie.proto.TrieNode;
 
 public class SnowUserService extends UserServiceGrpc.UserServiceImplBase
 {

@@ -1,20 +1,19 @@
 package snowblossom.client;
 
-import java.util.List;
-import java.util.LinkedList;
-import java.util.Map;
-import java.util.HashMap;
-import snowblossom.lib.*;
-import snowblossom.proto.*;
-import snowblossom.trie.proto.*;
-import snowblossom.lib.trie.HashUtils;
-import snowblossom.proto.UserServiceGrpc.UserServiceBlockingStub;
+import com.google.common.collect.ImmutableList;
 import com.google.protobuf.ByteString;
-
+import duckutil.LRUCache;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import com.google.common.collect.ImmutableList;
-import duckutil.LRUCache;
+import snowblossom.lib.*;
+import snowblossom.lib.trie.HashUtils;
+import snowblossom.proto.*;
+import snowblossom.proto.UserServiceGrpc.UserServiceBlockingStub;
+import snowblossom.trie.proto.*;
 
 public class GetUTXOUtil
 {

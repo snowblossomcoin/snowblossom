@@ -1,19 +1,17 @@
 package snowblossom.lib.db.rocksdb;
 
 import duckutil.Config;
-import snowblossom.lib.db.DBProvider;
-import snowblossom.lib.db.DBMap;
-import snowblossom.lib.db.DBMapMutationSet;
+import java.io.File;
+import java.util.TreeMap;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.rocksdb.FlushOptions;
 import org.rocksdb.Options;
 import org.rocksdb.RocksDB;
 import org.rocksdb.WriteOptions;
-
-import java.io.File;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
-import java.util.TreeMap;
+import snowblossom.lib.db.DBMap;
+import snowblossom.lib.db.DBMapMutationSet;
+import snowblossom.lib.db.DBProvider;
 
 public class JRocksDB extends DBProvider
 {

@@ -1,7 +1,6 @@
 package snowblossom.iceleaf;
-import snowblossom.lib.Globals;
-
 import java.util.prefs.Preferences;
+import snowblossom.lib.Globals;
 import snowblossom.lib.NetworkParamsTestnet;
 
 public class IceLeafTestnet

@@ -1,21 +1,12 @@
 package snowblossom.lib;
 
-import com.thetransactioncompany.jsonrpc2.JSONRPC2Request;
-import com.thetransactioncompany.jsonrpc2.JSONRPC2Response;
-import com.thetransactioncompany.jsonrpc2.server.RequestHandler;
-import com.thetransactioncompany.jsonrpc2.server.MessageContext;
-
-import net.minidev.json.JSONObject;
-import net.minidev.json.JSONArray;
-
-import duckutil.jsonrpc.JsonRpcServer;
-import duckutil.jsonrpc.JsonRequestHandler;
-import java.util.Map;
-
 import com.google.protobuf.util.JsonFormat;
+import com.thetransactioncompany.jsonrpc2.JSONRPC2Request;
+import com.thetransactioncompany.jsonrpc2.server.MessageContext;
+import duckutil.jsonrpc.JsonRequestHandler;
+import duckutil.jsonrpc.JsonRpcServer;
+import net.minidev.json.JSONObject;
 import net.minidev.json.parser.JSONParser;
-
-
 import snowblossom.proto.*;
 
 public class RpcUtil

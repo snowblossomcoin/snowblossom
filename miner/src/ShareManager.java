@@ -1,15 +1,11 @@
 package snowblossom.miner;
 
-import java.util.TreeMap;
-import java.util.LinkedList;
-import java.math.BigInteger;
-import java.util.Map;
-import com.google.protobuf.ByteString;
 import com.google.common.collect.ImmutableMap;
-
-import snowblossom.mining.proto.ShareEntry;
+import java.util.LinkedList;
+import java.util.Map;
+import java.util.TreeMap;
 import snowblossom.mining.proto.PPLNSState;
-
+import snowblossom.mining.proto.ShareEntry;
 
 public class ShareManager
 {

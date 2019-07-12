@@ -1,12 +1,12 @@
 package snowblossom.node;
-import snowblossom.lib.db.DB;
-import snowblossom.proto.*;
-import com.google.protobuf.ByteString;
 import com.google.common.collect.TreeMultimap;
-import snowblossom.lib.db.DBMapMutationSet;
-import snowblossom.lib.*;
+import com.google.protobuf.ByteString;
 import java.nio.ByteBuffer;
 import java.util.List;
+import snowblossom.lib.*;
+import snowblossom.lib.db.DB;
+import snowblossom.lib.db.DBMapMutationSet;
+import snowblossom.proto.*;
 
 public class AddressHistoryUtil
 {

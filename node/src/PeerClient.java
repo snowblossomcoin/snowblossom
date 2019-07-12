@@ -2,19 +2,16 @@ package snowblossom.node;
 
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
+import io.grpc.netty.GrpcSslContexts;
+import io.grpc.netty.NettyChannelBuilder;
 import io.grpc.stub.StreamObserver;
+import io.netty.handler.ssl.SslContext;
+import snowblossom.lib.*;
+import snowblossom.lib.tls.SnowTrustManagerFactorySpi;
 import snowblossom.proto.PeerInfo;
 import snowblossom.proto.PeerMessage;
-import snowblossom.proto.PeerServiceGrpc;
 import snowblossom.proto.PeerServiceGrpc.PeerServiceStub;
-import snowblossom.lib.*;
-
-import io.netty.handler.ssl.SslContext;
-import io.grpc.netty.GrpcSslContexts;
-import snowblossom.lib.tls.SnowTrustManagerFactorySpi;
-import io.grpc.netty.NettyChannelBuilder;
-
-
+import snowblossom.proto.PeerServiceGrpc;
 
 public class PeerClient
 {

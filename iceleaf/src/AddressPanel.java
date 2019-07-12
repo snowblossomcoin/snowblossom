@@ -1,48 +1,18 @@
 package snowblossom.iceleaf;
 
-import javax.swing.JFrame;
-import javax.swing.JPanel;
-import javax.swing.JLabel;
-import javax.swing.JTextArea;
-import javax.swing.JTextField;
-import javax.swing.JProgressBar;
-import javax.swing.SwingUtilities;
-import java.awt.GridBagLayout;
-import java.awt.GridBagConstraints;
-import java.util.prefs.Preferences;
-import javax.swing.JComboBox;
-import javax.swing.ButtonGroup;
-import javax.swing.JRadioButton;
-import javax.swing.JButton;
-import java.awt.event.ActionListener;
-import java.awt.event.ActionEvent;
-
-import snowblossom.client.SnowBlossomClient;
-import snowblossom.lib.Globals;
-import snowblossom.lib.AddressSpecHash;
-import snowblossom.lib.AddressUtil;
-
 import duckutil.PeriodicThread;
-import java.util.TreeMap;
-import java.util.TreeSet;
-import java.util.Collection;
-
-import snowblossom.proto.SubmitReply;
-import snowblossom.proto.Transaction;
-import snowblossom.proto.TransactionInner;
-import snowblossom.proto.TransactionOutput;
-import snowblossom.util.proto.*;
-import snowblossom.client.TransactionFactory;
-import snowblossom.lib.TransactionUtil;
-import snowblossom.lib.ChainHash;
-import java.io.PrintStream;
+import java.awt.GridBagConstraints;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.io.ByteArrayOutputStream;
-import snowblossom.proto.AddressSpec;
-import snowblossom.proto.WalletDatabase;
-import snowblossom.proto.BalanceInfo;
-import javax.swing.JScrollPane;
-import javax.swing.JComponent;
+import java.io.PrintStream;
+import javax.swing.JLabel;
+import snowblossom.client.SnowBlossomClient;
 import snowblossom.client.WalletUtil;
+import snowblossom.lib.AddressSpecHash;
+import snowblossom.proto.BalanceInfo;
+import snowblossom.proto.WalletDatabase;
+import snowblossom.util.proto.*;
 
 public class AddressPanel extends BasePanel
 {

@@ -2,14 +2,9 @@
 package snowblossom.miner;
 
 import com.google.common.collect.ImmutableSet;
-import java.util.Set;
+import java.nio.ByteBuffer;
 import java.util.List;
 import java.util.TreeSet;
-
-import java.nio.ByteBuffer;
-import snowblossom.lib.Globals;
-import snowblossom.lib.SnowMerkle;
-import java.util.logging.Logger;
 
 public class FieldSourceComposit extends FieldSource
 {

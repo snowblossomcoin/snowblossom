@@ -1,9 +1,8 @@
 package snowblossom.client;
 
+import io.grpc.ManagedChannel;
 import snowblossom.proto.UserServiceGrpc.UserServiceBlockingStub;
 import snowblossom.proto.UserServiceGrpc.UserServiceStub;
-import io.grpc.ManagedChannel;
-
 
 /**
  * Holds a reference to a ManagedChannel and stubs.

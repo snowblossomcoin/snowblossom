@@ -1,32 +1,19 @@
 package snowblossom.iceleaf;
 
-import javax.swing.JFrame;
-import javax.swing.JPanel;
-import javax.swing.JLabel;
-import javax.swing.JTextArea;
-import javax.swing.JProgressBar;
-import javax.swing.SwingUtilities;
-import java.awt.GridBagLayout;
-import java.awt.GridBagConstraints;
-import java.util.prefs.Preferences;
-
-import snowblossom.client.SnowBlossomClient;
-import snowblossom.node.SnowBlossomNode;
-import snowblossom.lib.Globals;
-import snowblossom.lib.AddressSpecHash;
-import snowblossom.lib.AddressUtil;
-
-import duckutil.PeriodicThread;
-import duckutil.ConfigMem;
-import duckutil.ConfigFile;
-import duckutil.ConfigCat;
+import com.google.common.collect.ImmutableList;
 import duckutil.Config;
-import java.util.TreeMap;
+import duckutil.ConfigCat;
+import duckutil.ConfigFile;
+import duckutil.ConfigMem;
+import duckutil.PeriodicThread;
+import java.awt.GridBagConstraints;
 import java.io.File;
 import java.util.Collection;
 import java.util.LinkedList;
-import com.google.common.collect.ImmutableList;
-
+import java.util.TreeMap;
+import snowblossom.client.SnowBlossomClient;
+import snowblossom.lib.AddressSpecHash;
+import snowblossom.lib.AddressUtil;
 
 public class WalletPanel extends BasePanel
 {

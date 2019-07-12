@@ -1,12 +1,10 @@
 package snowblossom.lib;
 
 import com.google.protobuf.ByteString;
-import org.junit.Assert;
-
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
+import org.junit.Assert;
 import snowblossom.proto.*;
-
 
 public class BlockchainUtil
 {

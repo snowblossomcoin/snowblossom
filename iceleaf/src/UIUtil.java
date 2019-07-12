@@ -2,10 +2,10 @@ package snowblossom.iceleaf;
 
 import java.awt.Component;
 import java.awt.Container;
-import javax.swing.JTextArea;
-import javax.swing.JTextField;
 import javax.swing.JLabel;
 import javax.swing.JTabbedPane;
+import javax.swing.JTextArea;
+import javax.swing.JTextField;
 
 public class UIUtil
 {

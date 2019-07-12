@@ -1,10 +1,9 @@
 package snowblossom.miner;
 
-import snowblossom.proto.Block;
-
 import java.nio.ByteBuffer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import snowblossom.proto.Block;
 
 /**
  * The idea is that this reads the current snow field

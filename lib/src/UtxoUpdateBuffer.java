@@ -1,15 +1,13 @@
 package snowblossom.lib;
 
 import com.google.protobuf.ByteString;
-import snowblossom.proto.TransactionInput;
-import snowblossom.proto.TransactionOutput;
-import snowblossom.proto.Transaction;
-import snowblossom.lib.trie.HashUtils;
-import snowblossom.lib.trie.HashedTrie;
-
 import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.List;
+import snowblossom.lib.trie.HashUtils;
+import snowblossom.lib.trie.HashedTrie;
+import snowblossom.proto.TransactionInput;
+import snowblossom.proto.TransactionOutput;
 
 public class UtxoUpdateBuffer
 {

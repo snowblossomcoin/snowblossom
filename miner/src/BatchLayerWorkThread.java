@@ -1,25 +1,14 @@
 package snowblossom.miner;
 
-import java.util.Random;
-import java.security.MessageDigest;
-import java.nio.ByteBuffer;
-import snowblossom.lib.*;
-import snowblossom.proto.*;
-import snowblossom.mining.proto.*;
-import duckutil.TimeRecord;
-import duckutil.TimeRecordAuto;
-
-import java.util.Queue;
-import org.junit.Assert;
-
-import java.util.LinkedList;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
 import com.google.protobuf.ByteString;
-
+import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.logging.Logger;
+import org.junit.Assert;
+import snowblossom.lib.*;
+import snowblossom.mining.proto.*;
+import snowblossom.proto.*;
 
 public class BatchLayerWorkThread extends LayerWorkThread
 {

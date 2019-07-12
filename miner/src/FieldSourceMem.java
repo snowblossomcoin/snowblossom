@@ -2,17 +2,14 @@
 package snowblossom.miner;
 
 import com.google.common.collect.ImmutableSet;
-import java.util.Set;
+import duckutil.TaskMaster;
+import java.nio.ByteBuffer;
 import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.Callable;
-
-import java.nio.ByteBuffer;
+import java.util.concurrent.ExecutorService;
 import snowblossom.lib.Globals;
 import snowblossom.lib.SnowMerkle;
-import duckutil.TaskMaster;
-import java.util.concurrent.ExecutorService;
-
 
 public class FieldSourceMem extends FieldSource
 {

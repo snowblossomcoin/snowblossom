@@ -1,17 +1,13 @@
 package snowblossom.miner;
 
-import snowblossom.mining.proto.*;
-import snowblossom.lib.*;
-
 import com.google.protobuf.ByteString;
-import java.nio.ByteBuffer;
-
 import io.grpc.stub.StreamObserver;
-import java.util.concurrent.atomic.AtomicLong;
+import java.nio.ByteBuffer;
 import java.text.DecimalFormat;
-import java.util.logging.Level;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.logging.Logger;
-
+import snowblossom.lib.*;
+import snowblossom.mining.proto.*;
 
 public class Stubo extends SharedMiningServiceGrpc.SharedMiningServiceImplBase
 {

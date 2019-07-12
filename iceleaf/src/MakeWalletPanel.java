@@ -1,37 +1,22 @@
 package snowblossom.iceleaf;
 
-import java.io.File;
-import javax.swing.JFrame;
-import javax.swing.JPanel;
-import javax.swing.JLabel;
-import javax.swing.JTextArea;
-import javax.swing.JTextField;
-import javax.swing.JProgressBar;
-import javax.swing.SwingUtilities;
-import javax.swing.JButton;
-import java.awt.GridBagLayout;
-import java.awt.GridBagConstraints;
-import java.util.prefs.Preferences;
-
-import snowblossom.node.SnowBlossomNode;
-import snowblossom.lib.Globals;
-import snowblossom.lib.AddressSpecHash;
-import snowblossom.lib.AddressUtil;
-
-import duckutil.PeriodicThread;
 import duckutil.ConfigMem;
-import java.util.TreeMap;
-import java.awt.event.ActionListener;
+import java.awt.GridBagConstraints;
 import java.awt.event.ActionEvent;
-import snowblossom.lib.NonsenseWordList;
-import snowblossom.client.SeedWordList;
-import javax.swing.ButtonGroup;
-import javax.swing.JRadioButton;
-import java.io.PrintStream;
+import java.awt.event.ActionListener;
+import java.io.File;
 import java.io.FileOutputStream;
+import java.io.PrintStream;
+import java.util.TreeMap;
+import javax.swing.ButtonGroup;
+import javax.swing.JButton;
+import javax.swing.JLabel;
+import javax.swing.JRadioButton;
+import javax.swing.JTextField;
 import snowblossom.client.SeedUtil;
+import snowblossom.client.SeedWordList;
 import snowblossom.client.WalletUtil;
-
+import snowblossom.lib.NonsenseWordList;
 import snowblossom.proto.WalletDatabase;
 
 public class MakeWalletPanel extends BasePanel

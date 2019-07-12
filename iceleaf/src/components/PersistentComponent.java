@@ -1,7 +1,6 @@
 package snowblossom.iceleaf.components;
 import java.util.prefs.Preferences;
 
-
 public abstract class PersistentComponent
 {
   protected Preferences prefs;

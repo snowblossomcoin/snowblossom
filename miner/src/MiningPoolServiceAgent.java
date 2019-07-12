@@ -1,23 +1,17 @@
 package snowblossom.miner;
 
-import snowblossom.proto.*;
-import snowblossom.mining.proto.*;
-import snowblossom.lib.*;
+import com.google.protobuf.ByteString;
 import io.grpc.stub.StreamObserver;
-
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import java.util.Random;
-import java.util.ArrayList;
-import java.util.LinkedList;
+import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.nio.ByteBuffer;
-
-import com.google.protobuf.ByteString;
-
+import java.util.LinkedList;
+import java.util.Random;
 import java.util.concurrent.atomic.AtomicInteger;
-
+import java.util.logging.Logger;
+import snowblossom.lib.*;
+import snowblossom.mining.proto.*;
+import snowblossom.proto.*;
 
 public class MiningPoolServiceAgent extends MiningPoolServiceGrpc.MiningPoolServiceImplBase
 {

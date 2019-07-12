@@ -2,18 +2,17 @@ package snowblossom.lib;
 
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
+import java.nio.ByteBuffer;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Random;
 import org.junit.Assert;
 import snowblossom.proto.Transaction;
 import snowblossom.proto.TransactionInner;
 import snowblossom.proto.TransactionInput;
 import snowblossom.proto.TransactionOutput;
-import snowblossom.util.proto.UTXOEntry;
 import snowblossom.trie.proto.TrieNode;
-
-import java.nio.ByteBuffer;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Random;
+import snowblossom.util.proto.UTXOEntry;
 
 /**
  * Simple class that acts as an easy way to make a transaction input

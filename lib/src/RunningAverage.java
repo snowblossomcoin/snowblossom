@@ -3,7 +3,6 @@ package snowblossom.lib;
 import java.math.BigInteger;
 import java.util.LinkedList;
 
-
 public class RunningAverage
 {
   private LinkedList<Long> values;

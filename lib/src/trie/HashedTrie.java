@@ -4,11 +4,10 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.MultimapBuilder;
 import com.google.common.collect.SetMultimap;
 import com.google.protobuf.ByteString;
+import java.util.*;
 import org.junit.Assert;
 import snowblossom.trie.proto.ChildEntry;
 import snowblossom.trie.proto.TrieNode;
-
-import java.util.*;
 
 /**
  * So this is a trie with the following properties:

@@ -1,18 +1,17 @@
 package snowblossom.lib;
 
 import com.google.protobuf.ByteString;
-import org.junit.Assert;
-import snowblossom.proto.BlockHeader;
-import snowblossom.proto.BlockSummary;
-import snowblossom.lib.trie.ByteStringComparator;
-import snowblossom.lib.trie.HashUtils;
-
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.security.MessageDigest;
 import java.text.DecimalFormat;
-import java.util.logging.Logger;
 import java.util.logging.Level;
+import java.util.logging.Logger;
+import org.junit.Assert;
+import snowblossom.lib.trie.ByteStringComparator;
+import snowblossom.lib.trie.HashUtils;
+import snowblossom.proto.BlockHeader;
+import snowblossom.proto.BlockSummary;
 
 public class PowUtil
 {

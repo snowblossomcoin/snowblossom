@@ -1,8 +1,8 @@
 package snowblossom.iceleaf.components;
 import java.util.prefs.Preferences;
 import javax.swing.JCheckBox;
-import javax.swing.event.ChangeListener;
 import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 
 public class PersistentComponentCheckBox extends JCheckBox implements ChangeListener
 {

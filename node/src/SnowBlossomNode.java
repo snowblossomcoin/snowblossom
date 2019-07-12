@@ -1,30 +1,27 @@
 package snowblossom.node;
 
+import com.google.common.collect.ImmutableList;
 import duckutil.Config;
 import duckutil.ConfigFile;
 import duckutil.ConfigMem;
 import io.grpc.Server;
 import io.grpc.ServerBuilder;
-import snowblossom.lib.db.DB;
-import snowblossom.lib.trie.HashedTrie;
-import snowblossom.lib.trie.TrieDBMap;
-import snowblossom.lib.db.lobstack.LobstackDB;
-import snowblossom.lib.db.rocksdb.JRocksDB;
-import snowblossom.lib.*;
-import snowblossom.proto.WalletDatabase;
-import snowblossom.lib.tls.CertGen;
-
-import java.util.TreeMap;
-import java.util.LinkedList;
+import io.grpc.netty.NettyServerBuilder;
 import io.netty.handler.ssl.SslContext;
-
+import java.io.File;
+import java.util.LinkedList;
+import java.util.TreeMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.io.File;
-import io.grpc.netty.NettyServerBuilder;
-
 import snowblossom.client.WalletUtil;
-import com.google.common.collect.ImmutableList;
+import snowblossom.lib.*;
+import snowblossom.lib.db.DB;
+import snowblossom.lib.db.lobstack.LobstackDB;
+import snowblossom.lib.db.rocksdb.JRocksDB;
+import snowblossom.lib.tls.CertGen;
+import snowblossom.lib.trie.HashedTrie;
+import snowblossom.lib.trie.TrieDBMap;
+import snowblossom.proto.WalletDatabase;
 
 public class SnowBlossomNode
 {

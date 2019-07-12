@@ -1,13 +1,12 @@
 package snowblossom.lib.db;
 
+import com.google.common.collect.TreeMultimap;
 import com.google.protobuf.ByteString;
 import duckutil.TimeRecord;
-
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.List;
-import com.google.common.collect.TreeMultimap;
 import snowblossom.lib.trie.ByteStringComparator;
 
 /**

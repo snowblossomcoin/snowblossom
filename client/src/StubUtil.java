@@ -1,32 +1,27 @@
 package snowblossom.client;
+import duckutil.Config;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
-import java.net.URI;
-import java.io.ByteArrayInputStream;
-import java.util.Properties;
-import java.util.List;
-import java.util.Collection;
-
-import io.netty.handler.ssl.SslContext;
 import io.grpc.netty.GrpcSslContexts;
-import snowblossom.lib.tls.SnowTrustManagerFactorySpi;
 import io.grpc.netty.NettyChannelBuilder;
-
 import io.grpc.stub.StreamObserver;
-
-import duckutil.Config;
-import snowblossom.lib.NetworkParams;
+import io.netty.handler.ssl.SslContext;
+import java.io.ByteArrayInputStream;
+import java.net.URI;
+import java.util.Collection;
+import java.util.List;
+import java.util.Properties;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import snowblossom.lib.AddressSpecHash;
 import snowblossom.lib.Globals;
-import snowblossom.proto.UserServiceGrpc;
-import snowblossom.proto.UserServiceGrpc.UserServiceBlockingStub;
-import snowblossom.proto.UserServiceGrpc.UserServiceStub;
+import snowblossom.lib.NetworkParams;
+import snowblossom.lib.tls.SnowTrustManagerFactorySpi;
 import snowblossom.proto.NodeStatus;
 import snowblossom.proto.NullRequest;
-
-import java.util.logging.Logger;
-import java.util.logging.Level;
-
+import snowblossom.proto.UserServiceGrpc.UserServiceBlockingStub;
+import snowblossom.proto.UserServiceGrpc.UserServiceStub;
+import snowblossom.proto.UserServiceGrpc;
 
 public class StubUtil
 {

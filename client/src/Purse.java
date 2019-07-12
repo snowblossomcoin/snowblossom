@@ -1,21 +1,18 @@
 package snowblossom.client;
 
-import java.io.File;
-import duckutil.Config;
-import snowblossom.lib.NetworkParams;
-import snowblossom.lib.AddressSpecHash;
-import snowblossom.lib.AddressUtil;
-import snowblossom.lib.TransactionUtil;
-import snowblossom.proto.*;
-
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import java.util.List;
-import snowblossom.lib.TransactionBridge;
-
 import com.google.common.collect.ImmutableList;
 import com.google.protobuf.ByteString;
-
+import duckutil.Config;
+import java.io.File;
+import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import snowblossom.lib.AddressSpecHash;
+import snowblossom.lib.AddressUtil;
+import snowblossom.lib.NetworkParams;
+import snowblossom.lib.TransactionBridge;
+import snowblossom.lib.TransactionUtil;
+import snowblossom.proto.*;
 
 /** Where you keep your wallet i
  *

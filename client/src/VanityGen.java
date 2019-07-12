@@ -1,11 +1,10 @@
 package snowblossom.client;
 
-import snowblossom.lib.*;
-import snowblossom.proto.*;
-
+import com.google.protobuf.util.JsonFormat;
 import duckutil.MultiAtomicLong;
 import java.text.DecimalFormat;
-import com.google.protobuf.util.JsonFormat;
+import snowblossom.lib.*;
+import snowblossom.proto.*;
 
 public class VanityGen
 {

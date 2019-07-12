@@ -1,14 +1,13 @@
 package snowblossom.node;
 
-import snowblossom.lib.db.DB;
-import snowblossom.proto.*;
-import snowblossom.lib.Globals;
-import snowblossom.lib.ChainHash;
-
-import snowblossom.lib.trie.ByteStringComparator;
 import com.google.common.collect.TreeMultimap;
 import com.google.protobuf.ByteString;
 import java.nio.ByteBuffer;
+import snowblossom.lib.ChainHash;
+import snowblossom.lib.Globals;
+import snowblossom.lib.db.DB;
+import snowblossom.lib.trie.ByteStringComparator;
+import snowblossom.proto.*;
 
 public class TransactionMapUtil
 {

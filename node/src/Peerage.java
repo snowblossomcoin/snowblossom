@@ -3,16 +3,15 @@ package snowblossom.node;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.protobuf.ByteString;
-import snowblossom.proto.*;
-import snowblossom.lib.*;
 import duckutil.AtomicFileOutputStream;
 import duckutil.NetUtil;
 import java.io.PrintStream;
-
 import java.net.InetAddress;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import snowblossom.lib.*;
+import snowblossom.proto.*;
 
 /**
  * Joe: Should I class that handles communicating with a bunch of peers be called the Peerage?

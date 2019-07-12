@@ -2,17 +2,14 @@
 package snowblossom.miner;
 
 import com.google.common.collect.ImmutableSet;
-import java.util.Set;
-import java.util.Map;
-import java.nio.channels.FileChannel;
-
+import duckutil.MultiAtomicLong;
 import java.nio.ByteBuffer;
+import java.nio.channels.FileChannel;
+import java.text.DecimalFormat;
+import java.util.Map;
+import java.util.logging.Logger;
 import snowblossom.lib.Globals;
 import snowblossom.lib.SnowMerkle;
-import java.util.logging.Logger;
-import java.text.DecimalFormat;
-
-import duckutil.MultiAtomicLong;
 
 public abstract class FieldSource
 {

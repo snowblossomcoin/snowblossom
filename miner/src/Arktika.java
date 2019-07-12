@@ -1,50 +1,30 @@
 package snowblossom.miner;
 
-import com.google.protobuf.ByteString;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import duckutil.Config;
 import duckutil.ConfigFile;
-import duckutil.TimeRecord;
-import duckutil.TimeRecordAuto;
-import duckutil.RateReporter;
 import duckutil.MultiAtomicLong;
+import duckutil.RateReporter;
+import duckutil.TimeRecord;
 import io.grpc.ManagedChannel;
-import io.grpc.ManagedChannelBuilder;
-import io.grpc.stub.StreamObserver;
-import snowblossom.lib.*;
-import snowblossom.proto.*;
-import snowblossom.mining.proto.*;
-import snowblossom.mining.proto.MiningPoolServiceGrpc.MiningPoolServiceStub;
-import snowblossom.mining.proto.MiningPoolServiceGrpc.MiningPoolServiceBlockingStub;
-import snowblossom.lib.trie.HashUtils;
-
+import io.grpc.Server;
+import io.grpc.ServerBuilder;
 import java.io.File;
-import java.io.FileInputStream;
 import java.math.BigInteger;
-import java.nio.ByteBuffer;
-import java.security.MessageDigest;
 import java.text.DecimalFormat;
-import java.util.Collections;
 import java.util.LinkedList;
-import java.util.Random;
+import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
+import java.util.TreeSet;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.List;
-import java.util.Set;
-import java.util.TreeSet;
-import java.util.TreeMap;
-import java.util.Queue;
-import java.util.Map;
-
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.MinMaxPriorityQueue;
 import org.junit.Assert;
-
-import io.grpc.Server;
-import io.grpc.ServerBuilder;
-import snowblossom.client.WalletUtil;
-
+import snowblossom.lib.*;
+import snowblossom.mining.proto.*;
+import snowblossom.proto.*;
 
 public class Arktika implements PoolClientOperator
 {

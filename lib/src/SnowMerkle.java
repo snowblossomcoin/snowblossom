@@ -1,15 +1,13 @@
 package snowblossom.lib;
 
 import com.google.protobuf.ByteString;
-import snowblossom.lib.trie.HashUtils;
-
 import java.io.*;
 import java.security.MessageDigest;
 import java.security.Security;
+import java.text.DecimalFormat;
 import java.util.TreeMap;
 import java.util.logging.Logger;
-import java.text.DecimalFormat;
-
+import snowblossom.lib.trie.HashUtils;
 
 public class SnowMerkle
 {

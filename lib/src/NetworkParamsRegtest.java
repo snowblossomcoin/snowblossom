@@ -2,12 +2,10 @@ package snowblossom.lib;
 
 
 import com.google.common.collect.ImmutableList;
-
 import java.math.BigInteger;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
-
 
 public class NetworkParamsRegtest extends NetworkParams
 {

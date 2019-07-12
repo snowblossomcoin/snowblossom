@@ -1,18 +1,16 @@
 package snowblossom.lib.tls;
 
-import snowblossom.lib.ValidationException;
-import snowblossom.lib.SignatureUtil;
+import com.google.protobuf.ByteString;
+import java.security.MessageDigest;
 import snowblossom.lib.DigestUtil;
 import snowblossom.lib.NetworkParams;
+import snowblossom.lib.SignatureUtil;
+import snowblossom.lib.ValidationException;
+import snowblossom.proto.AddressSpec;
+import snowblossom.proto.SigSpec;
 import snowblossom.proto.SignedMessage;
 import snowblossom.proto.SignedMessagePayload;
 import snowblossom.proto.WalletKeyPair;
-import snowblossom.proto.AddressSpec;
-import snowblossom.proto.SigSpec;
-
-import com.google.protobuf.ByteString;
-import java.security.MessageDigest;
-
 
 public class MsgSigUtil
 {
