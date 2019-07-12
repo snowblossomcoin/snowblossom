@@ -84,7 +84,7 @@ public abstract class BasePanel
     GridBagConstraints c = new GridBagConstraints();
     c.gridheight = 1;
 		c.gridwidth = GridBagConstraints.REMAINDER;
-    c.anchor = GridBagConstraints.NORTHWEST;
+    c.anchor = GridBagConstraints.WEST;
 
     c.weightx=0.0;
     c.weighty=0.0;

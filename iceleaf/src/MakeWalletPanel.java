@@ -59,7 +59,7 @@ public class MakeWalletPanel extends BasePanel
     c.weighty= 0.0;
     c.gridheight = 1;
     c.gridwidth = 1;
-    c.anchor = GridBagConstraints.NORTHWEST;
+    c.anchor = GridBagConstraints.WEST;
 
 
     panel.add(new JLabel("Name for new wallet: "), c);
@@ -186,6 +186,7 @@ public class MakeWalletPanel extends BasePanel
         }
 
         name_field.setText("");
+        import_field.setText("");
         ice_leaf.getWalletPanel().wake();
         
       }

@@ -62,7 +62,7 @@ public class AddressPanel extends BasePanel
     c.weightx = 0.0;
     c.weighty= 0.0;
     c.gridheight = 1;
-    c.anchor = GridBagConstraints.NORTHWEST;
+    c.anchor = GridBagConstraints.WEST;
 
     c.gridwidth = 1;
     panel.add(new JLabel("Wallet to view addresses of:"), c);
@@ -87,7 +87,7 @@ public class AddressPanel extends BasePanel
   {
     public UpdateThread()
     {
-      super(15000);
+      super(45000);
 
     }
     public void runPass()
@@ -98,6 +98,7 @@ public class AddressPanel extends BasePanel
         if (wallet_name == null)
         {
           setMessageBox("no wallet selected");
+          setStatusBox("");
           return;
         }
         
@@ -105,6 +106,7 @@ public class AddressPanel extends BasePanel
         if (client == null)
         {
           setMessageBox("no wallet selected");
+          setStatusBox("");
           return;
         }
         ByteArrayOutputStream bout = new ByteArrayOutputStream();
@@ -115,8 +117,6 @@ public class AddressPanel extends BasePanel
 
         for(AddressSpecHash hash : WalletUtil.getAddressesByAge(db, ice_leaf.getParams()))
         {
-          
-
           String address = hash.toAddressString(ice_leaf.getParams());
           boolean used = db.getUsedAddressesMap().containsKey(address);
           BalanceInfo bi = client.getBalance(hash);
@@ -133,6 +133,7 @@ public class AddressPanel extends BasePanel
 			catch(Throwable t)
 			{
 				setMessageBox(ErrorUtil.getThrowInfo(t));
+        setStatusBox("");
 			}
     }
 

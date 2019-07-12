@@ -71,7 +71,7 @@ public class SendPanel extends BasePanel
     c.weightx = 0.0;
     c.weighty= 0.0;
     c.gridheight = 1;
-    c.anchor = GridBagConstraints.NORTHWEST;
+    c.anchor = GridBagConstraints.WEST;
 
 
     c.gridwidth = 1;
@@ -145,9 +145,11 @@ public class SendPanel extends BasePanel
             SubmitReply reply = ice_leaf.getStubHolder().getBlockingStub().submitTransaction(tx_result.getTx());
             ChainHash tx_hash = new ChainHash(tx_result.getTx().getTxHash());
             setMessageBox(String.format("%s\n%s", tx_hash.toString(), reply.toString()));
+            setStatusBox("");
 
 						send_state = 0;
 						setProgressBar(0, SEND_DELAY);
+            setStatusBox("");
 
 						return;
 					}
@@ -163,11 +165,13 @@ public class SendPanel extends BasePanel
         setupTx();
 
 
+        setStatusBox("Time delay to review");
 				for(int i=0; i<SEND_DELAY; i+=SEND_DELAY_STEP)
 				{
 					setProgressBar(i, SEND_DELAY);
 					sleep(SEND_DELAY_STEP);
 				}
+        setStatusBox("Ready to broadcast");
 				setProgressBar(SEND_DELAY, SEND_DELAY);
 				synchronized(state_obj)
 				{
@@ -176,6 +180,7 @@ public class SendPanel extends BasePanel
 			}
 			catch(Throwable t)
 			{
+        setStatusBox("Error");
 				setMessageBox(ErrorUtil.getThrowInfo(t));
 				
 				synchronized(state_obj)
@@ -189,6 +194,8 @@ public class SendPanel extends BasePanel
 
   private void setupTx() throws Exception
   {
+    setStatusBox("Creating transaction");
+    setMessageBox("");
     TransactionFactoryConfig.Builder config = TransactionFactoryConfig.newBuilder();
     config.setSign(true);
     config.setChangeFreshAddress(true);

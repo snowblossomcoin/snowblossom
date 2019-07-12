@@ -49,7 +49,7 @@ public class WalletPanel extends BasePanel
 			c.weightx = 0.0;
 			c.weighty= 0.0;
 			c.gridheight = 1;
-			c.anchor = GridBagConstraints.NORTHWEST;
+			c.anchor = GridBagConstraints.WEST;
 
     c.gridwidth = GridBagConstraints.REMAINDER;
 
