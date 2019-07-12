@@ -60,6 +60,7 @@ public class IceLeaf
   
 
   public IceLeaf(NetworkParams params, Preferences prefs)
+    throws Exception
   {
     this.params = params;
     this.ice_leaf_prefs = prefs;
@@ -67,6 +68,8 @@ public class IceLeaf
     {
       ice_leaf_prefs = Preferences.userNodeForPackage(this.getClass());
     }
+    
+    SwingUtilities.invokeAndWait(new EnvSetup());
 
     node_panel = new NodePanel(this);
     node_select_panel = new NodeSelectionPanel(this);
@@ -80,7 +83,8 @@ public class IceLeaf
 
   }
 
-  public class WindowSetup implements Runnable
+
+  public class EnvSetup implements Runnable
   {
     public void run()
     {
@@ -95,6 +99,16 @@ public class IceLeaf
       {
         e.printStackTrace();
       }
+    }
+  }
+
+
+
+
+  public class WindowSetup implements Runnable
+  {
+    public void run()
+    {
 
       JFrame f=new JFrame();
       f.setVisible(true);

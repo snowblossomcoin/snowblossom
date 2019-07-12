@@ -7,6 +7,7 @@ import snowblossom.lib.NetworkParamsTestnet;
 public class IceLeafTestnet
 {
   public static void main(String args[])
+    throws Exception
   {
     Globals.addCryptoProvider();
 
