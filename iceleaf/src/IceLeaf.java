@@ -53,6 +53,10 @@ public class IceLeaf
   public SendPanel getSendPanel(){return send_panel;}
 
   public Color getBGColor(){return new Color(204,204,255);}
+
+  private Font fixed_font;
+
+  public Font getFixedFont(){return fixed_font;}
   
 
   public IceLeaf(NetworkParams params, Preferences prefs)
@@ -82,6 +86,8 @@ public class IceLeaf
     {
       try
       {
+        fixed_font = Font.createFont(Font.TRUETYPE_FONT, 
+          IceLeaf.class.getResourceAsStream("/iceleaf/resources/font/Hack-Regular.ttf"));
         //IceLeaf.setUIFont(new Font("Verdana", 0, 12));
         //UIManager.setLookAndFeel(new javax.swing.plaf.nimbus.NimbusLookAndFeel());
       }

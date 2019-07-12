@@ -14,6 +14,6 @@ java_library(
 
 filegroup(
   name = "resources",
-  srcs = glob(["resources/*"]),
+  srcs = glob(["resources/**"]),
 )
 
