@@ -37,7 +37,7 @@ public class SendPanel extends BasePanel
   private Object state_obj = new Object();
   private TransactionFactoryResult tx_result;
 
-  public static final int SEND_DELAY=10000;
+  public static final int SEND_DELAY=6000;
   public static final int SEND_DELAY_STEP=50;
 
   public SendPanel(IceLeaf ice_leaf)
