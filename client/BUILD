@@ -31,7 +31,7 @@ java_test(
     test_class = "client.test.AllTests",
     srcs = glob(["test/**/*.java", "test/*.java"]),
     deps = [
-		    "//client:client",
+        "//client:client",
         "//lib:lib",
         "//protolib:protogrpc",
         "@duckutil//:duckutil_lib",

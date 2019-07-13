@@ -1,21 +1,20 @@
 package client.test;
 
+import com.google.common.collect.ImmutableList;
+import com.google.protobuf.ByteString;
+import java.util.List;
+import java.util.Random;
+import java.util.logging.Logger;
+import org.bitcoinj.crypto.ChildNumber;
+import org.bitcoinj.crypto.DeterministicHierarchy;
+import org.bitcoinj.crypto.DeterministicKey;
+import org.bitcoinj.crypto.HDKeyDerivation;
 import org.junit.Assert;
 import org.junit.Test;
 import snowblossom.client.SeedUtil;
-
-import java.util.List;
-import com.google.protobuf.ByteString;
-import org.bitcoinj.crypto.HDKeyDerivation;
-import org.bitcoinj.crypto.DeterministicKey;
-import org.bitcoinj.crypto.DeterministicHierarchy;
-import org.bitcoinj.crypto.ChildNumber;
-import com.google.common.collect.ImmutableList;
-import snowblossom.proto.WalletKeyPair;
 import snowblossom.lib.*;
 import snowblossom.proto.*;
-import java.util.Random;
-import java.util.logging.Logger;
+import snowblossom.proto.WalletKeyPair;
 
 public class SeedTest
 {
@@ -126,7 +125,7 @@ public class SeedTest
       Assert.assertTrue(wkp.getHdPath().startsWith("M/44H/2339H/0H/"));
       Assert.assertTrue(wkp.getSeedId().size()==20);
 
-      AddressSpecHash addr = SeedUtil.getAddress(new NetworkParamsTestnet(), xpub, c, i);
+      AddressSpecHash addr = AddressUtil.getHashForSpec(SeedUtil.getAddressSpec(new NetworkParamsTestnet(), xpub, c, i));
 
       AddressSpecHash wkp_addr = AddressUtil.getHashForSpec(AddressUtil.getSimpleSpecForKey(wkp));
 
@@ -134,6 +133,10 @@ public class SeedTest
 
 			testKeyPair(wkp, "hd");
 		}
+
+    ByteString seed_id_seed = SeedUtil.getSeedId( new NetworkParamsTestnet(), seed, "", 0);
+    ByteString seed_id_xpub = SeedUtil.getSeedIdFromXpub( xpub);
+    Assert.assertEquals(seed_id_seed, seed_id_xpub);
 
   }
 

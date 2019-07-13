@@ -111,6 +111,16 @@ public class SeedUtil
     return ByteString.copyFrom(getMCode().toSeed( lst, pass));
   }
 
+  public static ByteString getSeedIdFromXpub(String xpub)
+  {
+    DeterministicKey account_key = DeterministicKey.deserializeB58(xpub, org.bitcoinj.params.MainNetParams.get());
+
+    ByteString seed_id = ByteString.copyFrom(account_key.getIdentifier());
+
+    return seed_id;
+  }
+
+
   public static ByteString getSeedId(NetworkParams params, String seed_str, String pass, int account)
   {
     ByteString seed = decodeSeed(seed_str,pass);
@@ -149,8 +159,7 @@ public class SeedUtil
     return xpub;
   }
 
-
-  public static AddressSpecHash getAddress(NetworkParams params, String xpub, int change, int index)
+  public static AddressSpec getAddressSpec(NetworkParams params, String xpub, int change, int index)
   {
     DeterministicKey account_key = DeterministicKey.deserializeB58(xpub, org.bitcoinj.params.MainNetParams.get());
 
@@ -166,7 +175,7 @@ public class SeedUtil
 
     AddressSpec addr_spec = AddressUtil.getSimpleSpecForKey(public_key, SignatureUtil.SIG_TYPE_ECDSA_COMPRESSED);
 
-    return AddressUtil.getHashForSpec(addr_spec);
+    return addr_spec;
 
   }
 

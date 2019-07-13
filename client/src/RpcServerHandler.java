@@ -259,7 +259,7 @@ public class RpcServerHandler
       }
       int index = (int) (long) params.get("index");
 
-      AddressSpecHash addr = SeedUtil.getAddress(client.getParams(), xpub, chain, index );
+      AddressSpecHash addr = AddressUtil.getHashForSpec(SeedUtil.getAddressSpec(client.getParams(), xpub, chain, index ));
 
       reply.put("address", addr.toAddressString(client.getParams()));
 

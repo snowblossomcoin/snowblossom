@@ -1,28 +1,24 @@
 package client.test;
 
+import duckutil.ConfigMem;
+import duckutil.TaskMaster;
+import java.io.File;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.TreeMap;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ThreadPoolExecutor;
 import org.junit.Assert;
-import org.junit.Test;
 import org.junit.BeforeClass;
 import org.junit.Rule;
-
-import snowblossom.lib.Globals;
+import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
-
-import snowblossom.proto.*;
-import snowblossom.client.WalletUtil;
-
-import java.io.File;
-import snowblossom.lib.*;
-import java.util.TreeMap;
-import duckutil.ConfigMem;
-
 import snowblossom.client.Purse;
-import java.util.HashSet;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.Callable;
-import duckutil.TaskMaster;
-import java.util.ArrayList;
-
+import snowblossom.client.SeedUtil;
+import snowblossom.client.WalletUtil;
+import snowblossom.lib.*;
+import snowblossom.lib.Globals;
+import snowblossom.proto.*;
 
 public class PurseTest
 {
@@ -162,6 +158,43 @@ public class PurseTest
     exec.shutdown();
   }
 
+  @Test
+  public void testExtendXpub() throws Exception
+  {
+    File empty_sub = new File(test_folder.newFolder(), "new");
+
+    TreeMap<String, String> config_settings = new TreeMap<>();
+    config_settings.put("key_mode","seed");
+    config_settings.put("watch_only","true");
+    ConfigMem config = new ConfigMem(config_settings);
+
+    NetworkParams params = new NetworkParamsRegtest();
+
+    String seed = SeedUtil.generateSeed(12);
+    String xpub = SeedUtil.getSeedXpub(params, seed, "", 0);
+
+    WalletDatabase db = WalletUtil.importXpub(params, xpub);
+
+    db = WalletUtil.fillKeyPool(db, empty_sub, config, params);
+    Assert.assertEquals(1, db.getXpubsCount());
+    Assert.assertEquals(0, db.getUsedAddressesCount());
+    Assert.assertEquals(20, db.getAddressesCount());
+
+    Purse purse = new Purse(null, empty_sub, config, params);
+    purse.maintainKeys(false);
+
+    Assert.assertEquals(1, purse.getDB().getXpubsCount());
+    Assert.assertEquals(0, purse.getDB().getUsedAddressesCount());
+    Assert.assertEquals(20, purse.getDB().getAddressesCount());
+
+    for(int i=20; i<1000;i++)
+    {
+      Assert.assertTrue(purse.getDB().getAddressesCount()>=i);
+      purse.getUnusedAddress(true, false);
+      purse.maintainKeys(false);
+      Assert.assertTrue(purse.getDB().getAddressesCount() - purse.getDB().getUsedAddressesCount()>=20);
+    }
+  }
 
 }
 

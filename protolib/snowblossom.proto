@@ -338,6 +338,7 @@ message WalletDatabase {
   int32 version = 10;
   string network = 11;
   map<string,SeedStatus> seeds = 12;
+  map<string,SeedStatus> xpubs = 13;
 }
 
 message SeedStatus

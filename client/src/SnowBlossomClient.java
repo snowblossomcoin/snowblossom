@@ -60,8 +60,6 @@ public class SnowBlossomClient
 
     }
 
-
-
     if (args.length == 1)
     {
       client.maintainKeys();
@@ -269,8 +267,26 @@ public class SnowBlossomClient
         logger.info("Imported data:");
         WalletUtil.printBasicStats(wallet_import.build());
       }
+      else if (command.equals("import_xpub"))
+      {
+        if (args.length != 3)
+        {
+          logger.log(Level.SEVERE, "import_xpub must be followed by xpub to import");
+          System.exit(-1);
+        }
+        
+        WalletDatabase wallet_import = WalletUtil.importXpub(client.getParams(), args[2]);
+        client.getPurse().mergeIn(wallet_import);
+        client.getPurse().maintainKeys(false);
+
+      }
       else if (command.equals("import_seed"))
       {
+        if (args.length != 2)
+        {
+          logger.log(Level.SEVERE, "No options allowed for import_seed");
+          System.exit(-1);
+        }
         client.getPurse().maintainKeys(true);
 
       }
@@ -360,6 +376,7 @@ public class SnowBlossomClient
         System.out.println("  export_watch_only <file> - export wallet to json file with no keys");
         System.out.println("  import <file> - import wallet from json file, merges with existing");
         System.out.println("  import_seed - prompts for a seed to import");
+        System.out.println("  import_xpub - imports a given xpub to watch");
         System.out.println("  show_seed - show seeds");
         System.out.println("  rpcserver - run a local rpc server for client commands");
         System.out.println("  audit_log_init <msg> - initialize a new audit log chain");

@@ -41,8 +41,9 @@ public class WalletUtil
    * 2 - merging support, multiple files
    * 3 - network version added
    * 4 - added seeds
+   * 5 - added mpk
    */
-  public static final int WALLET_DB_VERSION = 4;
+  public static final int WALLET_DB_VERSION = 5;
 
   public static WalletDatabase makeNewDatabase(Config config, NetworkParams params)
 	{
@@ -71,6 +72,27 @@ public class WalletUtil
         }
       }
     }
+    else
+    {
+      if (import_seed != null)
+      {
+        throw new RuntimeException("Can only import xpub into watch_only wallet");
+
+      }
+
+    }
+
+    return builder.build();
+  }
+
+  public static WalletDatabase importXpub(NetworkParams params, String xpub)
+  {
+
+    WalletDatabase.Builder builder = WalletDatabase.newBuilder();
+    builder.setVersion(WALLET_DB_VERSION);
+    builder.setNetwork(params.getNetworkName());
+    ByteString seed_id = SeedUtil.getSeedIdFromXpub(xpub);
+    builder.putXpubs(xpub, SeedStatus.newBuilder().setSeedId(seed_id).setSeedXpub(xpub).build());
 
     return builder.build();
   }
@@ -79,6 +101,7 @@ public class WalletUtil
   {
     genNewKey(existing_wallet, wallet_builder, config, params, null);
   }
+
   public static void genNewKey(WalletDatabase existing_wallet, WalletDatabase.Builder wallet_builder, Config config, NetworkParams params, String gen_seed)
   {
     if (config.getBoolean("watch_only"))
@@ -185,38 +208,46 @@ public class WalletUtil
   public static WalletDatabase fillKeyPool(WalletDatabase existing_db, File wallet_path, Config config, NetworkParams params)
     throws Exception
   {
+    WalletDatabase.Builder partial_new_db = WalletDatabase.newBuilder();
+    partial_new_db.setVersion(WALLET_DB_VERSION);
+    partial_new_db.setNetwork(params.getNetworkName());
+    boolean save=false;
     
     if (config.getBoolean("watch_only"))
     {
-      return existing_db;
+      if (existing_db.getXpubsCount() > 0)
+      {
+        if (addXpubGapAddresses(params, config, existing_db, partial_new_db))
+        {
+          save=true;
+        }
+      }
+    }
+    else
+    {
+      int key_pool = config.getIntWithDefault("key_pool_size", 10);
+      int unused = getUnusedAddressCount(existing_db, params);
+      //if (unused < key_pool)
+      {
+        int to_make = key_pool - unused;
+        for(int i=0; i<to_make; i++)
+        {
+          genNewKey(existing_db, partial_new_db, config, params);
+          save=true;
+        }
+        if (addSeedGapKeys(params, config, existing_db, partial_new_db))
+        {
+          save=true;
+        }
+      }
     }
 
-    int key_pool = config.getIntWithDefault("key_pool_size", 10);
-    int unused = getUnusedAddressCount(existing_db, params);
-    //if (unused < key_pool)
+    if (save)
     {
-      int to_make = key_pool - unused;
-      WalletDatabase.Builder partial_new_db = WalletDatabase.newBuilder();
-      partial_new_db.setVersion(WALLET_DB_VERSION);
-      partial_new_db.setNetwork(params.getNetworkName());
-      boolean save= false;
-      for(int i=0; i<to_make; i++)
-      {
-        genNewKey(existing_db, partial_new_db, config, params);
-        save=true;
-      }
-      if (addSeedGapKeys(params, config, existing_db, partial_new_db))
-      {
-        save=true;
-      }
-      if (save)
-      {
-        WalletDatabase new_db_part = partial_new_db.build();
-        saveWallet(new_db_part, wallet_path);
+      WalletDatabase new_db_part = partial_new_db.build();
+      saveWallet(new_db_part, wallet_path);
 
-        return mergeDatabases(ImmutableList.of(existing_db, new_db_part), params);
-      }
-
+      return mergeDatabases(ImmutableList.of(existing_db, new_db_part), params);
     }
 
     return existing_db;
@@ -261,6 +292,47 @@ public class WalletUtil
     return added;
     
   }
+  private static boolean addXpubGapAddresses(NetworkParams params, Config config, WalletDatabase existing_db, WalletDatabase.Builder partial_new_db)
+  {
+    int gap = config.getIntWithDefault("seed_gap", 20);
+    
+    existing_db = mergeDatabases(ImmutableList.of(existing_db, partial_new_db.build()), params);
+    boolean added=false;
+
+    for(String xpub : existing_db.getXpubsMap().keySet())
+    {
+      ByteString seed_id = existing_db.getXpubsMap().get(xpub).getSeedId();
+      int max_used=-1;
+
+      for(int i=0; i<= max_used + gap; i++)
+      {
+        AddressSpec claim = SeedUtil.getAddressSpec(params, xpub, 0, i);
+        AddressSpecHash address_hash = AddressUtil.getHashForSpec(claim);
+        String addr = address_hash.toAddressString(params);
+
+        if (existing_db.getUsedAddressesMap().containsKey(addr))
+        {
+          max_used = Math.max(max_used, i);
+        }
+        if (!existing_db.getAddressCreateTimeMap().containsKey(addr))
+        {
+          partial_new_db.addAddresses(claim);
+          partial_new_db.putAddressCreateTime(addr, System.currentTimeMillis());
+          added=true;
+        }
+      }
+      
+      partial_new_db.putXpubs(xpub, 
+          SeedStatus.newBuilder()
+              .setSeedId(seed_id)
+              .setSeedXpub(xpub)
+              .putAddressIndex(0, max_used+gap+1)
+              .build());
+    }
+    return added;
+    
+  }
+
 
 
   public static WalletDatabase markUsed(WalletDatabase existing_db, File wallet_path, Config config, NetworkParams params, AddressSpecHash hash)
@@ -454,6 +526,7 @@ public class WalletUtil
     HashMap<String, Boolean> used_addresses = new HashMap<>();
     HashMap<String, Long> address_create_time = new HashMap<>();
     HashMap<String, SeedStatus> seed_map = new HashMap<>();
+    HashMap<String, SeedStatus> xpub_map = new HashMap<>();
 
     for(WalletDatabase src : src_list)
     { 
@@ -476,6 +549,19 @@ public class WalletUtil
           seed_map.put(seed, status);
         }
       }
+      for(String xpub : src.getXpubsMap().keySet())
+      {
+        SeedStatus status = src.getXpubsMap().get(xpub);
+        if (xpub_map.containsKey(xpub))
+        {
+          xpub_map.put(xpub, mergeSeedStatus(status, xpub_map.get(xpub) ));
+        }
+        else
+        {
+          xpub_map.put(xpub, status);
+        }
+      }
+ 
     }
 
     new_db.addAllKeys(key_set);
@@ -484,6 +570,7 @@ public class WalletUtil
     new_db.putAllUsedAddresses(used_addresses);
     new_db.putAllAddressCreateTime(address_create_time);
     new_db.putAllSeeds(seed_map);
+    new_db.putAllXpubs(xpub_map);
 
     return new_db.build();
   }
@@ -633,6 +720,11 @@ public class WalletUtil
       System.out.println("  " + me.getKey() + ": " + me.getValue());
     }
 
+  }
+
+  public static boolean isXpub(String s)
+  {
+    return (s.startsWith("xpub"));
   }
 
 }
