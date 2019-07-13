@@ -86,7 +86,7 @@ public class IceLeaf
       try
       {
         fixed_font = Font.createFont(Font.TRUETYPE_FONT, 
-          IceLeaf.class.getResourceAsStream("/iceleaf/resources/font/Hack-Regular.ttf"));
+          IceLeaf.class.getResourceAsStream("/iceleaf-ui/resources/font/Hack-Regular.ttf"));
         var_font = new Font("Verdana", 0, 12);
 
         //IceLeaf.setUIFont(new Font("Verdana", 0, 12));
@@ -114,7 +114,7 @@ public class IceLeaf
 
       try
       {
-        InputStream is = IceLeaf.class.getResourceAsStream("/iceleaf/resources/flower-with-ink-256.png");
+        InputStream is = IceLeaf.class.getResourceAsStream("/iceleaf-ui/resources/flower-with-ink-256.png");
         f.setIconImage(ImageIO.read(is));
 
       }
