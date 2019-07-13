@@ -184,7 +184,7 @@ public class SendPanel extends BasePanel
     config.setInputConfirmedThenPending(true);
     config.setFeeUseEstimate(true);
     
-    AddressSpecHash dest_addr = new AddressSpecHash(saved_dest, ice_leaf.getParams());
+    AddressSpecHash dest_addr = new AddressSpecHash(saved_dest.trim(), ice_leaf.getParams());
 
     long output_val = 0;
     if (saved_amount.toLowerCase().equals("all"))
