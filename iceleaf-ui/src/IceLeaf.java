@@ -47,9 +47,11 @@ public class IceLeaf
   public Color getTextAreaBGColor(){return new Color(220,220,220);}
 
   private Font fixed_font;
+  private Font bold_fixed_font;
   private Font var_font;
 
   public Font getFixedFont(){return fixed_font;}
+  public Font getBoldFixedFont(){return bold_fixed_font;}
   public Font getVariableFont(){return var_font;}
   
 
@@ -87,6 +89,8 @@ public class IceLeaf
       {
         fixed_font = Font.createFont(Font.TRUETYPE_FONT, 
           IceLeaf.class.getResourceAsStream("/iceleaf-ui/resources/font/Hack-Regular.ttf"));
+        bold_fixed_font = Font.createFont(Font.TRUETYPE_FONT, 
+          IceLeaf.class.getResourceAsStream("/iceleaf-ui/resources/font/Hack-Bold.ttf"));
         var_font = new Font("Verdana", 0, 12);
 
         //IceLeaf.setUIFont(new Font("Verdana", 0, 12));
@@ -161,17 +165,5 @@ public class IceLeaf
     }
 
   }
-	public static void setUIFont(Font f) 
-  {
-    for(Object key : UIManager.getDefaults().keySet())
-		{
-      Font orig = UIManager.getFont(key);
-      if (orig != null)
-      {
-        Font font = new Font(f.getFontName(), orig.getStyle(), f.getSize());
-        UIManager.put(key, new FontUIResource(font));
-			}
-		}
-	}
 
 }

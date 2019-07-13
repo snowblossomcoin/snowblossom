@@ -49,7 +49,7 @@ public class MakeWalletPanel extends BasePanel
 
     panel.add(new JLabel("Name for new wallet: "), c);
     name_field = new JTextField();
-    name_field.setColumns(12);
+    name_field.setColumns(20);
     panel.add(name_field, c);
 
     c.gridwidth = GridBagConstraints.REMAINDER;

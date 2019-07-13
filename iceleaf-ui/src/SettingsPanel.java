@@ -61,6 +61,8 @@ public class SettingsPanel extends BasePanel
 			panel.add(new PersistentComponentCheckBox(ice_leaf_prefs, "Node transaction index", "node_tx_index", true), c);
 			panel.add(new PersistentComponentCheckBox(ice_leaf_prefs, "Node address index", "node_addr_index", true), c);
 
+      panel.add(new JLabel("NOTE: almost all changes here will require a restart to take effect.\n"),c);
+
   }
 
 

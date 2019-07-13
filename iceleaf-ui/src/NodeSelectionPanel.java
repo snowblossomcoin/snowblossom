@@ -54,7 +54,11 @@ public class NodeSelectionPanel extends BasePanel
     panel.add(box_seed, c);
 
     c.gridwidth = 1;
+    c.anchor = GridBagConstraints.NORTHWEST;
     panel.add(box_list, c);
+    
+    
+    c.anchor = GridBagConstraints.WEST;
 
 
     StringBuilder sb_list_default = new StringBuilder();

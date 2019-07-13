@@ -6,6 +6,7 @@ import javax.swing.JLabel;
 import javax.swing.JTabbedPane;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
+import javax.swing.JComboBox;
 
 public class UIUtil
 {
@@ -44,6 +45,11 @@ public class UIUtil
     {
       //int size = comp.getFont().getSize();
       //comp.setFont(ice_leaf.getVariableFont().deriveFont(0,size));
+
+    }
+    else if (comp instanceof JComboBox)
+    {
+      comp.setFont(ice_leaf.getBoldFixedFont().deriveFont(0,12));
 
     }
     

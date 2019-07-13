@@ -68,7 +68,7 @@ public class SendPanel extends BasePanel
     c.gridwidth = GridBagConstraints.REMAINDER;
 
     dest_field = new JTextField();
-    dest_field.setColumns(50);
+    dest_field.setColumns(65);
     panel.add(dest_field, c);
 
 
