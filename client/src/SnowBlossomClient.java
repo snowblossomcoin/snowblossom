@@ -142,7 +142,7 @@ public class SnowBlossomClient
       }
       else if (command.equals("getfresh"))
       {
-        client.maintainKeys();
+        client.getPurse().maintainKeys(false);
         boolean mark_used = false;
         boolean generate_now = false;
         if (args.length > 2)

@@ -23,11 +23,14 @@ public class MakeWalletPanel extends BasePanel
 {
   protected JTextField name_field;
   protected JTextField import_field;
+  protected JTextField import_xpub_field;
   protected JButton random_name_button;
   protected JRadioButton seed_button = new JRadioButton("HD Seed - secp256k1");
   protected JRadioButton old_std_button = new JRadioButton("Old Standard - secp256k1");
   protected JRadioButton qhard_button = new JRadioButton("QHard - secp256k1 + rsa8192 + dstu4145");
   protected JRadioButton import_seed_button = new JRadioButton("Import seed");
+  protected JRadioButton import_xpub_button = new JRadioButton("Import xpub (watch only)");
+
   protected JButton make_wallet_button;
 
   public MakeWalletPanel(IceLeaf ice_leaf)
@@ -65,18 +68,27 @@ public class MakeWalletPanel extends BasePanel
     main_radio_bg.add(old_std_button);
     main_radio_bg.add(qhard_button);
     main_radio_bg.add(import_seed_button);
+    main_radio_bg.add(import_xpub_button);
 
     seed_button.setSelected(true);
 
     panel.add(seed_button, c);
     panel.add(old_std_button, c);
     panel.add(qhard_button, c);
+
     c.gridwidth=1;
     panel.add(import_seed_button, c);
     import_field = new JTextField();
-    import_field.setColumns(40);
+    import_field.setColumns(75);
     c.gridwidth = GridBagConstraints.REMAINDER;
     panel.add(import_field, c);
+
+    c.gridwidth=1;
+    panel.add(import_xpub_button, c);
+    import_xpub_field = new JTextField();
+    import_xpub_field.setColumns(75);
+    c.gridwidth = GridBagConstraints.REMAINDER;
+    panel.add(import_xpub_field, c);
 
     make_wallet_button = new JButton("Make wallet");
     make_wallet_button.addActionListener( new MakeWalletAction());
@@ -124,6 +136,7 @@ public class MakeWalletPanel extends BasePanel
         config_out.println("network=" + ice_leaf.getParams().getNetworkName());
 
         String seed_to_import = null;
+        String xpub_to_import = null;
 
         if (seed_button.isSelected())
         {
@@ -150,6 +163,17 @@ public class MakeWalletPanel extends BasePanel
           seed_to_import = import_field.getText();
 
         }
+        else if (import_xpub_button.isSelected())
+        {
+          config_out.println("key_mode=seed");
+          config_out.println("watch_only=true");
+          config_map.put("key_mode", "seed");
+          config_map.put("watch_only", "true");
+
+          xpub_to_import = import_xpub_field.getText();
+
+        }
+ 
         else
         {
           throw new Exception("No mode button selected");
@@ -158,7 +182,17 @@ public class MakeWalletPanel extends BasePanel
 
         setMessageBox("Generating wallet");
 
-        WalletDatabase db = WalletUtil.makeNewDatabase(new ConfigMem(config_map), ice_leaf.getParams(), seed_to_import);
+
+        WalletDatabase db; 
+        
+        if (xpub_to_import==null)
+        {
+          db = WalletUtil.makeNewDatabase(new ConfigMem(config_map), ice_leaf.getParams(), seed_to_import);
+        }
+        else
+        {
+          db = WalletUtil.importXpub( ice_leaf.getParams(), xpub_to_import);
+        }
         WalletUtil.saveWallet(db, wallet_db_path);
 
         if (seed_button.isSelected())

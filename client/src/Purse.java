@@ -125,7 +125,16 @@ public class Purse
         if (hl.getEntriesCount() > 0)
 				{
 					markUsed(hash);
+          
 				}
+
+        TransactionHashList tl = client.getStub().getMempoolTransactionList(
+          RequestAddress.newBuilder().setAddressSpecHash(hash.getBytes()).build());
+        if (tl.getTxHashesCount() > 0)
+        {
+					markUsed(hash);
+
+        }
     	}
 		}
 		catch(Throwable e)
