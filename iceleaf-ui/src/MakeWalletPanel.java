@@ -206,6 +206,7 @@ public class MakeWalletPanel extends BasePanel
 
         name_field.setText("");
         import_field.setText("");
+        import_xpub_field.setText("");
         ice_leaf.getWalletPanel().wake();
         
       }
