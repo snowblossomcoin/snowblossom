@@ -197,7 +197,8 @@ public class MakeWalletPanel extends BasePanel
 
         if (seed_button.isSelected())
         {
-          setMessageBox(String.format("Wallet %s created with seed:\n%s", name, seed_to_import));
+          setMessageBox(String.format("Wallet %s created with seed:\n%s\nxpub:\n%s\n", name, seed_to_import, 
+            SeedUtil.getSeedXpub(ice_leaf.getParams(), seed_to_import, "", 0)));
         }
         else
         {
