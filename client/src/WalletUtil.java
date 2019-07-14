@@ -25,6 +25,7 @@ import snowblossom.lib.KeyUtil;
 import snowblossom.lib.NetworkParams;
 import snowblossom.lib.SignatureUtil;
 import snowblossom.lib.ValidationException;
+import snowblossom.lib.UpClock;
 import snowblossom.proto.*;
 
 public class WalletUtil
@@ -202,7 +203,7 @@ public class WalletUtil
       throw new RuntimeException("Unknown key_mode: " + key_mode);
     }
 
-    wallet_builder.putAddressCreateTime( AddressUtil.getAddressString(claim, params), System.currentTimeMillis());
+    wallet_builder.putAddressCreateTime( AddressUtil.getAddressString(claim, params), UpClock.time());
   }
 
   public static WalletDatabase fillKeyPool(WalletDatabase existing_db, File wallet_path, Config config, NetworkParams params)
@@ -317,7 +318,7 @@ public class WalletUtil
         if (!existing_db.getAddressCreateTimeMap().containsKey(addr))
         {
           partial_new_db.addAddresses(claim);
-          partial_new_db.putAddressCreateTime(addr, System.currentTimeMillis());
+          partial_new_db.putAddressCreateTime(addr, UpClock.time());
           added=true;
         }
       }
