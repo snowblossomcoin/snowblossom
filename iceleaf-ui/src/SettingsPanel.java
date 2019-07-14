@@ -62,6 +62,10 @@ public class SettingsPanel extends BasePanel
 			panel.add(new PersistentComponentCheckBox(ice_leaf_prefs, "Node address index", "node_addr_index", true), c);
 
       panel.add(new JLabel("NOTE: almost all changes here will require a restart to take effect.\n"),c);
+      c.weightx=10.0;
+      c.weighty=10.0;
+      panel.add(new LinkLabel("https://wiki.snowblossom.org/index.php/IceLeaf","IceLeaf Documentation"),c);
+
 
   }
 

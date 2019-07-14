@@ -150,8 +150,6 @@ public class IceLeaf
       send_panel.setup();
       address_panel.setup();
 
-
-
       tab_pane.add("Wallets", wallet_panel.getPanel());
       tab_pane.add("Send", send_panel.getPanel());
       tab_pane.add("Addresses", address_panel.getPanel());
