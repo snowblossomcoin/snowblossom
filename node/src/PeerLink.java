@@ -354,7 +354,7 @@ public class PeerLink implements StreamObserver<PeerMessage>
 
   public boolean isOpen()
   {
-    if (last_received_message_time + 120000L < System.currentTimeMillis())
+    if (last_received_message_time + 300000L < System.currentTimeMillis())
     {
       logger.info(getLinkId() + " - No message in a long time, assuming dead link");
       close();
