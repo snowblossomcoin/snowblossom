@@ -3,11 +3,13 @@ package snowblossom.iceleaf;
 import duckutil.PeriodicThread;
 import io.grpc.ManagedChannel;
 import java.awt.GridBagConstraints;
+import java.util.Map;
 import java.util.Scanner;
 import java.util.TreeSet;
 import javax.swing.JLabel;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
+import snowblossom.client.StubException;
 import snowblossom.client.StubHolder;
 import snowblossom.client.StubUtil;
 import snowblossom.iceleaf.components.PersistentComponentCheckBox;
@@ -156,6 +158,19 @@ public class NodeSelectionPanel extends BasePanel
           setStatusBox(String.format("Connected to %s and checked in %s ms",mon.getUri(), t2-t1));
         }
 
+      }
+      catch(StubException e)
+      {
+        StringBuilder sb=new StringBuilder();
+        sb.append(e.getMessage());
+        sb.append("\n");
+
+        for(Map.Entry<String, String> me : e.getErrorMap().entrySet())
+        {
+          sb.append(String.format("  %s - %s\n", me.getKey(), me.getValue()));
+        }
+
+        setMessageBox(sb.toString().trim());
       }
       catch(Throwable t)
       {

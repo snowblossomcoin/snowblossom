@@ -1,4 +1,5 @@
 package snowblossom.client;
+import com.google.common.collect.ImmutableMap;
 import duckutil.Config;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
@@ -10,7 +11,9 @@ import java.io.ByteArrayInputStream;
 import java.net.URI;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
+import java.util.TreeMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import snowblossom.lib.AddressSpecHash;
@@ -163,7 +166,7 @@ public class StubUtil
   }
 
   public static ChannelMonitor findFastestChannelMonitor(Collection<String> uris, NetworkParams params)
-    throws Exception
+    throws StubException
   {
     ChannelMonitor mon = new ChannelMonitor();
 
@@ -182,20 +185,31 @@ public class StubUtil
       catch(Exception e)
       {
         logger.log(Level.FINE, "Error on uri: " + uri, e);
+        mon.recordError(uri, e.toString());
       }
     }
     if (option_count == 0)
     {
-      throw new Exception("No valid URIs to select from");
+      throw new StubException("No valid URIs to select from");
     }
 
-    String uri = mon.getUri();
-    if (uri == null)
+    try
     {
-      throw new Exception("No nodes returned within timeout");
-    }
 
-    logger.log(Level.INFO, "Selected node: " + uri);
+      if (mon.waitFor(uris.size()))
+      {
+        String uri = mon.getUri();
+        logger.log(Level.INFO, "Selected node: " + uri);
+      }
+      else
+      {
+        throw new StubException("No nodes returned within timeout", mon.getErrorMap());
+      } 
+    }
+    catch(InterruptedException e)
+    {
+      throw new StubException(e.toString());
+    }
 
     return mon;
 
@@ -206,6 +220,7 @@ public class StubUtil
     private ManagedChannel mc;
     private String uri;
     private NodeStatus ns;
+    private TreeMap<String, String> error_map = new TreeMap<>();
     public static final int TIMEOUT_MS=60000;
 
     public synchronized void setMonitor(NodeStatus ns, ManagedChannel mc, String uri)
@@ -219,32 +234,39 @@ public class StubUtil
       this.notifyAll();
     }
 
-    public synchronized NodeStatus getNodeStatus()
+    public synchronized boolean waitFor(int expected_count)
       throws InterruptedException
     {
-      if(ns == null)
+      long t_end = System.currentTimeMillis() + TIMEOUT_MS;
+
+      while((error_map.size() < expected_count) && (System.currentTimeMillis() < t_end))
       {
-        this.wait(TIMEOUT_MS);
+        this.wait(500);
       }
+      return (uri != null);
+
+    }
+
+    public synchronized NodeStatus getNodeStatus()
+    {
       return ns;
     }
     public synchronized String getUri()
-      throws InterruptedException
     {
-      if(uri == null)
-      {
-        this.wait(TIMEOUT_MS);
-      }
       return uri;
     }
     public synchronized ManagedChannel getManagedChannel()
-      throws InterruptedException
     {
-      if(mc == null)
-      {
-        this.wait(TIMEOUT_MS);
-      }
       return mc;
+    }
+    public synchronized void recordError(String uri, String error)
+    {
+      error_map.put(uri, error);
+    }
+
+    public synchronized Map<String,String> getErrorMap()
+    {
+      return ImmutableMap.copyOf(error_map);
     }
   }
 
@@ -268,6 +290,7 @@ public class StubUtil
     public void onError(Throwable t)
     {
       logger.log(Level.FINE, "Error on uri: " + uri, t);
+      mon.recordError(uri, t.toString());
 
     }
     public void onCompleted()
