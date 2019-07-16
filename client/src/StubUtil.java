@@ -239,7 +239,7 @@ public class StubUtil
     {
       long t_end = System.currentTimeMillis() + TIMEOUT_MS;
 
-      while((error_map.size() < expected_count) && (System.currentTimeMillis() < t_end))
+      while((error_map.size() < expected_count) && (System.currentTimeMillis() < t_end) && (uri == null))
       {
         this.wait(500);
       }

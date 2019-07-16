@@ -3,6 +3,8 @@
 * Skip merging PeerInfo entries, really not needed
 * Adding support for host_uri in configs.  See https://wiki.snowblossom.org/index.php/ConfigOption/node_uri
 * Add client ability to autoselect fastest node
+* IceLeaf GUI client
+* Xpub support for watch only wallets
 
 ## 1.5.1
 
