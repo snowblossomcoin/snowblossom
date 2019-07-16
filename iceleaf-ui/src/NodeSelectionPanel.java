@@ -19,6 +19,7 @@ public class NodeSelectionPanel extends BasePanel
 
   private PersistentComponentCheckBox box_local;
   private PersistentComponentCheckBox box_seed;
+  private PersistentComponentCheckBox box_fallback_seed;
   private PersistentComponentCheckBox box_list;
 
   protected volatile ManagedChannel channel;
@@ -45,13 +46,15 @@ public class NodeSelectionPanel extends BasePanel
     panel.add(new JLabel("Select node sources to use.  The checked node sets will be considered.  The fastest will be used."), c);
 
 
-    box_local = new PersistentComponentCheckBox(ice_leaf_prefs, "local", "node_selection_local", true);
-    box_seed = new PersistentComponentCheckBox(ice_leaf_prefs, "seed", "node_selection_seed", true);
-    box_list = new PersistentComponentCheckBox(ice_leaf_prefs, "list", "node_selection_list", false);
+    box_local = new PersistentComponentCheckBox(ice_leaf_prefs, "Local", "node_selection_local", true);
+    box_seed = new PersistentComponentCheckBox(ice_leaf_prefs, "Seed", "node_selection_seed", true);
+    box_fallback_seed = new PersistentComponentCheckBox(ice_leaf_prefs, "Seed Fallback (no-TLS)", "node_selection_fallback_seed", false);
+    box_list = new PersistentComponentCheckBox(ice_leaf_prefs, "List", "node_selection_list", false);
 
 
     panel.add(box_local, c);
     panel.add(box_seed, c);
+    panel.add(box_fallback_seed, c);
 
     c.gridwidth = 1;
     c.anchor = GridBagConstraints.NORTHWEST;
@@ -81,6 +84,7 @@ public class NodeSelectionPanel extends BasePanel
 
     box_local.addChangeListener(cmt);
     box_seed.addChangeListener(cmt);
+    box_fallback_seed.addChangeListener(cmt);
     box_list.addChangeListener(cmt);
     
     cmt.start();
@@ -115,6 +119,14 @@ public class NodeSelectionPanel extends BasePanel
             options.add(uri);
           }
         }
+        if (ice_leaf_prefs.getBoolean("node_selection_fallback_seed", false))
+        {
+          for(String uri : ice_leaf.getParams().getFallbackSeedUris())
+          {
+            options.add(uri);
+          }
+        }
+
         if (ice_leaf_prefs.getBoolean("node_selection_list", false))
         {
           Scanner scan = new Scanner(list_box.getText());
@@ -155,7 +167,7 @@ public class NodeSelectionPanel extends BasePanel
     private volatile String last_state="";
     public void stateChanged(ChangeEvent e)
     {
-      String state = "" + box_local.isSelected() + box_seed.isSelected() + box_list.isSelected();
+      String state = "" + box_local.isSelected() + box_fallback_seed.isSelected() + box_seed.isSelected() + box_list.isSelected();
 
       if (!state.equals(last_state))
       {

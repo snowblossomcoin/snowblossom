@@ -72,6 +72,19 @@ public class NetworkParamsProd extends NetworkParams
   }
 
   @Override
+  public List<String> getFallbackSeedUris()
+  {
+    return ImmutableList.of(
+      "grpc://snow-a.1209k.com",
+      "grpc://snow-b.1209k.com",
+      "grpc://snow-tx1.snowblossom.org",
+      "grpc://snow-de1.snowblossom.org",
+      "grpc://snow-tx1.snowblossom.org:80",
+      "grpc://snow-de1.snowblossom.org:80");
+ 
+  }
+
+  @Override
   public int getDefaultPort() { return 2338; }
   
   // Fill in hash of bitcoin block 523850 when it occurs, in hex replacing the zeros to start mainnet

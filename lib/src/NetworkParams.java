@@ -59,6 +59,11 @@ public abstract class NetworkParams
     return lst;
   }
 
+  public List<String> getFallbackSeedUris()
+  {
+    return new LinkedList<String>();
+  }
+
 
   public int getDefaultPort() { return 2338; }
   public int getDefaultTlsPort() { return 2348; }
