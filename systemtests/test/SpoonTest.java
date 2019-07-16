@@ -3,34 +3,32 @@ package systemtests.test;
 import com.google.common.collect.ImmutableList;
 import com.google.protobuf.ByteString;
 import duckutil.ConfigMem;
+import java.io.File;
+import java.security.KeyPair;
+import java.util.*;
 import org.junit.Assert;
+import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 import snowblossom.client.SnowBlossomClient;
-import snowblossom.miner.SnowBlossomMiner;
-import snowblossom.miner.MrPlow;
-import snowblossom.miner.PoolMiner;
-import snowblossom.proto.*;
 import snowblossom.lib.AddressSpecHash;
 import snowblossom.lib.AddressUtil;
+import snowblossom.lib.Globals;
 import snowblossom.lib.KeyUtil;
 import snowblossom.lib.NetworkParams;
 import snowblossom.lib.NetworkParamsRegtest;
 import snowblossom.lib.SignatureUtil;
-import snowblossom.node.SnowBlossomNode;
 import snowblossom.lib.SnowFall;
 import snowblossom.lib.SnowFieldInfo;
 import snowblossom.lib.SnowMerkle;
 import snowblossom.lib.TransactionBridge;
 import snowblossom.lib.TransactionUtil;
-import snowblossom.lib.Globals;
-
-import java.io.File;
-import java.security.KeyPair;
-import java.util.*;
-import org.junit.BeforeClass;
-
+import snowblossom.miner.MrPlow;
+import snowblossom.miner.PoolMiner;
+import snowblossom.miner.SnowBlossomMiner;
+import snowblossom.node.SnowBlossomNode;
+import snowblossom.proto.*;
 
 public class SpoonTest
 {

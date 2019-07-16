@@ -2,22 +2,21 @@ package node.test;
 
 import com.google.common.collect.ImmutableList;
 import duckutil.TimeRecord;
+import java.security.KeyPair;
+import java.util.Random;
+import java.util.TreeMap;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import snowblossom.lib.*;
+import snowblossom.lib.trie.HashedTrie;
+import snowblossom.lib.trie.TrieDBMem;
+import snowblossom.node.ChainStateSource;
+import snowblossom.node.MemPool;
 import snowblossom.proto.AddressSpec;
 import snowblossom.proto.Transaction;
 import snowblossom.proto.TransactionInput;
 import snowblossom.proto.TransactionOutput;
-import snowblossom.lib.trie.HashedTrie;
-import snowblossom.lib.trie.TrieDBMem;
-import snowblossom.node.MemPool;
-import snowblossom.node.ChainStateSource;
-import snowblossom.lib.*;
-
-import java.security.KeyPair;
-import java.util.Random;
-import java.util.TreeMap;
 
 public class MemPoolTest
 {

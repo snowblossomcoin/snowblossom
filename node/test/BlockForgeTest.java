@@ -1,16 +1,13 @@
 package node.test;
 
-import org.junit.Test;
-import org.junit.Assert;
-
+import com.google.protobuf.ByteString;
 import java.util.List;
+import java.util.Random;
+import org.junit.Assert;
+import org.junit.Test;
 import snowblossom.lib.*;
 import snowblossom.node.BlockForge;
 import snowblossom.proto.*;
-
-import java.util.Random;
-
-import com.google.protobuf.ByteString;
 
 public class BlockForgeTest
 {

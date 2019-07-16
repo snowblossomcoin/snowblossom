@@ -1,16 +1,13 @@
 package node.test;
 
+import java.math.BigInteger;
 import org.junit.Assert;
 import org.junit.Test;
-import snowblossom.proto.BlockHeader;
-import snowblossom.proto.BlockSummary;
-import snowblossom.node.BlockIngestor;
 import snowblossom.lib.BlockchainUtil;
 import snowblossom.lib.NetworkParams;
 import snowblossom.lib.NetworkParamsTestnet;
-
-import java.math.BigInteger;
-
+import snowblossom.proto.BlockHeader;
+import snowblossom.proto.BlockSummary;
 
 public class BlockIngestorTest
 {

@@ -187,7 +187,7 @@ public class PurseTest
     Assert.assertEquals(0, purse.getDB().getUsedAddressesCount());
     Assert.assertEquals(20, purse.getDB().getAddressesCount());
 
-    for(int i=20; i<1000;i++)
+    for(int i=20; i<100;i++)
     {
       Assert.assertTrue(purse.getDB().getAddressesCount()>=i);
       purse.getUnusedAddress(true, false);
