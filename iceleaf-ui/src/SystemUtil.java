@@ -56,7 +56,16 @@ public class SystemUtil
     System.out.println("Home: " + System.getProperties().getProperty("user.home"));
     System.out.println("OS: " + System.getProperties().getProperty("os.name"));
     System.out.println("OS: " + System.getProperties().getProperty("os.arch"));
+    System.out.println("JVM: " + System.getProperty("sun.arch.data.model"));
+    System.out.println("64bit: " + isJvm64Bit());
+  }
 
+  public static boolean isJvm64Bit()
+  {
+    String bits = System.getProperty("sun.arch.data.model");
+    if (bits.equals("32")) return false;
+
+    return true;
   }
 
 }

@@ -24,7 +24,7 @@ public class PasswordCrypt
 
   public static final int SCRYPT_MEMORY_COST=2;
   public static final int SCRYPT_PARALLELIZATION_COST=128;
-  public static final int SCRYPT_CPU_COST=128*1024;
+  public static final int SCRYPT_CPU_COST=32*1024;
   public static final String SCRYPT_SALT="snowblossom";
   public static final String ENCRYPTION_MODE = "AES/CBC/PKCS5PADDING";
   public static final int BLOCK_SIZE = 16;
