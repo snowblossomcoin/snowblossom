@@ -116,6 +116,12 @@ maven_jar(
   sha1 = "1b6c4ff09ce03f3052429139c2a68e295cae6604",
 )
 
+maven_jar(
+  name = "scrypt",
+  artifact = "com.lambdaworks:scrypt:1.4.0",
+  sha1 = "906506b74f30c8c20bccd9ed4a11112d8941fe87",
+)
+
 # Used for HD wallet and seed stuff only
 maven_jar(
   name = "bitcoinj",

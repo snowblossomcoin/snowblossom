@@ -117,7 +117,7 @@ public class SeedTest
     String xpub = SeedUtil.getSeedXpub( new NetworkParamsTestnet(), seed, "", 0);
 
 		for(int c=0; c<2; c++)
-		for(int i=0; i<100; i++)
+		for(int i=0; i<20; i++)
 		{
     	WalletKeyPair wkp = SeedUtil.getKey( new NetworkParamsTestnet(), seed, "", 0, c, i);
 

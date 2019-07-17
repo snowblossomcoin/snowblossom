@@ -23,6 +23,7 @@ java_library(
     "@slf4j_api//jar",
     "@io_grpc_grpc_java//netty",
     "@io_netty_netty_handler//:io_netty_netty_handler",
+    "@scrypt//jar",
     ],
 )
 

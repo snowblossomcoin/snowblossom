@@ -9,7 +9,8 @@ import org.junit.runners.Suite;
   WalletTest.class,
   PurseTest.class,
   SeedTest.class,
-  TransactionFactoryTest.class
+  TransactionFactoryTest.class,
+  PasswordCryptTest.class
 })
 public class AllTests
 {}
