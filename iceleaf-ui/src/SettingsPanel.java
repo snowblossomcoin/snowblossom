@@ -5,6 +5,7 @@ import java.io.File;
 import javax.swing.JLabel;
 import snowblossom.iceleaf.components.*;
 import snowblossom.lib.NetworkParams;
+import snowblossom.lib.SystemUtil;
 
 public class SettingsPanel extends BasePanel
 {

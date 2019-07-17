@@ -20,6 +20,7 @@ import snowblossom.lib.AddressSpecHash;
 import snowblossom.lib.Globals;
 import snowblossom.lib.NetworkParams;
 import snowblossom.lib.tls.SnowTrustManagerFactorySpi;
+import snowblossom.lib.SystemUtil;
 import snowblossom.proto.NodeStatus;
 import snowblossom.proto.NullRequest;
 import snowblossom.proto.UserServiceGrpc.UserServiceBlockingStub;
@@ -119,6 +120,11 @@ public class StubUtil
     }
     else if (scheme.equals("grpc+tls"))
     {
+      if (!SystemUtil.isJvm64Bit())
+      {
+        logger.log(Level.SEVERE, "Unable to use grpc+tls without 64-bit JVM");
+        throw new Exception("64 bit JVM required for TLS");
+      }
       if (port == -1) port = params.getDefaultTlsPort();
       AddressSpecHash expected_key = null;
 

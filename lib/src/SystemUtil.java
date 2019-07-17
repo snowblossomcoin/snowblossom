@@ -1,4 +1,4 @@
-package snowblossom.iceleaf;
+package snowblossom.lib;
 
 import java.io.File;
 import snowblossom.lib.NetworkParams;
