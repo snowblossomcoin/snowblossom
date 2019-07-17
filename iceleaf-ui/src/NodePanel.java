@@ -9,6 +9,7 @@ import javax.swing.JProgressBar;
 import javax.swing.SwingUtilities;
 import snowblossom.lib.AddressUtil;
 import snowblossom.lib.Globals;
+import snowblossom.lib.SystemUtil;
 import snowblossom.node.SnowBlossomNode;
 
 public class NodePanel extends BasePanel
@@ -60,10 +61,18 @@ public class NodePanel extends BasePanel
     {
       try
       {
+        if (!SystemUtil.isJvm64Bit())
+        {
+          setStatusBox("Node requires a 64-bit JVM");
+          setMessageBox("Snowblososm node uses rocksdb, which requires a 64-bit JVM to run.\n"
+           + "See https://wiki.snowblossom.org/index.php/Download to download 64-bit JVM");
+          return;
+        }
         if (!start_attempt)
         {
           startNode();
         }
+
         StringBuilder sb=new StringBuilder();
         int net_height = 0;
         if ( node.getPeerage().getHighestSeenHeader() != null)
