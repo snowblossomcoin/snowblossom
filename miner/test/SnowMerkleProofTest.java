@@ -2,21 +2,20 @@ package miner.test;
 
 
 import com.google.protobuf.ByteString;
-import org.junit.Assert;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
-import snowblossom.lib.Validation;
-import snowblossom.proto.SnowPowProof;
-import snowblossom.lib.Globals;
-import snowblossom.lib.SnowFall;
-import snowblossom.lib.SnowMerkle;
-import snowblossom.miner.SnowMerkleProof;
-
 import java.io.File;
 import java.security.MessageDigest;
 import java.util.LinkedList;
 import java.util.Random;
+import org.junit.Assert;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
+import snowblossom.lib.Globals;
+import snowblossom.lib.SnowFall;
+import snowblossom.lib.SnowMerkle;
+import snowblossom.lib.Validation;
+import snowblossom.miner.SnowMerkleProof;
+import snowblossom.proto.SnowPowProof;
 
 public class SnowMerkleProofTest
 {

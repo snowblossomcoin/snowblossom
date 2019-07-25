@@ -1,8 +1,7 @@
 package miner.test;
 
-import org.junit.Test;
 import org.junit.Assert;
-
+import org.junit.Test;
 import snowblossom.miner.FaQueue;
 import snowblossom.miner.PartialWork;
 

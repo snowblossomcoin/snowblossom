@@ -1,11 +1,14 @@
 package lib.test;
 
 import com.google.protobuf.ByteString;
+import java.nio.ByteBuffer;
+import java.security.MessageDigest;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Random;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import snowblossom.proto.AddressSpec;
-import snowblossom.proto.SigSpec;
 import snowblossom.lib.AddressSpecHash;
 import snowblossom.lib.AddressUtil;
 import snowblossom.lib.DigestUtil;
@@ -16,12 +19,8 @@ import snowblossom.lib.NetworkParamsProd;
 import snowblossom.lib.NetworkParamsRegtest;
 import snowblossom.lib.NetworkParamsTestnet;
 import snowblossom.lib.ValidationException;
-
-import java.nio.ByteBuffer;
-import java.security.MessageDigest;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.Random;
+import snowblossom.proto.AddressSpec;
+import snowblossom.proto.SigSpec;
 
 public class AddressUtilTest
 {

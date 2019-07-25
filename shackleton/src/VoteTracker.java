@@ -1,23 +1,16 @@
 package snowblossom.shackleton;
 
+import com.google.common.collect.TreeMultimap;
+import duckutil.LRUCache;
 import java.io.PrintStream;
-import snowblossom.lib.*;
-import snowblossom.proto.*;
-
-import java.util.TreeSet;
+import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
-import java.util.Map;
-
-import com.google.common.collect.TreeMultimap;
-
-
-
+import java.util.TreeSet;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
-import duckutil.LRUCache;
-
+import snowblossom.lib.*;
+import snowblossom.proto.*;
 
 public class VoteTracker extends Thread
 {

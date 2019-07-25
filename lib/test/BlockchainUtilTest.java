@@ -1,13 +1,11 @@
 package lib.test;
 
 import com.google.protobuf.ByteString;
+import java.math.BigInteger;
+import java.util.Random;
 import org.junit.Assert;
 import org.junit.Test;
 import snowblossom.lib.BlockchainUtil;
-
-import java.math.BigInteger;
-import java.util.Random;
-
 
 public class BlockchainUtilTest
 {

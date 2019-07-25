@@ -1,19 +1,18 @@
 package lib.test;
 
+import com.google.common.collect.ImmutableList;
 import com.google.protobuf.ByteString;
-import org.junit.BeforeClass;
-import org.junit.Test;
-import org.junit.Assert;
-import snowblossom.proto.*;
-import snowblossom.lib.*;
-
 import java.security.KeyPair;
 import java.security.MessageDigest;
 import java.security.Signature;
-import java.util.Random;
 import java.util.ArrayList;
-import com.google.common.collect.ImmutableList;
 import java.util.List;
+import java.util.Random;
+import org.junit.Assert;
+import org.junit.BeforeClass;
+import org.junit.Test;
+import snowblossom.lib.*;
+import snowblossom.proto.*;
 
 public class ValidationTest
 {

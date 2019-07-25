@@ -1,24 +1,19 @@
 package snowblossom;
 
-import java.security.MessageDigest;
 import java.io.RandomAccessFile;
-import java.nio.channels.FileChannel;
 import java.nio.ByteBuffer;
-
-import lib.src.trie.HashUtils;
+import java.nio.channels.FileChannel;
+import java.security.MessageDigest;
+import java.security.Security;
+import java.util.HashMap;
+import java.util.concurrent.Semaphore;
+import java.util.concurrent.SynchronousQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+import java.util.logging.Logger;
 import lib.src.DaemonThreadFactory;
 import lib.src.LRUCache;
-
-import java.security.Security;
-
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.SynchronousQueue;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.Semaphore;
-import java.util.HashMap;
-
-import java.util.logging.Logger;
-
+import lib.src.trie.HashUtils;
 
 public class SnowMerkleMulti
 {

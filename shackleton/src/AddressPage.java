@@ -1,18 +1,15 @@
 package snowblossom.shackleton;
 
 import com.google.protobuf.ByteString;
-import snowblossom.lib.*;
-import snowblossom.proto.*;
-import snowblossom.trie.proto.TrieNode;
-
 import java.io.PrintStream;
 import java.text.DecimalFormat;
-import java.util.HashMap;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Collections;
-import snowblossom.proto.UserServiceGrpc.UserServiceBlockingStub;
 import snowblossom.client.GetUTXOUtil;
+import snowblossom.lib.*;
+import snowblossom.proto.*;
+import snowblossom.proto.UserServiceGrpc.UserServiceBlockingStub;
 
 public class AddressPage
 {

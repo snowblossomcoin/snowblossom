@@ -2,17 +2,15 @@ package lib.test.trie;
 
 import com.google.common.collect.ImmutableList;
 import com.google.protobuf.ByteString;
+import java.io.File;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Random;
 import org.junit.*;
 import org.junit.rules.TemporaryFolder;
 import snowblossom.lib.trie.HashUtils;
 import snowblossom.lib.trie.HashedTrie;
 import snowblossom.lib.trie.TrieDBRocks;
-
-import java.io.File;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Random;
-
 
 public class TrieRocksTest
 {

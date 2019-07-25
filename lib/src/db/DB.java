@@ -71,6 +71,10 @@ public class DB implements DBFace
 
     if (config.getBoolean("addr_index"))
     {
+      // This could be switched to UTXO style, complete with having a merkle root
+      // for the top.  This wouldn't be in the headers, but could be advertised to clients
+      // who can query for a concensus of address history roots.  And then address history 
+      // becomes much more firm and less potentially full of lies.
       address_history_map = prov.openMutationMapSet("addr_hist_2");
     }
     if (config.getBoolean("tx_index"))

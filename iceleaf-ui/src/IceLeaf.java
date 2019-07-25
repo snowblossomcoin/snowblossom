@@ -9,7 +9,6 @@ import javax.swing.JFrame;
 import javax.swing.JTabbedPane;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
-import javax.swing.plaf.FontUIResource;
 import snowblossom.client.StubHolder;
 import snowblossom.iceleaf.components.*;
 import snowblossom.lib.Globals;

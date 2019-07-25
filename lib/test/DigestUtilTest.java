@@ -1,15 +1,14 @@
 package lib.test;
 
 import com.google.common.collect.ImmutableList;
+import java.security.MessageDigest;
+import java.util.Random;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import snowblossom.lib.ChainHash;
 import snowblossom.lib.DigestUtil;
 import snowblossom.lib.Globals;
-
-import java.security.MessageDigest;
-import java.util.Random;
 
 public class DigestUtilTest
 {

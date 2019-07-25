@@ -24,8 +24,8 @@ import snowblossom.lib.HexUtil;
 import snowblossom.lib.KeyUtil;
 import snowblossom.lib.NetworkParams;
 import snowblossom.lib.SignatureUtil;
-import snowblossom.lib.ValidationException;
 import snowblossom.lib.UpClock;
+import snowblossom.lib.ValidationException;
 import snowblossom.proto.*;
 
 public class WalletUtil

@@ -1,29 +1,25 @@
 package snowblossom.shackleton;
 
-import snowblossom.lib.*;
-import snowblossom.proto.*;
-
-import snowblossom.proto.UserServiceGrpc;
-import snowblossom.proto.UserServiceGrpc.UserServiceBlockingStub;
-import snowblossom.proto.UserServiceGrpc.UserServiceStub;
+import com.google.common.collect.TreeMultimap;
+import com.google.protobuf.ByteString;
 import duckutil.Config;
 import duckutil.ConfigFile;
 import io.grpc.ManagedChannel;
-import io.grpc.ManagedChannelBuilder;
+import java.text.DecimalFormat;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.HashSet;
-import java.util.HashMap;
-import java.util.Map;
-import com.google.common.collect.TreeMultimap;
 import snowblossom.client.GetUTXOUtil;
-import snowblossom.client.StubUtil;
 import snowblossom.client.StubHolder;
-
-import java.text.DecimalFormat;
-import com.google.protobuf.ByteString;
-import java.util.List;
-
+import snowblossom.client.StubUtil;
+import snowblossom.lib.*;
+import snowblossom.proto.*;
+import snowblossom.proto.UserServiceGrpc.UserServiceBlockingStub;
+import snowblossom.proto.UserServiceGrpc.UserServiceStub;
+import snowblossom.proto.UserServiceGrpc;
 
 public class RichList
 {

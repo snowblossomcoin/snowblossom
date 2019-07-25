@@ -1,5 +1,9 @@
 package lib.test;
 
+import java.security.*;
+import java.security.spec.AlgorithmParameterSpec;
+import java.security.spec.X509EncodedKeySpec;
+import java.util.Random;
 import org.apache.commons.codec.binary.Hex;
 import org.bouncycastle.asn1.ASN1Encodable;
 import org.junit.Assert;
@@ -7,11 +11,6 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import snowblossom.lib.Globals;
 import snowblossom.lib.KeyUtil;
-
-import java.security.*;
-import java.security.spec.AlgorithmParameterSpec;
-import java.security.spec.X509EncodedKeySpec;
-import java.util.Random;
 
 /** Might not be testing any actual snowblossom code, just making sure I understand 
  * how signatures work.

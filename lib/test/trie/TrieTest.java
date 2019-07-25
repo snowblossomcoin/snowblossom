@@ -2,16 +2,15 @@ package lib.test.trie;
 
 import com.google.common.collect.ImmutableList;
 import com.google.protobuf.ByteString;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Random;
 import org.junit.Assert;
 import org.junit.Test;
 import snowblossom.lib.trie.HashUtils;
 import snowblossom.lib.trie.HashedTrie;
 import snowblossom.lib.trie.TrieDBMem;
-
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Random;
 
 public class TrieTest
 {

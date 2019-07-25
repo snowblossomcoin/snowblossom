@@ -1,6 +1,12 @@
 package lib.test;
 
 
+import java.io.BufferedInputStream;
+import java.io.DataInputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.security.MessageDigest;
+import java.util.HashMap;
 import org.apache.commons.codec.binary.Hex;
 import org.junit.Assert;
 import org.junit.Rule;
@@ -8,13 +14,6 @@ import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 import snowblossom.lib.SnowFall;
 import snowblossom.lib.SnowMerkle;
-
-import java.io.BufferedInputStream;
-import java.io.DataInputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.security.MessageDigest;
-import java.util.HashMap;
 
 public class SnowFallMerkleTest
 {

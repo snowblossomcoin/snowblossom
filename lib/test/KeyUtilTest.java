@@ -1,23 +1,21 @@
 package lib.test;
 
 import com.google.protobuf.ByteString;
-import org.junit.Assert;
-import org.junit.BeforeClass;
-import org.junit.Test;
-import snowblossom.proto.SigSpec;
-import snowblossom.proto.WalletKeyPair;
-import snowblossom.lib.ChainHash;
-import snowblossom.lib.Globals;
-import snowblossom.lib.KeyUtil;
-import snowblossom.lib.SignatureUtil;
-
 import java.security.KeyPair;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.util.ArrayList;
 import java.util.Random;
 import java.util.logging.Logger;
-
+import org.junit.Assert;
+import org.junit.BeforeClass;
+import org.junit.Test;
+import snowblossom.lib.ChainHash;
+import snowblossom.lib.Globals;
+import snowblossom.lib.KeyUtil;
+import snowblossom.lib.SignatureUtil;
+import snowblossom.proto.SigSpec;
+import snowblossom.proto.WalletKeyPair;
 
 public class KeyUtilTest
 {

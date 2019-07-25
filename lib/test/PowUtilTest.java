@@ -1,17 +1,16 @@
 package lib.test;
 
-import org.junit.Assert;
-import org.junit.Test;
-import snowblossom.proto.*;
-import snowblossom.lib.BlockchainUtil;
-import snowblossom.lib.NetworkParams;
-import snowblossom.lib.NetworkParamsRegtest;
-import snowblossom.lib.NetworkParamsProd;
-import snowblossom.lib.PowUtil;
-import snowblossom.lib.HexUtil;
-
 import java.math.BigInteger;
 import java.util.Random;
+import org.junit.Assert;
+import org.junit.Test;
+import snowblossom.lib.BlockchainUtil;
+import snowblossom.lib.HexUtil;
+import snowblossom.lib.NetworkParams;
+import snowblossom.lib.NetworkParamsProd;
+import snowblossom.lib.NetworkParamsRegtest;
+import snowblossom.lib.PowUtil;
+import snowblossom.proto.*;
 
 public class PowUtilTest
 {

@@ -1,28 +1,21 @@
 package snowblossom.iceleaf;
 
-import duckutil.PeriodicThread;
-import java.awt.GridBagConstraints;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.io.ByteArrayOutputStream;
-import java.io.PrintStream;
-import javax.swing.JLabel;
-import snowblossom.client.SnowBlossomClient;
-import snowblossom.client.WalletUtil;
-import snowblossom.lib.AddressSpecHash;
-import snowblossom.proto.BalanceInfo;
-import snowblossom.proto.WalletDatabase;
-import snowblossom.util.proto.*;
-
 import com.google.zxing.BarcodeFormat;
-import com.google.zxing.WriterException;
 import com.google.zxing.client.j2se.MatrixToImageWriter;
 import com.google.zxing.common.BitMatrix;
 import com.google.zxing.qrcode.QRCodeWriter;
-import java.awt.image.BufferedImage;
+import duckutil.PeriodicThread;
+import java.awt.GridBagConstraints;
 import java.awt.Image;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.image.BufferedImage;
 import javax.swing.ImageIcon;
+import javax.swing.JLabel;
 import javax.swing.SwingUtilities;
+import snowblossom.client.SnowBlossomClient;
+import snowblossom.lib.AddressSpecHash;
+import snowblossom.util.proto.*;
 
 public class ReceivePanel extends BasePanel
 {
