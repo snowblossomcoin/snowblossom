@@ -9,6 +9,8 @@ java_library(
     "//client:client",
     "//node:node",
     "@duckutil//:duckutil_lib",
+    "@zxing_core//jar",
+    "@zxing_javase//jar",
     ],
 )
 

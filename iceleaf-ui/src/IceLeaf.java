@@ -35,6 +35,7 @@ public class IceLeaf
   protected AddressPanel address_panel;
   protected NetworkParams params;
   protected SettingsPanel settings_panel;
+  protected ReceivePanel receive_panel;
   protected IceLeaf ice_leaf;
 
   public Preferences getPrefs() { return ice_leaf_prefs;}
@@ -74,6 +75,7 @@ public class IceLeaf
     make_wallet_panel = new MakeWalletPanel(this);
     send_panel = new SendPanel(this);
     address_panel = new AddressPanel(this);
+    receive_panel = new ReceivePanel(this);
     settings_panel = new SettingsPanel(this);
 
     SwingUtilities.invokeLater(new WindowSetup());
@@ -149,9 +151,11 @@ public class IceLeaf
       make_wallet_panel.setup();
       send_panel.setup();
       address_panel.setup();
+      receive_panel.setup();
 
       tab_pane.add("Wallets", wallet_panel.getPanel());
       tab_pane.add("Send", send_panel.getPanel());
+      tab_pane.add("Receive", receive_panel.getPanel());
       tab_pane.add("Addresses", address_panel.getPanel());
       tab_pane.add("Make Wallet", make_wallet_panel.getPanel());
       tab_pane.add("Node Selection", node_select_panel.getPanel());

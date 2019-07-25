@@ -122,6 +122,19 @@ maven_jar(
   sha1 = "906506b74f30c8c20bccd9ed4a11112d8941fe87",
 )
 
+maven_jar(
+  name = "zxing_core",
+  artifact = "com.google.zxing:core:3.4.0",
+  sha1 = "5264296c46634347890ec9250bc65f14b7362bf8",
+)
+
+maven_jar(
+  name = "zxing_javase",
+  artifact = "com.google.zxing:javase:3.4.0",
+  sha1 = "8be20100f28515037a31cc0bbe557501c0538147",
+)
+
+
 # Used for HD wallet and seed stuff only
 maven_jar(
   name = "bitcoinj",
