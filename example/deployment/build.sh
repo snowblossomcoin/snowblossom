@@ -13,7 +13,8 @@ bazel build \
 	:SnowBlossomNode_deploy.jar \
 	:SnowBlossomClient_deploy.jar \
 	:SnowBlossomMiner_deploy.jar \
-	:PoolMiner_deploy.jar
+	:PoolMiner_deploy.jar \
+  :IceLeaf_deploy.jar
 
 version=`git describe`
 name="snowblossom-$version"
@@ -40,6 +41,9 @@ cp "configs/client-testnet.conf" "$name/configs/"
 #pool-miner
 cp ../../bazel-bin/PoolMiner_deploy.jar "$name"/
 cp "configs/pool-miner.conf" "$name/configs/"
+
+#iceleaf-ui
+cp ../../bazel-bin/IceLeaf_deploy.jar "$name"/
 
 # make logs
 mkdir -p "$name/logs/"
