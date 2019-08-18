@@ -97,6 +97,7 @@ public class JRocksDB extends DBProvider
       else
       {
         File p = new File(base_path, name);
+        p.mkdirs();
         db = openRocksDB(p.getPath());
         separate_db_map.put(name, db);
       }
@@ -119,6 +120,7 @@ public class JRocksDB extends DBProvider
       else
       {
         File p = new File(base_path, name);
+        p.mkdirs();
         db = openRocksDB(p.getPath());
         separate_db_map.put(name, db);
       }

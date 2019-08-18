@@ -56,6 +56,7 @@ public class WalletPanel extends BasePanel
 
   public class WalletUpdateThread extends PeriodicThread
   {
+    boolean first_pass = true;
     public WalletUpdateThread()
     {
       super(15000);
@@ -97,7 +98,7 @@ public class WalletPanel extends BasePanel
           if (db_dir.isDirectory())
           if (db_dir.list().length > 0)
           {
-            sb.append("Wallet: " + getWalletSummary(name, db_dir, config_file) +"\n\n");
+            sb.append("Wallet: " + getWalletSummary(name, db_dir, config_file, first_pass) +"\n\n");
           }
         }
 
@@ -107,6 +108,7 @@ public class WalletPanel extends BasePanel
         {
           for(PeriodicThread p : wake_threads) p.wake();
         }
+        first_pass = false;
 
       }
       catch(Throwable e)
@@ -129,15 +131,22 @@ public class WalletPanel extends BasePanel
 
   }
 
-  private String getWalletSummary(String name, File db_dir, File config_file)
+  private String getWalletSummary(String name, File db_dir, File config_file, boolean first_pass)
     throws Exception
   {
     SnowBlossomClient client = loadWallet(name, db_dir, config_file);
-    setMessageBox("Maintaining: " + name);
-    client.maintainKeys();
 
+    if (!first_pass)
+    {
+      setMessageBox("Maintaining: " + name);
+      client.maintainKeys();
+    }
+
+    setMessageBox("Fresh address: " + name);
     AddressSpecHash hash  = client.getPurse().getUnusedAddress(false, false);
     String addr = AddressUtil.getAddressString(client.getParams().getAddressPrefix(), hash);
+
+    setMessageBox("Checking balance: " + name);
 
     return String.format("%s - %s\n    %s", 
       name, 
