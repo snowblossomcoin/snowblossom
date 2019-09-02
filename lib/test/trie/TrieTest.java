@@ -15,7 +15,9 @@ import snowblossom.lib.trie.TrieDBMem;
 public class TrieTest
 {
   private static ByteString emptyRoot = HashUtils.hashOfEmpty();
-  private static HashedTrie trie = new HashedTrie(new TrieDBMem(), 8, true);
+  private static HashedTrie trie = new HashedTrie(new TrieDBMem(), true, false);
+  private static HashedTrie vartrie = new HashedTrie(new TrieDBMem(), true, true);
+
 
   @Test
   public void testCreateEmpty() throws Exception {
@@ -27,6 +29,7 @@ public class TrieTest
     ByteString expected_hash = HashUtils.hashConcat(ImmutableList.of(ByteString.EMPTY));
 
     Assert.assertEquals(expected_hash, hash);
+    trie.assertValid(hash);
   }
 
   @Test
@@ -46,6 +49,7 @@ public class TrieTest
     ByteString expected_hash = HashUtils.hashConcat(ImmutableList.of(key, subkey_hash));
 
     Assert.assertEquals(expected_hash, hash);
+    trie.assertValid(hash);
 
   }
   @Test
@@ -65,6 +69,7 @@ public class TrieTest
     ByteString expected_hash = HashUtils.hashConcat(ImmutableList.of(key, subkey_hash));
 
     Assert.assertEquals(expected_hash, hash);
+    trie.assertValid(hash);
   }
   @Test
   public void testCreateDouble() throws Exception {
@@ -102,6 +107,8 @@ public class TrieTest
     
     ByteString r2 = trie.mergeBatch(r1, update_map);
     Assert.assertEquals(expected_hash_after_delete, r2);
+    trie.assertValid(r1);
+    trie.assertValid(r2);
 
   }
   @Test
@@ -143,6 +150,9 @@ public class TrieTest
 
     ByteString r3 = trie.mergeBatch(r2, update_map);
     Assert.assertEquals(expected_hash_after_delete, r3);
+    trie.assertValid(r1);
+    trie.assertValid(r2);
+    trie.assertValid(r3);
 
   }
 
@@ -168,9 +178,11 @@ public class TrieTest
     }
     ByteString hash = trie.mergeBatch(emptyRoot, update_map);
     String hash_str= HashUtils.getHexString(hash);
+    trie.assertValid(hash);
 
     Assert.assertEquals("c2a8b068d8613232723c54d611faf9bc894adbd5b36c089fb3ab0379415978f3",hash_str);
   }
+
   @Test
   public void testCreateRandomChunks() throws Exception {
  
@@ -200,6 +212,7 @@ public class TrieTest
     }
     ByteString hash = trie.mergeBatch(last_root, update_map);
     String hash_str= HashUtils.getHexString(hash);
+    trie.assertValid(hash);
 
     Assert.assertEquals("c2a8b068d8613232723c54d611faf9bc894adbd5b36c089fb3ab0379415978f3",hash_str);
   }
@@ -251,6 +264,8 @@ public class TrieTest
     Assert.assertEquals(first_hash, second_hash);
     
     String hash_str= HashUtils.getHexString(first_hash);
+    trie.assertValid(first_hash);
+    trie.assertValid(second_hash);
     Assert.assertEquals("c2a8b068d8613232723c54d611faf9bc894adbd5b36c089fb3ab0379415978f3",hash_str);
     
   }
@@ -301,6 +316,122 @@ public class TrieTest
       Assert.assertNull(trie.getLeafData(hash, key));
     }
   }
+
+  @Test
+  public void testVariableKeyLen() throws Exception 
+  {
+    Map<ByteString, ByteString> update_map = new HashMap<>();
+
+    {
+      ByteString key = ByteString.copyFrom(new String("").getBytes());
+      ByteString data = ByteString.copyFrom(new String("ZERO").getBytes());
+      update_map.put(key, data);
+    }
+    {
+      ByteString key = ByteString.copyFrom(new String("a").getBytes());
+      ByteString data = ByteString.copyFrom(new String("A").getBytes());
+      update_map.put(key, data);
+    }
+    {
+      ByteString key = ByteString.copyFrom(new String("aa").getBytes());
+      ByteString data = ByteString.copyFrom(new String("AA").getBytes());
+      update_map.put(key, data);
+    }
+
+
+    ByteString hash = vartrie.mergeBatch(emptyRoot, update_map);
+    String v;
+    
+    v = new String(vartrie.getLeafData(hash, ByteString.copyFrom(new String("").getBytes())).toByteArray());
+    Assert.assertEquals("ZERO", v);
+
+    v = new String(vartrie.getLeafData(hash, ByteString.copyFrom(new String("a").getBytes())).toByteArray());
+    Assert.assertEquals("A", v);
+
+    v = new String(vartrie.getLeafData(hash, ByteString.copyFrom(new String("aa").getBytes())).toByteArray());
+    Assert.assertEquals("AA", v);
+
+    update_map.clear();
+    update_map.put(ByteString.EMPTY, null);
+    hash = vartrie.mergeBatch(hash, update_map);
+
+    Assert.assertNull( vartrie.getLeafData(hash, ByteString.EMPTY) );
+
+    v = new String(vartrie.getLeafData(hash, ByteString.copyFrom(new String("a").getBytes())).toByteArray());
+    Assert.assertEquals("A", v);
+
+    v = new String(vartrie.getLeafData(hash, ByteString.copyFrom(new String("aa").getBytes())).toByteArray());
+    Assert.assertEquals("AA", v);
+
+  }
+  @Test
+  public void testVariableStorm() throws Exception 
+  {
+    ByteString hash = emptyRoot;
+
+    Map<ByteString, ByteString> revert_map = new HashMap<>();
+    Map<ByteString, ByteString> mangle_map = new HashMap<>();
+
+    Map<ByteString, ByteString> update_map = new HashMap<>();
+    Random rnd = new Random();
+    byte[] data = new byte[100];
+    for(int i=0; i<10000; i++)
+    {
+      int len = rnd.nextInt(50) * 2;
+      Assert.assertTrue(len % 2 == 0);
+      byte b[] = new byte[len];
+      rnd.nextBytes(b);
+      rnd.nextBytes(data);
+      update_map.put( ByteString.copyFrom(b), ByteString.copyFrom(data) );
+    }
+    hash = vartrie.mergeBatch(hash, update_map);
+    ByteString first_hash = hash;
+
+    for(ByteString k : update_map.keySet())
+    {
+      Assert.assertEquals( update_map.get(k), vartrie.getLeafData(hash, k));
+    }
+
+    for(int i=0; i<10000; i++)
+    {
+      int len = rnd.nextInt(50) * 2 + 1;
+      Assert.assertTrue(len % 2 == 1);
+      byte b[] = new byte[len];
+      rnd.nextBytes(b);
+      rnd.nextBytes(data);
+      mangle_map.put( ByteString.copyFrom(b), ByteString.copyFrom(data) );
+      revert_map.put( ByteString.copyFrom(b), null);
+    }
+    
+    // Apply changes
+    hash = vartrie.mergeBatch(hash, mangle_map);
+    vartrie.assertValid(hash);
+    for(ByteString k : update_map.keySet())
+    {
+      Assert.assertEquals( update_map.get(k), vartrie.getLeafData(hash, k));
+    }
+    for(ByteString k : mangle_map.keySet())
+    {
+      Assert.assertEquals( mangle_map.get(k), vartrie.getLeafData(hash, k));
+    }
+
+    // Revert changes
+    hash = vartrie.mergeBatch(hash, revert_map);
+    vartrie.assertValid(hash);
+
+    for(ByteString k : update_map.keySet())
+    {
+      Assert.assertEquals( update_map.get(k), vartrie.getLeafData(hash, k));
+    }
+    for(ByteString k : mangle_map.keySet())
+    {
+      Assert.assertNull( vartrie.getLeafData(hash, k));
+    }
  
+    Assert.assertEquals(first_hash, hash);
+
+  }
+
+
 }
 

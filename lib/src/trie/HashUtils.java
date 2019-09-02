@@ -47,15 +47,14 @@ public class HashUtils
 
   public static boolean validateNodeHash(TrieNode node)
   {
-    List<ByteString> hash_list = null;
+    LinkedList<ByteString> hash_list = new LinkedList<>();
+
+    hash_list.add(node.getPrefix());
     if (node.getIsLeaf())
     {
-      hash_list = ImmutableList.of(node.getPrefix(), node.getLeafData());
+      hash_list.add(node.getLeafData());
     }
-    else
     {
-      hash_list = new LinkedList<>();
-      hash_list.add(node.getPrefix());
       TreeMap<ByteString, ChildEntry> sortedChildren = new TreeMap<>(new ByteStringComparator());
 
       for(ChildEntry ce : node.getChildrenList())
@@ -68,7 +67,6 @@ public class HashUtils
         hash_list.add(ce.getHash());
       }
     }
-
 
     ByteString hash_calc = hashConcat(hash_list);
 

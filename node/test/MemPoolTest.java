@@ -407,7 +407,7 @@ public class MemPoolTest
 
   public static HashedTrie newMemoryTrie()
   {
-    return new HashedTrie(new TrieDBMem(), Globals.UTXO_KEY_LEN, true);
+    return new HashedTrie(new TrieDBMem(), true, false);
   }
 
   public class DummyChainState implements ChainStateSource

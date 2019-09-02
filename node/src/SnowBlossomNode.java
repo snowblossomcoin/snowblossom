@@ -215,7 +215,7 @@ public class SnowBlossomNode
     //File utxo_db_file = new File(utxo_db_path);
     //utxo_db_file.mkdirs();
 
-    utxo_hashed_trie = new HashedTrie(new TrieDBMap(db.getUtxoNodeMap()),Globals.UTXO_KEY_LEN ,true);
+    utxo_hashed_trie = new HashedTrie(new TrieDBMap(db.getUtxoNodeMap()), true, false);
   }
 
   public boolean areWeSynced()

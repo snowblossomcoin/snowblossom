@@ -21,13 +21,25 @@ import snowblossom.trie.proto.TrieNode;
  */
 public class HashedTrie
 {
-  private TrieDB basedb;
-  private int keylen;
+  private final TrieDB basedb;
+  private final boolean end_cap_data;
 
-  public HashedTrie(TrieDB db, int keylen, boolean create_if_empty)
+  public static final ByteString DATA_START = ByteString.copyFrom("DATA<".getBytes());
+  public static final ByteString DATA_END = ByteString.copyFrom(">DATA".getBytes());
+
+  /**
+   * @param db The DB to store things in
+   * @param create_if_empty create empty root if not present
+   * @param end_cap_data Wrap any data with the DATA_START and DATA_END above.  Important to be true
+       for variable key length Trie's, since otherwise someone could play silly buggers by removing
+       the children of a node and putting in data equals the hashes of the children and it would hash the same.
+   */
+  public HashedTrie(TrieDB db, boolean create_if_empty, boolean end_cap_data)
   {
     this.basedb = db;
-    this.keylen = keylen;
+    this.end_cap_data = end_cap_data;
+
+    
 
     TrieNode root = db.load(HashUtils.hashOfEmpty());
     if ((root == null) && (create_if_empty))
@@ -97,8 +109,11 @@ public class HashedTrie
     }
     if (node.getPrefix().equals(key))
     {
-      Assert.assertTrue(node.getIsLeaf());
-      return node.getLeafData();
+      if (node.getIsLeaf())
+      {
+        return node.getLeafData();
+      }
+      return null;
     }
     Assert.assertTrue(key.startsWith(node.getPrefix()));
 
@@ -169,28 +184,42 @@ public class HashedTrie
     }
     TrieNode.Builder builder = TrieNode.newBuilder();
     builder.setPrefix(node.getPrefix());
+    builder.setIsLeaf(node.getIsLeaf());
+    if (node.getIsLeaf())
+    {
+      builder.setLeafData(node.getLeafData());
+    }
+
+    ArrayList<ByteString> hash_list = new ArrayList<>();
+
+    hash_list.add(node.getPrefix());
 
     // Base case - at keylen
-    if (node.getPrefix().size() == keylen)
+    //if (node.getIsLeaf())
+    //if (node.getPrefix().size() == keylen)
+    if (updates.containsKey(node.getPrefix()))
     {
-      Assert.assertEquals(1, updates.size());
-      
-      ByteString data = updates.values().iterator().next();
+      ByteString data = updates.get(node.getPrefix());
       if (data == null)
       {
-        //nothing ever removed
-        //db.remove(node.getPrefix());
-        return null;
+        builder.setIsLeaf(false);
+        builder.clearLeafData();
+      }
+      else
+      {
+        builder.setIsLeaf(true);
+        builder.setLeafData(data);
       }
 
-      builder.setIsLeaf(true);
-      builder.setLeafData(data);
-
-      builder.setHash(HashUtils.hashConcat(ImmutableList.of(node.getPrefix(), data)));
-
-      TrieNode newNode = builder.build();
-      db.save(newNode);
-      return newNode;
+      //TrieNode newNode = builder.build();
+      //db.save(newNode);
+      //return newNode;
+    }
+    if (builder.getIsLeaf())
+    {
+      if (end_cap_data) hash_list.add(DATA_START);
+      hash_list.add(builder.getLeafData());
+      if (end_cap_data) hash_list.add(DATA_END);
     }
 
     //Intermediate node
@@ -204,10 +233,13 @@ public class HashedTrie
     int prefix_len = node.getPrefix().size();
     for(ByteString bs : updates.keySet())
     {
-      ByteString start = bs.substring(prefix_len, prefix_len + 1);
-      ByteString rest = bs.substring(prefix_len);
-      fings.put(start, rest);
-      changes_by_start.put(start, bs);
+      if (bs.size() > prefix_len)
+      {
+        ByteString start = bs.substring(prefix_len, prefix_len + 1);
+        ByteString rest = bs.substring(prefix_len);
+        fings.put(start, rest);
+        changes_by_start.put(start, bs);
+      }
     }
 
     Map<ByteString, ChildEntry> children = new HashMap<>();
@@ -292,31 +324,27 @@ public class HashedTrie
       
     }
 
-    if (node.getPrefix().size() > 0)
+    if (!builder.getIsLeaf())
     {
-      if (builder.getChildrenCount() == 0)
+      if (node.getPrefix().size() > 0)
       {
-        //db.remove(node.getPrefix());
-        return null;
-      }
-      if (builder.getChildrenCount() == 1)
-      {
-        //db.remove(node.getPrefix());
-
-        if (last_seen_child_node != null)
+        if (builder.getChildrenCount() == 0)
         {
-          return last_seen_child_node;
+          return null;
         }
-
-        TrieNode child_node = db.load(builder.getChildrenList().get(0).getHash());
-        return child_node;
+        if (builder.getChildrenCount() == 1)
+        {
+          if (last_seen_child_node != null)
+          {
+            return last_seen_child_node;
+          }
+          TrieNode child_node = db.load(builder.getChildrenList().get(0).getHash());
+          return child_node;
+        }
       }
     }
 
     //ok, we should have all the dumb child nodes in place, now it is time to redo the hashes
-    ArrayList<ByteString> hash_list = new ArrayList<>();
-
-    hash_list.add(node.getPrefix());
 
     TreeMap<ByteString, ChildEntry> sortedChildren = new TreeMap<>(new ByteStringComparator());
 
@@ -366,6 +394,100 @@ public class HashedTrie
 
   }
 
+  /**
+   * Pretty slow, use for diagnostics only
+   */
+  public TrieReport getTreeReport(ByteString root)
+  {
+    TrieReport report = new TrieReport();
+
+    getTreeReportInternal(basedb, report, root);
+
+    return report;
+
+  }
+
+  public void assertValid(ByteString root)
+  {
+    TrieReport report = getTreeReport(root);
+
+    System.out.println(report);
+    Assert.assertEquals(report.toString(), 0, report.malformed_node);
+  }
+
+  private void getTreeReportInternal(TrieDB db, TrieReport report, ByteString hash)
+  {
+    TrieNode node = db.load(hash);
+    report.nodes++;
+
+    int children = 0;
+    int leaf = 0;
+
+    LinkedList<ByteString> hash_list = new LinkedList<>();
+
+    hash_list.add(node.getPrefix());
+
+    if (node.getIsLeaf())
+    {
+      report.leaf_data_count++;
+      report.leaf_data_size+=node.getLeafData().size();
+      leaf++;
+      if (end_cap_data) hash_list.add(DATA_START);
+      hash_list.add(node.getLeafData());
+      if (end_cap_data) hash_list.add(DATA_END);
+    }
+
+
+    HashSet<ByteString> start_bytes = new HashSet<>();
+    for(ChildEntry ce : node.getChildrenList())
+    {
+      getTreeReportInternal(db, report, ce.getHash());
+      children++;
+      ByteString first = ce.getKey().substring(0,1);
+      start_bytes.add(first);
+    }
+    if (start_bytes.size() < children)
+    {
+      report.malformed_node++;
+      report.malformed_node_shared_prefix++;
+    }
+
+    if (node.getPrefix().size() > 0)
+    {
+      if ((children == 0) && (leaf == 0))
+      {
+        report.malformed_node++;
+        report.malformed_node_dead_end++;
+      }
+      if ((leaf==0) && (children == 1))
+      {
+        report.malformed_node++;
+        report.malformed_node_pass_through++;
+      }
+
+    }
+
+    TreeMap<ByteString, ChildEntry> sortedChildren = new TreeMap<>(new ByteStringComparator());
+
+    for(ChildEntry ce : node.getChildrenList())
+    {
+      sortedChildren.put(ce.getKey(), ce);
+    }
+    for(ChildEntry ce : sortedChildren.values())
+    {
+      hash_list.add(ce.getKey());
+      hash_list.add(ce.getHash());
+    }
+
+
+
+    ByteString found_hash = HashUtils.hashConcat(hash_list);
+    if (!found_hash.equals(hash))
+    {
+      report.malformed_node++;
+      report.malformed_node_hash++;
+    }
+  }
 
   public static ByteString findLongestCommonStart(Set<ByteString> rests)
   {

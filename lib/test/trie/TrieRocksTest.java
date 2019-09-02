@@ -28,7 +28,7 @@ public class TrieRocksTest
     File db_dir = testFolder.newFolder();
     
     db = new TrieDBRocks(db_dir);
-    trie = new HashedTrie(db, 8, true);
+    trie = new HashedTrie(db, true, false);
   }
 
   @After

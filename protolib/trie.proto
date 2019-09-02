@@ -9,6 +9,9 @@ package snowblossom;
 message TrieNode {
   bytes hash = 1;
   bytes prefix = 2;
+
+  // Leaf and children are no longer mutually exclusive
+  // Can have one or both, to support variable key length
   repeated ChildEntry children = 3;
   bool is_leaf = 4;
   bytes leaf_data = 5;
