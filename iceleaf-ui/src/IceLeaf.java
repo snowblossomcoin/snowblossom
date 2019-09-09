@@ -106,6 +106,12 @@ public class IceLeaf
 
 
 
+  public String getTitle()
+  {
+    String title = "SnowBlossom - IceLeaf " + Globals.VERSION;
+    return title;
+
+  }
 
   public class WindowSetup implements Runnable
   {
@@ -129,7 +135,7 @@ public class IceLeaf
       }
 
 
-      String title = "SnowBlossom - IceLeaf " + Globals.VERSION;
+      String title = getTitle();
       if (!params.getNetworkName().equals("snowblossom"))
       {
         title = title + " - " + params.getNetworkName();

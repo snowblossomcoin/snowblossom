@@ -48,7 +48,6 @@ public class DigestUtil
       throw new RuntimeException("Can't merkle empty list");
     }
 
-
     while(src.size() > 1)
     {
 
@@ -76,7 +75,5 @@ public class DigestUtil
 
     return src.get(0);
   }
-
-
 
 }
