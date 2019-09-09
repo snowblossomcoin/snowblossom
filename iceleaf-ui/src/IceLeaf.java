@@ -53,6 +53,9 @@ public class IceLeaf
   public Font getFixedFont(){return fixed_font;}
   public Font getBoldFixedFont(){return bold_fixed_font;}
   public Font getVariableFont(){return var_font;}
+
+
+  public String getResourceBasePath(){return ""; }
   
 
   public IceLeaf(NetworkParams params, Preferences prefs)
@@ -89,9 +92,9 @@ public class IceLeaf
       try
       {
         fixed_font = Font.createFont(Font.TRUETYPE_FONT, 
-          IceLeaf.class.getResourceAsStream("/iceleaf-ui/resources/font/Hack-Regular.ttf"));
+          IceLeaf.class.getResourceAsStream( getResourceBasePath() + "/iceleaf-ui/resources/font/Hack-Regular.ttf"));
         bold_fixed_font = Font.createFont(Font.TRUETYPE_FONT, 
-          IceLeaf.class.getResourceAsStream("/iceleaf-ui/resources/font/Hack-Bold.ttf"));
+          IceLeaf.class.getResourceAsStream( getResourceBasePath() +"/iceleaf-ui/resources/font/Hack-Bold.ttf"));
         var_font = new Font("Verdana", 0, 12);
 
         //IceLeaf.setUIFont(new Font("Verdana", 0, 12));
@@ -125,7 +128,7 @@ public class IceLeaf
 
       try
       {
-        InputStream is = IceLeaf.class.getResourceAsStream("/iceleaf-ui/resources/flower-with-ink-256.png");
+        InputStream is = IceLeaf.class.getResourceAsStream(getResourceBasePath() +"/iceleaf-ui/resources/flower-with-ink-256.png");
         f.setIconImage(ImageIO.read(is));
 
       }
