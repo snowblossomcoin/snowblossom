@@ -85,6 +85,7 @@ public class IceLeaf
   }
 
 
+
   public class EnvSetup implements Runnable
   {
     public void run()
@@ -170,9 +171,16 @@ public class IceLeaf
       tab_pane.add("Node", node_panel.getPanel());
       tab_pane.add("Settings", settings_panel.getPanel());
 
+      setupMorePanels(tab_pane);
+
       UIUtil.applyLook(f, ice_leaf);
       
     }
+
+  }
+
+  public void setupMorePanels( JTabbedPane tab_pane)
+  {
 
   }
 
