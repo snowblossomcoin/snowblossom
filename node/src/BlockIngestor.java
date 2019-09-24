@@ -119,8 +119,6 @@ public class BlockIngestor implements ChainStateSource
 
       }
 
-      System.exit(0);
-
     }
 
 
