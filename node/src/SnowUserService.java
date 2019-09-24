@@ -292,7 +292,7 @@ public class SnowUserService extends UserServiceGrpc.UserServiceImplBase
     ChainHash tx_id = new ChainHash(req.getTxHash());
 
     TransactionStatus status = null;
-    status = TransactionMapUtil.getTxStatus(tx_id, node.getDB(), node.getBlockHeightCache(), node.getBlockIngestor().getHead());
+    status = TransactionMapUtil.getTxStatus(tx_id, node.getDB(), node.getBlockIngestor().getHead());
 
     if (status.getUnknown())
     {
@@ -337,7 +337,7 @@ public class SnowUserService extends UserServiceGrpc.UserServiceImplBase
     try
     {
 
-      observer.onNext( AddressHistoryUtil.getHistory(spec_hash, node.getDB(), node.getBlockHeightCache()) );
+      observer.onNext( AddressHistoryUtil.getHistory(spec_hash, node.getDB(), node.getBlockIngestor().getHead()) );
       observer.onCompleted();
 
 

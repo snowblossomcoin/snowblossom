@@ -9,6 +9,7 @@ import java.io.PrintStream;
 import java.math.BigInteger;
 import java.text.DecimalFormat;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.logging.Logger;
 import snowblossom.lib.*;
 import snowblossom.lib.db.DB;
@@ -62,11 +63,75 @@ public class BlockIngestor implements ChainStateSource
       logger.info(String.format("Loaded chain tip: %d %s", 
         chainhead.getHeader().getBlockHeight(), 
         new ChainHash(chainhead.getHeader().getSnowHash())));
+      checkResummary();
     }
 
     tx_index = node.getConfig().getBoolean("tx_index");
     addr_index = node.getConfig().getBoolean("addr_index");
 
+  }
+
+  private void checkResummary()
+  {
+    BlockSummary curr = chainhead;
+    LinkedList<ChainHash> recalc_list = new LinkedList<>();
+
+    while(curr.getChainIndexTrieHash().size() == 0)
+    {
+      recalc_list.addFirst(new ChainHash(curr.getHeader().getSnowHash()));
+
+      ChainHash prevblock = new ChainHash(curr.getHeader().getPrevBlockHash());
+
+      if (prevblock.equals(ChainHash.ZERO_HASH))
+      {
+        curr = getStartSummary();
+      }
+      else
+      {
+        curr = db.getBlockSummaryMap().get( prevblock.getBytes() );
+      }
+    }
+
+    if (recalc_list.size() > 0)
+    {
+      logger.info(String.format("Need to recalcuate chain index of %d blocks now", recalc_list.size()));
+
+      for(ChainHash hash : recalc_list)
+      {
+        BlockSummary summary = db.getBlockSummaryMap().get( hash.getBytes() );
+        Block blk = db.getBlockMap().get(hash.getBytes());
+        logger.info("Reindexing: " + summary.getHeader().getBlockHeight() +" - " + hash + " - " + blk.getTransactionsCount());
+
+        ChainHash prevblock = new ChainHash(summary.getHeader().getPrevBlockHash());
+        BlockSummary prevsummary = null;
+        if (prevblock.equals(ChainHash.ZERO_HASH))
+        {
+          prevsummary = getStartSummary();
+        }
+        else
+        {
+          prevsummary = db.getBlockSummaryMap().get( prevblock.getBytes() );
+        }
+
+        summary = saveOtherChainIndexBits(summary, prevsummary, blk);
+
+        db.getBlockSummaryMap().put( hash.getBytes(), summary);
+
+      }
+
+      System.exit(0);
+
+    }
+
+
+  }
+
+  private BlockSummary getStartSummary()
+  {
+    return BlockSummary.newBuilder()
+      .setHeader(BlockHeader.newBuilder().setUtxoRootHash( HashUtils.hashOfEmpty() ).build())
+      .setChainIndexTrieHash(  HashUtils.hashOfEmpty() )
+      .build();
   }
 
   public boolean ingestBlock(Block blk)
@@ -92,9 +157,7 @@ public class BlockIngestor implements ChainStateSource
       BlockSummary prev_summary;
       if (prevblock.equals(ChainHash.ZERO_HASH))
       {
-        prev_summary = BlockSummary.newBuilder()
-            .setHeader(BlockHeader.newBuilder().setUtxoRootHash( HashUtils.hashOfEmpty() ).build())
-          .build();
+        prev_summary = getStartSummary();
       }
       else
       {
@@ -113,6 +176,8 @@ public class BlockIngestor implements ChainStateSource
 
       Validation.deepBlockValidation(node.getParams(), node.getUtxoHashedTrie(), blk, prev_summary);
 
+      summary = saveOtherChainIndexBits(summary, prev_summary, blk);
+
       if (tx_index)
       {
         try(TimeRecordAuto tra_tx = TimeRecord.openAuto("BlockIngestor.saveTx"))
@@ -124,18 +189,8 @@ public class BlockIngestor implements ChainStateSource
             tx_map.put(tx.getTxHash(), tx);
           }
           db.getTransactionMap().putAll(tx_map);
-
-          TransactionMapUtil.saveTransactionMap(blk, db);
         }
       }
-      if (addr_index)
-      {
-        try(TimeRecordAuto tra_tx = TimeRecord.openAuto("BlockIngestor.saveAddrHist"))
-        {
-          AddressHistoryUtil.saveAddressHistory(blk, db);
-        }
-      }
-
 
       try(TimeRecordAuto tra_tx = TimeRecord.openAuto("BlockIngestor.blockSave"))
       {
@@ -207,12 +262,31 @@ public class BlockIngestor implements ChainStateSource
       }
       time_record.printReport(block_log);
       time_record.reset();
-
-
     }
 
     return true;
 
+  }
+
+
+  /*
+   * Update the chain index trie hash
+   */
+  private BlockSummary saveOtherChainIndexBits(BlockSummary summary_current, BlockSummary summary_prev, Block blk)
+  {
+    HashMap<ByteString, ByteString> update_map = new HashMap<>();
+
+
+    // Block to TX index
+    TransactionMapUtil.saveTransactionMap(blk, update_map);
+    
+    // Address to TX List
+    AddressHistoryUtil.saveAddressHistory(blk, update_map);
+    
+    ByteString new_hash_root = node.getDB().getChainIndexTrie().mergeBatch( 
+      summary_prev.getChainIndexTrieHash(), update_map);
+
+    return BlockSummary.newBuilder().mergeFrom(summary_current).setChainIndexTrieHash(new_hash_root).build();
   }
 
   private void updateHeights(BlockSummary summary)

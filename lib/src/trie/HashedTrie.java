@@ -39,8 +39,6 @@ public class HashedTrie
     this.basedb = db;
     this.end_cap_data = end_cap_data;
 
-    
-
     TrieNode root = db.load(HashUtils.hashOfEmpty());
     if ((root == null) && (create_if_empty))
     {

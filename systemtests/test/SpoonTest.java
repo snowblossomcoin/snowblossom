@@ -24,10 +24,13 @@ import snowblossom.lib.SnowFieldInfo;
 import snowblossom.lib.SnowMerkle;
 import snowblossom.lib.TransactionBridge;
 import snowblossom.lib.TransactionUtil;
+import snowblossom.lib.ChainHash;
 import snowblossom.miner.MrPlow;
 import snowblossom.miner.PoolMiner;
 import snowblossom.miner.SnowBlossomMiner;
 import snowblossom.node.SnowBlossomNode;
+import snowblossom.node.TransactionMapUtil;
+import snowblossom.node.AddressHistoryUtil;
 import snowblossom.proto.*;
 
 public class SpoonTest
@@ -219,6 +222,26 @@ public class SpoonTest
     TransactionBridge b = new_funds.get(0);
     Assert.assertEquals(value, b.value);
 
+    Assert.assertNotNull(node.getDB());
+
+    TransactionStatus status = TransactionMapUtil.getTxStatus( 
+      new ChainHash(tx.getTxHash()), 
+      node.getDB(), 
+      node.getBlockIngestor().getHead());
+
+    System.out.println(status);
+    Assert.assertTrue(status.getConfirmed());
+
+    {
+      HistoryList hl = AddressHistoryUtil.getHistory(to_addr, node.getDB(), node.getBlockIngestor().getHead());
+      Assert.assertEquals(1, hl.getEntriesCount());
+    }
+    {
+      HistoryList hl = AddressHistoryUtil.getHistory(from_addr, node.getDB(), node.getBlockIngestor().getHead());
+      Assert.assertTrue(hl.getEntriesCount()>5);
+    }
+
+
     System.out.println(tx);
 
 
@@ -262,6 +285,8 @@ public class SpoonTest
     config_map.put("db_type", "rocksdb");
     config_map.put("service_port", "" + port);
     config_map.put("network", "spoon");
+    config_map.put("tx_index", "true");
+    config_map.put("addr_index", "true");
 
     return new SnowBlossomNode(new ConfigMem(config_map));
 

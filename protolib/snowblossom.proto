@@ -118,6 +118,15 @@ message TransactionOutput {
   // Doesn't do anything protocol wise, other things might respect
   // this as something.
   bytes for_benefit_of_spec_hash = 4;
+
+  // Also doesn't do anything protocol wise, but might be respected
+  // by other things.  Usually to be used in conjunction with a fbo hash
+  // spec (above).
+  ClaimedIdentifiers ids = 5;
+}
+
+message ClaimedIdentifiers {
+  bytes username = 1;
 }
 
 // The hash of this will simply be the hash of:
@@ -306,10 +315,9 @@ message NodeStatus {
   string network = 7;
 }
 
-// -------------------------------------------------------------------
-// LOCAL DATABASE THINGS - NOT PART OF PROTOCOL, NOT SENT OVER NETWORK
-// -------------------------------------------------------------------
-
+// -----------------------------------------------------------------------
+// LOCAL DATABASE THINGS - NOT PART OF PROTOCOL, NOT SENT OVER P2P NETWORK
+// -----------------------------------------------------------------------
 message BlockSummary {
   string work_sum = 1;
   int64 blocktime_average_ms = 2;
@@ -318,6 +326,7 @@ message BlockSummary {
   
   BlockHeader header = 5;
   int64 total_transactions = 6;
+  bytes chain_index_trie_hash = 7;
 
 }
 

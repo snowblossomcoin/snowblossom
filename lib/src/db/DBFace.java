@@ -1,6 +1,7 @@
 package snowblossom.lib.db;
 
 import snowblossom.lib.ChainHash;
+import snowblossom.lib.trie.HashedTrie;
 import snowblossom.proto.Block;
 import snowblossom.proto.BlockSummary;
 import snowblossom.proto.Transaction;
@@ -10,8 +11,6 @@ public interface DBFace
   public ProtoDBMap<Block> getBlockMap();
   public ProtoDBMap<BlockSummary> getBlockSummaryMap();
   public ProtoDBMap<Transaction> getTransactionMap();
-  public DBMapMutationSet getAddressHistoryMap();
-  public DBMapMutationSet getTransactionBlockMap();
 
   public DBMap getUtxoNodeMap();
 
@@ -21,5 +20,6 @@ public interface DBFace
   public DBMap getSpecialMap();
   public DBMapMutationSet getSpecialMapSet();
 
+  public HashedTrie getChainIndexTrie();
 
 }

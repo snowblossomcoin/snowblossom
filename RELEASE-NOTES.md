@@ -1,3 +1,8 @@
+## dev
+
+* Changing tx_index and addr_index over to Hashed Trie mode
+
+
 ## 1.5.2
 
 * Skip merging PeerInfo entries, really not needed

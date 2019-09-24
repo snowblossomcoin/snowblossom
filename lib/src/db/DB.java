@@ -14,6 +14,8 @@ import snowblossom.lib.DaemonThreadFactory;
 import snowblossom.proto.Block;
 import snowblossom.proto.BlockSummary;
 import snowblossom.proto.Transaction;
+import snowblossom.lib.trie.TrieDBMap;
+import snowblossom.lib.trie.HashedTrie;
 
 public class DB implements DBFace
 {
@@ -27,9 +29,15 @@ public class DB implements DBFace
   protected DBMap block_height_map;
   protected DBMap special_map;
   protected ProtoDBMap<Transaction> tx_map;
-  protected DBMapMutationSet address_history_map;
   protected DBMapMutationSet special_map_set;
-  protected DBMapMutationSet transaction_block_map;
+
+
+  // for the Hashed Trie of additional information
+  // including:
+  //  * transactions for addresses
+  //  * transaction to block
+  protected DBMap chain_index_map;
+  protected HashedTrie chain_index_trie;
 
   private Config config;
   private DBProvider prov;
@@ -60,6 +68,10 @@ public class DB implements DBFace
     utxo_node_map = prov.openMap("u");
     block_height_map = prov.openMap("height");
     special_map = prov.openMap("special");
+    chain_index_map = prov.openMap("cit");
+
+    chain_index_trie = new HashedTrie(new TrieDBMap(chain_index_map), true, true);
+
 
     try
     {
@@ -75,11 +87,10 @@ public class DB implements DBFace
       // for the top.  This wouldn't be in the headers, but could be advertised to clients
       // who can query for a concensus of address history roots.  And then address history 
       // becomes much more firm and less potentially full of lies.
-      address_history_map = prov.openMutationMapSet("addr_hist_2");
+      //address_history_map = prov.openMutationMapSet("addr_hist_2");
     }
     if (config.getBoolean("tx_index"))
     {
-      transaction_block_map = prov.openMutationMapSet("tx_blk_map");
     }
   }
 
@@ -99,13 +110,11 @@ public class DB implements DBFace
   public DBMap getUtxoNodeMap() { return utxo_node_map; }
 
   @Override
-  public DBMapMutationSet getAddressHistoryMap() { return address_history_map; }
+  public HashedTrie getChainIndexTrie() { return chain_index_trie; }
 
   @Override
   public DBMapMutationSet getSpecialMapSet() { return special_map_set; }
 
-  @Override
-  public DBMapMutationSet getTransactionBlockMap() { return transaction_block_map; }
 
   @Override
   public ChainHash getBlockHashAtHeight(int height)
