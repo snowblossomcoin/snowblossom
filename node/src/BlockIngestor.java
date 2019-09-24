@@ -243,10 +243,10 @@ public class BlockIngestor implements ChainStateSource
           u.tickleBlocks();
         }
         node.getMemPool().tickleBlocks(new ChainHash(summary.getHeader().getUtxoRootHash()));
+        node.getPeerage().sendAllTips();
       }
 
 
-      node.getPeerage().sendAllTips();
     }
 
     if (block_log != null)
@@ -276,10 +276,16 @@ public class BlockIngestor implements ChainStateSource
 
 
     // Block to TX index
-    TransactionMapUtil.saveTransactionMap(blk, update_map);
+    if (tx_index)
+    {
+      TransactionMapUtil.saveTransactionMap(blk, update_map);
+    }
     
     // Address to TX List
-    AddressHistoryUtil.saveAddressHistory(blk, update_map);
+    if (addr_index)
+    {
+      AddressHistoryUtil.saveAddressHistory(blk, update_map);
+    }
     
     ByteString new_hash_root = node.getDB().getChainIndexTrie().mergeBatch( 
       summary_prev.getChainIndexTrieHash(), update_map);
