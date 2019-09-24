@@ -32,10 +32,6 @@ public class DB implements DBFace
   protected DBMapMutationSet special_map_set;
 
 
-  // for the Hashed Trie of additional information
-  // including:
-  //  * transactions for addresses
-  //  * transaction to block
   protected DBMap chain_index_map;
   protected HashedTrie chain_index_trie;
 
@@ -83,14 +79,11 @@ public class DB implements DBFace
 
     if (config.getBoolean("addr_index"))
     {
-      // This could be switched to UTXO style, complete with having a merkle root
-      // for the top.  This wouldn't be in the headers, but could be advertised to clients
-      // who can query for a concensus of address history roots.  And then address history 
-      // becomes much more firm and less potentially full of lies.
-      //address_history_map = prov.openMutationMapSet("addr_hist_2");
+      // This has been swithed to Hashed Trie in chain_index_trie
     }
     if (config.getBoolean("tx_index"))
     {
+      // This has been swithed to Hashed Trie in chain_index_trie
     }
   }
 
@@ -109,9 +102,19 @@ public class DB implements DBFace
   @Override
   public DBMap getUtxoNodeMap() { return utxo_node_map; }
 
+
+  /**
+   * This is a hashed trie that holds data other than the UTXO.
+   * - address to tx (a2tx)
+   * - transaction to block (tx2b)
+   */
   @Override
   public HashedTrie getChainIndexTrie() { return chain_index_trie; }
 
+
+  /**
+   * Used by things like the mining pool, not actually used in the node
+   */
   @Override
   public DBMapMutationSet getSpecialMapSet() { return special_map_set; }
 
