@@ -10,6 +10,7 @@ import io.grpc.netty.NettyServerBuilder;
 import io.netty.handler.ssl.SslContext;
 import java.io.File;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.TreeMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -65,13 +66,23 @@ public class SnowBlossomNode
   private ImmutableList<Integer> service_ports;
   private ImmutableList<Integer> tls_service_ports;
   private AddressSpecHash node_tls_address;
+  private ImmutableList<StatusInterface> status_list;
 
   private volatile boolean terminate;
 
   public SnowBlossomNode(Config config)
     throws Exception
   {
+    this(config, ImmutableList.of(new StatusLogger()));
+
+  }
+
+  public SnowBlossomNode(Config config, List<StatusInterface> status_list)
+    throws Exception
+  {
     this.config = config;
+    this.status_list = ImmutableList.copyOf(status_list);
+    setStatus("Initializing SnowBlossomNode");
 
     config.require("db_type");
     logger.info(String.format("Starting SnowBlossomNode version %s", Globals.VERSION));
@@ -84,6 +95,8 @@ public class SnowBlossomNode
     startServices();
 
     startWidgets();
+
+    setStatus("SnowBlossomNode started");
   }
 
   public void stop()
@@ -95,6 +108,15 @@ public class SnowBlossomNode
   private void setupParams()
   {
     params = NetworkParams.loadFromConfig(config);
+  }
+
+  public void setStatus(String status)
+  {
+    for(StatusInterface si : status_list)
+    {
+      si.setStatus(status);
+    }
+
   }
 
   private void loadWidgets()
@@ -125,7 +147,6 @@ public class SnowBlossomNode
     peer_service = new SnowPeerService(this);
     LinkedList<Integer> ports = new LinkedList<>();
     LinkedList<Integer> tls_ports = new LinkedList<>();
-
 
     if (config.isSet("service_port"))
     {

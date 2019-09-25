@@ -60,7 +60,7 @@ public class BlockIngestor implements ChainStateSource
     chainhead = db.getBlockSummaryMap().get(HEAD);
     if (chainhead != null)
     {
-      logger.info(String.format("Loaded chain tip: %d %s", 
+      node.setStatus(String.format("Loaded chain tip: %d %s", 
         chainhead.getHeader().getBlockHeight(), 
         new ChainHash(chainhead.getHeader().getSnowHash())));
       checkResummary();
@@ -94,13 +94,13 @@ public class BlockIngestor implements ChainStateSource
 
     if (recalc_list.size() > 0)
     {
-      logger.info(String.format("Need to recalcuate chain index of %d blocks now", recalc_list.size()));
+      node.setStatus(String.format("Need to recalcuate chain index of %d blocks now", recalc_list.size()));
 
       for(ChainHash hash : recalc_list)
       {
         BlockSummary summary = db.getBlockSummaryMap().get( hash.getBytes() );
         Block blk = db.getBlockMap().get(hash.getBytes());
-        logger.info("Reindexing: " + summary.getHeader().getBlockHeight() +" - " + hash + " - " + blk.getTransactionsCount());
+        node.setStatus("Reindexing: " + summary.getHeader().getBlockHeight() +" - " + hash + " - " + blk.getTransactionsCount());
 
         ChainHash prevblock = new ChainHash(summary.getHeader().getPrevBlockHash());
         BlockSummary prevsummary = null;

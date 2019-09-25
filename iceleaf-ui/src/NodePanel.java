@@ -1,5 +1,6 @@
 package snowblossom.iceleaf;
 
+import com.google.common.collect.ImmutableList;
 import duckutil.ConfigMem;
 import duckutil.PeriodicThread;
 import java.awt.GridBagConstraints;
@@ -9,10 +10,13 @@ import javax.swing.JProgressBar;
 import javax.swing.SwingUtilities;
 import snowblossom.lib.AddressUtil;
 import snowblossom.lib.Globals;
+import snowblossom.lib.MiscUtils;
 import snowblossom.lib.SystemUtil;
 import snowblossom.node.SnowBlossomNode;
+import snowblossom.node.StatusInterface;
+import snowblossom.node.StatusLogger;
 
-public class NodePanel extends BasePanel
+public class NodePanel extends BasePanel implements StatusInterface
 {
   protected SnowBlossomNode node;
   protected JProgressBar progress;
@@ -92,7 +96,7 @@ public class NodePanel extends BasePanel
       }
       catch(Exception e)
       {
-        String text = e.toString();
+        String text = MiscUtils.printStackTrace(e);
         setMessageBox(text);
        
       }
@@ -137,12 +141,16 @@ public class NodePanel extends BasePanel
 
     ConfigMem config = new ConfigMem(config_map);
 
-    node = new SnowBlossomNode(config);
+    node = new SnowBlossomNode(config, ImmutableList.of(new StatusLogger(), this));
 
     setStatusBox("Node started");
     setMessageBox("");
-
-
   }
+
+  public void setStatus(String msg)
+  {
+    this.setStatusBox(msg);
+  }
+
 
 }
