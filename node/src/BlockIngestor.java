@@ -286,6 +286,10 @@ public class BlockIngestor implements ChainStateSource
     {
       AddressHistoryUtil.saveAddressHistory(blk, update_map);
     }
+
+    // FBO Index
+    ForBenefitOfUtil.saveIndex(blk, update_map);
+
     
     ByteString new_hash_root = node.getDB().getChainIndexTrie().mergeBatch( 
       summary_prev.getChainIndexTrieHash(), update_map);

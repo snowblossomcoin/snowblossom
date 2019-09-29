@@ -1,4 +1,5 @@
 package snowblossom.node;
+import com.google.common.collect.TreeMultimap;
 import com.google.protobuf.ByteString;
 import java.nio.ByteBuffer;
 import java.util.LinkedList;
@@ -10,12 +11,11 @@ import snowblossom.lib.db.DBMapMutationSet;
 import snowblossom.proto.*;
 import snowblossom.trie.proto.TrieNode;
 
-public class AddressHistoryUtil
+public class ForBenefitOfUtil
 {
-  public static final ByteString MAP_PREFIX = ByteString.copyFrom("a2tx".getBytes());
+  public static final ByteString MAP_PREFIX = ByteString.copyFrom("fbo2".getBytes());
 
-  // NEW STYLE
-  public static void saveAddressHistory(Block blk, Map<ByteString, ByteString> update_map)
+  public static void saveIndex(Block blk, Map<ByteString, ByteString> update_map)
   {
     int height = blk.getHeader().getBlockHeight();
 
@@ -23,37 +23,55 @@ public class AddressHistoryUtil
 
     for(Transaction tx : blk.getTransactionsList())
     {
-      ChainHash tx_id = new ChainHash(tx.getTxHash());
-      ByteString val = getValue(blk_id, tx_id, height);
       TransactionInner inner = TransactionUtil.getInner(tx);
 
-      for(TransactionInput in : inner.getInputsList())
-      {
-        ByteString addr = in.getSpecHash();
-        update_map.put( MAP_PREFIX.concat(addr).concat(tx_id.getBytes()), val);
-      }
+      int out_idx = 0;
       for(TransactionOutput out : inner.getOutputsList())
       {
-        ByteString addr = out.getRecipientSpecHash();
-        update_map.put( MAP_PREFIX.concat(addr).concat(tx_id.getBytes()), val);
+        if (out.getForBenefitOfSpecHash().size() == Globals.ADDRESS_SPEC_HASH_LEN)
+        {
+          ByteString for_addr = out.getForBenefitOfSpecHash();
+          ChainHash tx_id = new ChainHash(tx.getTxHash());
+
+          ByteString key = getKey(for_addr, tx_id, out_idx);
+          ByteString value = getValue(tx_id, out_idx);
+
+          update_map.put( key, value);
+
+        }
+        // if has identifiers, save those as well.  Maybe as a hash, to avoid silly
+        // buggers with naming
+        out_idx++;
       }
     }
   }
 
-
-  public static ByteString getValue(ChainHash blk_id, ChainHash tx_id, int height)
+  public static ByteString getKey(ByteString for_addr, ChainHash tx_id, int out_idx)
   {
-    byte[] buff = new byte[4 + Globals.BLOCKCHAIN_HASH_LEN * 2];
+    byte[] buff = new byte[Globals.ADDRESS_SPEC_HASH_LEN + Globals.BLOCKCHAIN_HASH_LEN + 4];
 
     ByteBuffer bb = ByteBuffer.wrap(buff);
-    bb.putInt(height);
-    bb.put(blk_id.toByteArray());
+    bb.put(for_addr.toByteArray());
     bb.put(tx_id.toByteArray());
+    bb.putInt(out_idx);
+
+    return MAP_PREFIX.concat(ByteString.copyFrom(buff));
+
+  }
+
+
+  public static ByteString getValue(ChainHash tx_id, int out_idx)
+  {
+    byte[] buff = new byte[Globals.BLOCKCHAIN_HASH_LEN + 4];
+
+    ByteBuffer bb = ByteBuffer.wrap(buff);
+    bb.put(tx_id.toByteArray());
+    bb.putInt(out_idx);
 
     return ByteString.copyFrom(buff);
   }
 
-  public static HistoryList getHistory(AddressSpecHash spec_hash, DB db, BlockSummary summary)
+  /*public static HistoryList getHistory(AddressSpecHash spec_hash, DB db, BlockSummary summary)
     throws ValidationException
   {
     
@@ -102,6 +120,6 @@ public class AddressHistoryUtil
     }
 
     return hist_list.build();
-  }
+  }*/
 
 }
