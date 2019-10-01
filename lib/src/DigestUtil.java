@@ -1,5 +1,6 @@
 package snowblossom.lib;
 
+import com.google.protobuf.ByteString;
 import duckutil.TimeRecord;
 import duckutil.TimeRecordAuto;
 import java.security.MessageDigest;
@@ -22,6 +23,12 @@ public class DigestUtil
       throw new RuntimeException(e);
     }
   }
+
+  public static ByteString hash(ByteString input)
+  {
+    return ByteString.copyFrom( getMD().digest(input.toByteArray() ));
+  }
+
   public static MessageDigest getMDAddressSpec()
   {
     try(TimeRecordAuto tra = TimeRecord.openAuto("MessageDigest.getMDAddressSpec"))

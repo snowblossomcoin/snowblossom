@@ -127,6 +127,7 @@ message TransactionOutput {
 
 message ClaimedIdentifiers {
   bytes username = 1;
+  bytes channelname = 2;
 }
 
 // The hash of this will simply be the hash of:
@@ -169,6 +170,8 @@ service UserService {
   rpc GetTransactionStatus ( RequestTransaction ) returns ( TransactionStatus ) {}
   rpc GetBlockHeader ( RequestBlockHeader ) returns ( BlockHeader ) {}
   rpc GetFeeEstimate ( NullRequest ) returns ( FeeEstimate ) {}
+  rpc GetFBOList ( RequestAddress ) returns ( TxOutList ) {}
+  rpc GetIDList ( RequestNameID ) returns ( TxOutList ) {} 
 }
 
 
@@ -300,6 +303,27 @@ message HistoryEntry {
   bytes block_hash = 3;
 }
 
+// A list of outputs
+message TxOutList {
+  repeated TxOutPoint out_list =1;
+}
+
+// A single output along with transaction id and out index
+message TxOutPoint {
+  TransactionOutput out = 1;
+  bytes tx_hash = 2;
+  int32 out_idx = 3;
+
+}
+
+message RequestNameID {
+  enum IdType {
+    USERNAME = 0;
+    CHANNELNAME = 1;
+  }
+  IdType name_type = 1;
+  bytes name = 2;
+}
 
 message NullRequest {
 

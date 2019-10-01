@@ -452,7 +452,6 @@ public class Validation
     throws ValidationException
   {
     validateByteString(hash, name, Globals.ADDRESS_SPEC_HASH_LEN);
-
   }
 
   public static void validateChainHash(ByteString hash, String name)

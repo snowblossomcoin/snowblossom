@@ -127,6 +127,23 @@ public class HashedTrie
     return null;
   }
 
+  public TreeMap<ByteString, ByteString> getDataMap(ByteString hash, ByteString key, int max_results)
+  {
+    LinkedList<TrieNode> proof = new LinkedList<>();
+    LinkedList<TrieNode> results = new LinkedList<>();
+
+    getNodeDetails(hash, key, proof, results, max_results);
+    
+    TreeMap<ByteString, ByteString> map = new TreeMap<>(new ByteStringComparator());
+
+    for(TrieNode node : results)
+    {
+      map.put(node.getPrefix(), node.getLeafData());
+    }
+
+    return map;
+  }
+
   public void getNodeDetails(ByteString hash, ByteString target_key, LinkedList<TrieNode> proof, LinkedList<TrieNode> results, int max_results)
   {
     TrieNode node = basedb.load(hash);
