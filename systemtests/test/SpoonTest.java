@@ -12,6 +12,8 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 import snowblossom.client.SnowBlossomClient;
+import snowblossom.client.WalletUtil;
+import snowblossom.client.TransactionFactory;
 import snowblossom.lib.AddressSpecHash;
 import snowblossom.lib.AddressUtil;
 import snowblossom.lib.Globals;
@@ -31,7 +33,9 @@ import snowblossom.miner.SnowBlossomMiner;
 import snowblossom.node.SnowBlossomNode;
 import snowblossom.node.TransactionMapUtil;
 import snowblossom.node.AddressHistoryUtil;
+import snowblossom.node.ForBenefitOfUtil;
 import snowblossom.proto.*;
+import snowblossom.util.proto.*;
 
 public class SpoonTest
 {
@@ -59,9 +63,7 @@ public class SpoonTest
     Thread.sleep(100);
 
     KeyPair key_pair = KeyUtil.generateECCompressedKey();
-
     AddressSpec claim = AddressUtil.getSimpleSpecForKey(key_pair.getPublic(), SignatureUtil.SIG_TYPE_ECDSA_COMPRESSED);
-
     AddressSpecHash to_addr = AddressUtil.getHashForSpec(claim);
 
     SnowBlossomMiner miner = startMiner(port, to_addr, snow_path);
@@ -70,7 +72,6 @@ public class SpoonTest
 
     SnowBlossomClient client = startClient(port);
     testConsolidateFunds(node, client, key_pair, to_addr);
-
 
     SnowBlossomNode node2 = startNode(port + 1);
     node2.getPeerage().connectPeer("localhost", port);
@@ -81,6 +82,121 @@ public class SpoonTest
     Thread.sleep(500);
     node.stop();
     node2.stop();
+  }
+
+  @Test
+  public void fboTest() throws Exception
+  {
+    File snow_path = setupSnow();
+
+    Random rnd = new Random();
+    int port = 20000 + rnd.nextInt(30000);
+    SnowBlossomNode node = startNode(port);
+    Thread.sleep(100);
+    
+    SnowBlossomClient client = startClientWithWallet(port);
+
+    WalletDatabase lock_db = genWallet();
+    WalletDatabase social_db = genWallet();
+
+    AddressSpecHash mine_to_addr = client.getPurse().getUnusedAddress(false,false);
+    AddressSpecHash lock_to_addr = AddressUtil.getHashForSpec( lock_db.getAddresses(0) );
+    AddressSpecHash social_addr = AddressUtil.getHashForSpec( social_db.getAddresses(0) );
+
+    
+    SnowBlossomMiner miner = startMiner(port, mine_to_addr, snow_path);
+
+    testMinedBlocks(node);
+    
+    LinkedList<Transaction> tx_list = new LinkedList<>();
+    LinkedList<Transaction> tx_list_jumbo = new LinkedList<>();
+    LinkedList<Transaction> tx_list_swoopo = new LinkedList<>();
+
+    for(int i=0; i<10; i++)
+    {
+      TransactionFactoryConfig.Builder config = TransactionFactoryConfig.newBuilder();
+
+      config.setSign(true);
+      config.setChangeRandomFromWallet(true);
+      config.setInputConfirmedThenPending(true);
+      config.setFeeUseEstimate(true);
+      config.addOutputs( TransactionOutput.newBuilder()
+        .setValue( Globals.SNOW_VALUE)
+        .setRecipientSpecHash(lock_to_addr.getBytes())
+        .setForBenefitOfSpecHash(social_addr.getBytes())
+        .build());
+      config.addOutputs( TransactionOutput.newBuilder()
+        .setValue( Globals.SNOW_VALUE)
+        .setRecipientSpecHash(lock_to_addr.getBytes())
+        .setForBenefitOfSpecHash(social_addr.getBytes())
+        .setIds( ClaimedIdentifiers.newBuilder().setUsername( ByteString.copyFrom("jumbo".getBytes())) )
+        .build());
+      config.addOutputs( TransactionOutput.newBuilder()
+        .setValue( Globals.SNOW_VALUE)
+        .setRecipientSpecHash(lock_to_addr.getBytes())
+        .setForBenefitOfSpecHash(social_addr.getBytes())
+        .setIds( ClaimedIdentifiers.newBuilder().setChannelname( ByteString.copyFrom("swoopo".getBytes())) )
+        .build());
+      config.addOutputs( TransactionOutput.newBuilder()
+        .setValue( Globals.SNOW_VALUE)
+        .setRecipientSpecHash(lock_to_addr.getBytes())
+        .setForBenefitOfSpecHash(social_addr.getBytes())
+        .setIds( ClaimedIdentifiers.newBuilder().setUsername( ByteString.copyFrom(("name-" + i).getBytes())) )
+        .build());
+
+      TransactionFactoryResult tr = TransactionFactory.createTransaction(config.build(), client.getPurse().getDB(), client);
+
+      SubmitReply submit = client.getStub().submitTransaction(tr.getTx());
+      System.out.println(submit);
+
+      Assert.assertTrue(submit.getErrorMessage(), submit.getSuccess());
+
+      tx_list.add(tr.getTx());
+
+      waitForMoreBlocks(node, 1);
+
+    }
+
+
+    // TODO - test FBO
+    TxOutList fbo_out_list = ForBenefitOfUtil.getFBOList(social_addr, 
+      node.getDB().getChainIndexTrie(), 
+      node.getBlockIngestor().getHead().getChainIndexTrieHash());
+    
+    Assert.assertEquals( 40, fbo_out_list.getOutListCount());
+
+    // TODO - test user name
+    TxOutList jumbo_list = ForBenefitOfUtil.getIdListUser(ByteString.copyFrom("jumbo".getBytes()), 
+      node.getDB().getChainIndexTrie(), 
+      node.getBlockIngestor().getHead().getChainIndexTrieHash());
+    Assert.assertEquals( 10, jumbo_list.getOutListCount());
+
+    // TODO - test channel name
+    TxOutList swoopo_list = ForBenefitOfUtil.getIdListChannel(ByteString.copyFrom("swoopo".getBytes()), 
+      node.getDB().getChainIndexTrie(), 
+      node.getBlockIngestor().getHead().getChainIndexTrieHash());
+    Assert.assertEquals( 10, swoopo_list.getOutListCount());
+
+    // Make sure the order of these matches the order put onto the chain
+    // So the first is the oldest
+    for(int i = 0; i<tx_list.size(); i++)
+    {
+      ByteString tx = tx_list.get(i).getTxHash();
+      Assert.assertEquals(tx, jumbo_list.getOutList(i).getTxHash());
+      Assert.assertEquals(tx, swoopo_list.getOutList(i).getTxHash());
+
+      Assert.assertEquals(1, ForBenefitOfUtil.getIdListUser(
+        ByteString.copyFrom(("name-" + i).getBytes()),
+        node.getDB().getChainIndexTrie(),
+        node.getBlockIngestor().getHead().getChainIndexTrieHash()).getOutListCount());
+
+    }
+   
+		node.stop();
+
+
+
+
   }
 
   @Test
@@ -244,7 +360,6 @@ public class SpoonTest
 
     System.out.println(tx);
 
-
   }
 
   private File setupSnow() throws Exception
@@ -347,13 +462,38 @@ public class SpoonTest
 
   }
 
+  private SnowBlossomClient startClientWithWallet(int port) throws Exception
+  {
+
+    String wallet_path = test_folder.newFolder().getPath();
+
+    Map<String, String> config_map = new TreeMap<>();
+    config_map.put("node_uri", "grpc://localhost:" + port);
+    config_map.put("network", "spoon");
+    config_map.put("wallet_path", wallet_path);
+
+    return new SnowBlossomClient(new ConfigMem(config_map));
+  }
+
+ 
 
   private SnowBlossomClient startClient(int port) throws Exception
   {
+
     Map<String, String> config_map = new TreeMap<>();
     config_map.put("node_uri", "grpc://localhost:" + port);
     config_map.put("network", "spoon");
 
     return new SnowBlossomClient(new ConfigMem(config_map));
   }
+
+  public static WalletDatabase genWallet()
+  {
+    TreeMap<String,String> config_map = new TreeMap<>();
+    config_map.put("key_count", "20");
+    WalletDatabase db = WalletUtil.makeNewDatabase(new ConfigMem(config_map), new NetworkParamsRegtest());
+    return db;
+  }
+
+
 }

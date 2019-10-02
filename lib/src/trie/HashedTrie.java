@@ -138,7 +138,10 @@ public class HashedTrie
 
     for(TrieNode node : results)
     {
-      map.put(node.getPrefix(), node.getLeafData());
+      if (node.getIsLeaf())
+      {
+        map.put(node.getPrefix(), node.getLeafData());
+      }
     }
 
     return map;

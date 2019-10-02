@@ -62,8 +62,8 @@ public class NetworkParamsRegtest extends NetworkParams
   public int getDefaultTlsPort() { return 2350; }
 
   @Override
-  public int getActivationHeightTxOutRequirements() { return 1000; }
+  public int getActivationHeightTxOutRequirements() { return 0; }
 
   @Override
-  public int getActivationHeightTxOutExtras() { return 750; }
+  public int getActivationHeightTxOutExtras() { return 0; }
 }

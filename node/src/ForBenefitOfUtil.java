@@ -40,6 +40,7 @@ public class ForBenefitOfUtil
           ByteString for_addr = out.getForBenefitOfSpecHash();
 
           ByteString key = getKey(for_addr, tx_id, out_idx);
+          System.out.println("ZZZ save: " + key.size());
 
           update_map.put(key, out.toByteString());
         }
@@ -109,7 +110,7 @@ public class ForBenefitOfUtil
 
     if (tx_info.size() != Globals.BLOCKCHAIN_HASH_LEN + 4)
     {
-      throw new RuntimeException("Wrong size tx_info");
+      throw new RuntimeException("Wrong size tx_info: " + tx_info.size());
     }
     
     TxOutPoint.Builder op = TxOutPoint.newBuilder();
@@ -144,7 +145,9 @@ public class ForBenefitOfUtil
 
     for(Map.Entry<ByteString, ByteString> me : map.entrySet())
     {
+      System.out.println("ZZZ key len: " + me.getKey().size() + " " + search_key.size());
       ByteString tx_info = me.getKey().substring( search_key.size() );
+      //ByteString tx_info = me.getKey();
 
       list.addOutList( getOutpoint(tx_info, me.getValue()));
     }
