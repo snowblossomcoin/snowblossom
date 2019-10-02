@@ -361,6 +361,66 @@ public class SnowUserService extends UserServiceGrpc.UserServiceImplBase
  
   }
 
+  @Override
+  public void getFBOList(RequestAddress req, StreamObserver<TxOutList> ob)
+  {
+    AddressSpecHash spec_hash = new AddressSpecHash(req.getAddressSpecHash());
+    try
+    {
+      ob.onNext(ForBenefitOfUtil.getFBOList(spec_hash,
+        node.getDB().getChainIndexTrie(),
+        node.getBlockIngestor().getHead().getChainIndexTrieHash()));
+      ob.onCompleted();
+    }
+    catch(Throwable e)
+    {
+      String addr = AddressUtil.getAddressString(node.getParams().getAddressPrefix(), spec_hash);
+      logger.info("Exception "+addr+" " + e.toString());
+
+      ob.onError(e);
+      ob.onCompleted();
+      return;
+    }
+
+  }
+
+  @Override
+  public void getIDList(RequestNameID req, StreamObserver<TxOutList> ob)
+  {
+    try
+    {
+      TxOutList lst = null;
+  
+      ByteString type = null;
+
+      if (req.getNameType() == RequestNameID.IdType.USERNAME)
+      {
+        type = ForBenefitOfUtil.ID_MAP_USER;
+      }
+      if (req.getNameType() == RequestNameID.IdType.CHANNELNAME)
+      {
+        type = ForBenefitOfUtil.ID_MAP_CHAN;
+      }
+      lst = ForBenefitOfUtil.getIdList( type,
+        req.getName(),
+        node.getDB().getChainIndexTrie(),
+        node.getBlockIngestor().getHead().getChainIndexTrieHash());
+
+      ob.onNext(lst);
+      ob.onCompleted();
+    }
+    catch(Throwable e)
+    {
+      logger.info("Exception " + e.toString());
+
+      ob.onError(e);
+      ob.onCompleted();
+      return;
+    }
+
+  }
+
+
 
   class BlockSubscriberInfo
   {

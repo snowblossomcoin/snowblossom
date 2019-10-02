@@ -147,7 +147,6 @@ public class ForBenefitOfUtil
     {
       System.out.println("ZZZ key len: " + me.getKey().size() + " " + search_key.size());
       ByteString tx_info = me.getKey().substring( search_key.size() );
-      //ByteString tx_info = me.getKey();
 
       list.addOutList( getOutpoint(tx_info, me.getValue()));
     }
