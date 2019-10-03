@@ -8,7 +8,8 @@ import org.junit.runners.Suite;
 @SuiteClasses({
   MemPoolTest.class,
   BlockIngestorTest.class,
-  BlockForgeTest.class
+  BlockForgeTest.class,
+  ForBenefitOfUtilTest.class
 })
 public class AllTests
 {}

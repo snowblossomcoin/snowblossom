@@ -12,6 +12,9 @@ import snowblossom.lib.db.DBMapMutationSet;
 import snowblossom.lib.trie.HashedTrie;
 import snowblossom.proto.*;
 import snowblossom.trie.proto.TrieNode;
+import java.text.Collator;
+import java.text.Normalizer;
+import java.util.Locale;
 
 public class ForBenefitOfUtil
 {
@@ -73,7 +76,7 @@ public class ForBenefitOfUtil
 
   public static ByteString getIdKey(ByteString type, ByteString name, int height, ChainHash tx_id, int out_idx)
   {
-    ByteString name_hash = DigestUtil.hash(name);
+    ByteString name_hash = normalizeAndHash(name);
 
     return ID_MAP_PREFIX
       .concat(type)
@@ -107,7 +110,6 @@ public class ForBenefitOfUtil
 
   protected static TxOutPoint getOutpoint(ByteString tx_info, ByteString val)
   {
-
     if (tx_info.size() != Globals.BLOCKCHAIN_HASH_LEN + 4)
     {
       throw new RuntimeException("Wrong size tx_info: " + tx_info.size());
@@ -128,8 +130,6 @@ public class ForBenefitOfUtil
     }
 
     return op.build();
-    
-
   }
 
   /**
@@ -159,7 +159,7 @@ public class ForBenefitOfUtil
    */
   public static TxOutList getIdList(ByteString type, ByteString name, HashedTrie db, ByteString trie_root)
   {
-    ByteString name_hash = DigestUtil.hash(name);
+    ByteString name_hash = normalizeAndHash(name);
 
     TxOutList.Builder list = TxOutList.newBuilder();
     ByteString search_key = ID_MAP_PREFIX
@@ -188,56 +188,30 @@ public class ForBenefitOfUtil
     return getIdList(ID_MAP_CHAN, name, db, trie_root);
   }
 
-
-  /*public static HistoryList getHistory(AddressSpecHash spec_hash, DB db, BlockSummary summary)
-    throws ValidationException
+  /**
+   * This doesn't output the string, but actually the collator byte stream
+   * which should be used as the uniqueness key. See ForBenefitOfUtilTest for examples
+   * of things that should or should not match each other.
+   */
+  public static ByteString normalize(String input)
   {
+    String n1 = Normalizer.normalize(input, Normalizer.Form.NFC);
+
+    // Not trying to be US-English centric, but have to pick some Locale
+    // so that this section will behave consistently for all nodes
+    Collator collator = Collator.getInstance(Locale.US);
+    collator.setStrength(Collator.PRIMARY);
+    collator.setDecomposition(Collator.FULL_DECOMPOSITION);
     
-    ByteString key = MAP_PREFIX.concat(spec_hash.getBytes());
+    return ByteString.copyFrom(collator.getCollationKey(n1).toByteArray());
 
-    LinkedList<TrieNode> proof = new LinkedList<>();
-    LinkedList<TrieNode> results = new LinkedList<>();
-    db.getChainIndexTrie().getNodeDetails(
-      summary.getChainIndexTrieHash(),
-      key,
-      proof,
-      results,
-      Globals.ADDRESS_HISTORY_MAX_REPLY);
+  }
+  public static ByteString normalizeAndHash(ByteString name)
+  {
+    ByteString str = normalize(new String(name.toByteArray()));
 
+    return DigestUtil.hash(str);
     
-    //List<ByteString> value_set = db.getAddressHistoryMap().getSet(spec_hash.getBytes(), Globals.ADDRESS_HISTORY_MAX_REPLY);
-
-    HistoryList.Builder hist_list = HistoryList.newBuilder();
-
-    for(TrieNode node : results)
-    {
-      if (node.getIsLeaf())
-      {
-        ByteString val = node.getLeafData();
-        ByteBuffer bb = ByteBuffer.wrap(val.toByteArray());
-        int height = bb.getInt();
-
-        byte[] b = new byte[Globals.BLOCKCHAIN_HASH_LEN];
-
-        bb.get(b);
-        ChainHash blk_hash = new ChainHash(b);
-
-        bb.get(b);
-        ChainHash tx_hash = new ChainHash(b);
-
-        //if (blk_hash.equals(cache.getHash(height)))
-        {
-          hist_list.addEntries(HistoryEntry
-            .newBuilder()
-            .setBlockHeight(height)
-            .setTxHash(tx_hash.getBytes())
-            .setBlockHash(blk_hash.getBytes())
-            .build());
-        }
-      }
-    }
-
-    return hist_list.build();
-  }*/
+  }
 
 }
