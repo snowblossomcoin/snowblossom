@@ -493,7 +493,7 @@ public class SnowBlossomClient
 
     tx_config.setSign(true);
     AddressSpecHash to_hash = AddressUtil.getHashForAddress(params.getAddressPrefix(), to);
-    AddressSpecHash fbo_hash = AddressUtil.getHashForAddress(params.getAddressPrefix(), fbo);
+    AddressSpecHash fbo_hash = AddressUtil.getHashForAddress(null, fbo);
 
     TransactionOutput.Builder out = TransactionOutput.newBuilder();
 

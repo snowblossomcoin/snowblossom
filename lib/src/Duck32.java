@@ -69,6 +69,10 @@ public class Duck32
     if (colon > 0)
     {
       String found_label = encoding.substring(0, colon);
+
+      // Use found label if we have null
+      if (expected_label == null) expected_label = found_label;
+
       data_str = encoding.substring(colon+1);
       if (!expected_label.equals(found_label))
       {

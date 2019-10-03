@@ -408,6 +408,17 @@ public class TransactionUtil
         String for_addr = new AddressSpecHash( o.getForBenefitOfSpecHash() ).toAddressString(params);
         out.println("    For benefit of: " + for_addr);
       }
+      if (o.getIds() != null)
+      {
+        if (o.getIds().getUsername().size() > 0)
+        {
+          out.println("    Username: " + HexUtil.getSafeString(o.getIds().getUsername()));
+        }
+        if (o.getIds().getChannelname().size() > 0)
+        {
+          out.println("    Channelname: " + HexUtil.getSafeString(o.getIds().getChannelname()));
+        }
+      }
     }
 
     for(int c_idx = 0; c_idx < inner.getClaimsCount(); c_idx++)
