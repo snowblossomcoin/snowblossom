@@ -23,6 +23,7 @@ import snowblossom.lib.*;
 import snowblossom.proto.*;
 import snowblossom.proto.UserServiceGrpc.UserServiceBlockingStub;
 import snowblossom.util.proto.*;
+import com.google.protobuf.ByteString;
 
 public class SnowBlossomClient
 {
@@ -128,10 +129,15 @@ public class SnowBlossomClient
         String to = args[3];
         String fbo = args[4];
         int block = Integer.parseInt(args[5]);
+        String username = null;
+        if (args.length > 6)
+        {
+          username = args[6];
+        }
 
         DecimalFormat df = new DecimalFormat("0.000000");
         logger.info(String.format("Building locked send of %s to %s for %s until %d", df.format(val_snow), to, fbo, block));
-        client.sendLocked(value, to, fbo, block);
+        client.sendLocked(value, to, fbo, block, username);
 
       }
  
@@ -479,7 +485,7 @@ public class SnowBlossomClient
     System.out.println(stub_holder.getBlockingStub().submitTransaction(tx));
 
   }
-  public void sendLocked(long value, String to, String fbo, int block)
+  public void sendLocked(long value, String to, String fbo, int block, String username)
     throws Exception
   {
 
@@ -488,12 +494,19 @@ public class SnowBlossomClient
     tx_config.setSign(true);
     AddressSpecHash to_hash = AddressUtil.getHashForAddress(params.getAddressPrefix(), to);
     AddressSpecHash fbo_hash = AddressUtil.getHashForAddress(params.getAddressPrefix(), fbo);
-    tx_config.addOutputs(TransactionOutput.newBuilder()
-      .setRecipientSpecHash(to_hash.getBytes())
-      .setValue(value)
-      .setForBenefitOfSpecHash(fbo_hash.getBytes())
-      .setRequirements( TransactionRequirements.newBuilder().setRequiredBlockHeight(block).build() )
-      .build());
+
+    TransactionOutput.Builder out = TransactionOutput.newBuilder();
+
+    out.setRecipientSpecHash(to_hash.getBytes());
+    out.setValue(value);
+    out.setForBenefitOfSpecHash(fbo_hash.getBytes());
+    out.setRequirements( TransactionRequirements.newBuilder().setRequiredBlockHeight(block).build() );
+    if (username != null)
+    {
+      out.setIds( ClaimedIdentifiers.newBuilder().setUsername(ByteString.copyFrom(username.getBytes())).build() );
+    }
+    tx_config.addOutputs(out.build());
+    
     tx_config.setChangeFreshAddress(true);
     tx_config.setInputConfirmedThenPending(true);
     tx_config.setFeeUseEstimate(true);
