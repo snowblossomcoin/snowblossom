@@ -120,7 +120,7 @@ public class SnowBlossomClient
         client.maintainKeys();
         if (args.length < 6)
         {
-          logger.log(Level.SEVERE, "Incorrect syntax. Syntax: SnowBlossomClient <config_file> sendlocked <amount> <dest_address> <fbo_address> <block>");
+          logger.log(Level.SEVERE, "Incorrect syntax. Syntax: SnowBlossomClient <config_file> sendlocked <amount> <dest_address> <fbo_address> <block> [name]");
           System.exit(-1);
         }
         double val_snow = Double.parseDouble(args[2]);
