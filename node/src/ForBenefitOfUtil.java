@@ -137,6 +137,7 @@ public class ForBenefitOfUtil
    */
   public static TxOutList getFBOList(AddressSpecHash spec_hash, HashedTrie db, ByteString trie_root)
   {
+    // TODO - filter by currently valid utxos
     TxOutList.Builder list = TxOutList.newBuilder();
 
     ByteString search_key = FBO_MAP_PREFIX.concat(spec_hash.getBytes()); 
@@ -145,7 +146,6 @@ public class ForBenefitOfUtil
 
     for(Map.Entry<ByteString, ByteString> me : map.entrySet())
     {
-      System.out.println("ZZZ key len: " + me.getKey().size() + " " + search_key.size());
       ByteString tx_info = me.getKey().substring( search_key.size() );
 
       list.addOutList( getOutpoint(tx_info, me.getValue()));
@@ -159,6 +159,7 @@ public class ForBenefitOfUtil
    */
   public static TxOutList getIdList(ByteString type, ByteString name, HashedTrie db, ByteString trie_root)
   {
+    // TODO - filter by currently valid utxos
     ByteString name_hash = normalizeAndHash(name);
 
     TxOutList.Builder list = TxOutList.newBuilder();
