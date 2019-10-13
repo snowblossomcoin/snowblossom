@@ -39,6 +39,8 @@ public class RpcServerHandler
     json_server.register(new GetBlockHandler());
     json_server.register(new GetXpubAddressHandler());
     json_server.register(new GetAddressBalanceHandler());
+    json_server.register(new GetFBOListHandler());
+    json_server.register(new GetIDListHandler());
 
   }
 
@@ -283,6 +285,7 @@ public class RpcServerHandler
       throws Exception
     {
       ChainHash tx_hash = new ChainHash(HexUtil.hexStringToBytes(RpcUtil.requireString(req, "tx_hash")));
+      Map<String, Object> params = req.getNamedParams();
 
       JSONObject reply = new JSONObject();
 
@@ -290,6 +293,11 @@ public class RpcServerHandler
       if (tx == null)
       {
         throw new Exception("Unknown transaction: " + tx_hash);
+      }
+      boolean as_json = false;
+      if (params.containsKey("send_json"))
+      {
+        as_json = (boolean) params.get("send_json");
       }
 
       TransactionInner inner = TransactionUtil.getInner(tx);
@@ -301,6 +309,12 @@ public class RpcServerHandler
       TransactionStatus status = client.getStub().getTransactionStatus(RequestTransaction.newBuilder().setTxHash(tx_hash.getBytes()).build());
 
       reply.put("status", RpcUtil.protoToJson(status));
+      if (as_json)
+      {
+        reply.put("tx_json", RpcUtil.protoToJson(tx));
+        reply.put("tx_inner_json", RpcUtil.protoToJson(inner));
+
+      }
 
       return reply;
  
@@ -679,6 +693,71 @@ public class RpcServerHandler
 
       return reply;
     }
+  }
+
+  public class GetFBOListHandler extends JsonRequestHandler
+  {
+    public String[] handledRequests()
+    {
+      return new String[]{"get_fbo_list"};
+    }
+
+    @Override
+    protected JSONObject processRequest(JSONRPC2Request req, MessageContext ctx)
+      throws Exception
+    {
+      String address = RpcUtil.requireString(req, "address");
+      AddressSpecHash fbo_hash = AddressUtil.getHashForAddress(null, address);
+      JSONObject reply = new JSONObject();
+
+      TxOutList lst = client.getStub().getFBOList(
+        RequestAddress.newBuilder().setAddressSpecHash(fbo_hash.getBytes()).build());
+
+      reply.put("tx_out_list",  RpcUtil.protoToJson(lst) ); 
+
+      return reply;
+    }
+
+  }
+
+  public class GetIDListHandler extends JsonRequestHandler
+  {
+    public String[] handledRequests()
+    {
+      return new String[]{"get_id_list"};
+    }
+
+    @Override
+    protected JSONObject processRequest(JSONRPC2Request req, MessageContext ctx)
+      throws Exception
+    {
+      String name = RpcUtil.requireString(req, "name");
+      String type = RpcUtil.requireString(req, "type");
+
+      JSONObject reply = new JSONObject();
+
+      RequestNameID.Builder nid = RequestNameID.newBuilder();
+      nid.setName(ByteString.copyFrom(name.getBytes()));
+
+
+      if (type.equals("username"))
+      {
+        nid.setNameType( RequestNameID.IdType.USERNAME ); 
+      }
+      else if (type.equals("channelname"))
+      {
+        nid.setNameType( RequestNameID.IdType.CHANNELNAME ); 
+      }
+
+      
+      TxOutList lst = client.getStub().getIDList( nid.build() );
+
+      reply.put("tx_out_list",  RpcUtil.protoToJson(lst) ); 
+
+      return reply;
+    }
+
+
   }
 
 

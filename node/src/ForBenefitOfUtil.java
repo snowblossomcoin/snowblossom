@@ -43,7 +43,6 @@ public class ForBenefitOfUtil
           ByteString for_addr = out.getForBenefitOfSpecHash();
 
           ByteString key = getKey(for_addr, tx_id, out_idx);
-          System.out.println("ZZZ save: " + key.size());
 
           update_map.put(key, out.toByteString());
         }

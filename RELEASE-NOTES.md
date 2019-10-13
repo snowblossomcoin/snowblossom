@@ -1,6 +1,8 @@
 ## dev
 
 * Changing tx_index and addr_index over to Hashed Trie mode
+* Added RPC call for get_fbo_list and get_id_list
+* Added RPC option to get_transaction to return json with "send_json" option
 
 
 ## 1.5.2
