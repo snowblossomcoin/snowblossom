@@ -144,7 +144,7 @@ public class SnowFall
         double runtime_estimate = (double)writes * MULTIPLICITY / rate;
         double runtime_est_hours = runtime_estimate/3600.0;
         double per_comp = (double)w / (double)writes;
-        DecimalFormat df = new DecimalFormat("0.00");
+        DecimalFormat df = new DecimalFormat("0.000");
 
         logger.info(String.format("Generating snow field at %s writes per second.  Estimated total runtime is %s hours. %s complete.",
           df.format(rate),

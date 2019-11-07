@@ -77,6 +77,8 @@ public class NodePanel extends BasePanel implements StatusInterface
           startNode();
         }
 
+        if (node == null) return;
+
         StringBuilder sb=new StringBuilder();
         int net_height = 0;
         if ( node.getPeerage().getHighestSeenHeader() != null)
@@ -123,6 +125,7 @@ public class NodePanel extends BasePanel implements StatusInterface
   private void startNode()
     throws Exception
   {
+    //There are too many side effects to try this more than once
     start_attempt=true;
     TreeMap<String, String> config_map = new TreeMap();
 
