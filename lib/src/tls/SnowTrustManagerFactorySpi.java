@@ -167,7 +167,7 @@ public class SnowTrustManagerFactorySpi extends TrustManagerFactorySpi
         throw new CertificateException(e);
       }
       logger.log(Level.FINER, "Certificate checks out");
-      logger.info("Connected to TLS server with key: " + AddressUtil.getAddressString(Globals.NODE_ADDRESS_STRING, found_claim));
+      logger.fine("Connected to TLS server with key: " + AddressUtil.getAddressString(Globals.NODE_ADDRESS_STRING, found_claim));
 
     }
     @Override

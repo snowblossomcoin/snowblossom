@@ -8,6 +8,7 @@ import snowblossom.lib.trie.HashUtils;
 import snowblossom.lib.trie.HashedTrie;
 import snowblossom.proto.TransactionInput;
 import snowblossom.proto.TransactionOutput;
+import snowblossom.proto.TxOutPoint;
 
 public class UtxoUpdateBuffer
 {
@@ -79,6 +80,23 @@ public class UtxoUpdateBuffer
 
   }
 
+  /**
+   * Determine if outpoint is still valid
+   * Does not check to see if recorded output matches given output
+   */
+  public boolean checkOutpointExists(TxOutPoint tx_out_point)
+  {
+    ByteString key = getKey(
+      new AddressSpecHash(tx_out_point.getOut().getRecipientSpecHash()),
+      new ChainHash(tx_out_point.getTxHash()),
+      tx_out_point.getOutIdx());
+
+    ByteString data = trie.getLeafData(utxo_root.getBytes(), key);
+    if (data == null) return false;
+
+    return true;
+  }
+
   public void useOutput(TransactionOutput out, ChainHash tx_id, int out_idx)
   {
     ByteString key = getKey(
@@ -86,6 +104,7 @@ public class UtxoUpdateBuffer
       tx_id,
       out_idx);
     updates.put(key, null);
+
   }
 
   public void addOutput(List<ByteString> raw_output_list, TransactionOutput out, ChainHash tx_id, int out_idx)

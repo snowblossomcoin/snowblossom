@@ -134,8 +134,10 @@ public class ForBenefitOfUtil
   /**
    * Return a list of outputs that are marked in favor of 'spec_hash'
    */
-  public static TxOutList getFBOList(AddressSpecHash spec_hash, HashedTrie db, ByteString trie_root)
+  public static TxOutList getFBOList(AddressSpecHash spec_hash, DB node_db, BlockSummary head)
   {
+    HashedTrie db = node_db.getChainIndexTrie();
+    ByteString trie_root = head.getChainIndexTrieHash();
     // TODO - filter by currently valid utxos
     TxOutList.Builder list = TxOutList.newBuilder();
 
@@ -149,15 +151,17 @@ public class ForBenefitOfUtil
 
       list.addOutList( getOutpoint(tx_info, me.getValue()));
     }
-    return list.build();
+    return filterByCurrent(list.build(), node_db, head);
   }
 
   /**
    * returns a list of outputs that are marked with the name 'name' in ascending
    * order of confirmation height.  So oldest first.
    */
-  public static TxOutList getIdList(ByteString type, ByteString name, HashedTrie db, ByteString trie_root)
+  public static TxOutList getIdList(ByteString type, ByteString name, DB node_db, BlockSummary head)
   {
+    HashedTrie db = node_db.getChainIndexTrie();
+    ByteString trie_root = head.getChainIndexTrieHash();
     // TODO - filter by currently valid utxos
     ByteString name_hash = normalizeAndHash(name);
 
@@ -175,17 +179,40 @@ public class ForBenefitOfUtil
       list.addOutList( getOutpoint(tx_info, me.getValue()));
     }
 
+    return filterByCurrent(list.build(), node_db, head);
+  }
+
+
+  /**
+   * Filter the list of OutPoints, returning only those that are still
+   * in the 'head' utxo set
+   */
+  public static TxOutList filterByCurrent(TxOutList input, DB node_db, BlockSummary head)
+  {
+    ByteString utxo_root_hash = head.getHeader().getUtxoRootHash();
+
+    UtxoUpdateBuffer utxo_buff = new UtxoUpdateBuffer( node_db.getUtxoHashedTrie(), new ChainHash(utxo_root_hash));
+
+    TxOutList.Builder list = TxOutList.newBuilder();
+    for(TxOutPoint out : input.getOutListList())
+    {
+      if (utxo_buff.checkOutpointExists(out))
+      {
+        list.addOutList( out );
+      }
+    }
+
     return list.build();
   }
 
-  public static TxOutList getIdListUser(ByteString name, HashedTrie db, ByteString trie_root)
+  public static TxOutList getIdListUser(ByteString name, DB node_db, BlockSummary head)
   {
-    return getIdList(ID_MAP_USER, name, db, trie_root);
+    return getIdList(ID_MAP_USER, name, node_db, head);
   }
 
-  public static TxOutList getIdListChannel(ByteString name, HashedTrie db, ByteString trie_root)
+  public static TxOutList getIdListChannel(ByteString name, DB node_db, BlockSummary head)
   {
-    return getIdList(ID_MAP_CHAN, name, db, trie_root);
+    return getIdList(ID_MAP_CHAN, name, node_db, head);
   }
 
   /**

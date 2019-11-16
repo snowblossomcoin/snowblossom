@@ -59,7 +59,6 @@ public class SnowBlossomNode
   private BlockIngestor ingestor;
   private BlockForge forge;
   private MemPool mem_pool;
-  private HashedTrie utxo_hashed_trie;
   private Peerage peerage;
   private BlockHeightCache block_height_cache;
 
@@ -89,7 +88,6 @@ public class SnowBlossomNode
 
     setupParams();
     loadDB();
-    loadUtxoDB();
     loadWidgets();
 
     startServices();
@@ -124,7 +122,7 @@ public class SnowBlossomNode
   {
     ingestor = new BlockIngestor(this);
     forge = new BlockForge(this);
-    mem_pool = new MemPool(utxo_hashed_trie, ingestor);
+    mem_pool = new MemPool(db.getUtxoHashedTrie(), ingestor);
 
     peerage = new Peerage(this);
     mem_pool.setPeerage(peerage);
@@ -228,16 +226,6 @@ public class SnowBlossomNode
     db.open();
 
   }
-  private void loadUtxoDB()
-    throws Exception
-  {
-    //config.require("utxo_db_path");
-    //String utxo_db_path = config.get("utxo_db_path");
-    //File utxo_db_file = new File(utxo_db_path);
-    //utxo_db_file.mkdirs();
-
-    utxo_hashed_trie = new HashedTrie(new TrieDBMap(db.getUtxoNodeMap()), true, false);
-  }
 
   public boolean areWeSynced()
   {
@@ -272,7 +260,7 @@ public class SnowBlossomNode
   public NetworkParams getParams(){return params;}
   public BlockIngestor getBlockIngestor(){ return ingestor; }
   public BlockForge getBlockForge() {return forge;}
-  public HashedTrie getUtxoHashedTrie(){return utxo_hashed_trie;}
+  public HashedTrie getUtxoHashedTrie(){return db.getUtxoHashedTrie();}
   public MemPool getMemPool(){return mem_pool;}
   public Peerage getPeerage(){return peerage;}
   public SnowUserService getUserService() {return user_service;}

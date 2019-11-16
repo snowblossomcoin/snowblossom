@@ -34,6 +34,7 @@ public class DB implements DBFace
 
   protected DBMap chain_index_map;
   protected HashedTrie chain_index_trie;
+  protected HashedTrie utxo_hashed_trie;
 
   private Config config;
   private DBProvider prov;
@@ -67,6 +68,7 @@ public class DB implements DBFace
     chain_index_map = prov.openMap("cit");
 
     chain_index_trie = new HashedTrie(new TrieDBMap(chain_index_map), true, true);
+    utxo_hashed_trie = new HashedTrie(new TrieDBMap(utxo_node_map), true, false);
 
 
     try
@@ -100,13 +102,13 @@ public class DB implements DBFace
   public DBMap getSpecialMap() { return special_map; }
 
   @Override
-  public DBMap getUtxoNodeMap() { return utxo_node_map; }
-
+  public HashedTrie getUtxoHashedTrie() { return utxo_hashed_trie; }
 
   /**
    * This is a hashed trie that holds data other than the UTXO.
    * - address to tx (a2tx)
    * - transaction to block (tx2b)
+   * - plus the things from ForBenefitOfUtil
    */
   @Override
   public HashedTrie getChainIndexTrie() { return chain_index_trie; }

@@ -12,8 +12,6 @@ public interface DBFace
   public ProtoDBMap<BlockSummary> getBlockSummaryMap();
   public ProtoDBMap<Transaction> getTransactionMap();
 
-  public DBMap getUtxoNodeMap();
-
   public ChainHash getBlockHashAtHeight(int height);
   public void setBlockHashAtHeight(int height, ChainHash hash);
 
@@ -21,5 +19,6 @@ public interface DBFace
   public DBMapMutationSet getSpecialMapSet();
 
   public HashedTrie getChainIndexTrie();
+  public HashedTrie getUtxoHashedTrie();
 
 }

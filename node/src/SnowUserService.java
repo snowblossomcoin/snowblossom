@@ -368,8 +368,8 @@ public class SnowUserService extends UserServiceGrpc.UserServiceImplBase
     try
     {
       ob.onNext(ForBenefitOfUtil.getFBOList(spec_hash,
-        node.getDB().getChainIndexTrie(),
-        node.getBlockIngestor().getHead().getChainIndexTrieHash()));
+        node.getDB(),
+        node.getBlockIngestor().getHead()));
       ob.onCompleted();
     }
     catch(Throwable e)
@@ -403,8 +403,9 @@ public class SnowUserService extends UserServiceGrpc.UserServiceImplBase
       }
       lst = ForBenefitOfUtil.getIdList( type,
         req.getName(),
-        node.getDB().getChainIndexTrie(),
-        node.getBlockIngestor().getHead().getChainIndexTrieHash());
+        node.getDB(),
+        node.getBlockIngestor().getHead());
+      //lst = ForBenefitOfUtil.filterByCurrent(lst);
 
       ob.onNext(lst);
       ob.onCompleted();

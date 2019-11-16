@@ -50,8 +50,6 @@ public class Validation
       validateByteString(header.getNonce(), "nonce", Globals.NONCE_LENGTH);
       validateByteString(header.getTarget(), "target", Globals.TARGET_LENGTH);
 
-      // TODO - make sure target is correct 
-
       SnowFieldInfo field_info = params.getSnowFieldInfo(header.getSnowField());
       if (field_info == null)
       {

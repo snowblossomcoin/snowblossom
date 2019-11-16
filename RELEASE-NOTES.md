@@ -1,9 +1,11 @@
 ## dev
 
 * Changing tx_index and addr_index over to Hashed Trie mode
+* Adding FBO and name values to hashed trie as well
+* Those above two will involve an index rebuild to update the database
+  * This should take a few minutes
 * Added RPC call for get_fbo_list and get_id_list
 * Added RPC option to get_transaction to return json with "send_json" option
-
 
 ## 1.5.2
 

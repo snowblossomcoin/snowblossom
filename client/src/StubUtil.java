@@ -26,6 +26,7 @@ import snowblossom.proto.NullRequest;
 import snowblossom.proto.UserServiceGrpc.UserServiceBlockingStub;
 import snowblossom.proto.UserServiceGrpc.UserServiceStub;
 import snowblossom.proto.UserServiceGrpc;
+import java.util.concurrent.TimeUnit;
 
 public class StubUtil
 {
@@ -179,10 +180,11 @@ public class StubUtil
     int option_count =0;
     for(String uri : uris)
     {
+      logger.log(Level.FINE, "Starting uri check: " + uri);
+      ManagedChannel mc = null;
       try
       {
-        logger.log(Level.FINE, "Starting uri check: " + uri);
-        ManagedChannel mc = openChannel(uri, params);
+        mc = openChannel(uri, params);
         UserServiceStub stub = getAsyncStub(mc);
 
         stub.getNodeStatus(NullRequest.newBuilder().build(), new StatusObserver(mon, mc, uri));
@@ -190,8 +192,9 @@ public class StubUtil
       }
       catch(Exception e)
       {
-        logger.log(Level.FINE, "Error on uri: " + uri, e);
+        logger.log(Level.INFO, "Error on uri: " + uri, e);
         mon.recordError(uri, e.toString());
+        mc.shutdownNow();
       }
     }
     if (option_count == 0)
@@ -229,15 +232,24 @@ public class StubUtil
     private TreeMap<String, String> error_map = new TreeMap<>();
     public static final int TIMEOUT_MS=60000;
 
-    public synchronized void setMonitor(NodeStatus ns, ManagedChannel mc, String uri)
+    /**
+     * Returns true iff the channel is adopted
+     */
+    public synchronized boolean setMonitor(NodeStatus ns, ManagedChannel mc, String uri)
     {
       if (this.ns == null)
       {
         this.ns = ns;
         this.mc = mc;
         this.uri = uri;
+        this.notifyAll();
+        return true;
       }
-      this.notifyAll();
+      else
+      {
+        this.notifyAll();
+        return false;
+      }
     }
 
     public synchronized boolean waitFor(int expected_count)
@@ -291,7 +303,10 @@ public class StubUtil
     }
     public void onNext(NodeStatus ns)
     {
-      mon.setMonitor(ns, mc, uri);
+      if (!mon.setMonitor(ns, mc, uri))
+      {
+        mc.shutdownNow();
+      }
     }
     public void onError(Throwable t)
     {

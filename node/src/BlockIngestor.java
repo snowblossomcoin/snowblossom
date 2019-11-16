@@ -79,7 +79,6 @@ public class BlockIngestor implements ChainStateSource
     while(curr.getChainIndexTrieHash().size() == 0)
     {
       recalc_list.addFirst(new ChainHash(curr.getHeader().getSnowHash()));
-
       ChainHash prevblock = new ChainHash(curr.getHeader().getPrevBlockHash());
 
       if (prevblock.equals(ChainHash.ZERO_HASH))
