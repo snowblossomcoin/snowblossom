@@ -1,4 +1,4 @@
-## dev
+## 1.6.0
 
 * Changing tx_index and addr_index over to Hashed Trie mode
 * Adding FBO and name values to hashed trie as well
