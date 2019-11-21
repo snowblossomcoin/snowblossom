@@ -390,6 +390,7 @@ public class SnowBlossomClient
         System.out.println("  audit_log_init <msg> - initialize a new audit log chain");
         System.out.println("  audit_log_record <msg> - record next audit log in chain");
         System.out.println("  audit_log_report <address> - get a report of audit log on address");
+        System.out.println("  sendlocked <amount> <dest_address> <fbo_address> <block> [name_type] [name]");
 
         System.exit(-1);
       }
