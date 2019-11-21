@@ -120,7 +120,7 @@ public class SnowBlossomClient
         client.maintainKeys();
         if (args.length < 6)
         {
-          logger.log(Level.SEVERE, "Incorrect syntax. Syntax: SnowBlossomClient <config_file> sendlocked <amount> <dest_address> <fbo_address> <block> [name]");
+          logger.log(Level.SEVERE, "Incorrect syntax. Syntax: SnowBlossomClient <config_file> sendlocked <amount> <dest_address> <fbo_address> <block> [name_type] [name]");
           System.exit(-1);
         }
         double val_snow = Double.parseDouble(args[2]);
@@ -129,15 +129,17 @@ public class SnowBlossomClient
         String to = args[3];
         String fbo = args[4];
         int block = Integer.parseInt(args[5]);
-        String username = null;
-        if (args.length > 6)
+        String name = null;
+        String nametype = null;
+        if (args.length > 7)
         {
-          username = args[6];
+          nametype = args[6];
+          name = args[7];
         }
 
         DecimalFormat df = new DecimalFormat("0.000000");
         logger.info(String.format("Building locked send of %s to %s for %s until %d", df.format(val_snow), to, fbo, block));
-        client.sendLocked(value, to, fbo, block, username);
+        client.sendLocked(value, to, fbo, block, nametype, name);
 
       }
  
@@ -485,7 +487,7 @@ public class SnowBlossomClient
     System.out.println(stub_holder.getBlockingStub().submitTransaction(tx));
 
   }
-  public void sendLocked(long value, String to, String fbo, int block, String username)
+  public void sendLocked(long value, String to, String fbo, int block, String nametype, String name)
     throws Exception
   {
 
@@ -501,9 +503,14 @@ public class SnowBlossomClient
     out.setValue(value);
     out.setForBenefitOfSpecHash(fbo_hash.getBytes());
     out.setRequirements( TransactionRequirements.newBuilder().setRequiredBlockHeight(block).build() );
-    if (username != null)
+    if (nametype != null)
     {
-      out.setIds( ClaimedIdentifiers.newBuilder().setUsername(ByteString.copyFrom(username.getBytes())).build() );
+      if (nametype.equals("user")) out.setIds( ClaimedIdentifiers.newBuilder().setUsername(ByteString.copyFrom(name.getBytes())).build() );
+      else if (nametype.equals("channel")) out.setIds( ClaimedIdentifiers.newBuilder().setChannelname(ByteString.copyFrom(name.getBytes())).build() );
+      else
+      {
+        throw new ValidationException("Nametype must be 'name' or 'channel'");
+      }
     }
     tx_config.addOutputs(out.build());
     
