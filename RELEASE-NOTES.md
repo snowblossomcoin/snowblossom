@@ -1,3 +1,7 @@
+## master
+
+* Allow reserving channel name in CLI
+
 ## 1.6.0
 
 * Changing tx_index and addr_index over to Hashed Trie mode
