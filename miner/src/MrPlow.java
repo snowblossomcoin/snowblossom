@@ -39,6 +39,8 @@ public class MrPlow
   public static final int SHARES_IN_VIEW_FOR_UPTARGET = 12;
   public static final int SHARES_IN_VIEW_FOR_DOWNTARGET = 4;
 
+  public static final long TEMPLATE_AGE_MAX_MS=40000L; //Should get updates every 30 seconds
+
   public static ByteString BLOCK_KEY = ByteString.copyFrom(new String("blocks_found").getBytes());
 
 
@@ -61,6 +63,7 @@ public class MrPlow
   }
 
   private volatile Block last_block_template;
+  private volatile long last_block_template_time;
 
   private UserServiceStub asyncStub;
   private UserServiceBlockingStub blockingStub;
@@ -183,7 +186,12 @@ public class MrPlow
       Thread.sleep(20000);
       printStats();
       prune();
-      subscribe();
+      if (last_block_template_time + TEMPLATE_AGE_MAX_MS < System.currentTimeMillis())
+      {
+        logger.info("No template in a while, redoing subscribe");
+        subscribe();
+
+      }
       saveState();
 
       if (config.isSet("report_path"))
@@ -258,8 +266,6 @@ public class MrPlow
         extras.addMotionsRejected( Integer.parseInt(s));
       }
     }
-
-
 
     asyncStub.subscribeBlockTemplate(
       SubscribeBlockTemplateRequest.newBuilder()
@@ -344,13 +350,18 @@ public class MrPlow
   {
     public void onCompleted() {}
 
-    public void onError(Throwable t) {}
+    public void onError(Throwable t) 
+    {
+      logger.info("Got error:" + t);
+      last_block_template_time = 0L;
+    }
 
     public void onNext(Block b)
     {
       logger.info("Got block template: height:" + b.getHeader().getBlockHeight() + " transactions:" + b.getTransactionsCount());
 
       last_block_template = b;
+      last_block_template_time = System.currentTimeMillis();
       agent.updateBlockTemplate(b);
     }
   }

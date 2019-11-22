@@ -90,7 +90,7 @@ public class SnowUserService extends UserServiceGrpc.UserServiceImplBase
         }
         catch(Throwable t)
         {
-          logger.info("Error: " + t);
+          logger.fine("Error: " + t);
         }
       }
       block_subscribers.clear();
