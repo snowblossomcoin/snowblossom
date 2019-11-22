@@ -22,6 +22,7 @@ import java.util.Map;
 import java.util.TimeZone;
 import snowblossom.lib.*;
 import snowblossom.proto.*;
+import com.google.protobuf.ByteString;
 
 public class WebServer
 {
@@ -134,6 +135,12 @@ public class WebServer
           return;
         }
 
+
+        if (displayNameIdentifiers(out, search))
+        {
+          return;
+        }
+
         // case: unknown
         displayUnexpectedStatus(out);
       }
@@ -145,9 +152,51 @@ public class WebServer
     }
   }
 
+  private boolean displayNameIdentifiers(PrintStream out, String search)
+    throws ValidationException
+  {
+
+    TxOutList lst_chan = shackleton.getStub().getIDList(
+      RequestNameID.newBuilder()
+        .setNameType(RequestNameID.IdType.CHANNELNAME)
+        .setName(ByteString.copyFrom(search.getBytes()))
+        .build());
+
+    TxOutList lst_user = shackleton.getStub().getIDList(
+      RequestNameID.newBuilder()
+        .setNameType(RequestNameID.IdType.USERNAME)
+        .setName(ByteString.copyFrom(search.getBytes()))
+        .build());
+
+		if (lst_chan.getOutListCount() + lst_user.getOutListCount() == 0) return false;
+
+		if (lst_chan.getOutListCount() > 0)
+		{
+      out.println("<H3>Channels</H3>");
+      for(TxOutPoint op : lst_chan.getOutListList())
+      {
+        Transaction tx = shackleton.getStub().getTransaction( RequestTransaction.newBuilder().setTxHash(op.getTxHash()).build());
+        displayTransaction(out, tx);
+      }
+		}
+		if (lst_user.getOutListCount() > 0)
+		{
+      out.println("<H3>Users</H3>");
+      for(TxOutPoint op : lst_user.getOutListList())
+      {
+        Transaction tx = shackleton.getStub().getTransaction( RequestTransaction.newBuilder().setTxHash(op.getTxHash()).build());
+        displayTransaction(out, tx);
+      }
+		}
+    
+    return true; 
+
+
+  }
+
   private void displayUnexpectedStatus(PrintStream out)
   {
-    out.println("<div>Invalid search</div>");
+    out.println("<div>No results</div>");
   }
 
   private void displayStatus(PrintStream out)

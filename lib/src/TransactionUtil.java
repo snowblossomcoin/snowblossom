@@ -514,6 +514,19 @@ public class TransactionUtil
       double value = o.getValue() / Globals.SNOW_VALUE_D;
 
       out.println(String.format("<a href='/?search=%s'>%s</a> <b>%s</b><br />", address, address, df.format(value)));
+      //TODO - add requirements data
+      if (o.getIds().getUsername().size() > 0)
+      { 
+        String name =  HexUtil.getSafeString(o.getIds().getUsername());
+        out.println(String.format("<li>Username: <a href='/?search=%s'>%s</a></li><br />", name, name));
+      }
+      if (o.getIds().getChannelname().size() > 0)
+      { 
+        String name =  HexUtil.getSafeString(o.getIds().getChannelname());
+        out.println(String.format("<li>Channel: <a href='/?search=%s'>%s</a></li><br />", name, name));
+      }
+
+
     }
 
     out.println("</td></tr><td colspan=2>");

@@ -1,6 +1,7 @@
 ## master
 
 * Allow reserving channel name in CLI
+* Adding username and channel identifiers to explorer
 
 ## 1.6.0
 
