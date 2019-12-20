@@ -6,24 +6,17 @@ java_library(
   deps = [
     "//protolib:protogrpc",
     "//lib:lib",
-    "@commons_codec//jar",
-    "@commons_math3//jar",
-    "@bcprov//jar",
-    "@junit_junit//jar",
-    "@org_rocksdb_rocksdbjni//jar",
     "@duckutil//:duckutil_lib",
     "@duckutil//:lobstack_lib",
     "@duckutil//:duckutil_jsonrpc_lib",
-    "@jsonrpc2_base//jar",
-    "@jsonrpc2_server//jar",
-    "@json_smart//jar",
     "@com_google_protobuf//:protobuf_java_util",
-    "@bitcoinj//jar",
-    "@slf4j_nop//jar",
-    "@slf4j_api//jar",
     "@io_grpc_grpc_java//netty",
     "@io_netty_netty_handler//:io_netty_netty_handler",
-    "@scrypt//jar",
+    "@maven//:com_thetransactioncompany_jsonrpc2_base",
+    "@maven//:com_thetransactioncompany_jsonrpc2_server",
+    "@maven//:net_minidev_json_smart",
+    "@maven//:org_bitcoinj_bitcoinj_core",
+    "@maven//:com_lambdaworks_scrypt",
     ],
 )
 
@@ -36,6 +29,6 @@ java_test(
         "//lib:lib",
         "//protolib:protogrpc",
         "@duckutil//:duckutil_lib",
-        "@bitcoinj//jar",
+        "@maven//:org_bitcoinj_bitcoinj_core",
     ]
 )

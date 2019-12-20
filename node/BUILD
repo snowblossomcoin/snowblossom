@@ -5,17 +5,13 @@ java_library(
   srcs = glob(["src/**/*.java", "src/*.java"]),
   deps = [
       "//protolib:protogrpc",
-      "@commons_codec//jar",
-      "@commons_math3//jar",
-      "@junit_junit//jar",
-      "@org_rocksdb_rocksdbjni//jar",
       "@duckutil//:duckutil_lib",
       "@duckutil//:lobstack_lib",
       "//lib:lib",
       "//client:client",
       "@io_netty_netty_handler//:io_netty_netty_handler",
       "@io_grpc_grpc_java//netty",
-      "@weupnp//jar",
+      "@maven//:junit_junit",
     ],
 )
 

@@ -7,14 +7,8 @@ java_library(
       "//protolib:protogrpc",
       "//lib:lib",
       "//client:client",
-      "@commons_codec//jar",
-      "@commons_math3//jar",
-      "@bcprov//jar",
-      "@junit_junit//jar",
-      "@org_rocksdb_rocksdbjni//jar",
-      "@duckutil//:duckutil_lib",
-      "@duckutil//:lobstack_lib",
       "@com_google_protobuf//:protobuf_java_util",
+      "@duckutil//:duckutil_lib",
     ],
 )
 

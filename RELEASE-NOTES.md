@@ -2,6 +2,8 @@
 
 * Allow reserving channel name in CLI
 * Adding username and channel identifiers to explorer
+* Switching MrPlow to continue using the same channel
+* Switching from maven-jar to new maven-install based system for bazel 2.0
 
 ## 1.6.0
 
