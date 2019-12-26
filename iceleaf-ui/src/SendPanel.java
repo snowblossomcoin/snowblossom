@@ -193,7 +193,7 @@ public class SendPanel extends BasePanel
     }
     else
     {
-      output_val = (long) Double.parseDouble(saved_amount) * Globals.SNOW_VALUE;
+      output_val = (long) (Double.parseDouble(saved_amount) * Globals.SNOW_VALUE);
     }
 
     config.addOutputs( TransactionOutput.newBuilder().setValue(output_val).setRecipientSpecHash(dest_addr.getBytes()).build() );
