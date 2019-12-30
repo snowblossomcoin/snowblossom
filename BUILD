@@ -93,6 +93,18 @@ java_binary(
   ]
 )
 
+java_binary(
+  name = "Everything",
+  main_class = "snowblossom.iceleaf.IceLeaf",
+  resources = [ "//iceleaf-ui:resources" ],
+  runtime_deps = [
+    "//iceleaf-ui:iceleaf",
+    "//miner:miner",
+    "//node:node",
+    "//lib:lib",
+    "//client:client",
+  ]
+)
 
 
 java_binary(
