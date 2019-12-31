@@ -32,6 +32,7 @@ java_binary(
     "//miner:miner",
   ]
 )
+
 java_binary(
   name = "SurfMiner",
   main_class = "snowblossom.miner.surf.SurfMiner",
@@ -39,6 +40,7 @@ java_binary(
     "//miner:miner",
   ]
 )
+
 java_binary(
   name = "MrPlow",
   main_class = "snowblossom.miner.MrPlow",
@@ -46,10 +48,6 @@ java_binary(
     "//miner:miner",
   ]
 )
-
-
-
-
 
 java_binary(
   name = "ShackletonExplorer",
@@ -65,7 +63,6 @@ java_binary(
     "//shackleton:shackleton",
   ]
 )
-
 
 java_binary(
   name = "SnowBlossomClient",
@@ -98,14 +95,14 @@ java_binary(
   main_class = "snowblossom.iceleaf.IceLeaf",
   resources = [ "//iceleaf-ui:resources" ],
   runtime_deps = [
-    "//iceleaf-ui:iceleaf",
-    "//miner:miner",
-    "//node:node",
     "//lib:lib",
+    "//node:node",
+    "//miner:miner",
     "//client:client",
+    "//shackleton:shackleton",
+    "//iceleaf-ui:iceleaf",
   ]
 )
-
 
 java_binary(
   name = "VanityGen",
@@ -115,7 +112,6 @@ java_binary(
   ]
 )
 
-
 java_binary(
   name = "SnowFall",
   main_class = "snowblossom.lib.SnowFall",
@@ -123,6 +119,7 @@ java_binary(
     "//lib:lib",
   ]
 )
+
 java_binary(
   name = "SnowMerkle",
   main_class = "snowblossom.lib.SnowMerkle",
@@ -138,4 +135,3 @@ java_binary(
     "//lib:lib",
   ]
 )
-
