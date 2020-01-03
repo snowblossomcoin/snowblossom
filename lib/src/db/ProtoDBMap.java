@@ -82,7 +82,10 @@ public class ProtoDBMap<M extends Message>
       ByteString value = inner.get(bs);
       try
       {
-        list.add( parser.parseFrom(value) );
+        if (value != null)
+        {
+          list.add( parser.parseFrom(value) );
+        }
       }
       catch(InvalidProtocolBufferException e)
       {
