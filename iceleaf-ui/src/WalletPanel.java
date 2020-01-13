@@ -112,13 +112,18 @@ public class WalletPanel extends BasePanel
         {
           p_out.println("Watch-only xpub: " + xpub);
         }
-        if (sr.missing_keys > 0)
-        {   
-            p_out.println(String.format("WARNING: THIS WALLET CONTAINS %d KEYS THAT DO NOT COME FROM SEEDS.  THIS WALLET CAN NOT BE COMPLETELY RESTORED FROM SEEDS", sr.missing_keys));
-        }
-        else
-        { 
-          p_out.println("All keys in this wallet are derived from the seed(s) above and will be recoverable from those seeds.");
+
+        if (sr.watch_xpubs.size() == 0)
+        {
+          if (sr.missing_keys > 0)
+          {   
+              p_out.println(
+                String.format("WARNING: THIS WALLET CONTAINS %d KEYS THAT DO NOT COME FROM SEEDS.  THIS WALLET CAN NOT BE COMPLETELY RESTORED FROM SEEDS", sr.missing_keys));
+          }
+          else
+          { 
+            p_out.println("All keys in this wallet are derived from the seed(s) above and will be recoverable from those seeds.");
+          }
         }
       }
 
