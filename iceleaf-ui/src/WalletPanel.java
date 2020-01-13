@@ -7,13 +7,23 @@ import duckutil.ConfigFile;
 import duckutil.ConfigMem;
 import duckutil.PeriodicThread;
 import java.awt.GridBagConstraints;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.PrintStream;
 import java.util.Collection;
 import java.util.LinkedList;
+import java.util.Map;
 import java.util.TreeMap;
+import javax.swing.JButton;
+import javax.swing.JLabel;
+import snowblossom.client.SeedReport;
 import snowblossom.client.SnowBlossomClient;
+import snowblossom.client.WalletUtil;
 import snowblossom.lib.AddressSpecHash;
 import snowblossom.lib.AddressUtil;
+import snowblossom.proto.WalletDatabase;
 
 public class WalletPanel extends BasePanel
 {
@@ -21,6 +31,13 @@ public class WalletPanel extends BasePanel
 
   protected TreeMap<String, SnowBlossomClient> client_map = new TreeMap<>();
   protected LinkedList<PeriodicThread> wake_threads = new LinkedList<>(); 
+
+  protected WalletComboBox wallet_select_box;
+  protected JButton details_button;
+
+  // Don't overwrite the message until this time,
+  // so user can get any message there from details
+  protected long message_lockout = 0;
 
   public WalletPanel(IceLeaf ice_leaf)
   {
@@ -37,7 +54,21 @@ public class WalletPanel extends BasePanel
     c.gridheight = 1;
     c.anchor = GridBagConstraints.WEST;
 
+    c.gridwidth = 1;
+    panel.add(new JLabel("Wallet details:"), c);
+
+    
+    wallet_select_box = new WalletComboBox(ice_leaf);
+    panel.add(wallet_select_box, c);
+    
+    details_button = new JButton("Details");
+
+
     c.gridwidth = GridBagConstraints.REMAINDER;
+    panel.add(details_button, c);
+
+    details_button.addActionListener( new DetailsButtonListener());
+
 
     update_thread = new WalletUpdateThread();
     update_thread.start();
@@ -49,6 +80,54 @@ public class WalletPanel extends BasePanel
     {
       update_thread.wake();
     }
+  }
+
+  public class DetailsButtonListener implements ActionListener
+  {
+    public void actionPerformed(ActionEvent e)
+    {
+      StringBuilder sb = new StringBuilder();
+
+			String wallet_str = (String)wallet_select_box.getSelectedItem();
+
+      sb.append("Detail for " + wallet_str);
+			ByteArrayOutputStream b_out = new ByteArrayOutputStream();
+			PrintStream p_out = new PrintStream(b_out);
+      
+
+      SnowBlossomClient client = ice_leaf.getWalletPanel().getWallet(wallet_str);
+      if (client != null)
+      {
+        p_out.println();
+
+        WalletDatabase db = client.getPurse().getDB();
+        SeedReport sr = WalletUtil.getSeedReport(db);
+
+        for(Map.Entry<String, String> seed : sr.seeds.entrySet())
+        { 
+          p_out.println("Public: " + seed.getValue());
+          p_out.println("Seed: " + seed.getKey());
+        }  
+        for(String xpub : sr.watch_xpubs)
+        {
+          p_out.println("Watch-only xpub: " + xpub);
+        }
+        if (sr.missing_keys > 0)
+        {   
+            p_out.println(String.format("WARNING: THIS WALLET CONTAINS %d KEYS THAT DO NOT COME FROM SEEDS.  THIS WALLET CAN NOT BE COMPLETELY RESTORED FROM SEEDS", sr.missing_keys));
+        }
+        else
+        { 
+          p_out.println("All keys in this wallet are derived from the seed(s) above and will be recoverable from those seeds.");
+        }
+      }
+
+			sb.append(new String(b_out.toByteArray()));
+
+      message_lockout = System.currentTimeMillis() + 60000L;
+      setMessageBox(sb.toString());
+    }
+
   }
   
 
@@ -62,6 +141,8 @@ public class WalletPanel extends BasePanel
 
     public void runPass() throws Exception
     {
+      if (System.currentTimeMillis() < message_lockout) return;
+
       try
       {
         for(int i=0;i<25; i++)
@@ -147,6 +228,7 @@ public class WalletPanel extends BasePanel
       SnowBlossomClient.getBalanceInfoPrint(client.getBalance()),
       addr
       );
+
     if (client.getPurse().isWatchOnly())
     {
       summary = summary +"\n    WATCH ONLY";

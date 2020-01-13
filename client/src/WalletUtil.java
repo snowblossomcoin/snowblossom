@@ -675,13 +675,25 @@ public class WalletUtil
 		SeedReport sr = new SeedReport();
 
 		HashSet<ByteString> seed_ids = new HashSet<>();
+    HashSet<String> xpubs_with_seeds = new HashSet<>();
+
 		for(String seed : db.getSeedsMap().keySet())
 		{
       String xpub=db.getSeedsMap().get(seed).getSeedXpub();
       sr.seeds.put(seed, xpub);
 			seed_ids.add(db.getSeedsMap().get(seed).getSeedId());
 
+      xpubs_with_seeds.add(xpub);
 		}
+    for(String xpub : db.getXpubsMap().keySet())
+    {
+      if (!xpubs_with_seeds.contains(xpub))
+      {
+        sr.watch_xpubs.add(xpub);
+      }
+    }
+
+
 		sr.missing_keys = 0;
 		for(WalletKeyPair wkp : db.getKeysList())
 		{
