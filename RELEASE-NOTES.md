@@ -4,6 +4,7 @@
 * Adding username and channel identifiers to explorer
 * Switching MrPlow to continue using the same channel
 * Switching from maven-jar to new maven-install based system for bazel 2.0
+* Added watch-only note on wallet summary page of iceleaf GUI
 
 ## 1.6.0
 

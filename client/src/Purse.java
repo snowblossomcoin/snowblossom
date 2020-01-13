@@ -34,6 +34,7 @@ public class Purse
   {
     this(client, wallet_path, config, params, null);
   }
+
   public Purse(SnowBlossomClient client, File wallet_path, Config config, NetworkParams params, String import_seed)
     throws Exception
   {
@@ -83,8 +84,11 @@ public class Purse
 				if (client!= null) client.getBalance();
 			}
 		}
+  }
 
-
+  public boolean isWatchOnly()
+  {
+    return config.getBoolean("watch_only");
   }
 
   private synchronized boolean fillKeyPool()

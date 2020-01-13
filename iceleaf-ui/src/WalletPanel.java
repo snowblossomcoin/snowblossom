@@ -22,7 +22,6 @@ public class WalletPanel extends BasePanel
   protected TreeMap<String, SnowBlossomClient> client_map = new TreeMap<>();
   protected LinkedList<PeriodicThread> wake_threads = new LinkedList<>(); 
 
-
   public WalletPanel(IceLeaf ice_leaf)
   {
     super(ice_leaf);
@@ -32,17 +31,16 @@ public class WalletPanel extends BasePanel
 	public void setupPanel()
 	{
 
-			GridBagConstraints c = new GridBagConstraints();
-			c.weightx = 0.0;
-			c.weighty= 0.0;
-			c.gridheight = 1;
-			c.anchor = GridBagConstraints.WEST;
+    GridBagConstraints c = new GridBagConstraints();
+    c.weightx = 0.0;
+    c.weighty = 0.0;
+    c.gridheight = 1;
+    c.anchor = GridBagConstraints.WEST;
 
     c.gridwidth = GridBagConstraints.REMAINDER;
 
     update_thread = new WalletUpdateThread();
     update_thread.start();
-
   }
 
   public void wake()
@@ -115,11 +113,8 @@ public class WalletPanel extends BasePanel
       {
         String text = ErrorUtil.getThrowInfo(e);
         setMessageBox(text);
-       
       }
-
     }
-
   }
 
   public void addWakeThread(PeriodicThread p)
@@ -128,7 +123,6 @@ public class WalletPanel extends BasePanel
     {
       wake_threads.add(p);
     }
-
   }
 
   private String getWalletSummary(String name, File db_dir, File config_file, boolean first_pass)
@@ -148,11 +142,16 @@ public class WalletPanel extends BasePanel
 
     setMessageBox("Checking balance: " + name);
 
-    return String.format("%s - %s\n    %s", 
+    String summary = String.format("%s - %s\n    %s", 
       name, 
       SnowBlossomClient.getBalanceInfoPrint(client.getBalance()),
       addr
       );
+    if (client.getPurse().isWatchOnly())
+    {
+      summary = summary +"\n    WATCH ONLY";
+    }
+    return summary;
   }
 
   public Collection<String> getNames()
@@ -190,9 +189,6 @@ public class WalletPanel extends BasePanel
       client_map.put(name, client);
     }
     return client;
-
-
-
   }
 
   public void setWalletBox(String text)
