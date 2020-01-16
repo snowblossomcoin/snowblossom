@@ -116,7 +116,7 @@ public class StubUtil
       if (port == -1) port = params.getDefaultPort();
       return ManagedChannelBuilder
         .forAddress(host, port)
-        .usePlaintext(true)
+        .usePlaintext()
         .build();
     }
     else if (scheme.equals("grpc+tls"))
