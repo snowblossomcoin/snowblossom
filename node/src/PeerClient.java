@@ -36,7 +36,7 @@ public class PeerClient
     {
       channel = ManagedChannelBuilder
         .forAddress(info.getHost(), info.getPort())
-        .usePlaintext(true)
+        .usePlaintext()
         .build();
     }
     else
