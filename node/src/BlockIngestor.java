@@ -34,14 +34,16 @@ public class BlockIngestor implements ChainStateSource
 
   private static final ByteString HEAD = ByteString.copyFrom(new String("head").getBytes());
 
+  public static final int SUMMARY_VERSION = 2;
+
   private LRUCache<ChainHash, Long> block_pull_map = new LRUCache<>(2000);
   private LRUCache<ChainHash, Long> tx_cluster_pull_map = new LRUCache<>(2000);
 
-  private PrintStream block_log;
+  private final PrintStream block_log;
   private TimeRecord time_record;
 
-  private boolean tx_index=false;
-  private boolean addr_index=false;
+  private final boolean tx_index;
+  private final boolean addr_index;
 
   public BlockIngestor(SnowBlossomNode node)
     throws Exception
@@ -50,11 +52,18 @@ public class BlockIngestor implements ChainStateSource
     this.db = node.getDB();
     this.params = node.getParams();
 
+    tx_index = node.getConfig().getBoolean("tx_index");
+    addr_index = node.getConfig().getBoolean("addr_index");
+
     if (node.getConfig().isSet("block_log"))
     {
       block_log = new PrintStream(new FileOutputStream(node.getConfig().get("block_log"), true));
       time_record = new TimeRecord();
       TimeRecord.setSharedRecord(time_record);
+    }
+    else
+    {
+      block_log = null;
     }
 
     chainhead = db.getBlockSummaryMap().get(HEAD);
@@ -66,9 +75,6 @@ public class BlockIngestor implements ChainStateSource
       checkResummary();
     }
 
-    tx_index = node.getConfig().getBoolean("tx_index");
-    addr_index = node.getConfig().getBoolean("addr_index");
-
   }
 
   private void checkResummary()
@@ -76,7 +82,7 @@ public class BlockIngestor implements ChainStateSource
     BlockSummary curr = chainhead;
     LinkedList<ChainHash> recalc_list = new LinkedList<>();
 
-    while(curr.getChainIndexTrieHash().size() == 0)
+    while(curr.getSummaryVersion() < SUMMARY_VERSION)
     {
       recalc_list.addFirst(new ChainHash(curr.getHeader().getSnowHash()));
       ChainHash prevblock = new ChainHash(curr.getHeader().getPrevBlockHash());
@@ -128,6 +134,7 @@ public class BlockIngestor implements ChainStateSource
     return BlockSummary.newBuilder()
       .setHeader(BlockHeader.newBuilder().setUtxoRootHash( HashUtils.hashOfEmpty() ).build())
       .setChainIndexTrieHash(  HashUtils.hashOfEmpty() )
+      .setSummaryVersion(SUMMARY_VERSION)
       .build();
   }
 
@@ -273,6 +280,7 @@ public class BlockIngestor implements ChainStateSource
   {
     HashMap<ByteString, ByteString> update_map = new HashMap<>();
 
+    logger.finer(String.format("indexes: %s %s", tx_index, addr_index)); 
 
     // Block to TX index
     if (tx_index)
@@ -289,11 +297,18 @@ public class BlockIngestor implements ChainStateSource
     // FBO Index
     ForBenefitOfUtil.saveIndex(blk, update_map);
 
+
+    ChainHash prev_trie_hash = new ChainHash(summary_prev.getChainIndexTrieHash());
+
     
     ByteString new_hash_root = node.getDB().getChainIndexTrie().mergeBatch( 
       summary_prev.getChainIndexTrieHash(), update_map);
 
-    return BlockSummary.newBuilder().mergeFrom(summary_current).setChainIndexTrieHash(new_hash_root).build();
+    ChainHash new_trie_hash = new ChainHash(new_hash_root);
+
+    logger.fine(String.format("Chain index hash %s -> %s - %d updates", prev_trie_hash, new_trie_hash, update_map.size()));
+
+    return BlockSummary.newBuilder().mergeFrom(summary_current).setSummaryVersion(SUMMARY_VERSION).setChainIndexTrieHash(new_hash_root).build();
   }
 
   private void updateHeights(BlockSummary summary)

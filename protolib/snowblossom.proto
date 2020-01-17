@@ -351,7 +351,7 @@ message BlockSummary {
   BlockHeader header = 5;
   int64 total_transactions = 6;
   bytes chain_index_trie_hash = 7;
-
+  int32 summary_version = 8;
 }
 
 message PeerList {

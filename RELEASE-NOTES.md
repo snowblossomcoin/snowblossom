@@ -6,6 +6,7 @@
 * Switching from maven-jar to new maven-install based system for bazel 2.0
 * Added watch-only note on wallet summary page of iceleaf GUI
 * Add details button to iceleaf GUI to get xpubs and seeds of wallets
+* Fixed bug in re-index for tx history - will automatically repair db on restart
 
 ## 1.6.0
 
