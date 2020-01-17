@@ -321,13 +321,20 @@ public class SnowBlossomClient
           System.out.println("Public: " + seed.getValue());
           System.out.println("Seed: " + seed.getKey());
         }
-        if (sr.missing_keys > 0)
+        for(String xpub : sr.watch_xpubs)
         {
-            System.out.println(String.format("WARNING: THIS WALLET CONTAINS %d KEYS THAT DO NOT COME FROM SEEDS.  THIS WALLET CAN NOT BE COMPLETELY RESTORED FROM SEEDS", sr.missing_keys));
+          System.out.println("Watch-only xpub: " + xpub);
         }
-        else
+        if (sr.watch_xpubs.size() == 0)
         {
-          System.out.println("All keys in this wallet are derived from the seed(s) above and will be recoverable from those seeds.");
+          if (sr.missing_keys > 0)
+          {
+              System.out.println(String.format("WARNING: THIS WALLET CONTAINS %d KEYS THAT DO NOT COME FROM SEEDS.  THIS WALLET CAN NOT BE COMPLETELY RESTORED FROM SEEDS", sr.missing_keys));
+          }
+          else
+          {
+            System.out.println("All keys in this wallet are derived from the seed(s) above and will be recoverable from those seeds.");
+          }
         }
 
       }
