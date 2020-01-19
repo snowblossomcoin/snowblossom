@@ -1,4 +1,4 @@
-package snowblossom.miner;
+package snowblossom.miner.plow;
 
 import com.google.protobuf.ByteString;
 import io.grpc.stub.StreamObserver;

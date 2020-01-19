@@ -1,4 +1,4 @@
-package snowblossom.miner;
+package snowblossom.miner.plow;
 
 import duckutil.AtomicFileOutputStream;
 import duckutil.RateReporter;

@@ -1,4 +1,4 @@
-package snowblossom.miner;
+package snowblossom.miner.plow;
 
 import com.google.common.collect.ImmutableMap;
 import java.util.LinkedList;

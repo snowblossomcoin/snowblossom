@@ -27,7 +27,7 @@ import snowblossom.lib.SnowMerkle;
 import snowblossom.lib.TransactionBridge;
 import snowblossom.lib.TransactionUtil;
 import snowblossom.lib.ChainHash;
-import snowblossom.miner.MrPlow;
+import snowblossom.miner.plow.MrPlow;
 import snowblossom.miner.PoolMiner;
 import snowblossom.miner.SnowBlossomMiner;
 import snowblossom.node.SnowBlossomNode;

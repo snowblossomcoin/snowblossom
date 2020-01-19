@@ -43,7 +43,7 @@ java_binary(
 
 java_binary(
   name = "MrPlow",
-  main_class = "snowblossom.miner.MrPlow",
+  main_class = "snowblossom.miner.plow.MrPlow",
   runtime_deps = [
     "//miner:miner",
   ]

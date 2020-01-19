@@ -5,7 +5,7 @@ import java.util.Map;
 import java.util.TreeMap;
 import org.junit.Assert;
 import org.junit.Test;
-import snowblossom.miner.ShareManager;
+import snowblossom.miner.plow.ShareManager;
 
 public class ShareManagerTest
 {

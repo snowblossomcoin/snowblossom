@@ -1,4 +1,4 @@
-package snowblossom.miner;
+package snowblossom.miner.plow;
 
 import com.google.protobuf.ByteString;
 import com.thetransactioncompany.jsonrpc2.JSONRPC2Request;
