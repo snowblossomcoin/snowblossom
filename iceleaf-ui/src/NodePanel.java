@@ -150,6 +150,7 @@ public class NodePanel extends BasePanel implements StatusInterface
     setMessageBox("");
   }
 
+  @Override
   public void setStatus(String msg)
   {
     this.setStatusBox(msg);

@@ -91,20 +91,12 @@ public class SendPanel extends BasePanel
 
   }
 
-  public class SendButtonListner implements ActionListener
+  
+
+  public class SendButtonListner extends ThreadActionListener
   {
-    public void actionPerformed(ActionEvent e)
+    public void threadActionPerformed(ActionEvent e)
     {
-      new SendButtonThread().start();
-
-    }
-  }
-
-  public class SendButtonThread extends Thread
-  {
-    public void run()
-    {
-
 			try
 			{
 				synchronized(state_obj)
@@ -151,7 +143,7 @@ public class SendPanel extends BasePanel
 				for(int i=0; i<SEND_DELAY; i+=SEND_DELAY_STEP)
 				{
 					setProgressBar(i, SEND_DELAY);
-					sleep(SEND_DELAY_STEP);
+					Thread.sleep(SEND_DELAY_STEP);
 				}
         setStatusBox("Ready to broadcast");
 				setProgressBar(SEND_DELAY, SEND_DELAY);
