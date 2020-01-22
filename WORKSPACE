@@ -4,29 +4,31 @@ load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 RULES_JVM_EXTERNAL_TAG = "3.0"
 RULES_JVM_EXTERNAL_SHA = "62133c125bf4109dfd9d2af64830208356ce4ef8b165a6ef15bbff7460b35c3a"
 
-http_archive(
+git_repository(
     name = "rules_jvm_external",
-    strip_prefix = "rules_jvm_external-%s" % RULES_JVM_EXTERNAL_TAG,
-    sha256 = RULES_JVM_EXTERNAL_SHA,
-    url = "https://github.com/bazelbuild/rules_jvm_external/archive/%s.zip" % RULES_JVM_EXTERNAL_TAG,
+    remote = "https://github.com/bazelbuild/rules_jvm_external",
+    commit = "9aec21a7eff032dfbdcf728bb608fe1a02c54124",
+    shallow_since = "1577467222 -0500"
 )
 
 load("@rules_jvm_external//:defs.bzl", "maven_install")
 
-http_archive(
-    name = "build_stack_rules_proto",
-    urls = ["https://github.com/stackb/rules_proto/archive/78d64b7317a332ee884ad7fcd0506d78f2a402cb.tar.gz"],
-    sha256 = "7f7fc55f1cfe8b28f95f1feb8ea42f21310cbbf3c1ee5015dfc15c604f6593f1",
-    strip_prefix = "rules_proto-78d64b7317a332ee884ad7fcd0506d78f2a402cb",
+git_repository(
+  name = "build_stack_rules_proto",
+  remote = "https://github.com/fireduck64/rules_proto",
+  commit = "8ab7bf0c7c992c893813f7151af4794ec5dd3e3f",
+  shallow_since = "1579204983 -0800"
 )
 
 load("@build_stack_rules_proto//:deps.bzl", "io_grpc_grpc_java")
+load("@build_stack_rules_proto//java:deps.bzl", "java_proto_compile")
 
 io_grpc_grpc_java()
+java_proto_compile()
 
 load("@io_grpc_grpc_java//:repositories.bzl", "grpc_java_repositories")
 
-grpc_java_repositories(omit_com_google_protobuf = True)
+grpc_java_repositories()
 
 load("@build_stack_rules_proto//java:deps.bzl", "java_grpc_library")
 

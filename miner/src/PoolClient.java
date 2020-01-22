@@ -71,7 +71,7 @@ public class PoolClient implements PoolClientFace
     }
 
     int port = config.getIntWithDefault("pool_port", 23380);
-    channel = ManagedChannelBuilder.forAddress(host, port).usePlaintext(true).build();
+    channel = ManagedChannelBuilder.forAddress(host, port).usePlaintext().build();
 
     asyncStub = MiningPoolServiceGrpc.newStub(channel);
     blockingStub = MiningPoolServiceGrpc.newBlockingStub(channel);

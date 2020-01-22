@@ -66,7 +66,7 @@ public class FieldSourceRemote extends FieldSource implements BatchSource
     SharedMiningServiceBlockingStub stub = stub_local.get();
     if (stub == null)
     {
-      ManagedChannel channel = ManagedChannelBuilder.forAddress(stub_host, stub_port).usePlaintext(true).build();
+      ManagedChannel channel = ManagedChannelBuilder.forAddress(stub_host, stub_port).usePlaintext().build();
       stub = SharedMiningServiceGrpc.newBlockingStub(channel);
       stub_local.set(stub);
     }
