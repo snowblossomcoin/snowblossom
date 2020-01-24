@@ -171,7 +171,7 @@ public class IceLeaf
       tab_pane.add("Node", node_panel.getPanel());
       tab_pane.add("Settings", settings_panel.getPanel());
 
-      setupMorePanels(tab_pane);
+      setupMorePanels(tab_pane, f);
 
       UIUtil.applyLook(f, ice_leaf);
       
@@ -179,7 +179,7 @@ public class IceLeaf
 
   }
 
-  public void setupMorePanels( JTabbedPane tab_pane)
+  public void setupMorePanels( JTabbedPane tab_pane, JFrame frame)
   {
 
   }
