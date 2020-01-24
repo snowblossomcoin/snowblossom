@@ -8,6 +8,7 @@
 * Add details button to iceleaf GUI to get xpubs and seeds of wallets
 * Fixed bug in re-index for tx history - will automatically repair db on restart
 * Switching to much newer version of gRPC
+* Added firm warning message about 32-bit JVM
 
 ## 1.6.0
 
