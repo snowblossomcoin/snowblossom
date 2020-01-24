@@ -23,6 +23,7 @@ import snowblossom.lib.tls.CertGen;
 import snowblossom.lib.trie.HashedTrie;
 import snowblossom.lib.trie.TrieDBMap;
 import snowblossom.proto.WalletDatabase;
+import snowblossom.lib.SystemUtil;
 
 public class SnowBlossomNode
 {
@@ -211,6 +212,14 @@ public class SnowBlossomNode
     
     if(db_type.equals("rocksdb"))
     {
+      if (!SystemUtil.isJvm64Bit())
+      {
+        logger.log(Level.SEVERE,"Java Virtual Machine is 32-bit.  rocksdb does not work with 32-bit jvm.");
+        logger.log(Level.SEVERE,"Upgrade to 64-bit JVM or set db_type=lobstack");
+
+        throw new RuntimeException("Needs 64-bit JVM for rocksdb");
+
+      }
       db = new DB(config, new JRocksDB(config));
     }
     else if (db_type.equals("lobstack"))
