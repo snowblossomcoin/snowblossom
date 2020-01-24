@@ -517,7 +517,7 @@ public class SnowBlossomClient
       else if (nametype.equals("channel")) out.setIds( ClaimedIdentifiers.newBuilder().setChannelname(ByteString.copyFrom(name.getBytes())).build() );
       else
       {
-        throw new ValidationException("Nametype must be 'name' or 'channel'");
+        throw new ValidationException("Nametype must be 'user' or 'channel'");
       }
     }
     tx_config.addOutputs(out.build());
