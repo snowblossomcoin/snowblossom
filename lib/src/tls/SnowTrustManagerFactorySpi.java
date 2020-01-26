@@ -144,7 +144,7 @@ public class SnowTrustManagerFactorySpi extends TrustManagerFactorySpi
       {
 
         String algo = "RSA";
-        PublicKey address_key = KeyUtil.decodeKey(tls_pub_key, algo);
+        PublicKey address_key = KeyUtil.decodeKey(tls_pub_key, algo, SignatureUtil.SIG_TYPE_RSA);
 
         // Since we can't use verify below, just checking that the keys
         // are the same

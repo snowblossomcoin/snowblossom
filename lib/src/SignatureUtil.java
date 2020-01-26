@@ -29,22 +29,19 @@ public class SignatureUtil
   public static final int SIG_TYPE_RSA=4;
   public static final int SIG_TYPE_DSTU4145=5;
 
-  public static boolean checkSignature(SigSpec sig_spec, ByteString signed_data, ByteString signature)
+  public static PublicKey decodePublicKey(SigSpec sig_spec)
     throws ValidationException
   {
     int sig_type = sig_spec.getSignatureType();
     ByteString encoded = sig_spec.getPublicKey();
 
-    PublicKey pub_key = null;
-    String algo="";
-
     if (sig_type == SIG_TYPE_ECDSA_COMPRESSED)
     {
-      pub_key = KeyUtil.convertCompressedECDSA(encoded);
-      algo="ECDSA";
+      return KeyUtil.convertCompressedECDSA(encoded);
     }
     else
     {
+      String algo = "";
       ArrayList<String> oidList = KeyUtil.extractObjectIdentifiers(encoded);
 
       if (sig_type == SIG_TYPE_ECDSA)
@@ -73,8 +70,19 @@ public class SignatureUtil
       {
         throw new ValidationException(String.format("Unknown sig type %d", sig_type));
       }
-      pub_key = KeyUtil.decodeKey(encoded, algo);
+      return KeyUtil.decodeKey(encoded, algo, sig_type);
     }
+
+
+  }
+
+  public static boolean checkSignature(SigSpec sig_spec, ByteString signed_data, ByteString signature)
+    throws ValidationException
+  {
+    int sig_type = sig_spec.getSignatureType();
+
+    PublicKey pub_key = decodePublicKey(sig_spec);
+    String algo=getAlgo(sig_type);
 
     try
     {

@@ -15,6 +15,7 @@ import org.junit.runners.Suite;
   // root
   AddressUtilTest.class,
   BlockchainUtilTest.class,
+  CipherUtilTest.class,
   DigestUtilTest.class,
   KeyUtilTest.class,
   PowUtilTest.class,

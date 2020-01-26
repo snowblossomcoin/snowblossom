@@ -29,7 +29,7 @@ public class KeyUtil
 
     ByteString fullkey = EC_SECP256K1_PREFIX.concat(encoded);
 
-    return decodeKey(fullkey, "ECDSA");
+    return decodeKey(fullkey, "ECDSA", SignatureUtil.SIG_TYPE_ECDSA);
 
   }
 
@@ -46,12 +46,17 @@ public class KeyUtil
     throws ValidationException
   {
     String algo = SignatureUtil.getAlgo(wkp.getSignatureType());
-    return new KeyPair( decodeKey( wkp.getPublicKey(), algo), decodePrivateKey(wkp.getPrivateKey(), algo));
+    return new KeyPair( decodeKey( wkp.getPublicKey(), algo, wkp.getSignatureType()), decodePrivateKey(wkp.getPrivateKey(), algo));
   }
 
-  public static PublicKey decodeKey(ByteString encoded, String algo)
+  public static PublicKey decodeKey(ByteString encoded, String algo, int sig_type)
     throws ValidationException
   {
+    if (sig_type == SignatureUtil.SIG_TYPE_ECDSA_COMPRESSED)
+    {
+      return convertCompressedECDSA(encoded);
+    }
+
     try
     {
       X509EncodedKeySpec spec = new X509EncodedKeySpec(encoded.toByteArray());
