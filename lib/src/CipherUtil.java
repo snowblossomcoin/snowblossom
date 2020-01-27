@@ -1,19 +1,11 @@
 package snowblossom.lib;
 
-import com.google.common.collect.ImmutableSet;
 import com.google.protobuf.ByteString;
-import java.security.PrivateKey;
-import java.security.PublicKey;
 import java.security.KeyPair;
-import java.security.Signature;
-import java.util.ArrayList;
-import java.util.Set;
-import java.util.TreeSet;
+import java.security.PublicKey;
+import javax.crypto.Cipher;
 import snowblossom.proto.SigSpec;
 import snowblossom.proto.WalletKeyPair;
-import javax.crypto.Cipher;
-import java.security.KeyFactory;
-import java.security.spec.X509EncodedKeySpec;
 
 public class CipherUtil
 {
