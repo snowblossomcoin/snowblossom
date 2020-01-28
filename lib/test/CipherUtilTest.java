@@ -7,6 +7,7 @@ import org.junit.Test;
 import org.junit.Assert;
 import snowblossom.lib.CipherUtil;
 import snowblossom.lib.Globals;
+import snowblossom.lib.SignatureUtil;
 import snowblossom.lib.KeyUtil;
 import snowblossom.proto.SigSpec;
 import snowblossom.proto.WalletKeyPair;
@@ -44,12 +45,26 @@ public class CipherUtilTest
   }*/
 
   @Test
-  public void testEC()
+  public void testECCompressed()
     throws Exception
   {
     WalletKeyPair wkp = KeyUtil.generateWalletStandardECKey();
     testKeys(wkp);
   }
+
+  @Test
+  public void testECCurves()
+    throws Exception
+  {
+    for(String curve : SignatureUtil.ALLOWED_ECDSA_CURVES)
+    {
+      
+      WalletKeyPair wkp = KeyUtil.generateWalletECKey(curve);
+      testKeys(wkp);
+    }
+
+  }
+
 
 
 
