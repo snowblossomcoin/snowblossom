@@ -32,7 +32,7 @@ public class CipherUtil
       if (algo.equals("ECDSA"))
       {
         c = Cipher.getInstance("ECIES");
-        c.init(Cipher.PUBLIC_KEY, pub_key);
+        c.init(Cipher.ENCRYPT_MODE, pub_key);
       }
       else
       {
@@ -60,7 +60,11 @@ public class CipherUtil
       if (algo.equals("ECDSA"))
       {
         c = Cipher.getInstance("ECIES");
-        c.init(Cipher.PRIVATE_KEY, kp.getPrivate());
+        c.init(Cipher.DECRYPT_MODE, kp.getPrivate());
+      }
+      else
+      {
+        throw new ValidationException("Encryption not supported with " + algo);
       }
 
       return ByteString.copyFrom(c.doFinal(cipher_data.toByteArray()));
