@@ -9,6 +9,7 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.SwingUtilities;
+import javax.swing.text.DefaultCaret;
 import snowblossom.util.proto.*;
 
 public abstract class BasePanel
@@ -33,6 +34,9 @@ public abstract class BasePanel
     panel.setBackground(ice_leaf.getBGColor());
 		status_box = new JTextArea();
 		message_box = new JTextArea();
+
+    makeNotViewReset(status_box);
+    makeNotViewReset(message_box);
 
     /*if (ice_leaf.getFixedFont() != null)
     {
@@ -94,6 +98,11 @@ public abstract class BasePanel
     });
   }
 
+  public static void makeNotViewReset(JTextArea a)
+  {
+    DefaultCaret caret = (DefaultCaret) a.getCaret();
+    caret.setUpdatePolicy(DefaultCaret.NEVER_UPDATE);
+  }
 
 
 }
