@@ -66,3 +66,11 @@ message AuditLogItem {
   bytes log_msg = 3;
 }
 
+message SymmetricKey {
+  // Keep the key size small by just using an identifier number here
+  // rather than something more long winded like AES/CBC/PKCS5PADDING
+  // See snowblossom.lib.CipherUtil
+  int32 algo_set = 1; 
+  bytes key = 2;
+}
+

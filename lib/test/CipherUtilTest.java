@@ -11,6 +11,7 @@ import snowblossom.lib.SignatureUtil;
 import snowblossom.lib.KeyUtil;
 import snowblossom.proto.SigSpec;
 import snowblossom.proto.WalletKeyPair;
+import snowblossom.util.proto.SymmetricKey;
 
 public class CipherUtilTest
 {
@@ -62,6 +63,37 @@ public class CipherUtilTest
       WalletKeyPair wkp = KeyUtil.generateWalletECKey(curve);
       testKeys(wkp);
     }
+
+  }
+
+  @Test
+  public void testSymmetricCipher() throws Exception
+  {
+    SymmetricKey key = CipherUtil.generageSymmetricKey();
+
+    Random rnd = new Random();
+    for(int i=0; i<100; i++)
+    {
+      byte[] b = new byte[rnd.nextInt(100000)];
+      if (i ==0) b = new byte[0];
+
+      rnd.nextBytes(b);
+
+      ByteString input = ByteString.copyFrom(b);
+
+      ByteString output = CipherUtil.encryptSymmetric(key, input);
+      ByteString output2 = CipherUtil.encryptSymmetric(key, input);
+
+      Assert.assertTrue(output.size() >= input.size());
+
+      Assert.assertFalse(output.equals(output2));
+
+      ByteString dec = CipherUtil.decryptSymmetric(key, output);
+      Assert.assertEquals(input, dec);
+
+
+    }
+    
 
   }
 
