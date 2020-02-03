@@ -186,9 +186,11 @@ public class MrPlow
       Thread.sleep(20000);
       printStats();
       prune();
-      if (last_block_template_time + TEMPLATE_AGE_MAX_MS < System.currentTimeMillis())
+      //if (last_block_template_time + TEMPLATE_AGE_MAX_MS < System.currentTimeMillis())
       {
-        logger.info("No template in a while, redoing subscribe");
+        //logger.info("No template in a while, redoing subscribe");
+        // Subscribe causes a new block template to be built from the
+        // share manager so has to be run
         subscribe();
 
       }
