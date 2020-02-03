@@ -9,6 +9,9 @@
 * Fixed bug in re-index for tx history - will automatically repair db on restart
 * Switching to much newer version of gRPC
 * Added firm warning message about 32-bit JVM
+* Break and fix mining share calculation
+  * Broken in commit a577f01ada35ca19e5fe2dd971a8880d5fc6c0bb (2019.11.22)
+  * Fixed in commit 03254fbf759ab0947d377458384efb83e6ee6e09 (2020.02.03)
 
 ## 1.6.0
 
