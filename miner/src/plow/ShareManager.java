@@ -4,11 +4,13 @@ import com.google.common.collect.ImmutableMap;
 import java.util.LinkedList;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.logging.Logger;
 import snowblossom.mining.proto.PPLNSState;
 import snowblossom.mining.proto.ShareEntry;
 
 public class ShareManager
 {
+  private static final Logger logger = Logger.getLogger("snowblossom.miner");
   private long total_shares;
   private TreeMap<String, Long> share_map = new TreeMap<>();
   private LinkedList<ShareEntry> share_queue = new LinkedList<>();
@@ -105,7 +107,7 @@ public class ShareManager
       if (total > 0.0)
       {
         weight_fixed = (total_fixed*total)/(1.0 - total_fixed);
-        System.out.println("Total: " + total +  " Weight fixed: " + weight_fixed);
+        logger.info("Total: " + total +  " Weight fixed: " + weight_fixed);
       }
     }
 

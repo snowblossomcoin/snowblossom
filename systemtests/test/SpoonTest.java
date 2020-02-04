@@ -12,10 +12,11 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 import snowblossom.client.SnowBlossomClient;
-import snowblossom.client.WalletUtil;
 import snowblossom.client.TransactionFactory;
+import snowblossom.client.WalletUtil;
 import snowblossom.lib.AddressSpecHash;
 import snowblossom.lib.AddressUtil;
+import snowblossom.lib.ChainHash;
 import snowblossom.lib.Globals;
 import snowblossom.lib.KeyUtil;
 import snowblossom.lib.NetworkParams;
@@ -26,14 +27,13 @@ import snowblossom.lib.SnowFieldInfo;
 import snowblossom.lib.SnowMerkle;
 import snowblossom.lib.TransactionBridge;
 import snowblossom.lib.TransactionUtil;
-import snowblossom.lib.ChainHash;
-import snowblossom.miner.plow.MrPlow;
 import snowblossom.miner.PoolMiner;
 import snowblossom.miner.SnowBlossomMiner;
-import snowblossom.node.SnowBlossomNode;
-import snowblossom.node.TransactionMapUtil;
+import snowblossom.miner.plow.MrPlow;
 import snowblossom.node.AddressHistoryUtil;
 import snowblossom.node.ForBenefitOfUtil;
+import snowblossom.node.SnowBlossomNode;
+import snowblossom.node.TransactionMapUtil;
 import snowblossom.proto.*;
 import snowblossom.util.proto.*;
 
@@ -109,6 +109,7 @@ public class SpoonTest
     SnowBlossomMiner miner = startMiner(port, mine_to_addr, snow_path);
 
     testMinedBlocks(node);
+
     
     LinkedList<Transaction> tx_list = new LinkedList<>();
     LinkedList<Transaction> tx_list_jumbo = new LinkedList<>();
@@ -239,6 +240,7 @@ public class SpoonTest
     Assert.assertEquals( 0, swoopo_list_a.getOutListCount());
 
 
+    miner.stop();
 		node.stop();
 
 
@@ -261,16 +263,37 @@ public class SpoonTest
     AddressSpecHash to_addr = AddressUtil.getHashForSpec(claim);
 
     KeyPair key_pair2 = KeyUtil.generateECCompressedKey();
-    AddressSpec claim2 = AddressUtil.getSimpleSpecForKey(key_pair.getPublic(), SignatureUtil.SIG_TYPE_ECDSA_COMPRESSED);
-    AddressSpecHash to_addr2 = AddressUtil.getHashForSpec(claim);
+    AddressSpec claim2 = AddressUtil.getSimpleSpecForKey(key_pair2.getPublic(), SignatureUtil.SIG_TYPE_ECDSA_COMPRESSED);
+    AddressSpecHash to_addr2 = AddressUtil.getHashForSpec(claim2);
+
+    KeyPair key_pair3 = KeyUtil.generateECCompressedKey();
+    AddressSpec claim3 = AddressUtil.getSimpleSpecForKey(key_pair3.getPublic(), SignatureUtil.SIG_TYPE_ECDSA_COMPRESSED);
+    AddressSpecHash to_addr3 = AddressUtil.getHashForSpec(claim3);
+
+    SnowBlossomClient client = startClient(port);
 
     MrPlow plow = startMrPlow(port, to_addr2);
 
     PoolMiner miner = startPoolMiner(port+1, to_addr, snow_path);
 
-    testMinedBlocks(node);
+    waitForMoreBlocks(node, 10);
 
+    System.out.println("ShareMap: " + plow.getShareManager().getShareMap());
+    System.out.println("ShareMap pay: " + plow.getShareManager().getPayRatios());
+
+    // Pool getting paid
+    waitForFunds(client, to_addr2, 10);
+
+    // Miner getting paid
+    waitForFunds(client, to_addr, 30);
+
+    PoolMiner miner2 = startPoolMiner(port+1, to_addr3, snow_path);
+
+    // Second miner getting paid
+    waitForFunds(client, to_addr3, 30);
+    
     miner.stop();
+    miner2.stop();
     Thread.sleep(500);
     plow.stop();
     node.stop();
@@ -320,24 +343,16 @@ public class SpoonTest
 
   private void testMinedBlocks(SnowBlossomNode node) throws Exception
   {
-    for (int i = 0; i < 15; i++)
-    {
-      Thread.sleep(1000);
-
-      BlockSummary summary = node.getBlockIngestor().getHead();
-      if (summary != null)
-      {
-
-        int height = summary.getHeader().getBlockHeight();
-        if (height > 2) return;
-      }
-    }
-    Assert.fail("Does not seem to be making blocks");
+    waitForMoreBlocks(node, 3);
   }
 
   private void waitForMoreBlocks(SnowBlossomNode node, int wait_for) throws Exception
   {
-    int start = node.getBlockIngestor().getHead().getHeader().getBlockHeight();
+    int start = -1;
+    if (node.getBlockIngestor().getHead()!=null)
+    {
+      start = node.getBlockIngestor().getHead().getHeader().getBlockHeight();
+    }
     int target = start + wait_for;
 
     int height = start;
@@ -351,10 +366,26 @@ public class SpoonTest
 
   }
 
+  private void waitForFunds(SnowBlossomClient client, AddressSpecHash addr, int max_seconds)
+    throws Exception
+  {
+    for(int i=0; i<max_seconds*10; i++)
+    {
+      Thread.sleep(100);
+      if (client.getSpendable(addr).size() > 0) return;
+
+    }
+
+    Assert.fail(String.format("Waiting for funds.  Didn't get any after %d seconds", max_seconds));
+
+  }
+
+
   private void testConsolidateFunds(SnowBlossomNode node, SnowBlossomClient client, KeyPair key_pair, AddressSpecHash from_addr) throws Exception
   {
     List<TransactionBridge> funds = client.getSpendable(from_addr);
-
+    
+    System.out.println("Funds: " + funds.size());
     Assert.assertTrue(funds.size() > 3);
 
     KeyPair key_pair_to = KeyUtil.generateECCompressedKey();
@@ -493,11 +524,16 @@ public class SpoonTest
 
   private PoolMiner startPoolMiner(int port, AddressSpecHash mine_to, File snow_path) throws Exception
   {
+
+    
+    String addr = mine_to.toAddressString(new NetworkParamsRegtest());
+    System.out.println("Starting miner with " + addr);
+
     Map<String, String> config_map = new TreeMap<>();
     config_map.put("pool_host", "localhost");
     config_map.put("pool_port", "" + port);
     config_map.put("threads", "1");
-    config_map.put("mine_to_address", mine_to.toAddressString(new NetworkParamsRegtest()));
+    config_map.put("mine_to_address", addr);
     config_map.put("snow_path", snow_path.getPath());
     config_map.put("network", "spoon");
     if (port % 2 == 1)

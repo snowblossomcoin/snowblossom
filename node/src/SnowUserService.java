@@ -35,6 +35,22 @@ public class SnowUserService extends UserServiceGrpc.UserServiceImplBase
     new Tickler().start();
   }
 
+  @Override
+  public StreamObserver<SubscribeBlockTemplateRequest> subscribeBlockTemplateStream(StreamObserver<Block> responseObserver)
+  {
+    logger.log(Level.INFO, "Subscribe block template stream called");
+
+    BlockSubscriberInfo info = new BlockSubscriberInfo(null, responseObserver);
+
+    synchronized(block_subscribers)
+    {
+      block_subscribers.add(info);
+    }
+
+    return new TemplateUpdateObserver(info);
+
+
+  }
 
   @Override
   public void subscribeBlockTemplate(SubscribeBlockTemplateRequest req, StreamObserver<Block> responseObserver)
@@ -85,7 +101,11 @@ public class SnowUserService extends UserServiceGrpc.UserServiceImplBase
       {
         try
         {
-          sendBlock(info);
+          // Could be null if stream hasn't started up yet
+          if (info.req != null)
+          {
+            sendBlock(info);
+          }
           continue_list.add(info);
         }
         catch(Throwable t)
@@ -425,13 +445,17 @@ public class SnowUserService extends UserServiceGrpc.UserServiceImplBase
 
   class BlockSubscriberInfo
   {
-    final SubscribeBlockTemplateRequest req;
+    volatile SubscribeBlockTemplateRequest req;
     final StreamObserver<Block> sink;
 
     public BlockSubscriberInfo(SubscribeBlockTemplateRequest req, StreamObserver<Block> sink)
     {
       this.req = req;
       this.sink = sink;
+    }
+    public void updateTemplate(SubscribeBlockTemplateRequest req)
+    {
+      this.req = req;
     }
   }
 
@@ -461,6 +485,36 @@ public class SnowUserService extends UserServiceGrpc.UserServiceImplBase
         }
       }
     }
+
+  }
+
+  public class TemplateUpdateObserver implements StreamObserver<SubscribeBlockTemplateRequest>
+  {
+    public final BlockSubscriberInfo info;
+    public TemplateUpdateObserver(BlockSubscriberInfo info)
+    { 
+      this.info = info;
+
+    }
+
+    public void onNext(SubscribeBlockTemplateRequest req)
+    {
+      info.updateTemplate(req);
+
+      // Send a new one immediately
+      sendBlock(info);
+    }
+
+    public void onError(Throwable t)
+    {
+      logger.log(Level.INFO, "Error in TemplateUpdateObserver: " + t);
+    }
+
+    public void onCompleted()
+    {
+
+    }
+
 
   }
 }

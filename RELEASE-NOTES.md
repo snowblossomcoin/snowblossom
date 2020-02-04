@@ -12,6 +12,8 @@
 * Break and fix mining share calculation
   * Broken in commit a577f01ada35ca19e5fe2dd971a8880d5fc6c0bb (2019.11.22)
   * Fixed in commit 03254fbf759ab0947d377458384efb83e6ee6e09 (2020.02.03)
+* Added streaming block template so MrPlow can update block template without breaking the connection
+  * MrPlow will need the SnowBlossomNode to be updated to run
 
 ## 1.6.0
 

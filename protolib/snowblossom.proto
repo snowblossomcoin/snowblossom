@@ -157,7 +157,13 @@ service PeerService {
 }
 
 service UserService {
+
+  /* Subscribe to getting block templates to mine with */
   rpc SubscribeBlockTemplate( SubscribeBlockTemplateRequest ) returns (stream Block) {}
+
+  /* Subscribe to getting block templates to mine with, 
+   * but can use an RPC stream to update the template request */
+  rpc SubscribeBlockTemplateStream( stream SubscribeBlockTemplateRequest ) returns (stream Block) {}
   rpc SubmitBlock ( Block ) returns ( SubmitReply ) {}
   rpc SubmitTransaction ( Transaction ) returns ( SubmitReply ) {}
   rpc GetUTXONode( GetUTXONodeRequest ) returns ( GetUTXONodeReply ) {}

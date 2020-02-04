@@ -3,6 +3,7 @@ package snowblossom.miner.plow;
 import com.google.protobuf.ByteString;
 import duckutil.Config;
 import duckutil.ConfigFile;
+import duckutil.PeriodicThread;
 import duckutil.TimeRecord;
 import duckutil.jsonrpc.JsonRpcServer;
 import io.grpc.ManagedChannel;
@@ -12,6 +13,7 @@ import io.grpc.stub.StreamObserver;
 import java.math.BigInteger;
 import java.text.DecimalFormat;
 import java.util.List;
+import java.util.Map;
 import java.util.TreeMap;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.logging.Level;
@@ -59,7 +61,6 @@ public class MrPlow
 
     MrPlow miner = new MrPlow(config);
 
-    miner.loop();
   }
 
   private volatile Block last_block_template;
@@ -67,6 +68,8 @@ public class MrPlow
 
   private UserServiceStub asyncStub;
   private UserServiceBlockingStub blockingStub;
+
+  private StreamObserver<SubscribeBlockTemplateRequest> template_update_observer;
 
   private final NetworkParams params;
 
@@ -81,6 +84,8 @@ public class MrPlow
 	private DB db;
   private ReportManager report_manager;
   private final int min_diff;
+
+  private final PlowLoop loop;
 
   public MrPlow(Config config) throws Exception
   {
@@ -146,6 +151,9 @@ public class MrPlow
     }
 
     s.start();
+
+    loop = new PlowLoop();
+    loop.start();
   }
 
   public int getMinDiff()
@@ -176,37 +184,38 @@ public class MrPlow
 
   }
 
-  private void loop()
-    throws Exception
+  public class PlowLoop extends PeriodicThread
   {
-    long last_report = System.currentTimeMillis();
-
-    while (true)
+    private long last_report;
+    public PlowLoop()
     {
-      Thread.sleep(20000);
-      printStats();
-      prune();
-      //if (last_block_template_time + TEMPLATE_AGE_MAX_MS < System.currentTimeMillis())
-      {
-        //logger.info("No template in a while, redoing subscribe");
-        // Subscribe causes a new block template to be built from the
-        // share manager so has to be run
-        subscribe();
+      super(20000);
+      last_report = System.currentTimeMillis();
 
-      }
+      setDaemon(false);
+      setName("PlowLoop");
+    }
+
+    @Override
+    public void runPass() throws Exception
+    {
+      printStats();
+      // Subscribe causes a new block template to be built from the
+      // share manager so has to be run
+      subscribe();
+      prune();
       saveState();
 
       if (config.isSet("report_path"))
       {
-      if (last_report + 60000L < System.currentTimeMillis())
-      {
-        report_manager.writeReport(config.get("report_path"));
+        if (last_report + 60000L < System.currentTimeMillis())
+        {
+          report_manager.writeReport(config.get("report_path"));
 
-        last_report = System.currentTimeMillis();
-      }
+          last_report = System.currentTimeMillis();
+        }
       }
      
-
     }
   }
 
@@ -231,21 +240,29 @@ public class MrPlow
         double diff_delta = PowUtil.getDiffForTarget(BlockchainUtil.targetBytesToBigInteger(b.getHeader().getTarget())) - getMinDiff();
 
         long shares_to_keep = Math.round( Math.pow(2, diff_delta) * BACK_BLOCKS);
+        logger.fine(String.format("Pruning to %d shares", shares_to_keep));
         share_manager.prune(shares_to_keep);
       }
   }
   private void subscribe() throws Exception
   {
     if (channel != null)
+    if (last_block_template_time + TEMPLATE_AGE_MAX_MS < System.currentTimeMillis())
     {
+      logger.info(String.format("Not block template in %s ms.  Restarting connection.", TEMPLATE_AGE_MAX_MS));
       channel.shutdownNow();
       channel = null;
     }
 
-    channel = StubUtil.openChannel(config, params);
+    if (channel == null)
+    {
 
-    asyncStub = UserServiceGrpc.newStub(channel);
-    blockingStub = UserServiceGrpc.newBlockingStub(channel);
+      channel = StubUtil.openChannel(config, params);
+      asyncStub = UserServiceGrpc.newStub(channel);
+      blockingStub = UserServiceGrpc.newBlockingStub(channel);
+      template_update_observer = asyncStub.subscribeBlockTemplateStream(new BlockTemplateEater());
+
+    }
 
     CoinbaseExtras.Builder extras = CoinbaseExtras.newBuilder();
     if (config.isSet("remark"))
@@ -269,12 +286,13 @@ public class MrPlow
       }
     }
 
-    asyncStub.subscribeBlockTemplate(
+    Map<String, Double> rates = share_manager.getPayRatios();
+
+    template_update_observer.onNext(
       SubscribeBlockTemplateRequest.newBuilder()
-        .putAllPayRatios( share_manager.getPayRatios() )
-        .setExtras(extras.build()).build(),
-                                     new BlockTemplateEater());
-    logger.info("Subscribed to blocks");
+        .putAllPayRatios( rates )
+        .setExtras(extras.build()).build());
+    logger.info("Block template updated - " + rates);
 
   }
 
@@ -288,6 +306,8 @@ public class MrPlow
   public void stop()
   {
     terminate = true;
+    loop.halt();
+
   }
 
   private volatile boolean terminate = false;
