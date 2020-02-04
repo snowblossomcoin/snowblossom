@@ -249,7 +249,7 @@ public class MrPlow
     if (channel != null)
     if (last_block_template_time + TEMPLATE_AGE_MAX_MS < System.currentTimeMillis())
     {
-      logger.info(String.format("Not block template in %s ms.  Restarting connection.", TEMPLATE_AGE_MAX_MS));
+      logger.info(String.format("No block template in %s ms.  Restarting connection.", TEMPLATE_AGE_MAX_MS));
       channel.shutdownNow();
       channel = null;
     }
