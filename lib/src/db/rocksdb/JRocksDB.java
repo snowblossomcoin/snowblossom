@@ -42,7 +42,7 @@ public class JRocksDB extends DBProvider
 
     base_path.mkdirs();
 
-    logger.info(String.format("Loadng RocksDB with path %s", path));
+    logger.info(String.format("Loading RocksDB with path %s", path));
 
     RocksDB.loadLibrary();
     sharedWriteOptions = new WriteOptions();
