@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableList;
 import duckutil.Config;
 import duckutil.ConfigFile;
 import duckutil.ConfigMem;
+import duckutil.MetricLogger;
 import io.grpc.Server;
 import io.grpc.ServerBuilder;
 import io.grpc.netty.NettyServerBuilder;
@@ -83,6 +84,11 @@ public class SnowBlossomNode
     this.config = config;
     this.status_list = ImmutableList.copyOf(status_list);
     setStatus("Initializing SnowBlossomNode");
+
+    if (config.isSet("metric_log"))
+    {
+      MetricLogger.init(config.get("metric_log"));
+    }
 
     config.require("db_type");
     logger.info(String.format("Starting SnowBlossomNode version %s", Globals.VERSION));

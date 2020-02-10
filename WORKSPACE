@@ -37,7 +37,7 @@ java_grpc_library()
 git_repository(
   name = "duckutil",
   remote = "https://github.com/fireduck64/duckutil",
-  commit = "74d770c50b407ca91416206931ceb5465d50776f",
+  commit = "a0319cf745eea482f6cab36fe54b811c7b15bb69",
   shallow_since = "1576867546 -0800",
 )
 

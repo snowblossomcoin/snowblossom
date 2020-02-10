@@ -35,6 +35,7 @@ public class PeerLink implements StreamObserver<PeerMessage>
   private TreeMap<Integer, ChainHash> peer_block_map = new TreeMap<Integer, ChainHash>();
 
 
+
   public PeerLink(SnowBlossomNode node, StreamObserver<PeerMessage> sink)
   {
     this.node = node;

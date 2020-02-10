@@ -2,6 +2,7 @@ package snowblossom.node;
 
 import com.google.protobuf.ByteString;
 import duckutil.LRUCache;
+import duckutil.MetricLog;
 import duckutil.TimeRecord;
 import duckutil.TimeRecordAuto;
 import java.io.FileOutputStream;
@@ -141,12 +142,15 @@ public class BlockIngestor implements ChainStateSource
   public boolean ingestBlock(Block blk)
     throws ValidationException
   {
-
+    
     if (time_record != null) time_record.reset();
 
     ChainHash blockhash;
-    try(TimeRecordAuto tra_blk = TimeRecord.openAuto("BlockIngestor.ingestBlock"))
+    try(TimeRecordAuto tra_blk = TimeRecord.openAuto("BlockIngestor.ingestBlock");
+      MetricLog mlog = new MetricLog())
     {
+      mlog.setOperation("ingest_block");
+      mlog.setModule("block_ingestor");
       Validation.checkBlockBasics(node.getParams(), blk, true, false);
 
       blockhash = new ChainHash(blk.getHeader().getSnowHash());
