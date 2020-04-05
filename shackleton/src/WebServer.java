@@ -1,5 +1,6 @@
 package snowblossom.shackleton;
 
+import com.google.protobuf.ByteString;
 import com.google.protobuf.util.JsonFormat;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
@@ -20,12 +21,13 @@ import java.util.Date;
 import java.util.LinkedList;
 import java.util.Map;
 import java.util.TimeZone;
+import java.util.logging.Logger;
 import snowblossom.lib.*;
 import snowblossom.proto.*;
-import com.google.protobuf.ByteString;
 
 public class WebServer
 {
+	private static final Logger logger = Logger.getLogger("snowblossom.shackleton");
   private HttpServer server;
   private Shackleton shackleton;
 
@@ -60,6 +62,7 @@ public class WebServer
     {
       NetworkParams params = shackleton.getParams();
       String query = t.getRequestURI().getQuery();
+      logger.info("Web request: " + t.getRequestURI());
       if ((query != null) && (query.startsWith("search=")))
       {
         int eq = query.indexOf("=");
