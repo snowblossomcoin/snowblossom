@@ -234,9 +234,11 @@ public class PeerLink implements StreamObserver<PeerMessage>
         mlog.set("type","req_header");
         // Peer is asking for a block header
         int height = msg.getReqHeader().getBlockHeight();
+        mlog.set("height", height);
         ChainHash hash = node.getDB().getBlockHashAtHeight(height);
         if (hash != null)
         {
+          mlog.set("hash", hash.toString());
           BlockSummary summary = node.getDB().getBlockSummaryMap().get(hash.getBytes());
           writeMessage( PeerMessage.newBuilder().setHeader(summary.getHeader()).build() );
         }
