@@ -1,5 +1,6 @@
 package snowblossom.node;
 
+import duckutil.MetricLog;
 import io.grpc.ManagedChannel;
 import io.grpc.stub.StreamObserver;
 import java.util.List;
@@ -100,12 +101,17 @@ public class PeerLink implements StreamObserver<PeerMessage>
   {
 
     last_received_message_time = System.currentTimeMillis();
-    try
+    try(MetricLog mlog = new MetricLog())
     {
-      msg = PeerMessage.parseFrom(msg.toByteString());
+      mlog.setOperation("peer_message");
+      mlog.setModule("peer_link");
+
+      mlog.set("size", msg.toByteString().size());
+
       if (msg.hasTx())
       {
         Transaction tx = msg.getTx();
+        mlog.set("type","tx");
         //logger.info("TX: " + new ChainHash(tx.getTxHash()));
         try
         {
@@ -142,6 +148,7 @@ public class PeerLink implements StreamObserver<PeerMessage>
       }
       else if (msg.hasTip())
       {
+        mlog.set("type","tip");
         PeerChainTip tip = msg.getTip();
         if (!node.getParams().getNetworkName().equals(tip.getNetworkName()))
         {
@@ -179,6 +186,7 @@ public class PeerLink implements StreamObserver<PeerMessage>
       }
       else if (msg.hasReqBlock())
       {
+        mlog.set("type","req_block");
         // Other side is asking for a block
         ChainHash hash = new ChainHash(msg.getReqBlock().getBlockHash());
         Block blk = node.getDB().getBlockMap().get(hash.getBytes());
@@ -189,6 +197,7 @@ public class PeerLink implements StreamObserver<PeerMessage>
       }
       else if (msg.hasBlock())
       {
+        mlog.set("type","block");
         // Getting a block, we probably asked for it.  See if we can eat it.
         Block blk = msg.getBlock();
         try
@@ -222,6 +231,7 @@ public class PeerLink implements StreamObserver<PeerMessage>
       }
       else if (msg.hasReqHeader())
       { 
+        mlog.set("type","req_header");
         // Peer is asking for a block header
         int height = msg.getReqHeader().getBlockHeight();
         ChainHash hash = node.getDB().getBlockHashAtHeight(height);
@@ -233,6 +243,7 @@ public class PeerLink implements StreamObserver<PeerMessage>
       }
       else if (msg.hasHeader())
       {
+        mlog.set("type","header");
         // We got a header, probably one we asked for
         BlockHeader header = msg.getHeader();
         Validation.checkBlockHeaderBasics(node.getParams(), header, false);
@@ -240,6 +251,8 @@ public class PeerLink implements StreamObserver<PeerMessage>
       }
       else if (msg.hasReqCluster())
       {
+        mlog.set("type","req_cluster");
+
         ChainHash tx_id = new ChainHash(msg.getReqCluster().getTxHash());
         sendCluster(tx_id);
       }
