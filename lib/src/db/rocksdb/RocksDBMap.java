@@ -135,7 +135,7 @@ public class RocksDBMap extends DBMap
   }
 
   @Override
-  public Map<ByteString, ByteString> getByPrefix(ByteString key, int max_reply)
+  public Map<ByteString, ByteString> getByPrefix(ByteString key, int max_reply, boolean allow_partial)
   {
     ByteString key_str = prefix.concat(key);
 
@@ -159,7 +159,11 @@ public class RocksDBMap extends DBMap
        	map.put(k, ByteString.copyFrom(it.value()));
 				count++;
 
-        if (count > max_reply) throw new DBTooManyResultsException();
+        if (count > max_reply)
+        {
+          if (allow_partial) return map;
+          else throw new DBTooManyResultsException();
+        }
 
         it.next();
       }

@@ -34,9 +34,14 @@ public abstract class DBMap
   {
     return containsKey(ByteString.copyFrom(key.getBytes()));
   }
-  public Map<ByteString, ByteString> getByPrefix(ByteString prefix, int max_reply)
+
+  public Map<ByteString, ByteString> getByPrefix(ByteString prefix, int max_reply, boolean allow_partial)
   {
     throw new RuntimeException("NOT IMPLEMENTED");
+  }
+  public Map<ByteString, ByteString> getByPrefix(ByteString prefix, int max_reply)
+  {
+    return getByPrefix(prefix, max_reply, false);
   }
 
   /** Implementing class should override this if they have something better to do */
