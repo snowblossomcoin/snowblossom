@@ -105,6 +105,7 @@ public class Shackleton
 
     public void runPass() throws Exception
     {
+      sleep(5000L);
       ByteArrayOutputStream b_out = new ByteArrayOutputStream();
       PrintStream p_out = new PrintStream(b_out);
 
