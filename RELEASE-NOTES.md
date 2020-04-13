@@ -15,6 +15,7 @@
 * Added streaming block template so MrPlow can update block template without breaking the connection
   * MrPlow will need the SnowBlossomNode to be updated to run
 * Added RichList report to explorer
+* Update bouncy castle to 1.65
 
 ## 1.6.0
 
