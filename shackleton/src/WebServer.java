@@ -76,15 +76,22 @@ public class WebServer
           displayStatus(out);
           return;
         }
+        
 
-	if (search.startsWith("load-"))
-	{
-	  try
-	  {
-	    displayAjax(out, Integer.parseInt(search.substring(5)));
-	    return;
-	  } catch(Throwable e){}
-	}
+        if (search.startsWith("load-"))
+        {
+          try
+          {
+            displayAjax(out, Integer.parseInt(search.substring(5)));
+            return;
+          } catch(Throwable e){}
+        }
+
+        if (search.equals("richlist"))
+        {
+          displayRichList(out);
+          return;
+        }
 
         try
         {
@@ -265,6 +272,8 @@ public class WebServer
     shackleton.getVoteTracker().getVotingReport(node_status, out);
     out.println("</pre>");
 
+    out.println("<h2>Rich List</h2>");
+    out.println("<pre><a href='?search=richlist'>Rich List Report</a></pre>");
 
     out.println("<h2>Recent Blocks</h2>");
     int min = Math.max(0, header.getBlockHeight()-75);
@@ -373,6 +382,14 @@ public class WebServer
       }
 
     }
+
+  }
+
+  private void displayRichList(PrintStream out)
+  {
+    out.println("<pre>");
+    out.println(shackleton.getRichListReport());
+    out.println("</pre>");
 
   }
   private void displayAddress(PrintStream out, AddressSpecHash address)

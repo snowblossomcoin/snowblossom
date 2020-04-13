@@ -14,6 +14,9 @@ import snowblossom.lib.NetworkParams;
 import snowblossom.proto.UserServiceGrpc.UserServiceBlockingStub;
 import snowblossom.proto.UserServiceGrpc.UserServiceStub;
 import snowblossom.proto.UserServiceGrpc;
+import duckutil.PeriodicThread;
+import java.io.PrintStream;
+import java.io.ByteArrayOutputStream;
 
 /** Yes a penguin taught me french back in antacrtica */
 public class Shackleton
@@ -46,6 +49,9 @@ public class Shackleton
   private NetworkParams params;
 
   private VoteTracker vote_tracker;
+  private RichList rich_list;
+
+  private volatile String rich_list_report = "not computed yet";
 
   public Shackleton(Config config)
     throws Exception
@@ -61,11 +67,15 @@ public class Shackleton
     asyncStub = UserServiceGrpc.newStub(channel);
     blockingStub = UserServiceGrpc.newBlockingStub(channel);
     get_utxo_util = new GetUTXOUtil(new StubHolder(channel), params);
+
+    rich_list = new RichList(params, blockingStub, get_utxo_util);
     
     web_server.start();
 
     vote_tracker=new VoteTracker(this);
     vote_tracker.start();
+
+    new RichListUpdateThread().start();
 
   }
 
@@ -81,4 +91,29 @@ public class Shackleton
   public VoteTracker getVoteTracker(){return vote_tracker;}
   public GetUTXOUtil getUtxoUtil(){ return get_utxo_util;}
 
+  public String getRichListReport(){return rich_list_report;}
+
+
+  public class RichListUpdateThread extends PeriodicThread
+  {
+    public RichListUpdateThread()
+    {
+      super(45L * 60L * 1000L);
+      setName("RichListUpdateThread");
+      setDaemon(true);
+    }
+
+    public void runPass() throws Exception
+    {
+      ByteArrayOutputStream b_out = new ByteArrayOutputStream();
+      PrintStream p_out = new PrintStream(b_out);
+
+      rich_list.print(p_out);
+      p_out.close();
+
+      rich_list_report = new String(b_out.toByteArray());
+
+    }
+
+  }
 }

@@ -5,9 +5,9 @@ import com.google.protobuf.ByteString;
 import duckutil.Config;
 import duckutil.ConfigFile;
 import io.grpc.ManagedChannel;
+import java.io.PrintStream;
 import java.text.DecimalFormat;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
@@ -39,35 +39,44 @@ public class RichList
 
     LogSetup.setup(config);
 
-    new RichList(config);
+    new RichList(config).print(System.out);
+
+
 
   }
 
-  private Config config;
-  private UserServiceStub asyncStub;
   private UserServiceBlockingStub stub;
   private NetworkParams params;
   private GetUTXOUtil get_utxo_util;
 
+
   public RichList(Config config)
     throws Exception
   { 
-    this.config = config;
-
 
     params = NetworkParams.loadFromConfig(config);
 
     ManagedChannel channel = StubUtil.openChannel(config, params);
 
-
-    asyncStub = UserServiceGrpc.newStub(channel);
     stub = UserServiceGrpc.newBlockingStub(channel);
 
     get_utxo_util = new GetUTXOUtil(new StubHolder(channel), params);
 
+  }
+
+  public RichList(NetworkParams params, UserServiceBlockingStub stub, GetUTXOUtil get_utxo_util)
+  {
+    this.params = params;
+    this.stub = stub;
+    this.get_utxo_util = get_utxo_util;
+  }
+
+  public void print(PrintStream out)
+    throws Exception
+  {
     NodeStatus node_status = stub.getNodeStatus(QueryUtil.nr());
 
-    System.out.println("Highest block: " + node_status.getHeadSummary().getHeader().getBlockHeight());
+    out.println("Highest block: " + node_status.getHeadSummary().getHeader().getBlockHeight());
 
     List<TransactionBridge> bridge_list = GetUTXOUtil.getSpendableValidatedStatic( ByteString.EMPTY, stub, node_status.getHeadSummary().getHeader().getUtxoRootHash());
 
@@ -75,11 +84,12 @@ public class RichList
     //getAllBlocks(node_status.getHeadSummary().getHeader());
     DecimalFormat df = new DecimalFormat("0.000000");
 
-    long total_value = getAddressBalances(bridge_list);
-    System.out.println("Total value: " + df.format(total_value / 1e6));
+    HashMap<String, Long> balance_map = new HashMap<>();
+    long total_value = getAddressBalances(bridge_list, balance_map);
+    out.println("Total value: " + df.format(total_value / 1e6));
 
     
-    System.out.println("Address count: " + balance_map.size());
+    out.println("Address count: " + balance_map.size());
 
     TreeMultimap<Long, String> m = TreeMultimap.create();
 
@@ -94,18 +104,13 @@ public class RichList
         double val = -me.getKey();
         double snow = val / 1e6;
         String addr = me.getValue();
-        System.out.println("" + addr + " " + df.format(snow));
+        out.println("" + addr + " " + df.format(snow));
       }
       
     }
-
-    
   } 
 
-  //HashSet<AddressSpecHash> all_addresses = new HashSet<>();
-  HashMap<String, Long> balance_map = new HashMap<>();
-
-  private long getAddressBalances(List<TransactionBridge> br_lst)
+  private long getAddressBalances(List<TransactionBridge> br_lst, Map<String, Long> balance_map)
   {
     long total = 0;
     for(TransactionBridge br : br_lst)
@@ -123,57 +128,6 @@ public class RichList
 
   }
 
-
-  /*private void getAddressBalances()
-  {
-    for(AddressSpecHash spec : all_addresses)
-    {
-      String addr = AddressUtil.getAddressString(params.getAddressPrefix(), spec);
-      AddressPage page = new AddressPage(System.out, spec, params, stub, false, get_utxo_util);
-      page.loadData();
-      balance_map.put(addr, page.valueConfirmed);
-    }
-  }
-
-  private void getAllBlocks(BlockHeader start_header)
-  {
-    ChainHash hash = new ChainHash(start_header.getSnowHash());
-
-    while(hash != null)
-    {
-      Block blk = stub.getBlock(RequestBlock.newBuilder().setBlockHash(hash.getBytes()).build());
-
-      processBlock(blk);
-      if (blk.getHeader().getBlockHeight() > 0)
-      {
-        hash = new ChainHash(blk.getHeader().getPrevBlockHash());
-      }
-      else
-      {
-        hash = null;
-      }
-
-    }
-
-  }
-
-  private void processBlock(Block blk)
-  {
-    for(Transaction tx : blk.getTransactionsList())
-    {
-      TransactionInner inner = TransactionUtil.getInner(tx);
-      for(TransactionInput in : inner.getInputsList())
-      {
-        all_addresses.add(new AddressSpecHash(in.getSpecHash()));
-      }
-      for(TransactionOutput out : inner.getOutputsList())
-      {
-        all_addresses.add(new AddressSpecHash(out.getRecipientSpecHash()));
-      }
-
-    }
-
-  }*/
 
   
 }
