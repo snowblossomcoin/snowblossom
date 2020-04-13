@@ -105,7 +105,9 @@ public class Shackleton
 
     public void runPass() throws Exception
     {
+      logger.info("Started rich list update");
       sleep(5000L);
+
       ByteArrayOutputStream b_out = new ByteArrayOutputStream();
       PrintStream p_out = new PrintStream(b_out);
 
@@ -113,6 +115,8 @@ public class Shackleton
       p_out.close();
 
       rich_list_report = new String(b_out.toByteArray());
+      
+      logger.info("Completed rich list update");
 
     }
 
