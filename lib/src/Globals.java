@@ -72,15 +72,4 @@ public class Globals
     crypt_provider_name = "BC";
   }
 
-  /**
-   * This uses the increasingly out of date spongecastle provider and should only
-   * be used if absolutely nessesary.
-   * Discussion: https://github.com/snowblossomcoin/snowblossom/issues/171
-   */
-  public static void addCryptoProviderAndroid()
-  {
-    Security.addProvider(new org.spongycastle.jce.provider.BouncyCastleProvider());
-    crypt_provider_name = "SC"; 
-  }
-
 }

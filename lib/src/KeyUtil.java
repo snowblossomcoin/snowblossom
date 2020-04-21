@@ -124,11 +124,6 @@ public class KeyUtil
         org.bouncycastle.jcajce.provider.asymmetric.ec.BCECPublicKey pub = (org.bouncycastle.jcajce.provider.asymmetric.ec.BCECPublicKey) pair.getPublic();
         pub.setPointFormat("COMPRESSED");
       }
-      else if (pair.getPublic() instanceof org.spongycastle.jcajce.provider.asymmetric.ec.BCECPublicKey)
-      {
-        org.spongycastle.jcajce.provider.asymmetric.ec.BCECPublicKey pub = (org.spongycastle.jcajce.provider.asymmetric.ec.BCECPublicKey) pair.getPublic();
-        pub.setPointFormat("COMPRESSED");
-      }
       else
       {
         throw new Exception("Unable to set public point format to compressed.  Not from SC or BC provider");
@@ -285,11 +280,6 @@ public class KeyUtil
       if (pair.getPublic() instanceof org.bouncycastle.jcajce.provider.asymmetric.ec.BCECPublicKey)
       {
         org.bouncycastle.jcajce.provider.asymmetric.ec.BCECPublicKey pub = (org.bouncycastle.jcajce.provider.asymmetric.ec.BCECPublicKey) pair.getPublic();
-        pub.setPointFormat("COMPRESSED");
-      }
-      else if (pair.getPublic() instanceof org.spongycastle.jcajce.provider.asymmetric.ec.BCECPublicKey)
-      {
-        org.spongycastle.jcajce.provider.asymmetric.ec.BCECPublicKey pub = (org.spongycastle.jcajce.provider.asymmetric.ec.BCECPublicKey) pair.getPublic();
         pub.setPointFormat("COMPRESSED");
       }
       else

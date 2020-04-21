@@ -11,7 +11,6 @@ java_library(
     "@maven//:org_rocksdb_rocksdbjni",
     "@maven//:org_bouncycastle_bcprov_jdk15on",
     "@maven//:org_bouncycastle_bcpkix_jdk15on",
-    "@maven//:com_madgag_spongycastle_prov",
     "@maven//:com_thetransactioncompany_jsonrpc2_server",
     "@maven//:net_minidev_json_smart",
     "@maven//:com_thetransactioncompany_jsonrpc2_base",
@@ -33,7 +32,6 @@ java_test(
     deps = [
         "//lib:lib",
         "//protolib:protogrpc",
-        "@maven//:com_madgag_spongycastle_prov",
         "@maven//:commons_codec_commons_codec",
         "@maven//:org_bouncycastle_bcprov_jdk15on",
     ]

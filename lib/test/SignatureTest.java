@@ -112,12 +112,6 @@ public class SignatureTest
     PublicKey pub = pair.getPublic();
     PrivateKey priv = pair.getPrivate();
 
-    if (pub instanceof org.spongycastle.jcajce.provider.asymmetric.ec.BCECPublicKey)
-    {
-      org.spongycastle.jcajce.provider.asymmetric.ec.BCECPublicKey pk = (org.spongycastle.jcajce.provider.asymmetric.ec.BCECPublicKey) pub;
-      pk.setPointFormat("COMPRESSED");
-    }
-
     if (pub instanceof org.bouncycastle.jcajce.provider.asymmetric.ec.BCECPublicKey)
     {
       org.bouncycastle.jcajce.provider.asymmetric.ec.BCECPublicKey pk = (org.bouncycastle.jcajce.provider.asymmetric.ec.BCECPublicKey) pub;
@@ -147,12 +141,6 @@ public class SignatureTest
     KeyPair pair = key_gen.genKeyPair();
     PublicKey pub = pair.getPublic();
     PrivateKey priv = pair.getPrivate();
-
-    if (pub instanceof org.spongycastle.jcajce.provider.asymmetric.ec.BCECPublicKey)
-    {
-      org.spongycastle.jcajce.provider.asymmetric.ec.BCECPublicKey pk = (org.spongycastle.jcajce.provider.asymmetric.ec.BCECPublicKey) pub;
-      pk.setPointFormat("COMPRESSED");
-    }
 
     if (pub instanceof org.bouncycastle.jcajce.provider.asymmetric.ec.BCECPublicKey)
     {

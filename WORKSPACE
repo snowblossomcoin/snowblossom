@@ -51,7 +51,6 @@ maven_install(
 				"io.netty:netty-tcnative-boringssl-static:2.0.25.Final",
 				"org.bouncycastle:bcprov-jdk15on:1.65",
         "org.bouncycastle:bcpkix-jdk15on:1.65",
-				"com.madgag.spongycastle:prov:1.58.0.0",
 				"com.thetransactioncompany:jsonrpc2-server:1.11",
 				"net.minidev:json-smart:2.3",
 				"com.lambdaworks:scrypt:1.4.0",
