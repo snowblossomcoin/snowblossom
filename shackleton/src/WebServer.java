@@ -491,6 +491,7 @@ public class WebServer
       t.getResponseHeaders().add("Content-Language", "en-US");
       ByteArrayOutputStream b_out = new ByteArrayOutputStream();
       PrintStream print_out = new PrintStream(b_out);
+      int resp_code=200;
 
       boolean useajax = t.getRequestURI().getQuery() != null && t.getRequestURI().getQuery().contains("load-");
       try
@@ -501,11 +502,13 @@ public class WebServer
       }
       catch(Throwable e)
       {
+        resp_code=500; //Might not actually be our fault if given bad input
+                       // so could be a 4XX, but not getting into the details here
         print_out.println("Exception: " + e);
       }
 
       byte[] data = b_out.toByteArray();
-      t.sendResponseHeaders(200, data.length);
+      t.sendResponseHeaders(resp_code, data.length);
       OutputStream out = t.getResponseBody();
       out.write(data);
       out.close();
