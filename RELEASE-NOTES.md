@@ -1,3 +1,7 @@
+## master
+
+* Added History panel to iceleaf GUI
+
 ## 1.7.0
 
 * Allow reserving channel name in CLI

@@ -32,6 +32,7 @@ public class IceLeaf
   protected MakeWalletPanel make_wallet_panel;
   protected SendPanel send_panel;
   protected AddressPanel address_panel;
+  protected HistoryPanel history_panel;
   protected NetworkParams params;
   protected SettingsPanel settings_panel;
   protected ReceivePanel receive_panel;
@@ -77,6 +78,7 @@ public class IceLeaf
     make_wallet_panel = new MakeWalletPanel(this);
     send_panel = new SendPanel(this);
     address_panel = new AddressPanel(this);
+    history_panel = new HistoryPanel(this);
     receive_panel = new ReceivePanel(this);
     settings_panel = new SettingsPanel(this);
 
@@ -160,12 +162,14 @@ public class IceLeaf
       make_wallet_panel.setup();
       send_panel.setup();
       address_panel.setup();
+      history_panel.setup();
       receive_panel.setup();
 
       tab_pane.add("Wallets", wallet_panel.getPanel());
       tab_pane.add("Send", send_panel.getPanel());
       tab_pane.add("Receive", receive_panel.getPanel());
       tab_pane.add("Addresses", address_panel.getPanel());
+      tab_pane.add("History", history_panel.getPanel());
       tab_pane.add("Make Wallet", make_wallet_panel.getPanel());
       tab_pane.add("Node Selection", node_select_panel.getPanel());
       tab_pane.add("Node", node_panel.getPanel());
