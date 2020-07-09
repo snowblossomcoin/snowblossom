@@ -7,6 +7,8 @@ import duckutil.AtomicFileOutputStream;
 import duckutil.Config;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.PrintStream;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -622,6 +624,36 @@ public class WalletUtil
     db.writeTo(out);
     out.flush();
     out.close();
+
+
+    { // Write readme file
+      File readme_file = new File(wallet_path, "readme.txt");
+      FileOutputStream readme_out = new FileOutputStream(readme_file);
+
+      PrintStream readme_print = new PrintStream(readme_out);
+
+      readme_print.println("This directory contains a Snowblossom Wallet.");
+      readme_print.println("");
+      readme_print.println("If backing this up, save the entire directory including all .wallet files in it.");
+      readme_print.println("It is safe to access a wallet directory from multiple clients on the same computer");
+      readme_print.println("or on multiple computers with real-time or eventual synchronization.");
+      readme_print.println("");
+      readme_print.println("Wallet data safety is ensured by the snowblossom client always writing the wallet");
+      readme_print.println("out to a new file with a random file name and only then deleting the old file(s).");
+      readme_print.println("This way, if multiple clients are making changes there will simple be multiple files.");
+      readme_print.println("The next client to update the wallet will merge those and make a new single file.");
+      readme_print.println("");
+      readme_print.println("In addition, each file has a proto version.  If a client sees a higher version it will");
+      readme_print.println("assume there are new fields that it does not know how to correctly merge and won't remove");
+      readme_print.println("the higher versioned files.  So it will always be safe to open a wallet with an older");
+      readme_print.println("snowblossom client.");
+
+      readme_print.flush();
+      readme_out.close();
+
+    
+
+    }
 
     logger.log(Level.FINE, String.format("Save to file %s completed", db_file.getPath()));
   }
