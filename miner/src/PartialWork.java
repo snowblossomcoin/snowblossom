@@ -50,11 +50,6 @@ public class PartialWork implements Comparable<PartialWork>
     //if (sort > o.sort) return 1;
     return 0;
   }
-  public boolean equals(Object o)
-  {
-    System.out.println("Equals called");
-    return super.equals(o);
-  }
 
   public long getNextWordIdx()
   {
