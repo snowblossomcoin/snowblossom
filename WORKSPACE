@@ -37,20 +37,20 @@ java_grpc_library()
 git_repository(
   name = "duckutil",
   remote = "https://github.com/fireduck64/duckutil",
-  commit = "0dd4f3aff5bab1f9ce9f4ac326c120c47b7e71e0",
-  shallow_since = "1576867546 -0800",
+  commit = "13ffaa92a04e783aabc520c9e63933ab3c1aa5c5",
+  shallow_since = "1594916994 -0700",
 )
 
 maven_install(
     artifacts = [
 				"com.google.protobuf:protobuf-java:3.5.1",
-				"org.rocksdb:rocksdbjni:5.14.2",
+				"org.rocksdb:rocksdbjni:6.11.4",
         "junit:junit:4.12",
 				"commons-codec:commons-codec:1.11",
         "org.apache.commons:commons-math3:3.6.1",
 				"io.netty:netty-tcnative-boringssl-static:2.0.25.Final",
-				"org.bouncycastle:bcprov-jdk15on:1.65",
-        "org.bouncycastle:bcpkix-jdk15on:1.65",
+				"org.bouncycastle:bcprov-jdk15on:1.66",
+        "org.bouncycastle:bcpkix-jdk15on:1.66",
 				"com.thetransactioncompany:jsonrpc2-server:1.11",
 				"net.minidev:json-smart:2.3",
 				"com.lambdaworks:scrypt:1.4.0",
