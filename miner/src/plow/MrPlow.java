@@ -44,6 +44,8 @@ public class MrPlow
   public static final long TEMPLATE_AGE_MAX_MS=40000L; //Should get updates every 30 seconds
 
   public static ByteString BLOCK_KEY = ByteString.copyFrom(new String("blocks_found").getBytes());
+  public static String PPLNS_STATE_KEY = "pplns_state";
+
 
 
   public static void main(String args[]) throws Exception
@@ -125,7 +127,7 @@ public class MrPlow
 		PPLNSState pplns_state = null;
 		try
 		{
-      pplns_state = PPLNSState.parseFrom(db.getSpecialMap().get("pplns_state"));
+      pplns_state = PPLNSState.parseFrom(db.getSpecialMap().get(PPLNS_STATE_KEY));
       logger.info(String.format("Loaded PPLNS state with %d entries", pplns_state.getShareEntriesCount()));
 		}
     catch(Throwable t)
@@ -224,7 +226,7 @@ public class MrPlow
   private void saveState()
   {
     PPLNSState state = share_manager.getState();
-    db.getSpecialMap().put("pplns_state", state.toByteString());
+    db.getSpecialMap().put(PPLNS_STATE_KEY, state.toByteString());
   }
   private ManagedChannel channel;
 
