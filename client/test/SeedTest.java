@@ -15,6 +15,7 @@ import snowblossom.client.SeedUtil;
 import snowblossom.lib.*;
 import snowblossom.proto.*;
 import snowblossom.proto.WalletKeyPair;
+import java.util.HashSet;
 
 public class SeedTest
 {
@@ -138,6 +139,8 @@ public class SeedTest
     ByteString seed_id_xpub = SeedUtil.getSeedIdFromXpub( xpub);
     Assert.assertEquals(seed_id_seed, seed_id_xpub);
 
+    testSiteKey(seed);
+
   }
 
   private static void testKeyPair(WalletKeyPair wkp, String name)
@@ -166,6 +169,34 @@ public class SeedTest
 
   }
 
+  public static void testSiteKey(String seed)
+    throws Exception
+  {
+    HashSet<ByteString> seen_keys = new HashSet<>();
+
+    for(int i=0; i<16; i++)
+    {
+      String site = NonsenseWordList.getNonsense(5);
+
+      WalletKeyPair wkp = SeedUtil.getSiteKey(new NetworkParamsTestnet(), seed, "", site);
+      WalletKeyPair wkp2 = SeedUtil.getSiteKey(new NetworkParamsTestnet(), seed, "", site);
+
+      logger.info("Key path: " + wkp.getHdPath());
+
+      testKeyPair(wkp, site);
+
+      Assert.assertEquals(wkp, wkp2);
+
+      ByteString pub_key = wkp.getPublicKey();
+      Assert.assertFalse( seen_keys.contains(pub_key));
+
+      seen_keys.add(pub_key);
+
+
+    }
+
+
+  }
 
 }
 

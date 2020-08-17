@@ -56,6 +56,13 @@ public class Globals
   public static final double LOW_FEE = 2.2;
 
 
+  // Site key HD derivation purpose
+  // See bip32, 43 and 44.
+  // Short story, int 44 is used for crypytocurrency
+  // So we want a different one used for site auth
+  public static final int HD_SITE_PURPOSE = 981231; 
+
+
   // Not a big fan of static global variables
   // but already loading the cryptoprovider is a global
   // thing that effects state so this isn't far from

@@ -12,13 +12,16 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
 import java.util.Scanner;
+import java.nio.ByteBuffer;
 import org.bitcoinj.crypto.ChildNumber;
 import org.bitcoinj.crypto.DeterministicHierarchy;
 import org.bitcoinj.crypto.DeterministicKey;
 import org.bitcoinj.crypto.HDKeyDerivation;
 import org.bitcoinj.crypto.MnemonicCode;
 import snowblossom.lib.AddressUtil;
+import snowblossom.lib.DigestUtil;
 import snowblossom.lib.Globals;
+import snowblossom.lib.HexUtil;
 import snowblossom.lib.KeyUtil;
 import snowblossom.lib.NetworkParams;
 import snowblossom.lib.SignatureUtil;
@@ -178,24 +181,8 @@ public class SeedUtil
 
   }
 
-  public static WalletKeyPair getKey(NetworkParams params, String seed_str, String pass, int account, int change, int index)
+  public static WalletKeyPair getKeyFromDeterministicKey(DeterministicKey dk_addr, ByteString seed_id, int change, int index)
   {
-    ByteString seed = decodeSeed(seed_str,pass);
-    DeterministicKey dk = HDKeyDerivation.createMasterPrivateKey(seed.toByteArray());
-    DeterministicHierarchy dh = new DeterministicHierarchy(dk);
-
-    ByteString seed_id = getSeedId(params, seed_str, pass, 0);
-
-
-    DeterministicKey dk_addr = dh.get( ImmutableList.of(
-      	new ChildNumber(44,true),
-      	new ChildNumber(params.getBIP44CoinNumber(),true),
-      	new ChildNumber(account,true),
-      	new ChildNumber(change,false),
-      	new ChildNumber(index,false)
-			),
-      true, true);
-
 		ByteString priv_key = ByteString.copyFrom(dk_addr.getPrivKeyBytes());
     BigInteger priv_bi = dk_addr.getPrivKey();
 
@@ -221,6 +208,70 @@ public class SeedUtil
       .setHdChange(change)
       .setHdIndex(index)
 			.build();
+
+  }
+
+  public static WalletKeyPair getKey(NetworkParams params, String seed_str, String pass, int account, int change, int index)
+  {
+    ByteString seed = decodeSeed(seed_str,pass);
+    DeterministicKey dk = HDKeyDerivation.createMasterPrivateKey(seed.toByteArray());
+    DeterministicHierarchy dh = new DeterministicHierarchy(dk);
+
+    ByteString seed_id = getSeedId(params, seed_str, pass, 0);
+
+
+    DeterministicKey dk_addr = dh.get( ImmutableList.of(
+      	new ChildNumber(44,true),
+      	new ChildNumber(params.getBIP44CoinNumber(),true),
+      	new ChildNumber(account,true),
+      	new ChildNumber(change,false),
+      	new ChildNumber(index,false)
+			),
+      true, true);
+    
+    return getKeyFromDeterministicKey(dk_addr, seed_id, change, index);
+
+  }
+
+  /** Generate a deterministic key for the given string site for the given seed */
+  public static WalletKeyPair getSiteKey(NetworkParams params, String seed_str, String pass, String site)
+  {
+    ByteString seed = decodeSeed(seed_str,pass);
+    DeterministicKey dk = HDKeyDerivation.createMasterPrivateKey(seed.toByteArray());
+    DeterministicHierarchy dh = new DeterministicHierarchy(dk);
+
+    ByteString seed_id = getSeedId(params, seed_str, pass, 0);
+
+    LinkedList<ChildNumber> hd_path = new LinkedList<>();
+
+    hd_path.add(new ChildNumber(Globals.HD_SITE_PURPOSE,true));
+    hd_path.add(new ChildNumber(params.getBIP44CoinNumber(),true));
+
+
+    // We take the site string, hash it
+    // and then use that data as ints in the HD
+    // we use the abs, since they shouldn't be negative
+    // and if they are negative max int, use zero instead
+
+    // Result is terrible paths like:
+    // M/981231H/2339H/671271860H/672827692H/1806601323H/705147759H/626028654H/1663169488H/712115807H/1149046820H
+    ByteString site_hash = DigestUtil.hash(ByteString.copyFrom(site.getBytes()));
+
+
+    ByteBuffer bb = site_hash.asReadOnlyByteBuffer();
+    while(bb.remaining() >= 4)
+    {
+      int v = bb.getInt();
+      v = Math.abs(v);
+      if (v < 0) v = 0;
+
+      hd_path.add(new ChildNumber(v, true));
+    }
+
+    DeterministicKey dk_addr = dh.get( hd_path, true, true);
+    
+    return getKeyFromDeterministicKey(dk_addr, seed_id, 0, 0);
+
   }
   
 
