@@ -95,6 +95,14 @@ public class CipherUtil
     byte[] key_data = new byte[SYM_BLOCK_SIZE_0];
     rnd.nextBytes(key_data);
     key.setKey( ByteString.copyFrom(key_data) );
+
+    // Probably overly paranoid, but as the key_id will be shared
+    // using a new low security rnd to not give away any state information
+    // from the secure rnd
+    Random rnd_low = new Random();
+    byte[] key_id_data = new byte[8];
+    rnd_low.nextBytes(key_id_data);
+    key.setKeyId( HexUtil.getHexString( key_id_data ) );
     return key.build(); 
 
   }
