@@ -72,6 +72,6 @@ message SymmetricKey {
   // See snowblossom.lib.CipherUtil
   int32 algo_set = 1; 
   bytes key = 2;
-  string key_id = 3; // Randomly generated key id
+  bytes key_id = 3; // Randomly generated key id
 }
 

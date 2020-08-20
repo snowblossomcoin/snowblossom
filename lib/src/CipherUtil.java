@@ -102,7 +102,7 @@ public class CipherUtil
     Random rnd_low = new Random();
     byte[] key_id_data = new byte[8];
     rnd_low.nextBytes(key_id_data);
-    key.setKeyId( HexUtil.getHexString( key_id_data ) );
+    key.setKeyId( ByteString.copyFrom(key_id_data) );
     return key.build(); 
 
   }
