@@ -127,16 +127,39 @@ public class CipherUtil
         byte[] cipher_data = cipher.doFinal(plain_data.toByteArray());
 
         return ByteString.copyFrom(iv_bytes).concat(ByteString.copyFrom(cipher_data));
-
       }
       throw new ValidationException("Unknown algo_set: " + key.getAlgoSet());
-
     }
     catch(java.security.GeneralSecurityException e)
     {
       throw new ValidationException(e);
     }
   }
+
+  public static ByteString encryptSymmetric(SymmetricKey key, ByteString plain_data, ByteString iv)
+    throws ValidationException
+  {
+    try
+    {
+      if (key.getAlgoSet() == 0)
+      {
+    
+        Key k_spec = new SecretKeySpec(key.getKey().toByteArray(), "AES");
+        Cipher cipher = Cipher.getInstance(SYM_ENCRYPTION_MODE_0);
+        cipher.init(Cipher.ENCRYPT_MODE, k_spec, new IvParameterSpec(iv.toByteArray()));
+
+        byte[] cipher_data = cipher.doFinal(plain_data.toByteArray());
+
+        return iv.concat(ByteString.copyFrom(cipher_data));
+      }
+      throw new ValidationException("Unknown algo_set: " + key.getAlgoSet());
+    }
+    catch(java.security.GeneralSecurityException e)
+    {
+      throw new ValidationException(e);
+    }
+  }
+
 
   public static ByteString decryptSymmetric(SymmetricKey key, ByteString cipher_data)
     throws ValidationException
