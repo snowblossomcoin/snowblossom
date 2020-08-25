@@ -9,11 +9,17 @@ import snowblossom.lib.*;
 import snowblossom.proto.*;
 import snowblossom.trie.proto.TrieNode;
 
-public class SnowUserService extends UserServiceGrpc.UserServiceImplBase
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Collection;
+
+
+public class SnowUserService extends UserServiceGrpc.UserServiceImplBase implements MemPoolTickleInterface
 {
   private static final Logger logger = Logger.getLogger("snowblossom.userservice");
 
   private LinkedList<BlockSubscriberInfo> block_subscribers = new LinkedList<>();
+  private HashMap<AddressSpecHash, LinkedList<StreamObserver<AddressUpdate> > > address_watchers = new HashMap<>();
 
   private SnowBlossomNode node;
   private Object tickle_trigger = new Object();
@@ -32,6 +38,7 @@ public class SnowUserService extends UserServiceGrpc.UserServiceImplBase
 
   public void start()
   {
+    node.getMemPool().registerListner(this);
     new Tickler().start();
   }
 
@@ -89,6 +96,72 @@ public class SnowUserService extends UserServiceGrpc.UserServiceImplBase
     {
       tickle_trigger.notifyAll(); 
     }
+  }
+
+  @Override
+  public void tickleMemPool(Transaction tx, Collection<AddressSpecHash> involved)
+  {
+    ChainHash utxo_root = new ChainHash(node.getBlockIngestor().getHead().getHeader().getUtxoRootHash());
+    sendAddressUpdates(involved, utxo_root);
+
+  }
+
+	@Override
+	public void subscribeAddressUpdates(RequestAddress req, StreamObserver<AddressUpdate> ob)
+  {
+    AddressSpecHash hash = new AddressSpecHash( req.getAddressSpecHash() );
+
+    synchronized(address_watchers)
+    {
+      if (!address_watchers.containsKey(hash))
+      {
+        address_watchers.put(hash, new LinkedList<StreamObserver<AddressUpdate>>());
+      }
+      address_watchers.get(hash).add(ob);
+    }
+
+    ChainHash utxo_root = new ChainHash(node.getBlockIngestor().getHead().getHeader().getUtxoRootHash());
+    sendAddressUpdate(hash, utxo_root, ob);
+
+  }
+
+  private void sendAddressUpdates(Collection<AddressSpecHash> involved, ChainHash utxo_root)
+  {
+    synchronized(address_watchers)
+    {
+      for(AddressSpecHash hash : involved)
+      {
+        if (address_watchers.containsKey(hash))
+        {
+          LinkedList<StreamObserver<AddressUpdate> > ok_list = new LinkedList<>();
+          for(StreamObserver<AddressUpdate> ob : address_watchers.get(hash))
+          {
+            try
+            {
+              sendAddressUpdate(hash, utxo_root, ob);
+              ok_list.add(ob);
+            }
+            catch(Throwable t)
+            {
+              logger.info("Error: " + t);
+            }
+          }
+         	address_watchers.put(hash, ok_list);
+        }
+      }
+    }
+
+  }
+  private void sendAddressUpdate(AddressSpecHash hash, ChainHash utxo_root, StreamObserver<AddressUpdate> ob)
+  {
+    AddressUpdate.Builder update = AddressUpdate.newBuilder();
+
+    update.setAddress(hash.getBytes());
+    update.setMempoolChanges( node.getMemPool().getTransactionsForAddress(hash).size() > 0);
+    update.setCurrentUtxoRoot(utxo_root.getBytes());
+
+    ob.onNext(update.build());
+
   }
 
   private void sendNewBlocks()
@@ -478,6 +551,30 @@ public class SnowUserService extends UserServiceGrpc.UserServiceImplBase
             tickle_trigger.wait(30000);
           }
           sendNewBlocks();
+
+          //TODO - should maybe look at more than last block in case we missed a few
+          ChainHash head_block = new ChainHash(node.getBlockIngestor().getHead().getHeader().getSnowHash());
+
+          Block b = node.getDB().getBlockMap().get(head_block.getBytes());
+          ChainHash utxo_root_hash = new ChainHash(b.getHeader().getUtxoRootHash());
+
+          HashSet<AddressSpecHash> involved = new HashSet<>();
+          for(Transaction tx : b.getTransactionsList())
+          {
+						TransactionInner inner = TransactionUtil.getInner(tx);
+						for (TransactionInput in : inner.getInputsList())
+						{
+							involved.add(new AddressSpecHash(in.getSpecHash()));
+						}
+						for (TransactionOutput out : inner.getOutputsList())
+						{
+							involved.add(new AddressSpecHash(out.getRecipientSpecHash()));
+						}
+          }
+
+					sendAddressUpdates(involved, utxo_root_hash);
+
+
         }
         catch(Throwable t)
         {

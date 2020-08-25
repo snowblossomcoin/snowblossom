@@ -178,6 +178,8 @@ service UserService {
   rpc GetFeeEstimate ( NullRequest ) returns ( FeeEstimate ) {}
   rpc GetFBOList ( RequestAddress ) returns ( TxOutList ) {}
   rpc GetIDList ( RequestNameID ) returns ( TxOutList ) {} 
+
+  rpc SubscribeAddressUpdates ( RequestAddress ) returns ( stream AddressUpdate ) {} 
 }
 
 
@@ -246,6 +248,12 @@ message RequestBlockHeader {
     int32 block_height = 1;
     bytes block_hash = 2;
   }
+}
+
+message AddressUpdate {
+  bytes address = 1;
+  bool mempool_changes = 2; // true iff there are mempool transactions
+  bytes current_utxo_root = 4;
 }
 
 message SubmitReply {

@@ -73,6 +73,8 @@ public class MemPool
   private final int low_fee_max;
 
   private Object tickle_trigger = new Object();
+  private ImmutableList<MemPoolTickleInterface> mempool_listener = ImmutableList.of();
+
 
   public MemPool(HashedTrie utxo_hashed_trie, ChainStateSource chain_state_source)
   {
@@ -297,6 +299,11 @@ public class MemPool
       }
       TimeRecord.record(t1, "mempool:tx_add");
       TimeRecord.record(t1, "mempool:p3");
+
+      for(MemPoolTickleInterface listener : mempool_listener)
+      {
+        listener.tickleMemPool(tx, info.involved_addresses);
+      }
 
       mlog.set("added", 1);
       return true;
@@ -552,6 +559,17 @@ public class MemPool
   {
     this.peerage = peerage;
   }
+
+  public synchronized void registerListner(MemPoolTickleInterface listener)
+  {
+    LinkedList<MemPoolTickleInterface> l = new LinkedList<>();
+    l.addAll(mempool_listener);
+    l.add(listener);
+
+    mempool_listener = ImmutableList.copyOf(l);
+
+  }
+
 
   public class TicklerBroadcast extends PeriodicThread
   {

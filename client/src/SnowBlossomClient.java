@@ -22,6 +22,7 @@ import java.util.logging.Logger;
 import snowblossom.lib.*;
 import snowblossom.proto.*;
 import snowblossom.proto.UserServiceGrpc.UserServiceBlockingStub;
+import snowblossom.proto.UserServiceGrpc.UserServiceStub;
 import snowblossom.util.proto.*;
 import com.google.protobuf.ByteString;
 
@@ -170,13 +171,23 @@ public class SnowBlossomClient
       else if (command.equals("monitor"))
       {
         BalanceInfo bi_last = null;
+        for(AddressSpec claim : client.getPurse().getDB().getAddressesList())
+        {
+          
+          AddressSpecHash hash = AddressUtil.getHashForSpec(claim);
+          client.getAsyncStub().subscribeAddressUpdates( 
+            RequestAddress.newBuilder().setAddressSpecHash(hash.getBytes()).build(), 
+              new MonitorUtil(client.getParams()) );
+        }
+
+
         while(true)
         {
           try
           {
             if (client == null)
             {
-               client = new SnowBlossomClient(config);
+              client = new SnowBlossomClient(config);
             }
             BalanceInfo bi = client.getBalance();
             if (!bi.equals(bi_last))
@@ -186,8 +197,6 @@ public class SnowBlossomClient
               bi_last = bi;
 
             }
-
-
           }
           catch(Throwable t)
           {
@@ -461,6 +470,7 @@ public class SnowBlossomClient
   public Config getConfig(){return config;}
 
   public UserServiceBlockingStub getStub(){ return stub_holder.getBlockingStub(); }
+  public UserServiceStub getAsyncStub(){ return stub_holder.getAsyncStub(); }
 
   public FeeEstimate getFeeEstimate()
   {
