@@ -171,13 +171,12 @@ public class SnowBlossomClient
       else if (command.equals("monitor"))
       {
         BalanceInfo bi_last = null;
+        MonitorTool mu = new MonitorTool(client.getParams(), client.getStubHolder(), new MonitorInterfaceSystemOut());
         for(AddressSpec claim : client.getPurse().getDB().getAddressesList())
         {
           
           AddressSpecHash hash = AddressUtil.getHashForSpec(claim);
-          client.getAsyncStub().subscribeAddressUpdates( 
-            RequestAddress.newBuilder().setAddressSpecHash(hash.getBytes()).build(), 
-              new MonitorUtil(client.getParams()) );
+          mu.addAddress(hash);
         }
 
 
@@ -469,6 +468,7 @@ public class SnowBlossomClient
   public NetworkParams getParams(){return params;}
   public Config getConfig(){return config;}
 
+  public StubHolder getStubHolder() { return stub_holder; }
   public UserServiceBlockingStub getStub(){ return stub_holder.getBlockingStub(); }
   public UserServiceStub getAsyncStub(){ return stub_holder.getAsyncStub(); }
 

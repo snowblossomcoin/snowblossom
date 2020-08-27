@@ -75,3 +75,11 @@ message SymmetricKey {
   bytes key_id = 3; // Randomly generated key id
 }
 
+
+// To be stuffed in extra field of transaction
+message OfferAcceptance {
+  bytes offer_id = 1; // Identifier of the offer accepted
+  bytes benefit_addr_spec_hash = 2; // address of the beneficiary of the offer (if applicable)
+  bytes refund_addr_spec_hash = 3;
+}
+
