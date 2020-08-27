@@ -40,7 +40,7 @@ public class CipherUtil
       Cipher c = null;
       if (algo.equals("ECDSA"))
       {
-        c = Cipher.getInstance("ECIES");
+        c = Cipher.getInstance("ECIES","BC");
         c.init(Cipher.ENCRYPT_MODE, pub_key);
       }
       else
@@ -68,7 +68,7 @@ public class CipherUtil
 
       if (algo.equals("ECDSA"))
       {
-        c = Cipher.getInstance("ECIES");
+        c = Cipher.getInstance("ECIES","BC");
         c.init(Cipher.DECRYPT_MODE, kp.getPrivate());
       }
       else
