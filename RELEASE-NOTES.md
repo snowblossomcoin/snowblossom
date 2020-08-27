@@ -1,4 +1,4 @@
-## master
+## 1.7.1
 
 * Added History panel to iceleaf GUI
 * Added SubscribeAddressUpdates gRPC api to node to monitor addresses
