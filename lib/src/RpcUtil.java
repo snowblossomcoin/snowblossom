@@ -20,9 +20,9 @@ public class RpcUtil
 
   public void registerHandlers(JsonRpcServer json_server)
   {
-		json_server.register(new AddressToHashHandler());
-		json_server.register(new HashToAddressHandler());
-		json_server.register(new TransactionParseHandler());
+    json_server.register(new AddressToHashHandler());
+    json_server.register(new HashToAddressHandler());
+    json_server.register(new TransactionParseHandler());
     
   }
 
@@ -88,7 +88,7 @@ public class RpcUtil
       TransactionInner inner = TransactionUtil.getInner(tx);
 
       reply.put("tx", protoToJson(tx));
-			reply.put("inner", protoToJson(inner));
+      reply.put("inner", protoToJson(inner));
 
       return reply;
     }

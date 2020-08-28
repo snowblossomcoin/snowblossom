@@ -37,7 +37,7 @@ public class NetworkParamsProd extends NetworkParams
     map.put(8, new SnowFieldInfo("bugbear",     256L * gb, "533ae42a04a609c4b45464b1aa9e6924",41));
     map.put(9, new SnowFieldInfo("hippo",       512L * gb, "ecdb28f1912e2266a71e71de601117d2",43));
     map.put(10,new SnowFieldInfo("shai-hulud", 1024L * gb, "cc883468a08f48b592a342a2cdf5bcba",45));
-    map.put(11,new SnowFieldInfo("avanc", 		 2048L * gb, "a2a4076f6cde947935db06e5fc5bbd14",47));
+    map.put(11,new SnowFieldInfo("avanc",      2048L * gb, "a2a4076f6cde947935db06e5fc5bbd14",47));
 
     return map;
   }

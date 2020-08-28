@@ -108,26 +108,26 @@ public class SignatureUtil
     {
       algo="ECDSA";
     }
-		if (sig_type == SIG_TYPE_ECDSA)
-		{
-			algo="ECDSA";
-		}
-		if (sig_type == SIG_TYPE_DSA)
-		{
-			algo="DSA";
-		}
-		if (sig_type == SIG_TYPE_RSA)
-		{
-			algo="RSA";
-		}
-		if (sig_type == SIG_TYPE_DSTU4145)
-		{
-			algo="DSTU4145";
-		}
-		if (algo == null)
-		{
-			throw new ValidationException(String.format("Unknown sig type %d", sig_type));
-		}
+    if (sig_type == SIG_TYPE_ECDSA)
+    {
+      algo="ECDSA";
+    }
+    if (sig_type == SIG_TYPE_DSA)
+    {
+      algo="DSA";
+    }
+    if (sig_type == SIG_TYPE_RSA)
+    {
+      algo="RSA";
+    }
+    if (sig_type == SIG_TYPE_DSTU4145)
+    {
+      algo="DSTU4145";
+    }
+    if (algo == null)
+    {
+      throw new ValidationException(String.format("Unknown sig type %d", sig_type));
+    }
     return algo;
   }
 
@@ -158,7 +158,7 @@ public class SignatureUtil
     {
       return 90;  
     }
-	  throw new ValidationException(String.format("Unknown sig type %d", sig_type));
+    throw new ValidationException(String.format("Unknown sig type %d", sig_type));
 
   }
 
@@ -169,8 +169,8 @@ public class SignatureUtil
     int sig_type = key_pair.getSignatureType();
     String algo=getAlgo(sig_type);
 
-		PrivateKey priv_key = KeyUtil.decodePrivateKey(key_pair.getPrivateKey(), algo);
-	  
+    PrivateKey priv_key = KeyUtil.decodePrivateKey(key_pair.getPrivateKey(), algo);
+    
     try
     {
       Signature sig_engine = Signature.getInstance(algo, Globals.getCryptoProviderName());

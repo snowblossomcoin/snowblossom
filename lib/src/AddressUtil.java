@@ -55,7 +55,7 @@ public class AddressUtil
   public static AddressSpec getSimpleSpecForKey(ByteString key_data, int sig_type)
   {
    return AddressSpec.newBuilder()
-    	.setRequiredSigners(1)
+      .setRequiredSigners(1)
       .addSigSpecs( SigSpec.newBuilder()
         .setSignatureType( sig_type )
         .setPublicKey(key_data)

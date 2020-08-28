@@ -16,10 +16,10 @@ public class DaemonThreadFactory implements ThreadFactory {
   @Override
   public synchronized Thread newThread(Runnable r)
   {
-	  Thread t = new Thread(r);
-		t.setDaemon(true);
+    Thread t = new Thread(r);
+    t.setDaemon(true);
     t.setName(name +"{" + count + "}");
     count++;
-		return t;
+    return t;
   }
 }

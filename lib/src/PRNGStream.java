@@ -66,17 +66,17 @@ import org.apache.commons.math3.random.Well44497b;
 
     private int seed_ints[];
     private byte seed_bytes[];
-		private TreeMap<Integer, ByteBuffer> preallocated_buffs = new TreeMap<>();
+    private TreeMap<Integer, ByteBuffer> preallocated_buffs = new TreeMap<>();
 
     public void mixBytes(byte[] b)
     {
       if (b.length > state_size_bytes - 64) throw new RuntimeException("Probably breaking entropy");
 
       byte[] ex = null;
-			int ex_len = state_size_bytes - b.length;
-			if (!preallocated_buffs.containsKey(ex_len)) preallocated_buffs.put(ex_len, ByteBuffer.allocate(ex_len));
+      int ex_len = state_size_bytes - b.length;
+      if (!preallocated_buffs.containsKey(ex_len)) preallocated_buffs.put(ex_len, ByteBuffer.allocate(ex_len));
 
-			ex = preallocated_buffs.get(ex_len).array();
+      ex = preallocated_buffs.get(ex_len).array();
 
       // Load existing data to mix in existing state
       nextBytes(ex);

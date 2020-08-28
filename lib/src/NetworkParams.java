@@ -13,7 +13,7 @@ import java.util.logging.Logger;
 
 public abstract class NetworkParams
 {
-	private static final Logger logger = Logger.getLogger("snowblossom.blockchain");
+  private static final Logger logger = Logger.getLogger("snowblossom.blockchain");
 
   protected final ImmutableMap<Integer, SnowFieldInfo> snow_fields;
 
@@ -126,7 +126,7 @@ public abstract class NetworkParams
       else
       {
         logger.log(Level.SEVERE, String.format("Unknown network: %s", network));
-				return null;
+        return null;
       }
     }
     else
