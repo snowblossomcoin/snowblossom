@@ -79,7 +79,13 @@ message SymmetricKey {
 // To be stuffed in extra field of transaction
 message OfferAcceptance {
   bytes offer_id = 1; // Identifier of the offer accepted
-  bytes benefit_addr_spec_hash = 2; // address of the beneficiary of the offer (if applicable)
-  bytes refund_addr_spec_hash = 3;
+  oneof z {
+    // That that are doing PKI to sign messages for the recipient will need the full spec
+    AddressSpec for_address_spec = 2; // address spec of the beneficiary of the offer (if applicable)
+
+    // Things that just need to validate signatures only need the spec hash
+    bytes for_address_spec_hash = 3;
+  }
+  bytes refund_addr_spec_hash = 5;
 }
 
