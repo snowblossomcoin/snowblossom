@@ -53,7 +53,12 @@ public class ProtoDBMap<M extends Message>
 
   public Map<ByteString, M> getByPrefix(ByteString prefix, int max_reply)
   {
-    Map<ByteString, ByteString> inner_result = inner.getByPrefix(prefix, max_reply);
+    return getByPrefix(prefix, max_reply, false);
+
+  }
+  public Map<ByteString, M> getByPrefix(ByteString prefix, int max_reply, boolean allow_partial)
+  {
+    Map<ByteString, ByteString> inner_result = inner.getByPrefix(prefix, max_reply, allow_partial);
 
     TreeMap<ByteString, M> m = new TreeMap<>(new ByteStringComparator());
 
