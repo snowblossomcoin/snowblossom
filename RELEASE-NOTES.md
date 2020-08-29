@@ -3,6 +3,7 @@
 * Added History panel to iceleaf GUI
 * Added SubscribeAddressUpdates gRPC api to node to monitor addresses
 * Added MonitorTool to use SubscribeAddressUpdates to monitor addresses
+* Update seed nodes
 
 ## 1.7.0
 
