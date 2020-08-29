@@ -17,6 +17,8 @@ import snowblossom.lib.TransactionUtil;
 import snowblossom.proto.SubmitReply;
 import snowblossom.proto.TransactionOutput;
 import snowblossom.util.proto.*;
+import java.util.Base64;
+import com.google.protobuf.ByteString;
 
 public class SendPanel extends BasePanel
 {
@@ -24,6 +26,7 @@ public class SendPanel extends BasePanel
 
   protected JTextField dest_field;
   protected JTextField send_amount_field;
+  protected JTextField extra_field;
   protected JProgressBar send_bar;
   protected JButton send_button;
 
@@ -34,6 +37,7 @@ public class SendPanel extends BasePanel
   private String saved_dest;
   private String saved_amount;
   private String saved_wallet;
+  private String saved_extra;
   private Object state_obj = new Object();
   private TransactionFactoryResult tx_result;
 
@@ -80,6 +84,15 @@ public class SendPanel extends BasePanel
     send_amount_field.setColumns(15);
     panel.add(send_amount_field, c);
 
+    c.gridwidth = 1;
+    panel.add(new JLabel("Extra transaction data (public):"), c);
+    c.gridwidth = GridBagConstraints.REMAINDER;
+
+    extra_field = new JTextField();
+    extra_field.setColumns(80);
+    panel.add(extra_field, c);
+
+
     send_bar = new JProgressBar(0, SEND_DELAY);
     panel.add(send_bar, c);
 
@@ -116,6 +129,10 @@ public class SendPanel extends BasePanel
             {
               throw new Exception("Parameters changed before second send press");
             }
+            if (!saved_extra.equals(extra_field.getText()))
+            {
+              throw new Exception("Parameters changed before second send press");
+            }
             SubmitReply reply = ice_leaf.getStubHolder().getBlockingStub().submitTransaction(tx_result.getTx());
             ChainHash tx_hash = new ChainHash(tx_result.getTx().getTxHash());
             setMessageBox(String.format("%s\n%s", tx_hash.toString(), reply.toString()));
@@ -132,6 +149,7 @@ public class SendPanel extends BasePanel
 						saved_dest = dest_field.getText();
 						saved_amount = send_amount_field.getText();
             saved_wallet = (String)wallet_select_box.getSelectedItem();
+            saved_extra = extra_field.getText();
 						send_state = 1;
 					}
 				}
@@ -166,6 +184,24 @@ public class SendPanel extends BasePanel
 
   }
 
+  private ByteString convertExtra(String extra)
+  {
+    try
+    {
+      if (extra.startsWith("base64:"))
+      {
+        byte[] buff = Base64.getDecoder().decode(extra.substring(7));
+        return ByteString.copyFrom(buff);
+      }
+    }
+    catch(IllegalArgumentException e)
+    {
+      // not base64 - just use string
+    }
+
+    return ByteString.copyFrom(extra.getBytes());
+  }
+
   private void setupTx() throws Exception
   {
     setStatusBox("Creating transaction");
@@ -175,6 +211,7 @@ public class SendPanel extends BasePanel
     config.setChangeFreshAddress(true);
     config.setInputConfirmedThenPending(true);
     config.setFeeUseEstimate(true);
+    config.setExtra(convertExtra(saved_extra));
     
     AddressSpecHash dest_addr = new AddressSpecHash(saved_dest.trim(), ice_leaf.getParams());
 
