@@ -14,6 +14,8 @@ public class StubHolder
   private volatile UserServiceStub stub;
   private volatile UserServiceBlockingStub blocking_stub;
 
+  private volatile OfferPayInterface offer_pay_interface;
+
   public StubHolder()
   {
 
@@ -33,5 +35,11 @@ public class StubHolder
 
   public UserServiceBlockingStub getBlockingStub(){return blocking_stub;}
   public UserServiceStub getAsyncStub(){return stub;}
+
+  public OfferPayInterface getOfferPayInterface(){return offer_pay_interface;}
+  public void setOfferPayInterface(OfferPayInterface offer_pay_interface)
+  {
+    this.offer_pay_interface = offer_pay_interface;
+  }
 
 }

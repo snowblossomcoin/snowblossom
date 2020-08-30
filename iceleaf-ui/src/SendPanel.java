@@ -1,13 +1,15 @@
 package snowblossom.iceleaf;
 
+import com.google.protobuf.ByteString;
 import java.awt.GridBagConstraints;
 import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
+import java.util.Base64;
 import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JProgressBar;
 import javax.swing.JTextField;
 import javax.swing.SwingUtilities;
+import snowblossom.client.OfferPayInterface;
 import snowblossom.client.SnowBlossomClient;
 import snowblossom.client.TransactionFactory;
 import snowblossom.lib.AddressSpecHash;
@@ -18,12 +20,13 @@ import snowblossom.proto.SubmitReply;
 import snowblossom.proto.TransactionOutput;
 import snowblossom.util.proto.*;
 
-public class SendPanel extends BasePanel
+public class SendPanel extends BasePanel implements OfferPayInterface
 {
   protected WalletComboBox wallet_select_box;
 
   protected JTextField dest_field;
   protected JTextField send_amount_field;
+  protected JTextField extra_field;
   protected JProgressBar send_bar;
   protected JButton send_button;
 
@@ -34,6 +37,7 @@ public class SendPanel extends BasePanel
   private String saved_dest;
   private String saved_amount;
   private String saved_wallet;
+  private String saved_extra;
   private Object state_obj = new Object();
   private TransactionFactoryResult tx_result;
 
@@ -43,11 +47,11 @@ public class SendPanel extends BasePanel
   public SendPanel(IceLeaf ice_leaf)
   {
     super(ice_leaf);
-	}
+  }
 
   @Override
-	public void setupPanel()
-	{
+  public void setupPanel()
+  {
 
     GridBagConstraints c = new GridBagConstraints();
     c.weightx = 0.0;
@@ -80,6 +84,15 @@ public class SendPanel extends BasePanel
     send_amount_field.setColumns(15);
     panel.add(send_amount_field, c);
 
+    c.gridwidth = 1;
+    panel.add(new JLabel("Extra transaction data (public):"), c);
+    c.gridwidth = GridBagConstraints.REMAINDER;
+
+    extra_field = new JTextField();
+    extra_field.setColumns(80);
+    panel.add(extra_field, c);
+
+
     send_bar = new JProgressBar(0, SEND_DELAY);
     panel.add(send_bar, c);
 
@@ -87,6 +100,8 @@ public class SendPanel extends BasePanel
     panel.add(send_button, c);
 
     send_button.addActionListener(new SendButtonListner());
+
+    ice_leaf.getStubHolder().setOfferPayInterface(this);
 
 
   }
@@ -97,13 +112,13 @@ public class SendPanel extends BasePanel
   {
     public void threadActionPerformed(ActionEvent e)
     {
-			try
-			{
-				synchronized(state_obj)
-				{
-					if (send_state == 1) return;
-					if (send_state == 2)
-					{
+      try
+      {
+        synchronized(state_obj)
+        {
+          if (send_state == 1) return;
+          if (send_state == 2)
+          {
             if (!saved_dest.equals(dest_field.getText()))
             {
               throw new Exception("Parameters changed before second send press");
@@ -116,54 +131,77 @@ public class SendPanel extends BasePanel
             {
               throw new Exception("Parameters changed before second send press");
             }
+            if (!saved_extra.equals(extra_field.getText()))
+            {
+              throw new Exception("Parameters changed before second send press");
+            }
             SubmitReply reply = ice_leaf.getStubHolder().getBlockingStub().submitTransaction(tx_result.getTx());
             ChainHash tx_hash = new ChainHash(tx_result.getTx().getTxHash());
             setMessageBox(String.format("%s\n%s", tx_hash.toString(), reply.toString()));
             setStatusBox("");
 
-						send_state = 0;
-						setProgressBar(0, SEND_DELAY);
+            send_state = 0;
+            setProgressBar(0, SEND_DELAY);
             setStatusBox("");
 
-						return;
-					}
-					if (send_state == 0)
-					{
-						saved_dest = dest_field.getText();
-						saved_amount = send_amount_field.getText();
+            return;
+          }
+          if (send_state == 0)
+          {
+            saved_dest = dest_field.getText();
+            saved_amount = send_amount_field.getText();
             saved_wallet = (String)wallet_select_box.getSelectedItem();
-						send_state = 1;
-					}
-				}
+            saved_extra = extra_field.getText();
+            send_state = 1;
+          }
+        }
 
         setupTx();
 
 
         setStatusBox("Time delay to review");
-				for(int i=0; i<SEND_DELAY; i+=SEND_DELAY_STEP)
-				{
-					setProgressBar(i, SEND_DELAY);
-					Thread.sleep(SEND_DELAY_STEP);
-				}
+        for(int i=0; i<SEND_DELAY; i+=SEND_DELAY_STEP)
+        {
+          setProgressBar(i, SEND_DELAY);
+          Thread.sleep(SEND_DELAY_STEP);
+        }
         setStatusBox("Ready to broadcast");
-				setProgressBar(SEND_DELAY, SEND_DELAY);
-				synchronized(state_obj)
-				{
-					send_state=2;
-				}
-			}
-			catch(Throwable t)
-			{
+        setProgressBar(SEND_DELAY, SEND_DELAY);
+        synchronized(state_obj)
+        {
+          send_state=2;
+        }
+      }
+      catch(Throwable t)
+      {
         setStatusBox("Error");
-				setMessageBox(ErrorUtil.getThrowInfo(t));
-				
-				synchronized(state_obj)
-				{
-					send_state=0;
-				}
-			}
+        setMessageBox(ErrorUtil.getThrowInfo(t));
+        
+        synchronized(state_obj)
+        {
+          send_state=0;
+        }
+      }
     }
 
+  }
+
+  private ByteString convertExtra(String extra)
+  {
+    try
+    {
+      if (extra.startsWith("base64:"))
+      {
+        byte[] buff = Base64.getDecoder().decode(extra.substring(7));
+        return ByteString.copyFrom(buff);
+      }
+    }
+    catch(IllegalArgumentException e)
+    {
+      // not base64 - just use string
+    }
+
+    return ByteString.copyFrom(extra.getBytes());
   }
 
   private void setupTx() throws Exception
@@ -175,6 +213,7 @@ public class SendPanel extends BasePanel
     config.setChangeFreshAddress(true);
     config.setInputConfirmedThenPending(true);
     config.setFeeUseEstimate(true);
+    config.setExtra(convertExtra(saved_extra));
     
     AddressSpecHash dest_addr = new AddressSpecHash(saved_dest.trim(), ice_leaf.getParams());
 
@@ -204,7 +243,7 @@ public class SendPanel extends BasePanel
   }
 
   public void setProgressBar(int curr, int net)
-		throws Exception
+    throws Exception
   {
     int enet = Math.max(net, curr);
     SwingUtilities.invokeAndWait(new Runnable() {
@@ -216,4 +255,37 @@ public class SendPanel extends BasePanel
     });
   }
 
+  @Override
+  public void maybePayOffer(Offer offer, OfferAcceptance oa)
+  {
+    OfferAcceptance.Builder accept = OfferAcceptance.newBuilder();
+
+    accept.mergeFrom(oa);
+    accept.setOfferId(offer.getOfferId());
+
+    OfferCurrency oc_snow = offer.getOfferPriceMap().get("SNOW");
+
+
+    try
+    {
+      SwingUtilities.invokeAndWait(new Runnable() {
+        public void run()
+        {
+          dest_field.setText( oc_snow.getAddress() );
+          send_amount_field.setText( "" + oc_snow.getPrice());
+          
+          extra_field.setText( "base64:" + Base64.getEncoder().encodeToString( accept.build().toByteString().toByteArray() ));
+        }
+      });
+    }
+    catch(Exception e)
+    {
+      throw new RuntimeException(e);
+
+    }
+
+
+
+
+  }
 }

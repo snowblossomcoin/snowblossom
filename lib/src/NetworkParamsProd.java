@@ -53,8 +53,9 @@ public class NetworkParamsProd extends NetworkParams
   {
     return ImmutableList.of(
       "seed.snowblossom.org", 
-      "snowday.fun", 
       "node.snowblossom.cluelessperson.com",
+      "snow-tx1.snowblossom.org",
+      "snow-de1.snowblossom.org",
       "snow-a.1209k.com",
       "snow-b.1209k.com");
   }

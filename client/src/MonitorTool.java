@@ -19,6 +19,12 @@ import com.google.protobuf.ByteString;
 
 import java.util.HashSet;
 
+/**
+ * For any addresses added via addAddress this will cause the MonitorInterface
+ * to be called for any transactions in or out of that address.
+ *
+ * Includes all historical transactions.
+ */
 public class MonitorTool implements StreamObserver<AddressUpdate>
 {
   private NetworkParams params;
