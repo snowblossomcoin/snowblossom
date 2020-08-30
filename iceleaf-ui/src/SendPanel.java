@@ -19,8 +19,9 @@ import snowblossom.proto.TransactionOutput;
 import snowblossom.util.proto.*;
 import java.util.Base64;
 import com.google.protobuf.ByteString;
+import snowblossom.client.OfferPayInterface;
 
-public class SendPanel extends BasePanel
+public class SendPanel extends BasePanel implements OfferPayInterface
 {
   protected WalletComboBox wallet_select_box;
 
@@ -100,6 +101,8 @@ public class SendPanel extends BasePanel
     panel.add(send_button, c);
 
     send_button.addActionListener(new SendButtonListner());
+
+    ice_leaf.getStubHolder().setOfferPayInterface(this);
 
 
   }
@@ -253,4 +256,37 @@ public class SendPanel extends BasePanel
     });
   }
 
+  @Override
+  public void maybePayOffer(Offer offer, OfferAcceptance oa)
+  {
+    OfferAcceptance.Builder accept = OfferAcceptance.newBuilder();
+
+    accept.mergeFrom(oa);
+    accept.setOfferId(offer.getOfferId());
+
+    OfferCurrency oc_snow = offer.getOfferPriceMap().get("SNOW");
+
+
+    try
+    {
+      SwingUtilities.invokeAndWait(new Runnable() {
+        public void run()
+        {
+          dest_field.setText( oc_snow.getAddress() );
+          send_amount_field.setText( "" + oc_snow.getPrice());
+          
+          extra_field.setText( Base64.getEncoder().encodeToString( accept.build().toByteString().toByteArray() ));
+        }
+      });
+    }
+    catch(Exception e)
+    {
+      throw new RuntimeException(e);
+
+    }
+
+
+
+
+  }
 }

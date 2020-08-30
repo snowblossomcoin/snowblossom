@@ -96,7 +96,7 @@ message OfferCurrency
 
 // To be stuffed in extra field of transaction
 message OfferAcceptance {
-  bytes offer_id = 1; // Identifier of the offer accepted
+  string offer_id = 1; // Identifier of the offer accepted
   oneof z {
     // That that are doing PKI to sign messages for the recipient will need the full spec
     AddressSpec for_address_spec = 2; // address spec of the beneficiary of the offer (if applicable)
