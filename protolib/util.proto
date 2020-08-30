@@ -76,6 +76,24 @@ message SymmetricKey {
 }
 
 
+message Offer
+{
+  enum OfferMode {
+    UNDEFINED = 0;
+    FOREVER_ACCESS = 1;
+  }
+  OfferMode offer_mode = 10;
+  string offer_id = 11;
+  map<string, OfferCurrency> offer_price = 12;
+
+}
+
+message OfferCurrency
+{
+  double price = 1;
+  string address = 2;
+}
+
 // To be stuffed in extra field of transaction
 message OfferAcceptance {
   bytes offer_id = 1; // Identifier of the offer accepted
@@ -88,4 +106,5 @@ message OfferAcceptance {
   }
   bytes refund_addr_spec_hash = 5;
 }
+
 
