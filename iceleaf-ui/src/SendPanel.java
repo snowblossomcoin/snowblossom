@@ -1,13 +1,15 @@
 package snowblossom.iceleaf;
 
+import com.google.protobuf.ByteString;
 import java.awt.GridBagConstraints;
 import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
+import java.util.Base64;
 import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JProgressBar;
 import javax.swing.JTextField;
 import javax.swing.SwingUtilities;
+import snowblossom.client.OfferPayInterface;
 import snowblossom.client.SnowBlossomClient;
 import snowblossom.client.TransactionFactory;
 import snowblossom.lib.AddressSpecHash;
@@ -17,9 +19,6 @@ import snowblossom.lib.TransactionUtil;
 import snowblossom.proto.SubmitReply;
 import snowblossom.proto.TransactionOutput;
 import snowblossom.util.proto.*;
-import java.util.Base64;
-import com.google.protobuf.ByteString;
-import snowblossom.client.OfferPayInterface;
 
 public class SendPanel extends BasePanel implements OfferPayInterface
 {
@@ -48,11 +47,11 @@ public class SendPanel extends BasePanel implements OfferPayInterface
   public SendPanel(IceLeaf ice_leaf)
   {
     super(ice_leaf);
-	}
+  }
 
   @Override
-	public void setupPanel()
-	{
+  public void setupPanel()
+  {
 
     GridBagConstraints c = new GridBagConstraints();
     c.weightx = 0.0;
@@ -113,13 +112,13 @@ public class SendPanel extends BasePanel implements OfferPayInterface
   {
     public void threadActionPerformed(ActionEvent e)
     {
-			try
-			{
-				synchronized(state_obj)
-				{
-					if (send_state == 1) return;
-					if (send_state == 2)
-					{
+      try
+      {
+        synchronized(state_obj)
+        {
+          if (send_state == 1) return;
+          if (send_state == 2)
+          {
             if (!saved_dest.equals(dest_field.getText()))
             {
               throw new Exception("Parameters changed before second send press");
@@ -141,48 +140,48 @@ public class SendPanel extends BasePanel implements OfferPayInterface
             setMessageBox(String.format("%s\n%s", tx_hash.toString(), reply.toString()));
             setStatusBox("");
 
-						send_state = 0;
-						setProgressBar(0, SEND_DELAY);
+            send_state = 0;
+            setProgressBar(0, SEND_DELAY);
             setStatusBox("");
 
-						return;
-					}
-					if (send_state == 0)
-					{
-						saved_dest = dest_field.getText();
-						saved_amount = send_amount_field.getText();
+            return;
+          }
+          if (send_state == 0)
+          {
+            saved_dest = dest_field.getText();
+            saved_amount = send_amount_field.getText();
             saved_wallet = (String)wallet_select_box.getSelectedItem();
             saved_extra = extra_field.getText();
-						send_state = 1;
-					}
-				}
+            send_state = 1;
+          }
+        }
 
         setupTx();
 
 
         setStatusBox("Time delay to review");
-				for(int i=0; i<SEND_DELAY; i+=SEND_DELAY_STEP)
-				{
-					setProgressBar(i, SEND_DELAY);
-					Thread.sleep(SEND_DELAY_STEP);
-				}
+        for(int i=0; i<SEND_DELAY; i+=SEND_DELAY_STEP)
+        {
+          setProgressBar(i, SEND_DELAY);
+          Thread.sleep(SEND_DELAY_STEP);
+        }
         setStatusBox("Ready to broadcast");
-				setProgressBar(SEND_DELAY, SEND_DELAY);
-				synchronized(state_obj)
-				{
-					send_state=2;
-				}
-			}
-			catch(Throwable t)
-			{
+        setProgressBar(SEND_DELAY, SEND_DELAY);
+        synchronized(state_obj)
+        {
+          send_state=2;
+        }
+      }
+      catch(Throwable t)
+      {
         setStatusBox("Error");
-				setMessageBox(ErrorUtil.getThrowInfo(t));
-				
-				synchronized(state_obj)
-				{
-					send_state=0;
-				}
-			}
+        setMessageBox(ErrorUtil.getThrowInfo(t));
+        
+        synchronized(state_obj)
+        {
+          send_state=0;
+        }
+      }
     }
 
   }
@@ -244,7 +243,7 @@ public class SendPanel extends BasePanel implements OfferPayInterface
   }
 
   public void setProgressBar(int curr, int net)
-		throws Exception
+    throws Exception
   {
     int enet = Math.max(net, curr);
     SwingUtilities.invokeAndWait(new Runnable() {
@@ -275,7 +274,7 @@ public class SendPanel extends BasePanel implements OfferPayInterface
           dest_field.setText( oc_snow.getAddress() );
           send_amount_field.setText( "" + oc_snow.getPrice());
           
-          extra_field.setText( Base64.getEncoder().encodeToString( accept.build().toByteString().toByteArray() ));
+          extra_field.setText( "base64:" + Base64.getEncoder().encodeToString( accept.build().toByteString().toByteArray() ));
         }
       });
     }
