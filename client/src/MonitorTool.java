@@ -72,7 +72,6 @@ public class MonitorTool implements StreamObserver<AddressUpdate>
     for(ByteString tx_hash : ml.getTxHashesList())
     {
       sendNotices(hash, tx_hash);
-
     }
   }
 
@@ -84,7 +83,9 @@ public class MonitorTool implements StreamObserver<AddressUpdate>
       if (processed_tx.contains(key)) return;
     }
 
-    Transaction tx = stub_holder.getBlockingStub().getTransaction( RequestTransaction.newBuilder().setTxHash( tx_hash ).build() );
+    Transaction tx = stub_holder.getBlockingStub().getTransaction(
+      RequestTransaction.newBuilder().setTxHash( tx_hash ).build() );
+
     TransactionInner inner = TransactionUtil.getInner(tx);
 
     int idx = 0;
@@ -111,8 +112,6 @@ public class MonitorTool implements StreamObserver<AddressUpdate>
     {
       processed_tx.add(key);
     }
-
-
   }
 
   public void onNext(AddressUpdate update)
@@ -130,6 +129,11 @@ public class MonitorTool implements StreamObserver<AddressUpdate>
   public void onError(Throwable t)
   {
     t.printStackTrace();
+  }
+
+  private void resubscribe()
+  {
+    
 
   }
 

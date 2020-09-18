@@ -13,7 +13,6 @@ public class StubHolder
   private volatile ManagedChannel channel;
   private volatile UserServiceStub stub;
   private volatile UserServiceBlockingStub blocking_stub;
-
   private volatile OfferPayInterface offer_pay_interface;
 
   public StubHolder()
