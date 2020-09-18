@@ -1,6 +1,5 @@
 package lib.test;
 
-
 import java.io.BufferedInputStream;
 import java.io.DataInputStream;
 import java.io.File;
@@ -130,4 +129,3 @@ public class SnowFallMerkleTest
  
   
 }
-

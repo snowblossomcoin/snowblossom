@@ -17,15 +17,15 @@ public class HashUtils
     return hashConcat(ImmutableList.of());
   }
 
-	public static ByteString hashConcat(List<ByteString> words)
-	{
+  public static ByteString hashConcat(List<ByteString> words)
+  {
     try
     {
       MessageDigest md = MessageDigest.getInstance("SHA-256");
-			for(ByteString bs : words)
-			{
-      	md.update(bs.toByteArray());
-			}
+      for(ByteString bs : words)
+      {
+        md.update(bs.toByteArray());
+      }
       return ByteString.copyFrom(md.digest());
 
     }
@@ -33,17 +33,17 @@ public class HashUtils
     {
             throw new RuntimeException(e);
     }
-	}
+  }
 
-	public static String getHexString(byte[] data)
-	{
+  public static String getHexString(byte[] data)
+  {
     return HexUtil.getHexString(data);
-	}
+  }
 
-	public static String getHexString(ByteString bs)
-	{
+  public static String getHexString(ByteString bs)
+  {
     return HexUtil.getHexString(bs);
-	}
+  }
 
   public static boolean validateNodeHash(TrieNode node)
   {

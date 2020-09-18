@@ -26,9 +26,9 @@ public class TrieDBMap extends TrieDB
   {
     ByteString r = db_map.get(key);
     if (r == null) return null;
-		try
-		{
-		 	return TrieNode.parser().parseFrom(r);
+    try
+    {
+       return TrieNode.parser().parseFrom(r);
     }
     catch(InvalidProtocolBufferException e)
     {

@@ -1,4 +1,3 @@
-
 package snowblossom.miner;
 
 import com.google.common.collect.ImmutableSet;

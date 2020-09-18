@@ -118,7 +118,7 @@ public class ProofGen
         partners.add(left);
         Assert.assertNull(right);
       }
-     	return null;
+       return null;
 
     }
 

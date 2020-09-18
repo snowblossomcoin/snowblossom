@@ -15,13 +15,13 @@ import snowblossom.proto.*;
 
 public class LayerWorkThread extends Thread
 {
-	private static final Logger logger = Logger.getLogger("snowblossom.miner");
+  private static final Logger logger = Logger.getLogger("snowblossom.miner");
 
-	Random rnd;
-	MessageDigest md = DigestUtil.getMD();
+  Random rnd;
+  MessageDigest md = DigestUtil.getMD();
 
-	FieldSource fs;
-	Arktika arktika;
+  FieldSource fs;
+  Arktika arktika;
   FaQueue queue;
   long total_words;
   boolean is_mem;
@@ -30,25 +30,25 @@ public class LayerWorkThread extends Thread
   ByteBuffer word_bb = ByteBuffer.wrap(word_buff);
 
 
-	public LayerWorkThread(Arktika arktika, FieldSource fs, FaQueue queue, long total_words)
-	{
-		this.fs = fs;
-		this.arktika = arktika;
+  public LayerWorkThread(Arktika arktika, FieldSource fs, FaQueue queue, long total_words)
+  {
+    this.fs = fs;
+    this.arktika = arktika;
     this.queue = queue;
     this.total_words = total_words;
-		setName("LayerWorkThread(" + fs.toString() + ")");
-		setDaemon(true);
-		rnd = new Random();
+    setName("LayerWorkThread(" + fs.toString() + ")");
+    setDaemon(true);
+    rnd = new Random();
     if (fs instanceof FieldSourceMem)
     {
       setPriority(1);
       is_mem = true;
     }
 
-	}
+  }
 
-	protected void runPass() throws Exception
-	{
+  protected void runPass() throws Exception
+  {
     PartialWork pw = null;
     pw=queue.poll();
 
@@ -84,7 +84,7 @@ public class LayerWorkThread extends Thread
       pw.doPass(word_buff, md, total_words);
     }
     processPw(pw);
-	}
+  }
 
   protected void processPw(PartialWork pw)
     throws Exception
@@ -94,13 +94,13 @@ public class LayerWorkThread extends Thread
       Assert.assertNotNull(pw);
       Assert.assertNotNull(pw.context);
       Assert.assertNotNull(pw.wu);
-		  if (PowUtil.lessThanTarget(pw.context, pw.wu.getReportTarget()))
-	  	{
-			  String str = HexUtil.getHexString(pw.context);
-			  logger.info("Found passable solution: " + str);
-			  submitWork(pw);
-		  }
-		  arktika.op_count.add(1L);
+      if (PowUtil.lessThanTarget(pw.context, pw.wu.getReportTarget()))
+      {
+        String str = HexUtil.getHexString(pw.context);
+        logger.info("Found passable solution: " + str);
+        submitWork(pw);
+      }
+      arktika.op_count.add(1L);
     }
     else
     {
@@ -122,80 +122,79 @@ public class LayerWorkThread extends Thread
 
   }
 
-	protected void submitWork(PartialWork pw) throws Exception
-	{
+  protected void submitWork(PartialWork pw) throws Exception
+  {
 
 
     WorkUnit wu = pw.wu;
-		byte[] first_hash = PowUtil.hashHeaderBits(wu.getHeader(), pw.nonce);
-		byte[] context = first_hash;
+    byte[] first_hash = PowUtil.hashHeaderBits(wu.getHeader(), pw.nonce);
+    byte[] context = first_hash;
 
 
 
-		BlockHeader.Builder header = BlockHeader.newBuilder();
-		header.mergeFrom(wu.getHeader());
-		header.setNonce(ByteString.copyFrom(pw.nonce));
+    BlockHeader.Builder header = BlockHeader.newBuilder();
+    header.mergeFrom(wu.getHeader());
+    header.setNonce(ByteString.copyFrom(pw.nonce));
 
     
-		for (int pass = 0; pass < Globals.POW_LOOK_PASSES; pass++)
-		{
-			((Buffer)word_bb).clear();
-			long word_idx = PowUtil.getNextSnowFieldIndex(context, total_words);
+    for (int pass = 0; pass < Globals.POW_LOOK_PASSES; pass++)
+    {
+      ((Buffer)word_bb).clear();
+      long word_idx = PowUtil.getNextSnowFieldIndex(context, total_words);
 
-			arktika.composit_source.readWord(word_idx, word_bb);
-			SnowPowProof proof = ProofGen.getProof(arktika.composit_source, arktika.deck_source, word_idx, total_words);
-			header.addPowProof(proof);
-			context = PowUtil.getNextContext(context, word_buff);
-		}
+      arktika.composit_source.readWord(word_idx, word_bb);
+      SnowPowProof proof = ProofGen.getProof(arktika.composit_source, arktika.deck_source, word_idx, total_words);
+      header.addPowProof(proof);
+      context = PowUtil.getNextContext(context, word_buff);
+    }
 
-		byte[] found_hash = context;
+    byte[] found_hash = context;
 
-		header.setSnowHash(ByteString.copyFrom(found_hash));
+    header.setSnowHash(ByteString.copyFrom(found_hash));
 
     SubmitReply reply = arktika.pool_client.submitWork(wu, header.build());
-		
-		if (PowUtil.lessThanTarget(found_hash, header.getTarget()))
-		{
-			arktika.share_block_count.getAndIncrement();
-		}
-		logger.info("Work submit: " + reply);
-		arktika.share_submit_count.getAndIncrement();
-		if (!reply.getSuccess())
-		{
-			arktika.share_reject_count.getAndIncrement();
-		}
+    
+    if (PowUtil.lessThanTarget(found_hash, header.getTarget()))
+    {
+      arktika.share_block_count.getAndIncrement();
+    }
+    logger.info("Work submit: " + reply);
+    arktika.share_submit_count.getAndIncrement();
+    if (!reply.getSuccess())
+    {
+      arktika.share_reject_count.getAndIncrement();
+    }
 
-	}
+  }
 
 
-	public void run()
-	{
-		while (!arktika.isTerminated())
-		{
-			boolean err = false;
-			try (TimeRecordAuto tra = TimeRecord.openAuto("MinerThread.runPass"))
-			{
-				runPass();
-			}
-			catch (Throwable t)
-			{
-				err = true;
-				logger.warning("Error: " + t);
+  public void run()
+  {
+    while (!arktika.isTerminated())
+    {
+      boolean err = false;
+      try (TimeRecordAuto tra = TimeRecord.openAuto("MinerThread.runPass"))
+      {
+        runPass();
+      }
+      catch (Throwable t)
+      {
+        err = true;
+        logger.warning("Error: " + t);
         t.printStackTrace();
-			}
+      }
 
-			if (err)
-			{
+      if (err)
+      {
 
-				try (TimeRecordAuto tra = TimeRecord.openAuto("MinerThread.errorSleep"))
-				{
-					Thread.sleep(5000);
-				}
-				catch (Throwable t)
-				{
-				}
-			}
-		}
-	}
+        try (TimeRecordAuto tra = TimeRecord.openAuto("MinerThread.errorSleep"))
+        {
+          Thread.sleep(5000);
+        }
+        catch (Throwable t)
+        {
+        }
+      }
+    }
+  }
 }
-

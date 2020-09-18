@@ -296,5 +296,3 @@ public class MiningPoolServiceAgent extends MiningPoolServiceGrpc.MiningPoolServ
     plow.getReportManager().record(info.req.getPayToAddress(), hashes);
   }
 }
-
-

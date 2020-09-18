@@ -36,11 +36,11 @@ public class MakeWalletPanel extends BasePanel
   public MakeWalletPanel(IceLeaf ice_leaf)
   {
     super(ice_leaf);
-	}
+  }
 
   @Override
-	public void setupPanel()
-	{
+  public void setupPanel()
+  {
 
     GridBagConstraints c = new GridBagConstraints();
     c.weightx = 0.0;

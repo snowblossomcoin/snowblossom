@@ -1,23 +1,21 @@
 package snowblossom.client;
 
+import com.google.protobuf.ByteString;
 import io.grpc.stub.StreamObserver;
-import snowblossom.proto.AddressUpdate;
+import java.util.HashSet;
 import snowblossom.lib.AddressSpecHash;
 import snowblossom.lib.NetworkParams;
+import snowblossom.lib.TransactionUtil;
+import snowblossom.proto.AddressUpdate;
+import snowblossom.proto.HistoryEntry;
+import snowblossom.proto.HistoryList;
 import snowblossom.proto.RequestAddress;
 import snowblossom.proto.RequestTransaction;
-import snowblossom.proto.HistoryList;
-import snowblossom.proto.HistoryEntry;
-import snowblossom.proto.TransactionHashList;
 import snowblossom.proto.Transaction;
+import snowblossom.proto.TransactionHashList;
 import snowblossom.proto.TransactionInner;
 import snowblossom.proto.TransactionInput;
 import snowblossom.proto.TransactionOutput;
-import snowblossom.lib.TransactionUtil;
-
-import com.google.protobuf.ByteString;
-
-import java.util.HashSet;
 
 /**
  * For any addresses added via addAddress this will cause the MonitorInterface

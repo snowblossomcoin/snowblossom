@@ -49,9 +49,9 @@ public class WalletUtil
   public static final int WALLET_DB_VERSION = 5;
 
   public static WalletDatabase makeNewDatabase(Config config, NetworkParams params)
-	{
-		return makeNewDatabase(config, params, null);
-	}
+  {
+    return makeNewDatabase(config, params, null);
+  }
   public static WalletDatabase makeNewDatabase(Config config, NetworkParams params, String import_seed)
   {
     WalletDatabase.Builder builder = WalletDatabase.newBuilder();
@@ -62,9 +62,9 @@ public class WalletUtil
     {
       if (import_seed != null)
       {
-     		ByteString seed_id = SeedUtil.getSeedId(params, import_seed, "", 0);
-     		String seed_xpub = SeedUtil.getSeedXpub(params, import_seed, "", 0);
-      	builder.putSeeds(import_seed, SeedStatus.newBuilder().setSeedId(seed_id).setSeedXpub(seed_xpub).build());
+         ByteString seed_id = SeedUtil.getSeedId(params, import_seed, "", 0);
+         String seed_xpub = SeedUtil.getSeedXpub(params, import_seed, "", 0);
+        builder.putSeeds(import_seed, SeedStatus.newBuilder().setSeedId(seed_id).setSeedXpub(seed_xpub).build());
       }
       else
       {
@@ -516,7 +516,7 @@ public class WalletUtil
     return null;
   }
 
-	public static WalletDatabase mergeDatabases(List<WalletDatabase> src_list, NetworkParams params)
+  public static WalletDatabase mergeDatabases(List<WalletDatabase> src_list, NetworkParams params)
   {
     WalletDatabase.Builder new_db = WalletDatabase.newBuilder();
 
@@ -704,19 +704,19 @@ public class WalletUtil
 
   public static SeedReport getSeedReport(WalletDatabase db)
   {
-		SeedReport sr = new SeedReport();
+    SeedReport sr = new SeedReport();
 
-		HashSet<ByteString> seed_ids = new HashSet<>();
+    HashSet<ByteString> seed_ids = new HashSet<>();
     HashSet<String> xpubs_with_seeds = new HashSet<>();
 
-		for(String seed : db.getSeedsMap().keySet())
-		{
+    for(String seed : db.getSeedsMap().keySet())
+    {
       String xpub=db.getSeedsMap().get(seed).getSeedXpub();
       sr.seeds.put(seed, xpub);
-			seed_ids.add(db.getSeedsMap().get(seed).getSeedId());
+      seed_ids.add(db.getSeedsMap().get(seed).getSeedId());
 
       xpubs_with_seeds.add(xpub);
-		}
+    }
     for(String xpub : db.getXpubsMap().keySet())
     {
       if (!xpubs_with_seeds.contains(xpub))
@@ -726,14 +726,14 @@ public class WalletUtil
     }
 
 
-		sr.missing_keys = 0;
-		for(WalletKeyPair wkp : db.getKeysList())
-		{
-			ByteString id = wkp.getSeedId();
-			if (!seed_ids.contains(id)) sr.missing_keys++;
-		}
+    sr.missing_keys = 0;
+    for(WalletKeyPair wkp : db.getKeysList())
+    {
+      ByteString id = wkp.getSeedId();
+      if (!seed_ids.contains(id)) sr.missing_keys++;
+    }
 
-		return sr;
+    return sr;
   }
 
 

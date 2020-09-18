@@ -11,11 +11,11 @@ import snowblossom.trie.proto.TrieNode;
 
 public class TrieDBRocks extends TrieDB
 {
-	private RocksDB db;
+  private RocksDB db;
   private WriteOptions sharedWriteOptions;
 
   public TrieDBRocks(File path)
-		throws Exception
+    throws Exception
   {
     RocksDB.loadLibrary();
 
@@ -34,26 +34,26 @@ public class TrieDBRocks extends TrieDB
   }
 
   public void save(TrieNode node)
-	{
-		ByteString prefix = node.getHash();
-		ByteString data = node.toByteString();
-		try
+  {
+    ByteString prefix = node.getHash();
+    ByteString data = node.toByteString();
+    try
     {
-		  db.put(sharedWriteOptions, prefix.toByteArray(), data.toByteArray());
+      db.put(sharedWriteOptions, prefix.toByteArray(), data.toByteArray());
     }
     catch(RocksDBException e)
     {
       throw new RuntimeException(e);
     }
-		
-	}
+    
+  }
   public TrieNode load(ByteString key)
-	{
+  {
     try
     {
-		  byte[] r = db.get(key.toByteArray());
-	  	if (r == null) return null;
-  		return TrieNode.parser().parseFrom(r);
+      byte[] r = db.get(key.toByteArray());
+      if (r == null) return null;
+      return TrieNode.parser().parseFrom(r);
     }
     catch(InvalidProtocolBufferException e)
     {
@@ -64,7 +64,7 @@ public class TrieDBRocks extends TrieDB
       throw new RuntimeException(e);
     }
 
-	}
+  }
 
   public void bulkSave(TreeMap<ByteString, TrieNode> updates)
   {

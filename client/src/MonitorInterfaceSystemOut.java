@@ -1,7 +1,7 @@
 package snowblossom.client;
 
-import snowblossom.proto.Transaction;
 import snowblossom.lib.ChainHash;
+import snowblossom.proto.Transaction;
 
 public class MonitorInterfaceSystemOut implements MonitorInterface
 {

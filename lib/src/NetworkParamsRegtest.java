@@ -1,6 +1,5 @@
 package snowblossom.lib;
 
-
 import com.google.common.collect.ImmutableList;
 import java.math.BigInteger;
 import java.util.List;

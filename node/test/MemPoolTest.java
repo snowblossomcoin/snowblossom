@@ -386,8 +386,8 @@ public class MemPoolTest
 
     AddressSpecHash addr = AddressUtil.getHashForSpec(claim);
 
-		TransactionInput tx_in = TransactionInput.newBuilder()
-			.setSpecHash(addr.getBytes())
+    TransactionInput tx_in = TransactionInput.newBuilder()
+      .setSpecHash(addr.getBytes())
       .setSrcTxId(tx_id.getBytes())
       .setSrcTxOutIdx(0)
       .build();
@@ -401,7 +401,7 @@ public class MemPoolTest
 
 
     return tx_in;
-			
+      
 
   }
 
@@ -427,4 +427,3 @@ public class MemPoolTest
   }
 
 }
-

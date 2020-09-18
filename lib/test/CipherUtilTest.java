@@ -2,13 +2,13 @@ package lib.test;
 
 import com.google.protobuf.ByteString;
 import java.util.Random;
+import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.junit.Assert;
 import snowblossom.lib.CipherUtil;
 import snowblossom.lib.Globals;
-import snowblossom.lib.SignatureUtil;
 import snowblossom.lib.KeyUtil;
+import snowblossom.lib.SignatureUtil;
 import snowblossom.proto.SigSpec;
 import snowblossom.proto.WalletKeyPair;
 import snowblossom.util.proto.SymmetricKey;

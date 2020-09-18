@@ -17,14 +17,13 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import snowblossom.client.WalletUtil;
 import snowblossom.lib.*;
+import snowblossom.lib.SystemUtil;
 import snowblossom.lib.db.DB;
 import snowblossom.lib.db.lobstack.LobstackDB;
 import snowblossom.lib.db.rocksdb.JRocksDB;
 import snowblossom.lib.tls.CertGen;
 import snowblossom.lib.trie.HashedTrie;
-import snowblossom.lib.trie.TrieDBMap;
 import snowblossom.proto.WalletDatabase;
-import snowblossom.lib.SystemUtil;
 
 public class SnowBlossomNode
 {
@@ -179,12 +178,12 @@ public class SnowBlossomNode
       File wallet_path = new File(config_wallet.get("wallet_path"));
 
       WalletDatabase wallet_db = WalletUtil.loadWallet(wallet_path, true, params);
-			if (wallet_db == null)
-			{
-				logger.log(Level.WARNING, String.format("Directory %s does not contain tls keys, creating new keys", wallet_path.getPath()));
-				wallet_db = WalletUtil.makeNewDatabase(config_wallet, params);
-				WalletUtil.saveWallet(wallet_db, wallet_path);
-			}
+      if (wallet_db == null)
+      {
+        logger.log(Level.WARNING, String.format("Directory %s does not contain tls keys, creating new keys", wallet_path.getPath()));
+        wallet_db = WalletUtil.makeNewDatabase(config_wallet, params);
+        WalletUtil.saveWallet(wallet_db, wallet_path);
+      }
       node_tls_address = AddressUtil.getHashForSpec(wallet_db.getAddresses(0));
       logger.info("My TLS address: " + AddressUtil.getAddressString(Globals.NODE_ADDRESS_STRING, node_tls_address));
 

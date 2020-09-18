@@ -21,12 +21,12 @@ public class GetUTXOUtil
 
   private static final Logger logger = Logger.getLogger("snowblossom.client");
 
-	// Saves cache of address,utxo_root to list of bridges, which will
+  // Saves cache of address,utxo_root to list of bridges, which will
   // never change for that given input pair
   private LRUCache<String, List<TransactionBridge> > spendable_cache = new LRUCache<>(1000);
 
   private StubHolder stub_holder;
-	private long utxo_root_time = 0;
+  private long utxo_root_time = 0;
   private ChainHash last_utxo_root = null;
   private NetworkParams params;
 
@@ -38,9 +38,9 @@ public class GetUTXOUtil
 
   public synchronized ChainHash getCurrentUtxoRootHash()
   {
-		
-		if (utxo_root_time + UTXO_ROOT_EXPIRE < System.currentTimeMillis())
-		{
+    
+    if (utxo_root_time + UTXO_ROOT_EXPIRE < System.currentTimeMillis())
+    {
       NodeStatus ns = getStub().getNodeStatus( NullRequest.newBuilder().build() );
       if (ns.getNetwork().length() > 0)
       {
@@ -53,11 +53,11 @@ public class GetUTXOUtil
 
       }
 
-    	last_utxo_root= new ChainHash(ns.getHeadSummary().getHeader().getUtxoRootHash());
-			utxo_root_time = System.currentTimeMillis();
+      last_utxo_root= new ChainHash(ns.getHeadSummary().getHeader().getUtxoRootHash());
+      utxo_root_time = System.currentTimeMillis();
       logger.log(Level.FINE, "UTXO root hash: " + last_utxo_root);
-		}
-		return last_utxo_root;
+    }
+    return last_utxo_root;
   }
 
   private UserServiceBlockingStub getStub()
@@ -66,10 +66,10 @@ public class GetUTXOUtil
   }
 
   public Map<String, TransactionBridge> getSpendableWithMempool(AddressSpecHash addr)
-		throws ValidationException
+    throws ValidationException
   {
 
-		List<TransactionBridge> confirmed_bridges = getSpendableValidated(addr);
+    List<TransactionBridge> confirmed_bridges = getSpendableValidated(addr);
 
     HashMap<String, TransactionBridge> bridge_map=new HashMap<>();
     for(TransactionBridge b : confirmed_bridges)
@@ -125,24 +125,24 @@ public class GetUTXOUtil
   }
 
   public List<TransactionBridge> getSpendableValidated(AddressSpecHash addr)
-		throws ValidationException
+    throws ValidationException
   {
-		ChainHash utxo_root = getCurrentUtxoRootHash();
+    ChainHash utxo_root = getCurrentUtxoRootHash();
     String key = addr.toString() + "/" + utxo_root;
-		synchronized(spendable_cache)
-		{
-			List<TransactionBridge> lst = spendable_cache.get(key);
-			if (lst != null) return lst;
-		}
+    synchronized(spendable_cache)
+    {
+      List<TransactionBridge> lst = spendable_cache.get(key);
+      if (lst != null) return lst;
+    }
 
-		List<TransactionBridge> lst = getSpendableValidatedStatic(addr, getStub(), utxo_root.getBytes());
-		
-		lst = ImmutableList.copyOf(lst);
-		synchronized(spendable_cache)
-		{
-			spendable_cache.put(key, lst);
-		}
-		return lst;
+    List<TransactionBridge> lst = getSpendableValidatedStatic(addr, getStub(), utxo_root.getBytes());
+    
+    lst = ImmutableList.copyOf(lst);
+    synchronized(spendable_cache)
+    {
+      spendable_cache.put(key, lst);
+    }
+    return lst;
 
   }
   public static List<TransactionBridge> getSpendableValidatedStatic(AddressSpecHash addr, UserServiceBlockingStub stub, ByteString utxo_root )

@@ -31,17 +31,17 @@ public class NodeSelectionPanel extends BasePanel
   {
     super(ice_leaf);
     stub_holder = new StubHolder();
-	}
+  }
 
   @Override
-	public void setupPanel()
-	{
+  public void setupPanel()
+  {
 
-			GridBagConstraints c = new GridBagConstraints();
-			c.weightx = 0.0;
-			c.weighty= 0.0;
-			c.gridheight = 1;
-			c.anchor = GridBagConstraints.WEST;
+      GridBagConstraints c = new GridBagConstraints();
+      c.weightx = 0.0;
+      c.weighty= 0.0;
+      c.gridheight = 1;
+      c.anchor = GridBagConstraints.WEST;
 
     c.gridwidth = GridBagConstraints.REMAINDER;
 

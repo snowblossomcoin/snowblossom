@@ -1,9 +1,7 @@
-
 package snowblossom.iceleaf;
 
-import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
-
+import java.awt.event.ActionListener;
 
 /**
  * Need an action listener to do a bunch of stuff, outside of the GUI thread
@@ -38,4 +36,3 @@ public abstract class ThreadActionListener implements ActionListener
   }
 
 }
-

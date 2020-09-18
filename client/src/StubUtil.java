@@ -1,4 +1,5 @@
 package snowblossom.client;
+
 import com.google.common.collect.ImmutableMap;
 import duckutil.Config;
 import io.grpc.ManagedChannel;
@@ -26,7 +27,6 @@ import snowblossom.proto.NullRequest;
 import snowblossom.proto.UserServiceGrpc.UserServiceBlockingStub;
 import snowblossom.proto.UserServiceGrpc.UserServiceStub;
 import snowblossom.proto.UserServiceGrpc;
-import java.util.concurrent.TimeUnit;
 
 public class StubUtil
 {
@@ -54,7 +54,7 @@ public class StubUtil
  
       return findFastestChannel( params.getSeedUris(), params);
     }
-		if (config.isSet("node_uri"))
+    if (config.isSet("node_uri"))
     {
       if (config.isSet("node_host"))
       {

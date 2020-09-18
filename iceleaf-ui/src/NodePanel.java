@@ -25,29 +25,29 @@ public class NodePanel extends BasePanel implements StatusInterface
   public NodePanel(IceLeaf ice_leaf)
   {
     super(ice_leaf);
-	}
+  }
 
   @Override
-	public void setupPanel()
-	{
-			GridBagConstraints c = new GridBagConstraints();
-			c.weightx = 0.0;
-			c.weighty= 0.0;
-			c.gridheight = 1;
-			c.anchor = GridBagConstraints.WEST;
+  public void setupPanel()
+  {
+      GridBagConstraints c = new GridBagConstraints();
+      c.weightx = 0.0;
+      c.weighty= 0.0;
+      c.gridheight = 1;
+      c.anchor = GridBagConstraints.WEST;
 
     c.gridwidth = GridBagConstraints.REMAINDER;
-		if (ice_leaf_prefs.getBoolean("node_run_local", false))
-		{
-			panel.add(new JLabel("Starting local node"), c);
+    if (ice_leaf_prefs.getBoolean("node_run_local", false))
+    {
+      panel.add(new JLabel("Starting local node"), c);
       new NodeUpdateThread().start();
 
-		}
-		else
-		{
-			panel.add(new JLabel("Local node disabled"), c);
+    }
+    else
+    {
+      panel.add(new JLabel("Local node disabled"), c);
 
-		}
+    }
 
     progress = new JProgressBar(0,0);
     panel.add(progress, c);

@@ -1,4 +1,5 @@
 package snowblossom.iceleaf.components;
+
 import java.awt.Dimension;
 import java.util.prefs.Preferences;
 import javax.swing.JTextArea;

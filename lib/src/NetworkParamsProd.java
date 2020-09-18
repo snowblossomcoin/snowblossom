@@ -1,6 +1,5 @@
 package snowblossom.lib;
 
-
 import com.google.common.collect.ImmutableList;
 import com.google.protobuf.ByteString;
 import java.math.BigInteger;

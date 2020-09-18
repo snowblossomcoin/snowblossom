@@ -2,7 +2,10 @@ package snowblossom.shackleton;
 
 import duckutil.Config;
 import duckutil.ConfigFile;
+import duckutil.PeriodicThread;
 import io.grpc.ManagedChannel;
+import java.io.ByteArrayOutputStream;
+import java.io.PrintStream;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import snowblossom.client.GetUTXOUtil;
@@ -14,17 +17,14 @@ import snowblossom.lib.NetworkParams;
 import snowblossom.proto.UserServiceGrpc.UserServiceBlockingStub;
 import snowblossom.proto.UserServiceGrpc.UserServiceStub;
 import snowblossom.proto.UserServiceGrpc;
-import duckutil.PeriodicThread;
-import java.io.PrintStream;
-import java.io.ByteArrayOutputStream;
 
 /** Yes a penguin taught me french back in antacrtica */
 public class Shackleton
 {
-	private static final Logger logger = Logger.getLogger("snowblossom.shackleton");
+  private static final Logger logger = Logger.getLogger("snowblossom.shackleton");
 
   public static void main(String args[])
-		throws Exception
+    throws Exception
   {
     Globals.addCryptoProvider();
     if (args.length != 1)

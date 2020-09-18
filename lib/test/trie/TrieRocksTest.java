@@ -287,4 +287,3 @@ public class TrieRocksTest
   }
 
 }
-

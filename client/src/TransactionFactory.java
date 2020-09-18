@@ -1,6 +1,5 @@
 package snowblossom.client;
 
-
 import com.google.common.collect.TreeMultimap;
 import com.google.protobuf.ByteString;
 import java.text.DecimalFormat;
@@ -261,11 +260,11 @@ public class TransactionFactory
 
 
   public static TransactionFactoryResult signTransaction(Transaction input, WalletDatabase db)
-		throws ValidationException
+    throws ValidationException
   {
-		TransactionInner inner = TransactionUtil.getInner(input);
-		ArrayList<AddressSpec> claims = new ArrayList<>();
-		claims.addAll(inner.getClaimsList());
+    TransactionInner inner = TransactionUtil.getInner(input);
+    ArrayList<AddressSpec> claims = new ArrayList<>();
+    claims.addAll(inner.getClaimsList());
 
     // Note number of needed signatures for each claim
     int[] needed_sigs = new int[claims.size()];
@@ -277,8 +276,8 @@ public class TransactionFactory
 
     TreeMultimap<Integer, Integer> existing_sigs = TreeMultimap.create();
 
-		// Note any existing signatures
-		for(SignatureEntry sig : input.getSignaturesList())
+    // Note any existing signatures
+    for(SignatureEntry sig : input.getSignaturesList())
     {
       int claim_idx = sig.getClaimIdx();
       int key_idx = sig.getKeyIdx();
@@ -286,10 +285,10 @@ public class TransactionFactory
       needed_sigs[claim_idx]--;
     }
 
-		Transaction.Builder tx = Transaction.newBuilder().mergeFrom(input);
-		int added_sigs = 0;
+    Transaction.Builder tx = Transaction.newBuilder().mergeFrom(input);
+    int added_sigs = 0;
 
-		ChainHash tx_hash = new ChainHash(tx.getTxHash());
+    ChainHash tx_hash = new ChainHash(tx.getTxHash());
 
     for(WalletKeyPair key_pair : db.getKeysList())
     {
@@ -303,7 +302,7 @@ public class TransactionFactory
           for(int j=0; j<spec.getSigSpecsCount(); j++)
           {
             SigSpec sig_spec = spec.getSigSpecs(j);
-						if (!existing_sigs.containsEntry(i,j))
+            if (!existing_sigs.containsEntry(i,j))
             if (sig_spec.getSignatureType() == key_pair.getSignatureType())
             if (sig_spec.getPublicKey().equals(public_key))
             {
@@ -313,7 +312,7 @@ public class TransactionFactory
                 .setSignature( SignatureUtil.sign(key_pair, tx_hash) )
                 .build());
               needed_sigs[i]--;
-							added_sigs++;
+              added_sigs++;
             }
 
           }
@@ -321,18 +320,18 @@ public class TransactionFactory
       }
     }
 
-		boolean all_signed=true;
+    boolean all_signed=true;
 
     for(int i =0;i<claims.size(); i++)
-		{
-			if (needed_sigs[i] > 0) all_signed=false;
-		}
+    {
+      if (needed_sigs[i] > 0) all_signed=false;
+    }
            
      return TransactionFactoryResult.newBuilder()
       .setTx(tx.build())
       .setFee(inner.getFee())
       .setAllSigned(all_signed)
-			.setSignaturesAdded(added_sigs)
+      .setSignaturesAdded(added_sigs)
       .build();
 
   }

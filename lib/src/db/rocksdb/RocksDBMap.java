@@ -140,7 +140,7 @@ public class RocksDBMap extends DBMap
     ByteString key_str = prefix.concat(key);
 
     LinkedList<ByteString> set = new LinkedList<>();
-		Map<ByteString, ByteString> map = new HashMap<>(16,0.5f);
+    Map<ByteString, ByteString> map = new HashMap<>(16,0.5f);
 
     int count = 0;
     RocksIterator it = db.newIterator();
@@ -156,8 +156,8 @@ public class RocksDBMap extends DBMap
 
         ByteString k = curr_key.substring(prefix.size());
         
-       	map.put(k, ByteString.copyFrom(it.value()));
-				count++;
+         map.put(k, ByteString.copyFrom(it.value()));
+        count++;
 
         if (count > max_reply)
         {

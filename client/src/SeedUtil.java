@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.protobuf.ByteString;
 import java.io.ByteArrayInputStream;
 import java.math.BigInteger;
+import java.nio.ByteBuffer;
 import java.security.KeyFactory;
 import java.security.PrivateKey;
 import java.security.SecureRandom;
@@ -12,7 +13,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
 import java.util.Scanner;
-import java.nio.ByteBuffer;
 import org.bitcoinj.crypto.ChildNumber;
 import org.bitcoinj.crypto.DeterministicHierarchy;
 import org.bitcoinj.crypto.DeterministicKey;
@@ -21,7 +21,6 @@ import org.bitcoinj.crypto.MnemonicCode;
 import snowblossom.lib.AddressUtil;
 import snowblossom.lib.DigestUtil;
 import snowblossom.lib.Globals;
-import snowblossom.lib.HexUtil;
 import snowblossom.lib.KeyUtil;
 import snowblossom.lib.NetworkParams;
 import snowblossom.lib.SignatureUtil;
@@ -131,10 +130,10 @@ public class SeedUtil
 
 
     DeterministicKey dk_acct = dh.get( ImmutableList.of(
-      	new ChildNumber(44,true),
-      	new ChildNumber(params.getBIP44CoinNumber(),true),
-      	new ChildNumber(account,true)
-			),
+        new ChildNumber(44,true),
+        new ChildNumber(params.getBIP44CoinNumber(),true),
+        new ChildNumber(account,true)
+      ),
       true, true);
 
     String xpub = dk_acct.serializePubB58( org.bitcoinj.params.MainNetParams.get() );
@@ -151,10 +150,10 @@ public class SeedUtil
 
 
     DeterministicKey dk_acct = dh.get( ImmutableList.of(
-      	new ChildNumber(44,true),
-      	new ChildNumber(params.getBIP44CoinNumber(),true),
-      	new ChildNumber(account,true)
-			),
+        new ChildNumber(44,true),
+        new ChildNumber(params.getBIP44CoinNumber(),true),
+        new ChildNumber(account,true)
+      ),
       true, true);
 
     String xpub = dk_acct.serializePubB58( org.bitcoinj.params.MainNetParams.get() );
@@ -173,7 +172,7 @@ public class SeedUtil
     ), true, true);
 
 
-		ByteString public_key = ByteString.copyFrom(dk_addr.getPubKey());
+    ByteString public_key = ByteString.copyFrom(dk_addr.getPubKey());
 
     AddressSpec addr_spec = AddressUtil.getSimpleSpecForKey(public_key, SignatureUtil.SIG_TYPE_ECDSA_COMPRESSED);
 
@@ -183,7 +182,7 @@ public class SeedUtil
 
   public static WalletKeyPair getKeyFromDeterministicKey(DeterministicKey dk_addr, ByteString seed_id, int change, int index)
   {
-		ByteString priv_key = ByteString.copyFrom(dk_addr.getPrivKeyBytes());
+    ByteString priv_key = ByteString.copyFrom(dk_addr.getPrivKeyBytes());
     BigInteger priv_bi = dk_addr.getPrivKey();
 
     PrivateKey pk = null;
@@ -198,16 +197,16 @@ public class SeedUtil
     }
     catch(Exception e){throw new RuntimeException(e);}
     
-		ByteString public_key = ByteString.copyFrom(dk_addr.getPubKey());
-		return WalletKeyPair.newBuilder()
-			.setPublicKey(public_key)
-			.setPrivateKey(ByteString.copyFrom(pk.getEncoded()))
-			.setSignatureType(SignatureUtil.SIG_TYPE_ECDSA_COMPRESSED)
+    ByteString public_key = ByteString.copyFrom(dk_addr.getPubKey());
+    return WalletKeyPair.newBuilder()
+      .setPublicKey(public_key)
+      .setPrivateKey(ByteString.copyFrom(pk.getEncoded()))
+      .setSignatureType(SignatureUtil.SIG_TYPE_ECDSA_COMPRESSED)
       .setSeedId(seed_id)
       .setHdPath(dk_addr.getPathAsString())
       .setHdChange(change)
       .setHdIndex(index)
-			.build();
+      .build();
 
   }
 
@@ -221,12 +220,12 @@ public class SeedUtil
 
 
     DeterministicKey dk_addr = dh.get( ImmutableList.of(
-      	new ChildNumber(44,true),
-      	new ChildNumber(params.getBIP44CoinNumber(),true),
-      	new ChildNumber(account,true),
-      	new ChildNumber(change,false),
-      	new ChildNumber(index,false)
-			),
+        new ChildNumber(44,true),
+        new ChildNumber(params.getBIP44CoinNumber(),true),
+        new ChildNumber(account,true),
+        new ChildNumber(change,false),
+        new ChildNumber(index,false)
+      ),
       true, true);
     
     return getKeyFromDeterministicKey(dk_addr, seed_id, change, index);

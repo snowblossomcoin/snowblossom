@@ -1,4 +1,5 @@
 package snowblossom.iceleaf.components;
+
 import java.util.prefs.Preferences;
 import javax.swing.JCheckBox;
 import javax.swing.event.ChangeEvent;

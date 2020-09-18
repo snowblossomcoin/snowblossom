@@ -27,13 +27,13 @@ public class RpcServerHandler
 
   public void registerHandlers(JsonRpcServer json_server)
   {
-		json_server.register(new GetFreshHandler());
-		json_server.register(new BalanceHandler());
-		json_server.register(new CreateTxHandler());
-		json_server.register(new SignTxHandler());
-		json_server.register(new BroadcastTxHandler());
-		json_server.register(new GetTxHandler());
-		json_server.register(new GetUnspentHandler());
+    json_server.register(new GetFreshHandler());
+    json_server.register(new BalanceHandler());
+    json_server.register(new CreateTxHandler());
+    json_server.register(new SignTxHandler());
+    json_server.register(new BroadcastTxHandler());
+    json_server.register(new GetTxHandler());
+    json_server.register(new GetUnspentHandler());
     json_server.register(new GetStatusHandler());
     json_server.register(new ImportWalletHandler());
     json_server.register(new GetBlockHandler());
@@ -664,7 +664,7 @@ public class RpcServerHandler
 
         if (client.getConfig().getBoolean("watch_only") && (new_db.getKeysCount() > 0))
         {
-					throw new ValidationException("Attempting to import wallet with keys into watch only wallet. Nope.");
+          throw new ValidationException("Attempting to import wallet with keys into watch only wallet. Nope.");
         }
 
 
@@ -763,4 +763,3 @@ public class RpcServerHandler
 
 
 }
-

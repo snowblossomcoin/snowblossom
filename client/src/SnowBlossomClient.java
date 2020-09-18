@@ -1,5 +1,6 @@
 package snowblossom.client;
 
+import com.google.protobuf.ByteString;
 import com.google.protobuf.util.JsonFormat;
 import duckutil.AtomicFileOutputStream;
 import duckutil.Config;
@@ -24,7 +25,6 @@ import snowblossom.proto.*;
 import snowblossom.proto.UserServiceGrpc.UserServiceBlockingStub;
 import snowblossom.proto.UserServiceGrpc.UserServiceStub;
 import snowblossom.util.proto.*;
-import com.google.protobuf.ByteString;
 
 public class SnowBlossomClient
 {
@@ -416,7 +416,7 @@ public class SnowBlossomClient
 
   private final StubHolder stub_holder;
 
-	private final NetworkParams params;
+  private final NetworkParams params;
 
   private File wallet_path;
   private Purse purse;

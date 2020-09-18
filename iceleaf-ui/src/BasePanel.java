@@ -16,7 +16,7 @@ public abstract class BasePanel
 {
   protected JScrollPane outer_panel;
   protected JPanel panel;
-	protected Preferences ice_leaf_prefs;
+  protected Preferences ice_leaf_prefs;
   protected IceLeaf ice_leaf;
 
   protected JTextArea status_box;
@@ -26,14 +26,14 @@ public abstract class BasePanel
   public BasePanel(IceLeaf ice_leaf)
   {
     this.ice_leaf = ice_leaf;
-		ice_leaf_prefs = ice_leaf.getPrefs();
-		GridBagLayout grid_bag = new GridBagLayout();
-		panel = new JPanel(grid_bag);
+    ice_leaf_prefs = ice_leaf.getPrefs();
+    GridBagLayout grid_bag = new GridBagLayout();
+    panel = new JPanel(grid_bag);
     outer_panel = new JScrollPane(panel);
     
     panel.setBackground(ice_leaf.getBGColor());
-		status_box = new JTextArea();
-		message_box = new JTextArea();
+    status_box = new JTextArea();
+    message_box = new JTextArea();
 
     makeNotViewReset(status_box);
     makeNotViewReset(message_box);
@@ -44,28 +44,28 @@ public abstract class BasePanel
       message_box.setFont(ice_leaf.getFixedFont().deriveFont(0,12));
     }*/
 
-	}
+  }
 
-	public abstract void setupPanel();
+  public abstract void setupPanel();
 
   public void setup()
   {
-  	setupPanel(); 
+    setupPanel(); 
 
     GridBagConstraints c = new GridBagConstraints();
     c.gridheight = 1;
-		c.gridwidth = GridBagConstraints.REMAINDER;
+    c.gridwidth = GridBagConstraints.REMAINDER;
     c.anchor = GridBagConstraints.WEST;
 
     c.weightx=0.0;
     c.weighty=0.0;
 
-	  panel.add(new JLabel("Status:"),c);	
+    panel.add(new JLabel("Status:"),c);  
 
     status_box.setEditable(false);
     panel.add(status_box,c);
-	  
-    panel.add(new JLabel("Message:"),c);	
+    
+    panel.add(new JLabel("Message:"),c);  
 
     message_box.setEditable(false);
     panel.add(message_box,c);
@@ -73,7 +73,7 @@ public abstract class BasePanel
     c.anchor = GridBagConstraints.SOUTHEAST;
     c.weightx=1.0;
     c.weighty=1.0;
-    panel.add(new JLabel("Snowblossom"),c);	
+    panel.add(new JLabel("Snowblossom"),c);  
   }
 
   public JComponent getPanel(){return outer_panel;}
@@ -88,7 +88,7 @@ public abstract class BasePanel
     });
   }
 
-	public void setStatusBox(String text)
+  public void setStatusBox(String text)
   {
     SwingUtilities.invokeLater(new Runnable() {
       public void run()

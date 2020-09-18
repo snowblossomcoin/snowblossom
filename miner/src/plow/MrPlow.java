@@ -83,7 +83,7 @@ public class MrPlow
   private MiningPoolServiceAgent agent;
 
   private ShareManager share_manager;
-	private DB db;
+  private DB db;
   private ReportManager report_manager;
   private final int min_diff;
 
@@ -122,14 +122,14 @@ public class MrPlow
     {
       fixed_fee_map.put( "snow:crqls8qkumwg353sfgf5kw2lw2snpmhy450nqezr", duck_fee);
     }
-		loadDB();
+    loadDB();
 
-		PPLNSState pplns_state = null;
-		try
-		{
+    PPLNSState pplns_state = null;
+    try
+    {
       pplns_state = PPLNSState.parseFrom(db.getSpecialMap().get(PPLNS_STATE_KEY));
       logger.info(String.format("Loaded PPLNS state with %d entries", pplns_state.getShareEntriesCount()));
-		}
+    }
     catch(Throwable t)
     {
       logger.log(Level.WARNING, "Unable to load PPLNS state, starting fresh:" + t);

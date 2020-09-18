@@ -29,31 +29,31 @@ public class KeyUtilTest
 
   @Test
   public void testCompressKeyEncoding()
-		throws Exception
+    throws Exception
   {
     KeyPair pair = KeyUtil.generateECCompressedKey();
 
-		ByteString encoded = KeyUtil.getCompressedPublicKeyEncoding(pair.getPublic());
+    ByteString encoded = KeyUtil.getCompressedPublicKeyEncoding(pair.getPublic());
 
-		Assert.assertEquals(33, encoded.size());
+    Assert.assertEquals(33, encoded.size());
 
-		PublicKey k = KeyUtil.convertCompressedECDSA(encoded);
+    PublicKey k = KeyUtil.convertCompressedECDSA(encoded);
 
-		Assert.assertEquals(k, pair.getPublic());
+    Assert.assertEquals(k, pair.getPublic());
   }
 
   @Test
   public void testCompressPrivateKeyEncoding()
-		throws Exception
+    throws Exception
   {
     KeyPair pair = KeyUtil.generateECCompressedKey();
 
-		ByteString encoded = ByteString.copyFrom(pair.getPrivate().getEncoded());
+    ByteString encoded = ByteString.copyFrom(pair.getPrivate().getEncoded());
     System.out.println("Format: " + pair.getPrivate().getFormat());
 
     PrivateKey k = KeyUtil.decodePrivateKey(encoded, "ECDSA");
 
-		Assert.assertEquals(k, pair.getPrivate());
+    Assert.assertEquals(k, pair.getPrivate());
   }
 
   @Test

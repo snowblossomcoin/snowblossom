@@ -42,11 +42,11 @@ public class WalletPanel extends BasePanel
   public WalletPanel(IceLeaf ice_leaf)
   {
     super(ice_leaf);
-	}
+  }
 
   @Override
-	public void setupPanel()
-	{
+  public void setupPanel()
+  {
 
     GridBagConstraints c = new GridBagConstraints();
     c.weightx = 0.0;
@@ -88,11 +88,11 @@ public class WalletPanel extends BasePanel
     {
       StringBuilder sb = new StringBuilder();
 
-			String wallet_str = (String)wallet_select_box.getSelectedItem();
+      String wallet_str = (String)wallet_select_box.getSelectedItem();
 
       sb.append("Detail for " + wallet_str);
-			ByteArrayOutputStream b_out = new ByteArrayOutputStream();
-			PrintStream p_out = new PrintStream(b_out);
+      ByteArrayOutputStream b_out = new ByteArrayOutputStream();
+      PrintStream p_out = new PrintStream(b_out);
       
 
       SnowBlossomClient client = ice_leaf.getWalletPanel().getWallet(wallet_str);
@@ -127,7 +127,7 @@ public class WalletPanel extends BasePanel
         }
       }
 
-			sb.append(new String(b_out.toByteArray()));
+      sb.append(new String(b_out.toByteArray()));
 
       message_lockout = System.currentTimeMillis() + 60000L;
       setMessageBox(sb.toString());
@@ -267,9 +267,9 @@ public class WalletPanel extends BasePanel
     TreeMap<String, String> config_map = new TreeMap<>();
     config_map.put("wallet_path", db_dir.getPath());
     config_map.put("network", ice_leaf.getParams().getNetworkName());
-		Config conf = new ConfigCat(new ConfigMem(config_map), new ConfigFile(config_file.getPath()));
+    Config conf = new ConfigCat(new ConfigMem(config_map), new ConfigFile(config_file.getPath()));
 
-	  SnowBlossomClient client = new SnowBlossomClient(conf, null, ice_leaf.getStubHolder());
+    SnowBlossomClient client = new SnowBlossomClient(conf, null, ice_leaf.getStubHolder());
 
     synchronized(client_map)
     {

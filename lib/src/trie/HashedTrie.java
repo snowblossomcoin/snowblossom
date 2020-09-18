@@ -1,6 +1,5 @@
 package snowblossom.lib.trie;
 
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.MultimapBuilder;
 import com.google.common.collect.SetMultimap;
 import com.google.protobuf.ByteString;

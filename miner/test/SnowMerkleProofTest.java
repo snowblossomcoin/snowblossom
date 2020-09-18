@@ -1,6 +1,5 @@
 package miner.test;
 
-
 import com.google.protobuf.ByteString;
 import java.io.File;
 import java.security.MessageDigest;
@@ -134,4 +133,3 @@ public class SnowMerkleProofTest
   }
 
 }
-

@@ -1,8 +1,8 @@
 package node.test;
 
-import snowblossom.node.ForBenefitOfUtil;
 import org.junit.Assert;
 import org.junit.Test;
+import snowblossom.node.ForBenefitOfUtil;
 
 public class ForBenefitOfUtilTest
 {

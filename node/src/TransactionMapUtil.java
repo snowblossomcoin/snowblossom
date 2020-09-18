@@ -48,13 +48,13 @@ public class TransactionMapUtil
       ByteBuffer bb = ByteBuffer.wrap(val.toByteArray());
       int height = bb.getInt();
 
-			{
+      {
         status.setConfirmed(true);
         status.setHeightConfirmed(height);
         int curr_height = head_summary.getHeader().getBlockHeight();
         int depth = 1 + curr_height - height;
         status.setConfirmations(depth);
-			}
+      }
     }
     return status.build();
     

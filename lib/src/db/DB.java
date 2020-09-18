@@ -11,11 +11,11 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import snowblossom.lib.ChainHash;
 import snowblossom.lib.DaemonThreadFactory;
+import snowblossom.lib.trie.HashedTrie;
+import snowblossom.lib.trie.TrieDBMap;
 import snowblossom.proto.Block;
 import snowblossom.proto.BlockSummary;
 import snowblossom.proto.Transaction;
-import snowblossom.lib.trie.TrieDBMap;
-import snowblossom.lib.trie.HashedTrie;
 
 public class DB implements DBFace
 {

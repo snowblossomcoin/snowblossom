@@ -18,7 +18,6 @@ import snowblossom.client.StubUtil;
 import snowblossom.lib.*;
 import snowblossom.proto.*;
 import snowblossom.proto.UserServiceGrpc.UserServiceBlockingStub;
-import snowblossom.proto.UserServiceGrpc.UserServiceStub;
 import snowblossom.proto.UserServiceGrpc;
 
 public class RichList

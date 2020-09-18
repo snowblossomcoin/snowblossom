@@ -1,6 +1,5 @@
 package snowblossom.lib;
 
-
 import com.google.protobuf.ByteString;
 import java.math.BigInteger;
 
@@ -30,4 +29,3 @@ import java.math.BigInteger;
     public BigInteger getActivationTarget() { return activation_target; }
 
   }
-

@@ -14,7 +14,7 @@ import snowblossom.proto.*;
 
 public class VoteTracker extends Thread
 {
-	private static final Logger logger = Logger.getLogger("snowblossom.shackleton");
+  private static final Logger logger = Logger.getLogger("snowblossom.shackleton");
 
   private volatile boolean startup=true;
   private final Shackleton shackleton;

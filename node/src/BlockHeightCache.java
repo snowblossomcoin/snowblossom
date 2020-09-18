@@ -1,6 +1,5 @@
 package snowblossom.node;
 
-
 import java.util.TreeMap;
 import snowblossom.lib.ChainHash;
 

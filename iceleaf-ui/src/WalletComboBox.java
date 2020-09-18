@@ -1,4 +1,5 @@
 package snowblossom.iceleaf;
+
 import duckutil.PeriodicThread;
 import java.util.Collection;
 import java.util.TreeSet;
@@ -14,10 +15,10 @@ public class WalletComboBox extends JComboBox<String>
   {
     this.ice_leaf = ice_leaf;
 
-		UpdateThread ut = new UpdateThread();
+    UpdateThread ut = new UpdateThread();
 
-		ut.start();
-		ice_leaf.getWalletPanel().addWakeThread(ut);
+    ut.start();
+    ice_leaf.getWalletPanel().addWakeThread(ut);
 
   }
   public class UpdateThread extends PeriodicThread
@@ -35,7 +36,7 @@ public class WalletComboBox extends JComboBox<String>
       }
       catch(Throwable e)
       { 
-				e.printStackTrace();
+        e.printStackTrace();
       }
 
     }

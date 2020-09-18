@@ -29,12 +29,12 @@ public class RocksDBMapMutationSet extends DBMapMutationSet
 
   private ByteString getDBKey(ByteString key, ByteString value)
   {
-		try
-		{
+    try
+    {
       ByteString.Output out = ByteString.newOutput(100);
       out.write(name_bytes);
       out.write(key.toByteArray());
-      out.write(sep);	
+      out.write(sep);  
       out.write(value.toByteArray());
       ByteString w = out.toByteString();
       return w;
@@ -71,8 +71,8 @@ public class RocksDBMapMutationSet extends DBMapMutationSet
   
     try
     {
-    	db.put(jdb.getWriteOption(), w.toByteArray(), b);
-		}
+      db.put(jdb.getWriteOption(), w.toByteArray(), b);
+    }
     catch(RocksDBException e)
     {
       throw new RuntimeException(e);
@@ -105,11 +105,11 @@ public class RocksDBMapMutationSet extends DBMapMutationSet
   @Override
   public void remove(ByteString key, ByteString value)
   {
-		try
-		{
-    	ByteString w = getDBKey(key, value);
-    	db.remove(jdb.getWriteOption(), w.toByteArray());
-		}
+    try
+    {
+      ByteString w = getDBKey(key, value);
+      db.remove(jdb.getWriteOption(), w.toByteArray());
+    }
     catch(RocksDBException e)
     {
       throw new RuntimeException(e);
@@ -119,7 +119,7 @@ public class RocksDBMapMutationSet extends DBMapMutationSet
   @Override
   public List<ByteString> getSet(ByteString key, int max_reply)
   {
-		ByteString dbKey = getDBKey(key);
+    ByteString dbKey = getDBKey(key);
 
     LinkedList<ByteString> set = new LinkedList<>();
     int count = 0;
@@ -129,7 +129,7 @@ public class RocksDBMapMutationSet extends DBMapMutationSet
 
       while(it.isValid())
       {
-				ByteString curr_key = ByteString.copyFrom(it.key());
+        ByteString curr_key = ByteString.copyFrom(it.key());
         if (!curr_key.startsWith(dbKey)) break;
 
         ByteString v = curr_key.substring(dbKey.size());

@@ -2,17 +2,15 @@ package snowblossom.node;
 
 import com.google.protobuf.ByteString;
 import io.grpc.stub.StreamObserver;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import snowblossom.lib.*;
 import snowblossom.proto.*;
 import snowblossom.trie.proto.TrieNode;
-
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Collection;
-
 
 public class SnowUserService extends UserServiceGrpc.UserServiceImplBase implements MemPoolTickleInterface
 {
@@ -106,8 +104,8 @@ public class SnowUserService extends UserServiceGrpc.UserServiceImplBase impleme
 
   }
 
-	@Override
-	public void subscribeAddressUpdates(RequestAddress req, StreamObserver<AddressUpdate> ob)
+  @Override
+  public void subscribeAddressUpdates(RequestAddress req, StreamObserver<AddressUpdate> ob)
   {
     AddressSpecHash hash = new AddressSpecHash( req.getAddressSpecHash() );
 
@@ -146,7 +144,7 @@ public class SnowUserService extends UserServiceGrpc.UserServiceImplBase impleme
               logger.info("Error: " + t);
             }
           }
-         	address_watchers.put(hash, ok_list);
+           address_watchers.put(hash, ok_list);
         }
       }
     }
@@ -561,18 +559,18 @@ public class SnowUserService extends UserServiceGrpc.UserServiceImplBase impleme
           HashSet<AddressSpecHash> involved = new HashSet<>();
           for(Transaction tx : b.getTransactionsList())
           {
-						TransactionInner inner = TransactionUtil.getInner(tx);
-						for (TransactionInput in : inner.getInputsList())
-						{
-							involved.add(new AddressSpecHash(in.getSpecHash()));
-						}
-						for (TransactionOutput out : inner.getOutputsList())
-						{
-							involved.add(new AddressSpecHash(out.getRecipientSpecHash()));
-						}
+            TransactionInner inner = TransactionUtil.getInner(tx);
+            for (TransactionInput in : inner.getInputsList())
+            {
+              involved.add(new AddressSpecHash(in.getSpecHash()));
+            }
+            for (TransactionOutput out : inner.getOutputsList())
+            {
+              involved.add(new AddressSpecHash(out.getRecipientSpecHash()));
+            }
           }
 
-					sendAddressUpdates(involved, utxo_root_hash);
+          sendAddressUpdates(involved, utxo_root_hash);
 
 
         }
@@ -615,4 +613,3 @@ public class SnowUserService extends UserServiceGrpc.UserServiceImplBase impleme
 
   }
 }
-

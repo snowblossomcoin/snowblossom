@@ -241,7 +241,7 @@ public class SpoonTest
 
 
     miner.stop();
-		node.stop();
+    node.stop();
 
 
 

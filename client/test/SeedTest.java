@@ -2,6 +2,7 @@ package client.test;
 
 import com.google.common.collect.ImmutableList;
 import com.google.protobuf.ByteString;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Random;
 import java.util.logging.Logger;
@@ -15,11 +16,10 @@ import snowblossom.client.SeedUtil;
 import snowblossom.lib.*;
 import snowblossom.proto.*;
 import snowblossom.proto.WalletKeyPair;
-import java.util.HashSet;
 
 public class SeedTest
 {
-	private static final Logger logger = Logger.getLogger("SeedTest");
+  private static final Logger logger = Logger.getLogger("SeedTest");
 
   @Test
   public void testMnemonicCode()
@@ -117,10 +117,10 @@ public class SeedTest
 
     String xpub = SeedUtil.getSeedXpub( new NetworkParamsTestnet(), seed, "", 0);
 
-		for(int c=0; c<2; c++)
-		for(int i=0; i<20; i++)
-		{
-    	WalletKeyPair wkp = SeedUtil.getKey( new NetworkParamsTestnet(), seed, "", 0, c, i);
+    for(int c=0; c<2; c++)
+    for(int i=0; i<20; i++)
+    {
+      WalletKeyPair wkp = SeedUtil.getKey( new NetworkParamsTestnet(), seed, "", 0, c, i);
 
       System.out.println("Seed wkp: " + HexUtil.getHexString(wkp.getSeedId()) + " " + wkp.getHdPath());
       Assert.assertTrue(wkp.getHdPath().startsWith("M/44H/2339H/0H/"));
@@ -132,8 +132,8 @@ public class SeedTest
 
       Assert.assertEquals(addr, wkp_addr);
 
-			testKeyPair(wkp, "hd");
-		}
+      testKeyPair(wkp, "hd");
+    }
 
     ByteString seed_id_seed = SeedUtil.getSeedId( new NetworkParamsTestnet(), seed, "", 0);
     ByteString seed_id_xpub = SeedUtil.getSeedIdFromXpub( xpub);
@@ -147,10 +147,10 @@ public class SeedTest
     throws Exception
   {
 
-		WalletKeyPair ref = KeyUtil.generateWalletStandardECKey();
-		logger.info(String.format("Reference key pub %d priv %d", ref.getPublicKey().size(), ref.getPrivateKey().size()));
-		logger.info(String.format("testwkp key pub %d priv %d", wkp.getPublicKey().size(), wkp.getPrivateKey().size()));
-		
+    WalletKeyPair ref = KeyUtil.generateWalletStandardECKey();
+    logger.info(String.format("Reference key pub %d priv %d", ref.getPublicKey().size(), ref.getPrivateKey().size()));
+    logger.info(String.format("testwkp key pub %d priv %d", wkp.getPublicKey().size(), wkp.getPrivateKey().size()));
+    
     Random rnd = new Random();
     byte[] b = new byte[Globals.BLOCKCHAIN_HASH_LEN];
     rnd.nextBytes(b);
@@ -199,4 +199,3 @@ public class SeedTest
   }
 
 }
-

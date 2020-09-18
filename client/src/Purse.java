@@ -72,18 +72,18 @@ public class Purse
   public void maintainKeys(boolean print_on_pass)
     throws Exception
   {
-		while(fillKeyPool())
-		{
-			if (print_on_pass)
-			{
-				WalletUtil.printBasicStats(getDB());
-				client.showBalances(false);
-			}
-			else
-			{
-				if (client!= null) client.getBalance();
-			}
-		}
+    while(fillKeyPool())
+    {
+      if (print_on_pass)
+      {
+        WalletUtil.printBasicStats(getDB());
+        client.showBalances(false);
+      }
+      else
+      {
+        if (client!= null) client.getBalance();
+      }
+    }
   }
 
   public boolean isWatchOnly()
@@ -113,13 +113,13 @@ public class Purse
   public void checkHistory()
     throws Exception
   {
-		try
-		{
-			if (client == null) return;
-			for(AddressSpecHash hash : WalletUtil.getAllUnused(wallet_database, params))
-			{
+    try
+    {
+      if (client == null) return;
+      for(AddressSpecHash hash : WalletUtil.getAllUnused(wallet_database, params))
+      {
         HistoryList hl = client.getStub().getAddressHistory(
-					RequestAddress.newBuilder().setAddressSpecHash(hash.getBytes()).build());
+          RequestAddress.newBuilder().setAddressSpecHash(hash.getBytes()).build());
 
         if (hl.getNotEnabled())
         {
@@ -127,24 +127,24 @@ public class Purse
         }
 
         if (hl.getEntriesCount() > 0)
-				{
-					markUsed(hash);
+        {
+          markUsed(hash);
           
-				}
+        }
 
         TransactionHashList tl = client.getStub().getMempoolTransactionList(
           RequestAddress.newBuilder().setAddressSpecHash(hash.getBytes()).build());
         if (tl.getTxHashesCount() > 0)
         {
-					markUsed(hash);
+          markUsed(hash);
 
         }
-    	}
-		}
-		catch(Throwable e)
-		{
-			logger.info("Error from server on checking address.  This is fine, but to get more accuracy on used address, have the node enable addr_index");
-		}
+      }
+    }
+    catch(Throwable e)
+    {
+      logger.info("Error from server on checking address.  This is fine, but to get more accuracy on used address, have the node enable addr_index");
+    }
     
   }
 
@@ -159,11 +159,11 @@ public class Purse
 
   }
 
-	public synchronized void markUsed(AddressSpecHash hash)
+  public synchronized void markUsed(AddressSpecHash hash)
     throws Exception
-	{
+  {
     wallet_database = WalletUtil.markUsed(wallet_database, wallet_path, config, params, hash);
-	}
+  }
 
   public AddressSpecHash getUnusedAddress(boolean mark_used, boolean generate_now)
     throws Exception
@@ -229,4 +229,3 @@ public class Purse
   }
 
 }
-

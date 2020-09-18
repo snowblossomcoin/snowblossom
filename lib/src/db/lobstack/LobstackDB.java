@@ -12,10 +12,10 @@ public class LobstackDB extends DBProvider
 {
   private static final Logger logger = Logger.getLogger("snowblossom.db");
 
-	private Lobstack stack;
+  private Lobstack stack;
 
   public LobstackDB(Config config)
-		throws Exception
+    throws Exception
   {
     super(config);
     config.require("db_path");
@@ -26,14 +26,14 @@ public class LobstackDB extends DBProvider
 
     logger.info(String.format("Loadng LobstackDB with path %s", path));
 
-		stack = new Lobstack(new File(path), "snowdb");
+    stack = new Lobstack(new File(path), "snowdb");
 
   }
 
   @Override
   public DBMapMutationSet openMutationMapSet(String name) throws Exception
   {
-		throw new Exception("NOT IMPLEMENTED");
+    throw new Exception("NOT IMPLEMENTED");
   }
 
   @Override

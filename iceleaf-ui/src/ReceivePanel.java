@@ -29,11 +29,11 @@ public class ReceivePanel extends BasePanel
   public ReceivePanel(IceLeaf ice_leaf)
   {
     super(ice_leaf);
-	}
+  }
 
-	@Override
+  @Override
   public void setupPanel()
-	{
+  {
     
     GridBagConstraints c = new GridBagConstraints();
     c.weightx = 0.0;
@@ -74,8 +74,8 @@ public class ReceivePanel extends BasePanel
     }
     public void runPass()
     {
-			try
-			{
+      try
+      {
         String wallet_name = (String)wallet_select_box.getSelectedItem();
         if (wallet_name == null)
         {
@@ -105,12 +105,12 @@ public class ReceivePanel extends BasePanel
         setStatusBox(address_str);
         setMessageBox("");
 
-			}
-			catch(Throwable t)
-			{
-				setMessageBox(ErrorUtil.getThrowInfo(t));
+      }
+      catch(Throwable t)
+      {
+        setMessageBox(ErrorUtil.getThrowInfo(t));
         setStatusBox("");
-			}
+      }
     }
 
   }
@@ -121,7 +121,7 @@ public class ReceivePanel extends BasePanel
     SwingUtilities.invokeLater(new Runnable() {
       public void run()
       {
-				address_qr_label.setIcon(ii);
+        address_qr_label.setIcon(ii);
       }
     });
 

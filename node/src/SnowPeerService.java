@@ -29,4 +29,3 @@ public class SnowPeerService extends PeerServiceGrpc.PeerServiceImplBase
   }
 
 }
-

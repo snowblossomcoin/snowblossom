@@ -12,21 +12,21 @@ import snowblossom.proto.*;
 
 public class BatchLayerWorkThread extends LayerWorkThread
 {
-	private static final Logger logger = Logger.getLogger("snowblossom.miner");
+  private static final Logger logger = Logger.getLogger("snowblossom.miner");
   //  256 = 590hk/s
   //  512 = 635kh/s 
   // 1024 = 650kh/s
   public static final int BATCH_SIZE=1024;
 
-	public BatchLayerWorkThread(Arktika arktika, FieldSource fs, FaQueue queue, long total_words)
-	{
+  public BatchLayerWorkThread(Arktika arktika, FieldSource fs, FaQueue queue, long total_words)
+  {
     super(arktika, fs, queue, total_words);
 
-	}
+  }
 
   @Override
-	protected void runPass() throws Exception
-	{
+  protected void runPass() throws Exception
+  {
     LinkedList<PartialWork> pw_list = new LinkedList<>();
 
     queue.superPoll(BATCH_SIZE, pw_list);
@@ -75,7 +75,7 @@ public class BatchLayerWorkThread extends LayerWorkThread
         processPw(pw);
       }
     }
-	}
+  }
 
   @Override
   protected void processPw(PartialWork pw)
@@ -86,13 +86,13 @@ public class BatchLayerWorkThread extends LayerWorkThread
       Assert.assertNotNull(pw);
       Assert.assertNotNull(pw.context);
       Assert.assertNotNull(pw.wu);
-		  if (PowUtil.lessThanTarget(pw.context, pw.wu.getReportTarget()))
-	  	{
-			  String str = HexUtil.getHexString(pw.context);
-			  logger.info("Found passable solution: " + str);
-			  submitWork(pw);
-		  }
-		  arktika.op_count.add(1L);
+      if (PowUtil.lessThanTarget(pw.context, pw.wu.getReportTarget()))
+      {
+        String str = HexUtil.getHexString(pw.context);
+        logger.info("Found passable solution: " + str);
+        submitWork(pw);
+      }
+      arktika.op_count.add(1L);
     }
     else
     {
@@ -104,4 +104,3 @@ public class BatchLayerWorkThread extends LayerWorkThread
   }
 
 }
-

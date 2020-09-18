@@ -18,12 +18,12 @@ public class FieldSourceFake extends FieldSource
 
   private final String name;
 
- 	private final ThreadLocal<Random> threadRnd =
-		 new ThreadLocal<Random>() {
-				 @Override protected Random initialValue() {
-						 return new Random();
-		 }
- 	};
+   private final ThreadLocal<Random> threadRnd =
+     new ThreadLocal<Random>() {
+         @Override protected Random initialValue() {
+             return new Random();
+     }
+   };
 
   public FieldSourceFake(NetworkParams params, int field_number) throws java.io.IOException
   {

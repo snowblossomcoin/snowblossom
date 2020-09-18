@@ -22,11 +22,11 @@ public class AddressPanel extends BasePanel
   public AddressPanel(IceLeaf ice_leaf)
   {
     super(ice_leaf);
-	}
+  }
 
-	@Override
+  @Override
   public void setupPanel()
-	{
+  {
     
     GridBagConstraints c = new GridBagConstraints();
     c.weightx = 0.0;
@@ -62,8 +62,8 @@ public class AddressPanel extends BasePanel
     }
     public void runPass()
     {
-			try
-			{
+      try
+      {
         String wallet_name = (String)wallet_select_box.getSelectedItem();
         if (wallet_name == null)
         {
@@ -99,12 +99,12 @@ public class AddressPanel extends BasePanel
         setStatusBox(new String(bout.toByteArray()).trim());
         setMessageBox("");
 
-			}
-			catch(Throwable t)
-			{
-				setMessageBox(ErrorUtil.getThrowInfo(t));
+      }
+      catch(Throwable t)
+      {
+        setMessageBox(ErrorUtil.getThrowInfo(t));
         setStatusBox("");
-			}
+      }
     }
 
   }

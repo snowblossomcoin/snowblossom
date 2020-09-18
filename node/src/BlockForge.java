@@ -23,7 +23,7 @@ public class BlockForge
 
   private SnowBlossomNode node;
   private NetworkParams params;
-	public BlockForge(SnowBlossomNode node)
+  public BlockForge(SnowBlossomNode node)
   {
     this.node = node;
     this.params = node.getParams();
@@ -128,9 +128,9 @@ public class BlockForge
 
     ByteString inner_data = inner.build().toByteString();
 
-		MessageDigest md_bc = DigestUtil.getMD();
+    MessageDigest md_bc = DigestUtil.getMD();
 
-		tx.setTxHash(ByteString.copyFrom(md_bc.digest(inner_data.toByteArray())));
+    tx.setTxHash(ByteString.copyFrom(md_bc.digest(inner_data.toByteArray())));
 
     tx.setInnerData(inner_data);
 

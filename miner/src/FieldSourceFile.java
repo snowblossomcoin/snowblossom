@@ -46,23 +46,23 @@ public class FieldSourceFile extends FieldSource
 
     Set<Integer> chunks = new TreeSet<Integer>();
 
-		int start =0;
-		int end = total_chunk;
+    int start =0;
+    int end = total_chunk;
 
-		if (conf.isSet("layer_" + layer + "_range"))
-		{
+    if (conf.isSet("layer_" + layer + "_range"))
+    {
 
-			List<String> range_lst = conf.getList("layer_" + layer + "_range");
-			if (range_lst.size() != 2)
-			{
-				throw new RuntimeException("Expected range of two numbers.  Example: 0,17");
-			}
-			start = Integer.parseInt(range_lst.get(0));
-			end = Math.min(Integer.parseInt(range_lst.get(1)), end);
+      List<String> range_lst = conf.getList("layer_" + layer + "_range");
+      if (range_lst.size() != 2)
+      {
+        throw new RuntimeException("Expected range of two numbers.  Example: 0,17");
+      }
+      start = Integer.parseInt(range_lst.get(0));
+      end = Math.min(Integer.parseInt(range_lst.get(1)), end);
 
-			Assert.assertTrue(end >= start);
-			Assert.assertTrue(start >= 0);
-		}
+      Assert.assertTrue(end >= start);
+      Assert.assertTrue(start >= 0);
+    }
 
     File blob_file = new File(new File(path, base), String.format("%s.snow", base));
     if (blob_file.exists())

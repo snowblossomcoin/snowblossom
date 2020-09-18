@@ -27,14 +27,14 @@ import snowblossom.proto.*;
 
 public class WebServer
 {
-	private static final Logger logger = Logger.getLogger("snowblossom.shackleton");
+  private static final Logger logger = Logger.getLogger("snowblossom.shackleton");
   private HttpServer server;
   private Shackleton shackleton;
 
   private LRUCache<ChainHash, String> block_summary_lines = new LRUCache<>(500);
 
   public WebServer(Config config, Shackleton shackleton)
-		throws Exception
+    throws Exception
   {
     this.shackleton = shackleton;
 
@@ -42,7 +42,7 @@ public class WebServer
     int port = config.getInt("port");
 
     server = HttpServer.create(new InetSocketAddress(port), 0);
-		server.createContext("/", new RootHandler());
+    server.createContext("/", new RootHandler());
     server.setExecutor(TaskMaster.getBasicExecutor(32,"shackleton"));
 
 
@@ -178,26 +178,26 @@ public class WebServer
         .setName(ByteString.copyFrom(search.getBytes()))
         .build());
 
-		if (lst_chan.getOutListCount() + lst_user.getOutListCount() == 0) return false;
+    if (lst_chan.getOutListCount() + lst_user.getOutListCount() == 0) return false;
 
-		if (lst_chan.getOutListCount() > 0)
-		{
+    if (lst_chan.getOutListCount() > 0)
+    {
       out.println("<H3>Channels</H3>");
       for(TxOutPoint op : lst_chan.getOutListList())
       {
         Transaction tx = shackleton.getStub().getTransaction( RequestTransaction.newBuilder().setTxHash(op.getTxHash()).build());
         displayTransaction(out, tx);
       }
-		}
-		if (lst_user.getOutListCount() > 0)
-		{
+    }
+    if (lst_user.getOutListCount() > 0)
+    {
       out.println("<H3>Users</H3>");
       for(TxOutPoint op : lst_user.getOutListList())
       {
         Transaction tx = shackleton.getStub().getTransaction( RequestTransaction.newBuilder().setTxHash(op.getTxHash()).build());
         displayTransaction(out, tx);
       }
-		}
+    }
     
     return true; 
 
@@ -422,9 +422,9 @@ public class WebServer
       {
             LinkedList<Double> inValues = new LinkedList<Double>();
             try 
-	    {
+      {
                 for(TransactionInput in : TransactionUtil.getInner(tx).getInputsList()) 
-		{
+    {
                   int idx = in.getSrcTxOutIdx();
                   Transaction txo = shackleton.getStub().getTransaction( RequestTransaction.newBuilder().setTxHash(in.getSrcTxId()).build());
                   TransactionInner innero = TransactionUtil.getInner(txo);
@@ -433,7 +433,7 @@ public class WebServer
                   inValues.addLast(value);
                 }
             } catch(Exception e) 
-	    {
+      {
                 out.println(e);
             }
 
@@ -445,38 +445,38 @@ public class WebServer
   private void displayTransaction(PrintStream out, Transaction tx)
     throws ValidationException
   {
-	out.println("<pre>");
-	out.println("Found transaction");
-	LinkedList<Double> inValues = new LinkedList<Double>();
-	try {
-		for(TransactionInput in : TransactionUtil.getInner(tx).getInputsList()) {
-			int idx = in.getSrcTxOutIdx();
-			Transaction txo = shackleton.getStub().getTransaction( RequestTransaction.newBuilder().setTxHash(in.getSrcTxId()).build());
-			TransactionInner innero = TransactionUtil.getInner(txo);
-			TransactionOutput outo = innero.getOutputs(idx);
-			double value = outo.getValue() / Globals.SNOW_VALUE_D;
-			inValues.addLast(value);
-		}
-	} catch(Exception e) {
-		out.println(e);
-	}
+  out.println("<pre>");
+  out.println("Found transaction");
+  LinkedList<Double> inValues = new LinkedList<Double>();
+  try {
+    for(TransactionInput in : TransactionUtil.getInner(tx).getInputsList()) {
+      int idx = in.getSrcTxOutIdx();
+      Transaction txo = shackleton.getStub().getTransaction( RequestTransaction.newBuilder().setTxHash(in.getSrcTxId()).build());
+      TransactionInner innero = TransactionUtil.getInner(txo);
+      TransactionOutput outo = innero.getOutputs(idx);
+      double value = outo.getValue() / Globals.SNOW_VALUE_D;
+      inValues.addLast(value);
+    }
+  } catch(Exception e) {
+    out.println(e);
+  }
 
-	TransactionUtil.prettyDisplayTxHTML(tx, out, shackleton.getParams(), inValues);
-	out.println("");
-	out.println("Transaction status:");
+  TransactionUtil.prettyDisplayTxHTML(tx, out, shackleton.getParams(), inValues);
+  out.println("");
+  out.println("Transaction status:");
 
-	try
-	{
-		TransactionStatus status = shackleton.getStub().getTransactionStatus(RequestTransaction.newBuilder().setTxHash(tx.getTxHash()).build());
-		JsonFormat.Printer printer = JsonFormat.printer();
-		out.println(printer.print(status));
-	}
-	catch(com.google.protobuf.InvalidProtocolBufferException e)
-	{
-		throw new ValidationException(e);
-	}
+  try
+  {
+    TransactionStatus status = shackleton.getStub().getTransactionStatus(RequestTransaction.newBuilder().setTxHash(tx.getTxHash()).build());
+    JsonFormat.Printer printer = JsonFormat.printer();
+    out.println(printer.print(status));
+  }
+  catch(com.google.protobuf.InvalidProtocolBufferException e)
+  {
+    throw new ValidationException(e);
+  }
 
-	out.println("</pre>");
+  out.println("</pre>");
 
       
   }

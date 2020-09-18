@@ -1,4 +1,5 @@
 package snowblossom.iceleaf;
+
 import java.util.prefs.Preferences;
 import snowblossom.lib.Globals;
 import snowblossom.lib.NetworkParamsTestnet;

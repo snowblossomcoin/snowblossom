@@ -61,7 +61,7 @@ public class PoolClient implements PoolClientFace
   private ManagedChannel channel;
 
 
-	@Override
+  @Override
   public void subscribe() throws Exception
   {
     if (channel != null)
@@ -132,13 +132,13 @@ public class PoolClient implements PoolClientFace
   }
 
 
-	@Override
+  @Override
   public void stop()
   {
     terminate = true;
   }
 
-	@Override
+  @Override
   public boolean isTerminated()
   {
     return terminate;
@@ -146,7 +146,7 @@ public class PoolClient implements PoolClientFace
 
   private volatile boolean terminate = false;
 
-	@Override
+  @Override
   public WorkUnit getWorkUnit()
   {
     WorkUnit wu = last_work_unit;
@@ -188,7 +188,7 @@ public class PoolClient implements PoolClientFace
     }
   }
 
-	@Override
+  @Override
   public SubmitReply submitWork(WorkUnit wu, BlockHeader header)
   {
        WorkSubmitRequest.Builder req = WorkSubmitRequest.newBuilder();
@@ -196,7 +196,7 @@ public class PoolClient implements PoolClientFace
       req.setHeader(header);
 
       SubmitReply reply = blockingStub.submitWork( req.build());
-		return reply;
+    return reply;
  
 
   }
