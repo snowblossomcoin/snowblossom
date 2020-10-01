@@ -62,7 +62,7 @@ public class WebServer
     {
       NetworkParams params = shackleton.getParams();
       String query = t.getRequestURI().getQuery();
-      logger.info("Web request: " + t.getRequestURI());
+      logger.info("Web request: " + t.getRequestURI() + " from " + t.getRemoteAddress());
       if ((query != null) && (query.startsWith("search=")))
       {
         int eq = query.indexOf("=");

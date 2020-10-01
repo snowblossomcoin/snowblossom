@@ -4,6 +4,7 @@
 * Added SubscribeAddressUpdates gRPC api to node to monitor addresses
 * Added MonitorTool to use SubscribeAddressUpdates to monitor addresses
 * Update seed nodes
+* Add remote address to Shackleton explorer logs
 
 ## 1.7.0
 
