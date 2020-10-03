@@ -4,6 +4,7 @@ import com.google.protobuf.ByteString;
 import java.io.PrintStream;
 import java.text.DecimalFormat;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.List;
 import snowblossom.client.GetUTXOUtil;
@@ -57,7 +58,12 @@ public class AddressPage
 
       LinkedList<HistoryEntry> entries = new LinkedList<>();
       entries.addAll(history.getEntriesList());
-      Collections.reverse(entries);
+      //Collections.reverse(entries);
+      Collections.sort(entries, new Comparator<HistoryEntry>() {
+	  public int compare(HistoryEntry s1, HistoryEntry s2) {
+	      return s2.getBlockHeight() - s1.getBlockHeight();
+	  }
+      });
       for(HistoryEntry he : entries)
       {
         int height =  he.getBlockHeight();
