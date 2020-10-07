@@ -5,7 +5,8 @@ java_library(
   srcs = glob(["src/**/*.java", "src/*.java"]),
   deps = [
       "//protolib:protogrpc",
-      "//lib",
+      "//lib:lib",
+      "//lib:rocksdb",
       "//client",
       "@duckutil//:duckutil_jsonrpc_lib",
       "@duckutil//:duckutil_lib",

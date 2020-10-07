@@ -8,6 +8,7 @@ java_library(
       "@duckutil//:duckutil_lib",
       "@duckutil//:lobstack_lib",
       "//lib:lib",
+      "//lib:rocksdb",
       "//client:client",
       "@io_netty_netty_handler//:io_netty_netty_handler",
       "@io_grpc_grpc_java//netty",
