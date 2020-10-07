@@ -104,6 +104,7 @@ java_binary(
   ]
 )
 
+
 java_binary(
   name = "VanityGen",
   main_class = "snowblossom.client.VanityGen",

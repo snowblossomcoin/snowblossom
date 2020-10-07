@@ -7,8 +7,8 @@ RULES_JVM_EXTERNAL_SHA = "62133c125bf4109dfd9d2af64830208356ce4ef8b165a6ef15bbff
 git_repository(
     name = "rules_jvm_external",
     remote = "https://github.com/bazelbuild/rules_jvm_external",
-    commit = "9aec21a7eff032dfbdcf728bb608fe1a02c54124",
-    shallow_since = "1577467222 -0500"
+    commit = "e797572b56e2eb0d8b86bb1a4b1a7392d80c30fe",
+    shallow_since = "1601631482 +0800"
 )
 
 load("@rules_jvm_external//:defs.bzl", "maven_install")

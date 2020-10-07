@@ -24,7 +24,6 @@ java_library(
     ],
 )
 
-
 java_library(
   name = "rocksdb",
   srcs = glob(["src/db/rocksdb/*.java"]),
