@@ -48,6 +48,7 @@ public class RichList
   private NetworkParams params;
   private GetUTXOUtil get_utxo_util;
 
+  private volatile long last_total_value;
 
   public RichList(Config config)
     throws Exception
@@ -85,6 +86,7 @@ public class RichList
 
     HashMap<String, Long> balance_map = new HashMap<>();
     long total_value = getAddressBalances(bridge_list, balance_map);
+    last_total_value = total_value;
     out.println("Total value: " + df.format(total_value / 1e6));
 
     
@@ -128,5 +130,11 @@ public class RichList
   }
 
 
-  
+  public long getTotalValue()
+    throws Exception
+  {
+    if (last_total_value == 0) throw new Exception("Not calculated yet");
+    
+    return last_total_value;
+  }
 }

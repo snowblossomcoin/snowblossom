@@ -41,6 +41,38 @@ public class WebServer implements WebHandler
 
   }
 
+  public void apiHandle(WebContext t)
+    throws Exception
+  {
+    String path = t.getURI().getPath();
+
+    if (path.equals("/api") || path.equals("/api/"))
+    {
+      t.setContentType("text/html");
+      t.getExchange().getResponseHeaders().add("Content-Language", "en-US");
+      addHeader(t.out());
+      t.out().println("<H2>APIs</H2>");
+      t.out().println("<a href='/api/total_coins'>total_coins</a>");
+      addFooter(t.out());
+      t.setHttpCode(200);
+      return;
+    }
+
+    if (path.equals("/api/total_coins"))
+    {
+      t.setContentType("text/plain");
+      long total_value = shackleton.getTotalValue();
+      DecimalFormat df = new DecimalFormat("0.000000");
+      t.out().println(df.format(total_value / 1e6));
+      t.setHttpCode(200);
+      return;
+
+    }
+
+    t.setHttpCode(404);
+
+  }
+
     public void innerHandle(WebContext t, PrintStream out)
       throws Exception
     {
@@ -258,6 +290,9 @@ public class WebServer implements WebHandler
     out.println("<h2>Rich List</h2>");
     out.println("<pre><a href='?search=richlist'>Rich List Report</a></pre>");
 
+    out.println("<h2>APIs</h2>");
+    out.println("<pre><a href='/api'>APIs</a></pre>");
+
     out.println("<h2>Recent Blocks</h2>");
     int min = Math.max(0, header.getBlockHeight()-75);
 
@@ -471,10 +506,9 @@ public class WebServer implements WebHandler
     if (t.getURI().getPath().startsWith("/api"))
     {
       // TODO API
-      //apiHandle(t, print_out);
-      System.out.println("Path: " + t.getURI().getPath());
-
       t.setHttpCode(404);
+      apiHandle(t);
+
     }
     else
     {

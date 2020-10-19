@@ -92,6 +92,8 @@ public class Shackleton
 
   public String getRichListReport(){return rich_list_report;}
 
+  public long getTotalValue() throws Exception {return rich_list.getTotalValue();}
+
 
   public class RichListUpdateThread extends PeriodicThread
   {
