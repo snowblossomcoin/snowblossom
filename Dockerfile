@@ -4,10 +4,10 @@
 
 #*** first stage is for building
 
-FROM ubuntu:18.10 as builder
+FROM ubuntu:20.10 as builder
 
 RUN apt-get update
-RUN apt-get install --yes wget gpg
+RUN apt-get install --yes wget gpg g++ gcc git
 RUN echo "deb [arch=amd64] http://storage.googleapis.com/bazel-apt stable jdk1.8" > /etc/apt/sources.list.d/snowblossom-bazel.list
 RUN wget --output-document=bazel-release.pub.gpg --quiet https://bazel.build/bazel-release.pub.gpg && apt-key add bazel-release.pub.gpg && rm --force bazel-release.pub.gpg
 RUN apt-get update
@@ -31,7 +31,7 @@ RUN bazel build :SnowBlossomMiner_deploy.jar \
 
 #*** second stage is for running
 
-FROM ubuntu:18.10
+FROM ubuntu:20.10
 
 EXPOSE 2338
 
