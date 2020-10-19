@@ -204,7 +204,7 @@ public class Peerage
     return map;
   }
 
-  private ImmutableList<PeerLink> getLinkList()
+  public ImmutableList<PeerLink> getLinkList()
   {
     synchronized(links)
     {
