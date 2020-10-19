@@ -5,6 +5,7 @@
 * Added MonitorTool to use SubscribeAddressUpdates to monitor addresses
 * Update seed nodes
 * Add remote address to Shackleton explorer logs
+* Switch Shackleton web handling over to new web framework
 
 ## 1.7.0
 

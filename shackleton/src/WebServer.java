@@ -2,18 +2,13 @@ package snowblossom.shackleton;
 
 import com.google.protobuf.ByteString;
 import com.google.protobuf.util.JsonFormat;
-import com.sun.net.httpserver.HttpExchange;
-import com.sun.net.httpserver.HttpHandler;
-import com.sun.net.httpserver.HttpServer;
 import duckutil.Config;
 import duckutil.LRUCache;
-import duckutil.TaskMaster;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.OutputStream;
+import duckutil.webserver.DuckWebServer;
+import duckutil.webserver.WebContext;
+import duckutil.webserver.WebHandler;
 import java.io.PrintStream;
 import java.math.RoundingMode;
-import java.net.InetSocketAddress;
 import java.net.URLDecoder;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
@@ -25,10 +20,9 @@ import java.util.logging.Logger;
 import snowblossom.lib.*;
 import snowblossom.proto.*;
 
-public class WebServer
+public class WebServer implements WebHandler
 {
   private static final Logger logger = Logger.getLogger("snowblossom.shackleton");
-  private HttpServer server;
   private Shackleton shackleton;
 
   private LRUCache<ChainHash, String> block_summary_lines = new LRUCache<>(500);
@@ -39,30 +33,20 @@ public class WebServer
     this.shackleton = shackleton;
 
     config.require("port");
+    String host = null;
     int port = config.getInt("port");
+    int threads = 32;
 
-    server = HttpServer.create(new InetSocketAddress(port), 0);
-    server.createContext("/", new RootHandler());
-    server.setExecutor(TaskMaster.getBasicExecutor(32,"shackleton"));
-
+    new DuckWebServer(host, port, this, 32);
 
   }
 
-  public void start()
-    throws java.io.IOException
-  {
-    server.start();
-  }
-
-  class RootHandler extends GeneralHandler
-  {
-    @Override
-    public void innerHandle(HttpExchange t, PrintStream out)
+    public void innerHandle(WebContext t, PrintStream out)
       throws Exception
     {
       NetworkParams params = shackleton.getParams();
-      String query = t.getRequestURI().getQuery();
-      logger.info("Web request: " + t.getRequestURI() + " from " + t.getRemoteAddress());
+      String query = t.getURI().getQuery();
+      logger.info("Web request: " + t.getURI() + " from " + t.getExchange().getRemoteAddress());
       if ((query != null) && (query.startsWith("search=")))
       {
         int eq = query.indexOf("=");
@@ -80,11 +64,11 @@ public class WebServer
 
         if (search.startsWith("load-"))
         {
-          try
+          //try
           {
             displayAjax(out, Integer.parseInt(search.substring(5)));
             return;
-          } catch(Throwable e){}
+          }
         }
 
         if (search.equals("richlist"))
@@ -160,7 +144,6 @@ public class WebServer
       }
 
     }
-  }
 
   private boolean displayNameIdentifiers(PrintStream out, String search)
     throws ValidationException
@@ -482,38 +465,30 @@ public class WebServer
   }
 
 
-
-  public abstract class GeneralHandler implements HttpHandler
+  @Override
+  public void handle(WebContext t) throws Exception
   {
-    @Override
-    public void handle(HttpExchange t) throws IOException {
+    if (t.getURI().getPath().startsWith("/api"))
+    {
+      // TODO API
+      //apiHandle(t, print_out);
+      System.out.println("Path: " + t.getURI().getPath());
 
-      t.getResponseHeaders().add("Content-Language", "en-US");
-      ByteArrayOutputStream b_out = new ByteArrayOutputStream();
-      PrintStream print_out = new PrintStream(b_out);
-      int resp_code=200;
-
-      boolean useajax = t.getRequestURI().getQuery() != null && t.getRequestURI().getQuery().contains("load-");
-      try
-      {
-        if(!useajax) addHeader(print_out);
-        innerHandle(t, print_out);
-        if(!useajax) addFooter(print_out);
-      }
-      catch(Throwable e)
-      {
-        resp_code=500; //Might not actually be our fault if given bad input
-                       // so could be a 4XX, but not getting into the details here
-        print_out.println("Exception: " + e);
-      }
-
-      byte[] data = b_out.toByteArray();
-      t.sendResponseHeaders(resp_code, data.length);
-      OutputStream out = t.getResponseBody();
-      out.write(data);
-      out.close();
-
+      t.setHttpCode(404);
     }
+    else
+    {
+      t.setContentType("text/html");
+      t.getExchange().getResponseHeaders().add("Content-Language", "en-US");
+      boolean useajax = t.getURI().getQuery() != null && t.getURI().getQuery().contains("load-");
+      if(!useajax) addHeader(t.out());
+      innerHandle(t, t.out());
+      if(!useajax) addFooter(t.out());
+      t.setHttpCode(200);
+    }
+
+
+  }
 
     private void addHeader(PrintStream out)
     {
@@ -555,7 +530,5 @@ public class WebServer
       out.println("</html>");
     }
 
-    public abstract void innerHandle(HttpExchange t, PrintStream out) throws Exception;
-  }
 
 }

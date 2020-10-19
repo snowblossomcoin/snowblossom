@@ -58,7 +58,6 @@ public class Shackleton
   {
     this.config = config;
 
-    web_server = new WebServer(config, this);
 
     params = NetworkParams.loadFromConfig(config);
 
@@ -70,10 +69,10 @@ public class Shackleton
 
     rich_list = new RichList(params, blockingStub, get_utxo_util);
     
-    web_server.start();
-
     vote_tracker=new VoteTracker(this);
     vote_tracker.start();
+    
+    web_server = new WebServer(config, this);
 
     new RichListUpdateThread().start();
 

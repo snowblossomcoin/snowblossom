@@ -7,8 +7,9 @@ java_library(
       "//protolib:protogrpc",
       "//lib:lib",
       "//client:client",
-      "@com_google_protobuf//:protobuf_java_util",
       "@duckutil//:duckutil_lib",
+      "@duckutil//:webserver_lib",
+      "@com_google_protobuf//:protobuf_java_util",
     ],
 )
 
