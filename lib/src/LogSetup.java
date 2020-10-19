@@ -36,7 +36,7 @@ public class LogSetup
     {
       log_props.setProperty(".level", "FINE");
       log_props.setProperty("io.level", "SEVERE");
-      log_props.setProperty("io.grpc", "SEVERE");
+      log_props.setProperty("io.grpc.level", "SEVERE");
     }
 
     
