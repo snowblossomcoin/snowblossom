@@ -47,7 +47,6 @@ public class LogSetup
 
   public static void fixLevels()
   {
-    LogManager lm = LogManager.getLogManager();
     Enumeration<String> e =  LogManager.getLogManager().getLoggerNames();
     while(e.hasMoreElements())
     {
@@ -104,7 +103,7 @@ public class LogSetup
       if (m != null)
       {
         System.out.println(m.getLevel());
-        //m.setLevel(Level.WARNING);
+        m.setLevel(Level.WARNING);
         Logger p = m.getParent();
         if (p != null) System.out.println(" p: " + p.getName());
         for(Handler h : m.getHandlers())

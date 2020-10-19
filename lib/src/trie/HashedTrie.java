@@ -7,6 +7,8 @@ import java.util.*;
 import org.junit.Assert;
 import snowblossom.trie.proto.ChildEntry;
 import snowblossom.trie.proto.TrieNode;
+import java.util.logging.Logger;
+
 
 /**
  * So this is a trie with the following properties:
@@ -20,6 +22,8 @@ import snowblossom.trie.proto.TrieNode;
  */
 public class HashedTrie
 {
+
+  private static final Logger logger = Logger.getLogger("snowblossom.blockchain");
   private final TrieDB basedb;
   private final boolean end_cap_data;
 
@@ -74,7 +78,7 @@ public class HashedTrie
     ByteString answer = mergeNode(db, root, updates).getHash();
     if (answer.equals(expected_new_root))
     {
-      System.out.println("Commiting new UTXO root: " + HashUtils.getHexString(answer));
+      logger.fine("Commiting new UTXO root: " + HashUtils.getHexString(answer));
       db.commit();
       return true;
     }
