@@ -116,6 +116,12 @@ public class MemPool
     return null;
   }
 
+  public synchronized Collection<ChainHash> getPoolHashList()
+  {
+    return ImmutableList.copyOf( known_transactions.keySet() );
+
+  }
+
   public synchronized Set<ChainHash> getTransactionsForAddress(AddressSpecHash spec_hash)
   {
     return ImmutableSet.copyOf(address_tx_map.get(spec_hash));
