@@ -7,6 +7,7 @@
 * Add remote address to Shackleton explorer logs
 * Switch Shackleton web handling over to new web framework
 * Added explorer APIs zone and /api/total_coins
+* Lower max history replies
 
 ## 1.7.0
 

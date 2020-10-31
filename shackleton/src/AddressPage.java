@@ -59,10 +59,12 @@ public class AddressPage
       LinkedList<HistoryEntry> entries = new LinkedList<>();
       entries.addAll(history.getEntriesList());
       //Collections.reverse(entries);
-      Collections.sort(entries, new Comparator<HistoryEntry>() {
-	  public int compare(HistoryEntry s1, HistoryEntry s2) {
-	      return s2.getBlockHeight() - s1.getBlockHeight();
-	  }
+      Collections.sort(entries, new Comparator<HistoryEntry>() 
+      {
+        public int compare(HistoryEntry s1, HistoryEntry s2) 
+        {
+          return s2.getBlockHeight() - s1.getBlockHeight();
+        }
       });
       for(HistoryEntry he : entries)
       {
