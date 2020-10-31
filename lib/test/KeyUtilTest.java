@@ -14,6 +14,7 @@ import snowblossom.lib.ChainHash;
 import snowblossom.lib.Globals;
 import snowblossom.lib.KeyUtil;
 import snowblossom.lib.SignatureUtil;
+import snowblossom.lib.HexUtil;
 import snowblossom.proto.SigSpec;
 import snowblossom.proto.WalletKeyPair;
 
@@ -31,15 +32,19 @@ public class KeyUtilTest
   public void testCompressKeyEncoding()
     throws Exception
   {
-    KeyPair pair = KeyUtil.generateECCompressedKey();
+    for(int i=0; i<100; i++)
+    {
+      KeyPair pair = KeyUtil.generateECCompressedKey();
 
-    ByteString encoded = KeyUtil.getCompressedPublicKeyEncoding(pair.getPublic());
+      ByteString encoded = KeyUtil.getCompressedPublicKeyEncoding(pair.getPublic());
 
-    Assert.assertEquals(33, encoded.size());
+      Assert.assertEquals(33, encoded.size());
+      //System.out.println("Comp Byte: " + encoded.byteAt(0));
 
-    PublicKey k = KeyUtil.convertCompressedECDSA(encoded);
+      PublicKey k = KeyUtil.convertCompressedECDSA(encoded);
 
-    Assert.assertEquals(k, pair.getPublic());
+      Assert.assertEquals(k, pair.getPublic());
+    }
   }
 
   @Test
@@ -145,19 +150,24 @@ public class KeyUtilTest
   {
     Random rnd = new Random();
     byte[] b = new byte[Globals.BLOCKCHAIN_HASH_LEN];
-    rnd.nextBytes(b);
+    for(int i=0; i<8; i++)
+    {
+      rnd.nextBytes(b);
 
-    ChainHash hash = new ChainHash(b);
+      ChainHash hash = new ChainHash(b);
 
-    ByteString sig = SignatureUtil.sign(wkp, hash);
-    SigSpec sig_spec = SigSpec.newBuilder()
-      .setSignatureType(wkp.getSignatureType())
-      .setPublicKey(wkp.getPublicKey())
-      .build();
+      ByteString sig = SignatureUtil.sign(wkp, hash);
+      SigSpec sig_spec = SigSpec.newBuilder()
+        .setSignatureType(wkp.getSignatureType())
+        .setPublicKey(wkp.getPublicKey())
+        .build();
 
-    logger.info(String.format("Key report %s Pub size: %d, sig %d", name, wkp.getPublicKey().size(), sig.size()));
+      logger.info(String.format("Key report %s Pub size: %d, sig %d", name, wkp.getPublicKey().size(), sig.size()));
+      logger.info("Key report: " + HexUtil.getHexString( sig));
+      //logger.info("Key report: " + KeyUtil.decomposeASN1Encoded( sig ));
 
-    Assert.assertTrue(SignatureUtil.checkSignature(sig_spec, hash.getBytes(), sig));
+      Assert.assertTrue(SignatureUtil.checkSignature(sig_spec, hash.getBytes(), sig));
+    }
 
 
   }

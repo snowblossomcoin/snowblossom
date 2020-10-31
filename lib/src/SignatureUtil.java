@@ -14,7 +14,7 @@ import snowblossom.proto.WalletKeyPair;
 public class SignatureUtil
 {
   /**
-   * The public key sent on the network shall be just "03" plus the 32 bytes of X
+   * The public key sent on the network shall be just "03" or "02" plus the 32 bytes of X
    * The curve is assumed to be secp256k1.  Just like bitcoin.
    */
   public static final int SIG_TYPE_ECDSA_COMPRESSED=1; //secp256k1 only
@@ -84,6 +84,11 @@ public class SignatureUtil
     PublicKey pub_key = decodePublicKey(sig_spec);
     String algo=getAlgo(sig_type);
 
+    /*if (algo.equals("ECDSA"))
+    {
+      algo="SHA1WithECDSA";
+    }*/
+
     try
     {
 
@@ -140,7 +145,7 @@ public class SignatureUtil
   {
     if (sig_type == SIG_TYPE_ECDSA_COMPRESSED)
     {
-      return 70;
+      return 71;
     }
     if (sig_type == SIG_TYPE_ECDSA)
     {

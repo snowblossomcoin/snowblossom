@@ -169,24 +169,31 @@ public class Duck32
   private static ByteString convertBase32ToBytes(String encoding)
     throws ValidationException
   {
-    BigInteger big = new BigInteger(convertBech32ToBase32(encoding), 32);
-    byte[] data = big.toByteArray();
-
-    int data_size=HASH_BYTES + Globals.ADDRESS_SPEC_HASH_LEN;
-
-
-    // Helpful biginteger might throw an extra zero byte on the front to show positive sign
-    // or it might start with a lot of zeros and be short so add them back in
-    int start = data.length - data_size;
-    if (start >= 0)
+    try
     {
-      return ByteString.copyFrom(data, start, Globals.ADDRESS_SPEC_HASH_LEN + HASH_BYTES);
+      BigInteger big = new BigInteger(convertBech32ToBase32(encoding), 32);
+      byte[] data = big.toByteArray();
+
+      int data_size=HASH_BYTES + Globals.ADDRESS_SPEC_HASH_LEN;
+
+
+      // Helpful biginteger might throw an extra zero byte on the front to show positive sign
+      // or it might start with a lot of zeros and be short so add them back in
+      int start = data.length - data_size;
+      if (start >= 0)
+      {
+        return ByteString.copyFrom(data, start, Globals.ADDRESS_SPEC_HASH_LEN + HASH_BYTES);
+      }
+      else
+      {
+        byte[] zeros = new byte[data_size];
+        int needed_zeros = data_size - data.length;
+        return ByteString.copyFrom(zeros, 0, needed_zeros).concat(ByteString.copyFrom(data));
+      }
     }
-    else
+    catch(NumberFormatException e)
     {
-      byte[] zeros = new byte[data_size];
-      int needed_zeros = data_size - data.length;
-      return ByteString.copyFrom(zeros, 0, needed_zeros).concat(ByteString.copyFrom(data));
+      throw new ValidationException(e);
     }
   }
 
