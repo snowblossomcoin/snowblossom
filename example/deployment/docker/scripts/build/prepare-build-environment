@@ -1,0 +1,19 @@
+#!/bin/bash
+
+set -eux
+
+BAZEL_VERSION="${BAZEL_VERSION:-2.0.0}"
+
+# debian/openjdk bug https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=863199#23
+mkdir -p /usr/share/man/man1
+
+# setup packaging for bazel
+apt-get update -q
+apt-get install -yqq curl gnupg2 git openjdk-11-jdk-headless
+curl -s https://bazel.build/bazel-release.pub.gpg | apt-key add -
+echo "deb [arch=amd64] https://storage.googleapis.com/bazel-apt stable jdk1.8" > /etc/apt/sources.list.d/bazel.list
+
+# install bazel
+apt-get update -q
+apt-get install -yq "bazel-${BAZEL_VERSION}"
+ldconfig
