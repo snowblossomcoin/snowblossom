@@ -38,9 +38,10 @@ public class SignatureTest
       java.security.spec.RSAKeyGenParameterSpec.F0);
     
     // RSA should just work with any key size someone feels like making so whatever
-
     testAlgo("RSA", spec, "SHA256withRSA", null, 10240);
-    testAlgo("RSA", spec, "RSA", null, 24);
+
+    // Can't handle large data
+    testAlgo("RSA", spec, "RSA", null, 32);
   }
   @Test
   public void testDSA()
@@ -52,9 +53,11 @@ public class SignatureTest
     spec = null;
 
     // DSA should just work with any key size someone feels like making so whatever
-
     testAlgo("DSA", spec, "SHA256withDSA", null, 10240);
-    testAlgo("DSA", spec, "DSA", null, 24);
+
+    // Is actually DSA with SHA1
+    testAlgo("DSA", spec, "DSA", null, 10240);
+    testAlgo("DSA", spec, "DSA", null, 32);
   }
 
   @Test
@@ -64,7 +67,8 @@ public class SignatureTest
     java.security.spec.ECGenParameterSpec spec = new java.security.spec.ECGenParameterSpec("secp256k1");
 
     testAlgo("ECDSA", spec, "SHA256withECDSA", null, 10240);
-    testAlgo("ECDSA", spec, "ECDSA", null, 24);
+    testAlgo("ECDSA", spec, "ECDSA", null, 2400);
+    testAlgo("ECDSA", spec, "ECDSA", null, 32);
   }
 
   @Test
@@ -74,7 +78,8 @@ public class SignatureTest
     java.security.spec.ECGenParameterSpec spec = new java.security.spec.ECGenParameterSpec("secp384r1");
 
     testAlgo("ECDSA", spec, "SHA256withECDSA", null, 10240);
-    testAlgo("ECDSA", spec, "ECDSA", null, 24);
+    testAlgo("ECDSA", spec, "ECDSA", null, 2400);
+    testAlgo("ECDSA", spec, "ECDSA", null, 32);
   }
   @Test
   public void testEC521()
@@ -83,7 +88,8 @@ public class SignatureTest
     java.security.spec.ECGenParameterSpec spec = new java.security.spec.ECGenParameterSpec("secp521r1");
 
     testAlgo("ECDSA", spec, "SHA256withECDSA", null, 10240);
-    testAlgo("ECDSA", spec, "ECDSA", null, 24);
+    testAlgo("ECDSA", spec, "ECDSA", null, 2400);
+    testAlgo("ECDSA", spec, "ECDSA", null, 32);
   }
 
 
@@ -99,7 +105,17 @@ public class SignatureTest
     testAlgo("DSTU4145", spec, "GOST3411WITHDSTU4145", null, 10240);
     testAlgo("DSTU4145", spec, "DSTU4145", null, 24000); //whatever the hell this is, seems to handle large data size
     testAlgo("DSTU4145", spec, "DSTU4145", null, 24);
+    testAlgo("DSTU4145", spec, "DSTU4145", null, 32);
   }
+
+	@Test
+  public void testED25519()
+    throws Exception
+  {
+    testAlgo("ED25519", null, "ED25519", null, 10240);
+  }
+
+
 
   @Test
   public void testCompressedEcPrefix() throws Exception

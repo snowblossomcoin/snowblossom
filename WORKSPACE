@@ -65,6 +65,12 @@ maven_install(
     maven_install_json = "//:maven_install.json",
 
 )
+# After updating run:
+#
+# bazel run @unpinned_maven//:pin
+#
+# See: https://github.com/bazelbuild/rules_jvm_external
+
 
 load("@maven//:defs.bzl", "pinned_maven_install")
 pinned_maven_install()
