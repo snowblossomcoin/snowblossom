@@ -1,0 +1,20 @@
+#!/bin/bash
+# client entrypoint
+
+set -eu
+
+cd /data
+
+cat <<EOF > /tmp/client.conf
+log_config_file=${SNOWBLOSSOM_LOG_CONF:-log.conf}
+network=${SNOWBLOSSOM_NETWORK:-mainnet}
+node_host=${SNOWBLOSSOM_NODE_HOST:-localhost}
+node_port=${SNOWBLOSSOM_NODE_PORT:-2338}
+wallet_path=${SNOWBLOSSOM_CLIENT_WALLET_PATH:-wallet}
+EOF
+
+[[ ! -f client.conf ]] && cp /tmp/client.conf ./
+[[ ! -f log.conf ]] && cp /snowblossom/log.conf ./
+[[ ! -d logs ]] && mkdir logs
+
+bash snowblossom/scripts/snowblossom snowblossom.client.SnowBlossomClient client.conf "${@}"

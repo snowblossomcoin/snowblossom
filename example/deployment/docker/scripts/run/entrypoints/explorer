@@ -1,0 +1,21 @@
+#!/bin/bash
+# node entrypoint
+
+set -eu
+
+cd /data
+
+printenv
+
+cat <<EOF > /tmp/explorer.conf
+log_config_file=${SNOWBLOSSOM_LOG_CONF:-log.conf}
+network=${SNOWBLOSSOM_NETWORK:-mainnet}
+node_uri=${SNOWBLOSSOM_EXPLORER_NODE_URI:-grpc://localhost:2338}
+port=${SNOWBLOSSOM_EXPLORER_HTTP_PORT:-8080}
+EOF
+
+cp /tmp/explorer.conf ./
+[[ ! -f log.conf ]] && cp /snowblossom/log.conf ./
+[[ ! -d logs ]] && mkdir logs
+
+bash /snowblossom/scripts/snowblossom snowblossom.shackleton.Shackleton explorer.conf

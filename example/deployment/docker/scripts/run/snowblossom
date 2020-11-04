@@ -1,0 +1,7 @@
+#!/bin/bash
+
+set -eu
+
+start_command="/usr/local/openjdk-11/bin/java ${SNOWBLOSSOM_JAVA_OPTIONS:-} -cp /snowblossom/Everything_deploy.jar ${@}"
+echo $start_command
+exec $start_command
