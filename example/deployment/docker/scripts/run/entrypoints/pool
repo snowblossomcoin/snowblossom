@@ -1,0 +1,27 @@
+#!/bin/bash
+# node entrypoint
+
+set -eu
+
+cd /data
+
+cat <<EOF > /tmp/pool.conf
+log_config_file=${SNOWBLOSSOM_LOG_CONF:-log.conf}
+node_host=${SNOWBLOSSOM_NODE_HOST:-node}
+node_port=${SNOWBLOSSOM_NODE_PORT:-2338}
+db_type=${SNOWBLOSSOM_POOL_DB_TYPE:-rocksdb}
+db_path=${SNOWBLOSSOM_POOL_DB_PATH:-pool_db/mainnet}
+pool_fee=${SNOWBLOSSOM_POOL_FEE:-0}
+pool_address=${SNOWBLOSSOM_POOL_ADDRESS}
+pay_the_duck=${SNOWBLOSSOM_FIREDUCK_DONATION:-0}
+remark=${SNOWBLOSSOM_POOL_REMARK}
+vote_yes=${SNOWBLOSSOM_POOL_VOTE_YES}
+vote_no=${SNOWBLOSSOM_POOL_VOTE_NO}
+report_path=${SNOWBLOSSOM_POOL_REPORT_PATH}
+EOF
+
+cp /tmp/pool.conf ./
+[[ ! -f log.conf ]] && cp /snowblossom/log.conf ./
+[[ ! -d logs ]] && mkdir logs
+
+bash /snowblossom/scripts/snowblossom snowblossom.miner.plow.MrPlow node.conf
