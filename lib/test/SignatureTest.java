@@ -100,12 +100,16 @@ public class SignatureTest
   {
     // There are oids ending with 0 through 9 which seem to map to 
     // DSTU 4145-163 to DSTU 4145-431 which is not very helpful
-    java.security.spec.ECGenParameterSpec spec = new java.security.spec.ECGenParameterSpec("1.2.804.2.1.1.1.1.3.1.1.2.0");
 
-    testAlgo("DSTU4145", spec, "GOST3411WITHDSTU4145", null, 10240);
-    testAlgo("DSTU4145", spec, "DSTU4145", null, 24000); //whatever the hell this is, seems to handle large data size
-    testAlgo("DSTU4145", spec, "DSTU4145", null, 24);
-    testAlgo("DSTU4145", spec, "DSTU4145", null, 32);
+    for(int i=0; i<=9; i++)
+    {
+      java.security.spec.ECGenParameterSpec spec = new java.security.spec.ECGenParameterSpec("1.2.804.2.1.1.1.1.3.1.1.2." + i);
+
+      testAlgo("DSTU4145", spec, "GOST3411WITHDSTU4145", null, 10240);
+      testAlgo("DSTU4145", spec, "DSTU4145", null, 24000); //whatever the hell this is, seems to handle large data size
+      testAlgo("DSTU4145", spec, "DSTU4145", null, 24);
+      testAlgo("DSTU4145", spec, "DSTU4145", null, 32);
+    }
   }
 
 	@Test
