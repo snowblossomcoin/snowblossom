@@ -71,6 +71,10 @@ public abstract class NetworkParams
   public int getActivationHeightTxOutRequirements() { return Integer.MAX_VALUE; }
   public int getActivationHeightTxOutExtras() { return Integer.MAX_VALUE; }
 
+  // SIP-4
+  public int getActivationHeightTxInValue() { return Integer.MAX_VALUE; }
+  
+
   /**
    * Returns a mapping of field seeds, which also
    * should be the directory fields are stored in for miners

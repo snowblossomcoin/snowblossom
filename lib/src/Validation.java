@@ -344,6 +344,18 @@ public class Validation
         }
         validateSpendable(matching_out, block_header, params);
         sum_of_inputs += matching_out.getValue();
+
+        // SIP-4 check
+        if (block_header.getBlockHeight() >= params.getActivationHeightTxInValue())
+        {
+          if (in.getValue() != 0L)
+          {
+            if (in.getValue() != matching_out.getValue())
+            {
+              throw new ValidationException(String.format("Input value does not match: %d %d", matching_out.getValue(), in.getValue()));
+            }
+          }
+        }
         utxo_buffer.useOutput(matching_out, new ChainHash(in.getSrcTxId()), in.getSrcTxOutIdx());
       }
 
