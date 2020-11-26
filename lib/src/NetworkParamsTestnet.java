@@ -66,5 +66,8 @@ public class NetworkParamsTestnet extends NetworkParams
 
   @Override
   public int getActivationHeightTxOutExtras() { return 16000; }
+  
+  @Override
+  public int getActivationHeightTxInValue() { return 131000; }
 
 }
