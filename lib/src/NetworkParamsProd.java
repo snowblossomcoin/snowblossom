@@ -92,9 +92,12 @@ public class NetworkParamsProd extends NetworkParams
   public ByteString getBlockZeroRemark() { return ByteString.copyFrom(new String("00000000000000000019d1562bd02674302db7ddd6ccdb77be3e6daaa8eb8a51").getBytes()); }
 
   // SIP3
+  @Override
   public int getActivationHeightTxOutRequirements() { return 35000; }
+  @Override
   public int getActivationHeightTxOutExtras() { return 35000; }
 
   // SIP4 - roughly 2021.03.25
+  @Override
   public int getActivationHeightTxInValue() { return 151680; }
 }
