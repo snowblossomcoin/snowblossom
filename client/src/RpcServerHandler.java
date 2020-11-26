@@ -39,6 +39,7 @@ public class RpcServerHandler
     json_server.register(new GetBlockHandler());
     json_server.register(new GetXpubAddressHandler());
     json_server.register(new GetAddressBalanceHandler());
+    json_server.register(new GetAddressHistoryHandler());
     json_server.register(new GetFBOListHandler());
     json_server.register(new GetIDListHandler());
 
@@ -236,6 +237,62 @@ public class RpcServerHandler
 
 
   }
+
+  public class GetAddressHistoryHandler extends JsonRequestHandler
+  {
+    public String[] handledRequests()
+    {
+      return new String[]{"get_address_history"};
+    }
+
+    @Override
+    protected JSONObject processRequest(JSONRPC2Request req, MessageContext ctx)
+      throws Exception
+    {
+      String address = RpcUtil.requireString(req, "address");
+      AddressSpecHash hash = new AddressSpecHash(address, client.getParams());
+      JSONObject reply = new JSONObject();
+
+      HistoryList hl = client.getStub().getAddressHistory(
+        RequestAddress.newBuilder().setAddressSpecHash(hash.getBytes()).build());
+
+      JSONArray tx_list = new JSONArray();
+
+      for(HistoryEntry he : hl.getEntriesList())
+      {
+        JSONObject e = new JSONObject();
+
+        ByteString tx_hash = he.getTxHash();
+
+        e.put("tx_hash", new ChainHash(tx_hash).toString());
+        e.put("block_height", he.getBlockHeight());
+
+        tx_list.add(e);
+
+      }
+
+      TransactionHashList ml = client.getStub().getMempoolTransactionList( 
+        RequestAddress.newBuilder().setAddressSpecHash(hash.getBytes()).build());
+
+      for(ByteString tx_hash : ml.getTxHashesList())
+      {
+        JSONObject e = new JSONObject();
+
+        e.put("tx_hash", new ChainHash(tx_hash).toString());
+        e.put("mempool", true);
+
+        tx_list.add(e);
+
+
+      }
+
+      reply.put("tx_list", tx_list);
+ 
+      return reply;
+    }
+
+  }
+
 
 
   public class GetXpubAddressHandler extends JsonRequestHandler

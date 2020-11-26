@@ -1,13 +1,17 @@
-## 1.7.1
+## dev
 
-* Added History panel to iceleaf GUI
-* Added SubscribeAddressUpdates gRPC api to node to monitor addresses
-* Added MonitorTool to use SubscribeAddressUpdates to monitor addresses
 * Update seed nodes
 * Add remote address to Shackleton explorer logs
 * Switch Shackleton web handling over to new web framework
 * Added explorer APIs zone and /api/total_coins
 * Lower max history replies
+* Add get_address_history rpc
+
+## 1.7.1
+
+* Added History panel to iceleaf GUI
+* Added SubscribeAddressUpdates gRPC api to node to monitor addresses
+* Added MonitorTool to use SubscribeAddressUpdates to monitor addresses
 
 ## 1.7.0
 
