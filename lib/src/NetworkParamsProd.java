@@ -94,4 +94,7 @@ public class NetworkParamsProd extends NetworkParams
   // SIP3
   public int getActivationHeightTxOutRequirements() { return 35000; }
   public int getActivationHeightTxOutExtras() { return 35000; }
+
+  // SIP4 - roughly 2021.03.25
+  public int getActivationHeightTxInValue() { return 151680; }
 }
