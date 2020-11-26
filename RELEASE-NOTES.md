@@ -6,7 +6,7 @@
 * Added explorer APIs zone and /api/total_coins
 * Lower max history replies
 * Add get_address_history rpc
-* SIP4 - Input value checking
+* SIP4 - Input value checking set for block 151680
 
 ## 1.7.1
 
