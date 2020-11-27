@@ -80,7 +80,7 @@ public class TransactionBridge implements Comparable<TransactionBridge>
 
   public String getKeyString()
   {
-    return in.toString();
+    return new ChainHash(in.getSrcTxId()).toString() + ":" + in.getSrcTxOutIdx();
   }
 
   public static List<TransactionBridge> getConnections(Transaction tx)

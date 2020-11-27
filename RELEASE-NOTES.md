@@ -7,6 +7,7 @@
 * Lower max history replies
 * Add get_address_history rpc
 * SIP4 - Input value checking set for block 151680
+* Fixed presentation bug in unspent with mempool
 
 ## 1.7.1
 
