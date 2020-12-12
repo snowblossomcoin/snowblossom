@@ -8,6 +8,7 @@
 * Add get_address_history rpc
 * SIP4 - Input value checking set for block 151680
 * Fixed presentation bug in unspent with mempool
+* Added public note string to iceleaf send panel
 
 ## 1.7.1
 
