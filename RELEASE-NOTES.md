@@ -1,4 +1,4 @@
-## dev
+## 1.8.0
 
 * Update seed nodes
 * Add remote address to Shackleton explorer logs
