@@ -187,7 +187,7 @@ public class SignatureTest
 
     org.bouncycastle.asn1.ASN1StreamParser parser = new org.bouncycastle.asn1.ASN1StreamParser(encoded);
 
-    org.bouncycastle.asn1.DERSequenceParser der_p = (org.bouncycastle.asn1.DERSequenceParser) parser.readObject();
+    /*org.bouncycastle.asn1.DERSequenceParser der_p = (org.bouncycastle.asn1.DERSequenceParser) parser.readObject();
     org.bouncycastle.asn1.DERSequenceParser der_p2 = (org.bouncycastle.asn1.DERSequenceParser) der_p.readObject();
 
     ASN1Encodable encodable = der_p2.readObject();
@@ -196,7 +196,7 @@ public class SignatureTest
 
     encodable = der_p2.readObject();
     System.out.println(encodable.getClass());
-    System.out.println(encodable);
+    System.out.println(encodable);*/
 
     //encodable = der_p2.readObject();
     //System.out.println(encodable.getClass());

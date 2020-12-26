@@ -1,3 +1,7 @@
+## master
+
+* Update to bouncy-castle 1.68
+
 ## 1.8.0
 
 * Update seed nodes

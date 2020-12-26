@@ -163,9 +163,9 @@ public class KeyUtil
   private static void extractOID(ASN1Encodable input, ArrayList<String> answers)
     throws java.io.IOException
   {
-    if (input instanceof DERSequenceParser)
+    if (input instanceof DLSequenceParser)
     {
-      DERSequenceParser parser = (DERSequenceParser) input;
+      DLSequenceParser parser = (DLSequenceParser) input;
       while(true)
       {
         ASN1Encodable encodable = parser.readObject();
@@ -178,6 +178,22 @@ public class KeyUtil
     {
       ASN1ObjectIdentifier id = (ASN1ObjectIdentifier) input;
       answers.add(id.getId());
+    }
+    else if (input instanceof DERBitString)
+    {
+
+    }
+    else if (input instanceof DERNull)
+    {
+
+    }
+    else if (input instanceof ASN1Integer)
+    {
+
+    }
+    else 
+    {
+      throw new java.io.IOException("Unexpected ASN1Encodable: " + input.getClass() + " - " + input);
     }
 
   }
@@ -218,7 +234,7 @@ public class KeyUtil
   {
     printdent(out, indent);
     out.println(input.getClass());
-    if (input instanceof DERSequenceParser)
+    /*if (input instanceof DERSequenceParser)
     {
       DERSequenceParser parser = (DERSequenceParser) input;
       while(true)
@@ -229,7 +245,7 @@ public class KeyUtil
       }
 
     }
-    else if (input instanceof ASN1ObjectIdentifier)
+    else */if (input instanceof ASN1ObjectIdentifier)
     {
       ASN1ObjectIdentifier id = (ASN1ObjectIdentifier) input;
       printdent(out, indent+2);
