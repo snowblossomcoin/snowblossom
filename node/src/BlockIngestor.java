@@ -237,15 +237,12 @@ public class BlockIngestor implements ChainStateSource
 
         logger.info(String.format("New chain tip: Height %d %s (tx:%d sz:%d)", blk.getHeader().getBlockHeight(), blockhash, blk.getTransactionsCount(), blk.toByteString().size()));
 
-        double age_min = System.currentTimeMillis() - blk.getHeader().getTimestamp();
-        age_min = age_min / 60000.0;
+        String age = MiscUtils.getAgeSummary( System.currentTimeMillis() - blk.getHeader().getTimestamp() );
 
-        DecimalFormat df = new DecimalFormat("0.0");
-
-        logger.info(String.format("  The activated field is %d (%s).  This block was %s minutes ago.",
+        logger.info(String.format("  The activated field is %d (%s).  This block was %s ago.",
           chainhead.getActivatedField(),
           params.getSnowFieldInfo(chainhead.getActivatedField()).getName(),
-          df.format(age_min)));
+          age));
 
         SnowUserService u = node.getUserService();
         if (u != null)
