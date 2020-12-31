@@ -28,6 +28,7 @@ public class AtomicFileMapSet extends DBMapMutationSet
       f.getParentFile().mkdirs();
 
       FileOutputStream f_out = new FileOutputStream(f);
+      f_out.write(value.toByteArray());
       f_out.flush();
       f_out.close();
     }
