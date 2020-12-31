@@ -29,7 +29,7 @@ public class AtomicFileDB extends DBProvider
   @Override
   public DBMapMutationSet openMutationMapSet(String name) throws Exception
   {
-    throw new Exception("NOT IMPLEMENTED");
+    return new AtomicFileMapSet(new File(base, name));
   }
 
   @Override
