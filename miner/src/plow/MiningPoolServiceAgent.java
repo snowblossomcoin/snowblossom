@@ -134,8 +134,7 @@ public class MiningPoolServiceAgent extends MiningPoolServiceGrpc.MiningPoolServ
     }
     catch(Throwable t)
     {
-      t.printStackTrace();
-
+      logger.info("Submit error: " + t);
       observer.onNext( SubmitReply.newBuilder().setSuccess(false).setErrorMessage(t.toString()).build() );
       observer.onCompleted();
     }

@@ -5,9 +5,12 @@ import java.io.DataInputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import snowblossom.lib.HexUtil;
+import snowblossom.lib.DigestUtil;
 import snowblossom.lib.db.DBMapMutationSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.io.FileInputStream;
+import java.io.DataInputStream;
 
 public class AtomicFileMapSet extends DBMapMutationSet
 {
@@ -52,14 +55,27 @@ public class AtomicFileMapSet extends DBMapMutationSet
 
     LinkedList<ByteString> lst = new LinkedList<>();
 
-    if (dir.isDirectory())
+    try
     {
-      for(String s : dir.list())
+      if (dir.isDirectory())
       {
-        lst.add( HexUtil.hexStringToBytes(s) ); 
-        if (lst.size() >= max_reply) break;
-      }
+        for(File f : dir.listFiles())
+        {
+          int sz = (int)f.length();
+          byte b[]=new byte[sz];
+          DataInputStream d_in = new DataInputStream(new FileInputStream(f));
+          d_in.readFully(b);
+          d_in.close();
+          lst.add(ByteString.copyFrom(b));
 
+          if (lst.size() >= max_reply) break;
+        }
+
+      }
+    }
+    catch(java.io.IOException e)
+    {
+      throw new RuntimeException(e);
     }
     return lst;
   }
@@ -75,10 +91,8 @@ public class AtomicFileMapSet extends DBMapMutationSet
 
   public File getFileForKeyValue(ByteString key, ByteString value)
   {
-    String value_name = HexUtil.getHexString(value);
-
+    String value_name = HexUtil.getHexString(DigestUtil.hash(value));
     return new File(getFileForKey(key), value_name);
-
   }
 
 }
