@@ -492,6 +492,7 @@ public class SpoonTest
     config_map.put("node_host", "localhost");
     config_map.put("node_port", "" + node_port);
     config_map.put("db_type", "rocksdb");
+    config_map.put("db_type", "atomic_file");
     config_map.put("db_path", plow_db_path +"/plowdb");
     config_map.put("pool_fee", "0.01");
     config_map.put("pool_address", pool_addr.toAddressString(new NetworkParamsRegtest()));

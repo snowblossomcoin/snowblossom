@@ -5,7 +5,7 @@ import java.util.logging.Logger;
 
 public abstract class DBProvider
 {
-  private static final Logger logger = Logger.getLogger("snowblossom.db");
+  protected static final Logger logger = Logger.getLogger("snowblossom.db");
 
   protected Config config;
 

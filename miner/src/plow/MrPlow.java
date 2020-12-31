@@ -23,6 +23,7 @@ import snowblossom.lib.*;
 import snowblossom.lib.db.DB;
 import snowblossom.lib.db.lobstack.LobstackDB;
 import snowblossom.lib.db.rocksdb.JRocksDB;
+import snowblossom.lib.db.atomicfile.AtomicFileDB;
 import snowblossom.mining.proto.*;
 import snowblossom.proto.*;
 import snowblossom.proto.UserServiceGrpc.UserServiceBlockingStub;
@@ -175,6 +176,10 @@ public class MrPlow
     else if (db_type.equals("lobstack"))
     {
       db = new DB(config, new LobstackDB(config));
+    }
+    else if (db_type.equals("atomic_file"))
+    {
+      db = new DB(config, new AtomicFileDB(config));
     }
     else
     {

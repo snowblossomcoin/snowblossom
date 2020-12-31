@@ -36,6 +36,17 @@ java_library(
     ],
 )
 
+java_library(
+  name = "atomicfiledb",
+  srcs = glob(["src/db/atomicfile/*.java"]),
+  deps = [
+    ":lib",
+    "//protolib:protogrpc",
+    "@duckutil//:duckutil_lib",
+    "@maven//:junit_junit"
+    ],
+)
+
 
 
 java_test(

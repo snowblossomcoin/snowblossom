@@ -7,6 +7,7 @@ java_library(
       "//protolib:protogrpc",
       "//lib:lib",
       "//lib:rocksdb",
+      "//lib:atomicfiledb",
       "//client",
       "@duckutil//:duckutil_jsonrpc_lib",
       "@duckutil//:duckutil_lib",
