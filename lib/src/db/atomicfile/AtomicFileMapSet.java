@@ -11,6 +11,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.io.FileInputStream;
 import java.io.DataInputStream;
+import duckutil.AtomicFileOutputStream;
+import snowblossom.lib.Globals;
 
 public class AtomicFileMapSet extends DBMapMutationSet
 {
@@ -26,11 +28,10 @@ public class AtomicFileMapSet extends DBMapMutationSet
   {
     try
     {
-
       File f = getFileForKeyValue(key, value);
       f.getParentFile().mkdirs();
 
-      FileOutputStream f_out = new FileOutputStream(f);
+      AtomicFileOutputStream f_out = new AtomicFileOutputStream(f);
       f_out.write(value.toByteArray());
       f_out.flush();
       f_out.close();
@@ -61,12 +62,16 @@ public class AtomicFileMapSet extends DBMapMutationSet
       {
         for(File f : dir.listFiles())
         {
-          int sz = (int)f.length();
-          byte b[]=new byte[sz];
-          DataInputStream d_in = new DataInputStream(new FileInputStream(f));
-          d_in.readFully(b);
-          d_in.close();
-          lst.add(ByteString.copyFrom(b));
+          // Avoid picking up any tmp files
+          if (f.getName().length() == Globals.BLOCKCHAIN_HASH_LEN * 2)
+          {
+            int sz = (int)f.length();
+            byte b[]=new byte[sz];
+            DataInputStream d_in = new DataInputStream(new FileInputStream(f));
+            d_in.readFully(b);
+            d_in.close();
+            lst.add(ByteString.copyFrom(b));
+          }
 
           if (lst.size() >= max_reply) break;
         }

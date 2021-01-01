@@ -21,6 +21,7 @@ import snowblossom.lib.SystemUtil;
 import snowblossom.lib.db.DB;
 import snowblossom.lib.db.lobstack.LobstackDB;
 import snowblossom.lib.db.rocksdb.JRocksDB;
+import snowblossom.lib.db.atomicfile.AtomicFileDB;
 import snowblossom.lib.tls.CertGen;
 import snowblossom.lib.trie.HashedTrie;
 import snowblossom.proto.WalletDatabase;
@@ -230,6 +231,10 @@ public class SnowBlossomNode
     else if (db_type.equals("lobstack"))
     {
       db = new DB(config, new LobstackDB(config));
+    }
+    else if (db_type.equals("atomic_file"))
+    {
+      db = new DB(config, new AtomicFileDB(config));
     }
     else
     {

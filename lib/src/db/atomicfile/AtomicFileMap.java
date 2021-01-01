@@ -33,6 +33,7 @@ public class AtomicFileMap extends DBMap
     }
     catch(java.io.IOException e)
     {
+      System.out.println("Writing to: " + f);
       throw new RuntimeException(e);
     }
 
@@ -74,6 +75,10 @@ public class AtomicFileMap extends DBMap
   public File getFileForKey(ByteString key)
   {
     String name = HexUtil.getHexString(key);
+    if (name.length() ==0)
+    {
+      name ="null";
+    }
 
     return new File(base, name);
 

@@ -9,6 +9,7 @@ java_library(
       "@duckutil//:lobstack_lib",
       "//lib:lib",
       "//lib:rocksdb",
+      "//lib:atomicfiledb",
       "//client:client",
       "@io_netty_netty_handler//:io_netty_netty_handler",
       "@io_grpc_grpc_java//netty",
