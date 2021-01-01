@@ -50,6 +50,15 @@ java_binary(
 )
 
 java_binary(
+  name = "MrPlowDataMigrate",
+  main_class = "snowblossom.miner.plow.DataMigrate",
+  runtime_deps = [
+    "//miner:miner",
+  ]
+)
+
+
+java_binary(
   name = "ShackletonExplorer",
   main_class = "snowblossom.shackleton.Shackleton",
   runtime_deps = [

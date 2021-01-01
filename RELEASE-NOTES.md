@@ -2,6 +2,7 @@
 
 * Update to bouncy-castle 1.68
 * Added database type "atomic_file" for use with MrPlow
+* Added data migration tool for MrPlow data
 
 ## 1.8.0
 
