@@ -14,6 +14,7 @@ import snowblossom.client.StubHolder;
 import snowblossom.client.StubUtil;
 import snowblossom.iceleaf.components.PersistentComponentCheckBox;
 import snowblossom.iceleaf.components.PersistentComponentTextArea;
+import snowblossom.lib.SystemUtil;
 
 public class NodeSelectionPanel extends BasePanel
 {
@@ -50,7 +51,10 @@ public class NodeSelectionPanel extends BasePanel
 
     box_local = new PersistentComponentCheckBox(ice_leaf_prefs, "Local", "node_selection_local", true);
     box_seed = new PersistentComponentCheckBox(ice_leaf_prefs, "Seed", "node_selection_seed", true);
-    box_fallback_seed = new PersistentComponentCheckBox(ice_leaf_prefs, "Seed Fallback (no-TLS)", "node_selection_fallback_seed", false);
+
+    // If not 64-bit jvm, default to allow fallback nodes
+    box_fallback_seed = new PersistentComponentCheckBox(ice_leaf_prefs, "Seed Fallback (no-TLS)", "node_selection_fallback_seed", 
+      !SystemUtil.isJvm64Bit());
     box_list = new PersistentComponentCheckBox(ice_leaf_prefs, "List", "node_selection_list", false);
 
 
