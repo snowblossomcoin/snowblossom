@@ -22,6 +22,6 @@ RUN \
   apt-get clean
 
 
-VOLUME [/data]
+VOLUME ["/data"]
 ENTRYPOINT ["/bin/sh", "/snowblossom/scripts/entrypoint"]
 CMD ["node"]
