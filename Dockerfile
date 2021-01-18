@@ -19,6 +19,7 @@ COPY example/configs/logging.properties /snowblossom/log.conf
 RUN \
   apt-get update -q && \
   apt-get -yqq install sudo && \
+  apt-get -yqq install libxext6 libxrender1 libxtst6 libfreetype6 fontconfig && \
   apt-get clean
 
 

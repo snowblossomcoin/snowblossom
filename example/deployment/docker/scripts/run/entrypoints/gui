@@ -1,0 +1,11 @@
+#!/bin/bash
+# node entrypoint
+
+set -eu
+
+cd /data
+
+[[ ! -f log.conf ]] && cp /snowblossom/log.conf ./
+[[ ! -d logs ]] && mkdir logs
+
+bash /snowblossom/scripts/snowblossom snowblossom.iceleaf.IceLeaf
