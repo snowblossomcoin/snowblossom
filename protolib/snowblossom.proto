@@ -16,6 +16,8 @@ package snowblossom;
 message Block {
   BlockHeader header = 1;
   repeated Transaction transactions = 2;
+  repeated BlockHeader shard_tips = 3;
+  // TODO the export utxo set
 }
 
 message SnowPowProof {
@@ -40,6 +42,9 @@ message BlockHeader {
   int32 snow_field = 9; // Number of which snow field is in use
   bytes snow_hash = 10; // From POW function, becomes block hash
   repeated SnowPowProof pow_proof = 11;
+  int32 shard_id = 12;
+  int32 shard_gen = 13;
+  bytes shard_export_root_hash = 14;
 }
 
 // TX Hash is hmac(sha256(inner_data), sha256(signature_data))
@@ -70,6 +75,8 @@ message TransactionInner {
   //TransactionRequirements requirements = 7;
   int64 fee = 8;
   bytes extra = 10; //Limited to 100 bytes, so short letters to grandma
+  int32 shard = 11; // which shard this transaction should be on
+                    // All transaction inputs must be on this shard
 }
 
 message CoinbaseExtras {
@@ -122,6 +129,7 @@ message TransactionOutput {
   // by other things.  Usually to be used in conjunction with a fbo hash
   // spec (above).
   ClaimedIdentifiers ids = 5;
+  int32 target_shard = 6;
 }
 
 message ClaimedIdentifiers {

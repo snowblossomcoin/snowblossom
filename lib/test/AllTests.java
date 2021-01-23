@@ -22,6 +22,7 @@ import org.junit.runners.Suite;
   PRNGStreamTest.class,
   SignatureTest.class,
   SnowFallMerkleTest.class,
-  ValidationTest.class
+  ValidationTest.class,
+  ShardUtilTest.class
 })
 public class AllTests {}
