@@ -12,6 +12,7 @@ import snowblossom.lib.trie.ByteStringComparator;
 import snowblossom.lib.trie.HashUtils;
 import snowblossom.proto.BlockHeader;
 import snowblossom.proto.BlockSummary;
+import java.util.Map;
 
 public class PowUtil
 {
@@ -42,6 +43,28 @@ public class PowUtil
       md.update(header.getMerkleRootHash().toByteArray());
       md.update(header.getUtxoRootHash().toByteArray());
       md.update(header.getTarget().toByteArray());
+
+      if (header.getShardId() != 0)
+      {
+        byte[] shard_id = new byte[4];
+        ByteBuffer bb_s = ByteBuffer.wrap(shard_id);
+        bb_s.putInt(header.getShardId());
+
+        md.update(shard_id);
+      }
+      for(Map.Entry<Integer, ByteString> me : header.getShardExportRootHashMap().entrySet())
+      {
+        int id = me.getKey();
+        byte[] shard_id = new byte[4];
+        ByteBuffer bb_s = ByteBuffer.wrap(shard_id);
+        bb_s.putInt(id);
+        md.update(shard_id);
+        md.update(me.getValue().toByteArray());
+      }
+      for(ByteString block_id : header.getShardImportBlocksList())
+      {
+        md.update(block_id.toByteArray());
+      }
 
       return md.digest();
   }

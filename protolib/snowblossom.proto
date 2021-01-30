@@ -16,6 +16,8 @@ package snowblossom;
 message Block {
   BlockHeader header = 1;
   repeated Transaction transactions = 2;
+
+  // Must be in order of asc(shard_id, block height)
   repeated ImportedBlock imported_blocks = 3;
 }
 
@@ -50,8 +52,14 @@ message BlockHeader {
   bytes snow_hash = 10; // From POW function, becomes block hash
   repeated SnowPowProof pow_proof = 11;
   int32 shard_id = 12;
-  int32 shard_gen = 13;
-  bytes shard_export_root_hash = 14;
+
+  // UTXO roots of all outputs we are mapping to other shards
+  map<int32, bytes> shard_export_root_hash = 13;
+
+  // List of all blocks we are importing
+  // Must be in order of asc(shard_id, block height)
+  repeated bytes shard_import_blocks = 14;
+
 }
 
 // TX Hash is hmac(sha256(inner_data), sha256(signature_data))
