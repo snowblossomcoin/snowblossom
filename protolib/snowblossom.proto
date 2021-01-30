@@ -16,8 +16,15 @@ package snowblossom;
 message Block {
   BlockHeader header = 1;
   repeated Transaction transactions = 2;
-  repeated BlockHeader shard_tips = 3;
-  // TODO the export utxo set
+  repeated ImportedBlock imported_blocks = 3;
+}
+
+message ImportedBlock {
+  BlockHeader header = 1;
+
+  // Might need to send these as ByteStrings
+  // for encoding reasons
+  repeated TransactionOutput tx_outs = 2;
 }
 
 message SnowPowProof {
@@ -222,7 +229,7 @@ message PeerInfo {
   int64 learned = 5;
   string version = 6;
   bytes node_id = 7;
-  bool tls = 8; // bad idea, using enum - DEPRECATED
+  //bool tls = 8; bad idea, using enum - DEPRECATED
   bytes node_snow_address = 9; //Used for TLS
   enum ConnectionType {
     GRPC_TCP = 0;

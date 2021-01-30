@@ -35,7 +35,9 @@ public class Globals
   public static final long SNOW_VALUE = 1000000L;
   public static final double SNOW_VALUE_D = SNOW_VALUE;
 
-  public static final int MAX_BLOCK_SIZE =       3800000;
+
+  public static final int GRPC_MAX_MESSAGE_SIZE = 32 * 1024 * 1024;
+  public static final int MAX_BLOCK_SIZE = 32 * 1024 * 1024 - 60000;
   public static final int MAX_TX_SIZE    =       1000000;
   public static final int LOW_FEE_SIZE_IN_BLOCK = 100000;
 
