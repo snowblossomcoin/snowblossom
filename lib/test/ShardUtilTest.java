@@ -67,6 +67,32 @@ public class ShardUtilTest
     }
     Assert.assertEquals(all_shards,claimed);
 
+    testShardShares(active_shards);
+
+  }
+
+
+  /** 
+   * Tests that the list of shards given sums to 1.0
+   */
+  private void testShardShares(List<Integer> active_shards)
+  {
+    int lcm = 1 << 30;
+    int sum = 0;
+
+    LinkedList<Integer> divisors = new LinkedList<>();
+
+    for(int s : active_shards)
+    {
+      int div = ShardUtil.getShardShareDivisor(s);
+      sum += lcm / div;
+
+      divisors.add(div);
+    }
+
+    Assert.assertEquals("Divs: " + divisors, lcm, sum);
+
+
   }
   
 

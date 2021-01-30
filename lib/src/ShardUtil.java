@@ -101,4 +101,29 @@ public class ShardUtil
 
   }
 
+  /** Return the number of generations of this shard.
+   * The block reward should be 1 / pow(2, generation_number)
+   * Shard zero is generation zero
+   */
+  public static int getShardGeneration(int shard_id)
+  {
+    // Ok, I know there is going to be a better way to do this
+    // but I don't want to screw it up, so stupid on
+    if (shard_id == 0) return 0;
+    return getShardGeneration(getShardParentId(shard_id)) + 1;
+  }
+
+  /**
+   * The block reward for this shard should be 1/divisor
+   */
+	public static int getShardShareDivisor(int shard_id)
+  {
+    return 1 << getShardGeneration(shard_id);
+  }
+
+
+
+
+
 }
+
