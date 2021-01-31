@@ -313,6 +313,8 @@ public class Validation
 
 
       // TODO check import block list in header against imported block data
+      // TODO check block hight differences against summary
+      // TODO check shard set completeness
 
       // Add in imported outputs
       for(ImportedBlock ib : blk.getImportedBlocksList())
