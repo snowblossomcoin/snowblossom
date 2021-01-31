@@ -24,10 +24,23 @@ message Block {
 message ImportedBlock {
   BlockHeader header = 1;
 
+  // As we might be including inherited parent blocks
+  // we might be bring in more than one list of outputs
+  map<int32, ImportedOutputList> import_outputs = 2;
+}
+
+message ImportedOutputList {
   // Might need to send these as ByteStrings
   // for encoding reasons
-  repeated TransactionOutput tx_outs = 2;
+  repeated ImportedOutput tx_outs = 2;
 }
+
+message ImportedOutput {
+  bytes raw_output = 1;
+  bytes tx_id = 2;
+  int32 out_idx = 3;;
+}
+
 
 message SnowPowProof {
   int64 word_idx = 1; //Index of word in snow field
@@ -56,10 +69,15 @@ message BlockHeader {
   // UTXO roots of all outputs we are mapping to other shards
   map<int32, bytes> shard_export_root_hash = 13;
 
-  // List of all blocks we are importing
-  // Must be in order of asc(shard_id, block height)
-  repeated bytes shard_import_blocks = 14;
+  // Shard -> list of blocks
+  map<int32, BlockImportList > shard_import = 14;
 
+}
+
+message BlockImportList
+{
+  // Height -> Block Hash
+  map<int32, bytes> height_map = 1;
 }
 
 // TX Hash is hmac(sha256(inner_data), sha256(signature_data))
@@ -388,6 +406,9 @@ message BlockSummary {
   int64 total_transactions = 6;
   bytes chain_index_trie_hash = 7;
   int32 summary_version = 8;
+ 
+  // Current highest imported blocks from other shards
+  map<int32, BlockHeader> imported_shards = 9;
 }
 
 message PeerList {

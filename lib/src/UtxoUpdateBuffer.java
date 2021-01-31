@@ -9,6 +9,8 @@ import snowblossom.lib.trie.HashedTrie;
 import snowblossom.proto.TransactionInput;
 import snowblossom.proto.TransactionOutput;
 import snowblossom.proto.TxOutPoint;
+import snowblossom.proto.ImportedOutputList;
+import snowblossom.proto.ImportedOutput;
 
 public class UtxoUpdateBuffer
 {
@@ -104,6 +106,31 @@ public class UtxoUpdateBuffer
       tx_id,
       out_idx);
     updates.put(key, null);
+
+  }
+
+  public void addOutputs(ImportedOutputList import_list)
+    throws ValidationException
+  {
+    for(ImportedOutput io : import_list.getTxOutsList())
+    {
+      try
+      {
+        TransactionOutput out = TransactionOutput.parseFrom(io.getRawOutput());
+
+        ByteString key = getKey(
+          new AddressSpecHash(out.getRecipientSpecHash()),
+          new ChainHash(io.getTxId()),
+          io.getOutIdx());
+
+        updates.put(key, io.getRawOutput());
+
+      }
+      catch(com.google.protobuf.InvalidProtocolBufferException e)
+      {
+        throw new ValidationException(e);
+      }
+    }
 
   }
 

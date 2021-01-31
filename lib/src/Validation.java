@@ -9,6 +9,7 @@ import java.security.MessageDigest;
 import java.util.*;
 import org.junit.Assert;
 import snowblossom.lib.trie.HashedTrie;
+import snowblossom.lib.trie.TrieDBMem;
 import snowblossom.proto.*;
 
 public class Validation
@@ -97,6 +98,29 @@ public class Validation
         throw new ValidationException("POW Hash does not match");
       }
 
+      int my_shard_id = header.getShardId();
+
+      for(Map.Entry<Integer, ByteString> me : header.getShardExportRootHashMap().entrySet())
+      {
+        int export_shart_id = me.getKey();
+        if (my_shard_id == export_shart_id)
+        {
+          throw new ValidationException("Has shard_export_root_hash for self");
+        }
+        validateChainHash( me.getValue(), "shard_export_root_hash utxo for " + export_shart_id); 
+      }
+
+      for(int import_shard_id : header.getShardImportMap().keySet())
+      {
+        BlockImportList bil = header.getShardImportMap().get(import_shard_id);
+        for(int import_height : bil.getHeightMap().keySet())
+        {
+					validateNonNegValue(import_shard_id, "import_shard_id");
+					validateNonNegValue(import_height, "import_height");
+					validateChainHash( bil.getHeightMap().get(import_height), "shard_import_blocks");
+        }
+      }
+
       if (!ignore_target)
       {
         if (!PowUtil.lessThanTarget(context, header.getTarget()))
@@ -131,7 +155,6 @@ public class Validation
             merkle_root.toString(),
             new ChainHash(header.getMerkleRootHash()).toString()));
         }
-
       }
     }
 
@@ -287,6 +310,17 @@ public class Validation
 
       UtxoUpdateBuffer utxo_buffer = new UtxoUpdateBuffer(utxo_hashed_trie, 
         new ChainHash(prev_summary.getHeader().getUtxoRootHash()));
+
+
+      // TODO check import block list in header against imported block data
+
+      // Add in imported outputs
+      for(ImportedBlock ib : blk.getImportedBlocksList())
+      {
+        validateShardImport(params, ib, blk.getHeader().getShardId(), utxo_buffer);
+      }
+
+
       long fee_sum = 0L;
 
       for(Transaction tx : blk.getTransactionsList())
@@ -679,6 +713,85 @@ public class Validation
         throw new ValidationException("Extra string too long");
       }
     }
+
+  }
+
+  /**
+   * Validates that 
+   *  - the transaction output lists match the 
+   *    shard_export_root_hash from the source block
+   *  - all the output lists that should be imported (and only those)
+   *    have been
+   */
+  public static void validateShardImport(NetworkParams params, ImportedBlock import_blk, int my_shard_id, UtxoUpdateBuffer utxo_buff)
+    throws ValidationException
+  {
+
+  	checkBlockHeaderBasics(params, import_blk.getHeader(), false);
+
+    Set<Integer> inherit_set = ShardUtil.getInheritSet(my_shard_id);
+    TreeSet<Integer> expected_set = new TreeSet<>();
+  
+    for(int s : inherit_set)
+    {
+      if (import_blk.getHeader().getShardExportRootHashMap().containsKey(s))
+      {
+        expected_set.add(s);
+        if (!import_blk.getImportOutputsMap().containsKey(s))
+        {
+          throw new ValidationException("Expected block to import outputs for shard " + s);
+        }
+      }
+    }
+    for(int s : import_blk.getImportOutputsMap().keySet())
+    {
+      if (!expected_set.contains(s))
+      {
+        throw new ValidationException("Unexpected shard in import: " + s);
+      }
+      ChainHash found_utxo = getUtxoHashOfImportedOutputList( import_blk.getImportOutputsMap().get(s), s);
+      ChainHash header_utxo = new ChainHash(import_blk.getHeader().getShardExportRootHashMap().get(s));
+
+      if (!header_utxo.equals(found_utxo))
+      {
+        throw new ValidationException("Import list utxo mismatch");
+      }
+      utxo_buff.addOutputs(import_blk.getImportOutputsMap().get(s) );
+    }
+
+  }
+
+  public static ChainHash getUtxoHashOfImportedOutputList(ImportedOutputList lst, int expected_shard)
+    throws ValidationException
+  {
+    HashedTrie hashed_trie = new HashedTrie(new TrieDBMem(), true, false);
+
+    UtxoUpdateBuffer utxo_buffer = new UtxoUpdateBuffer( hashed_trie, UtxoUpdateBuffer.EMPTY );
+
+    for(ImportedOutput io : lst.getTxOutsList())
+    {
+      try
+      {
+        TransactionOutput out = TransactionOutput.parseFrom(io.getRawOutput());
+        if (out.getTargetShard()!=expected_shard)
+        {
+          throw new ValidationException("Import for unexpected shard");
+        }
+      }
+      catch(com.google.protobuf.InvalidProtocolBufferException e)
+      {
+        throw new ValidationException(e);
+      }
+
+      validateChainHash( io.getTxId(), "import tx_id");
+      validateNonNegValue( io.getOutIdx(), "import out_idx");
+
+    }
+
+    utxo_buffer.addOutputs(lst);
+
+    return utxo_buffer.simulateUpdates();
+
 
   }
 

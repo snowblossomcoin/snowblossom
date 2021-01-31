@@ -12,7 +12,10 @@ import snowblossom.lib.trie.ByteStringComparator;
 import snowblossom.lib.trie.HashUtils;
 import snowblossom.proto.BlockHeader;
 import snowblossom.proto.BlockSummary;
+import snowblossom.proto.BlockImportList;
 import java.util.Map;
+import java.util.TreeSet;
+import java.util.Set;
 
 public class PowUtil
 {
@@ -61,12 +64,34 @@ public class PowUtil
         md.update(shard_id);
         md.update(me.getValue().toByteArray());
       }
-      for(ByteString block_id : header.getShardImportBlocksList())
+
+      for(int import_shard_id : inOrder(header.getShardImportMap().keySet()))
       {
-        md.update(block_id.toByteArray());
+        BlockImportList bil = header.getShardImportMap().get(import_shard_id);
+        for(int import_height : inOrder(bil.getHeightMap().keySet()))
+        {
+          byte[] shard_id = new byte[8];
+          ByteBuffer bb_s = ByteBuffer.wrap(shard_id);
+          bb_s.putInt(import_shard_id);
+          bb_s.putInt(import_height);
+          md.update(shard_id);
+
+          md.update(bil.getHeightMap().get(import_height).toByteArray());
+
+
+        }
+
       }
 
       return md.digest();
+  }
+
+  public static TreeSet<Integer> inOrder(Set<Integer> in)
+  {
+    TreeSet<Integer> sort = new TreeSet<>();
+    sort.addAll(in);
+    return sort;
+
   }
 
   public static long getNextSnowFieldIndex(byte[] context, long word_count)
