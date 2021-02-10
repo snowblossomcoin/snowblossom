@@ -4,12 +4,20 @@ import java.util.List;
 import com.google.common.collect.ImmutableList;
 import java.util.TreeSet;
 import java.util.Set;
+import java.util.Map;
 import java.util.Collection;
 import java.util.HashSet;
+import snowblossom.proto.BlockHeader;
+import snowblossom.proto.BlockImportList;
+
+import java.math.BigInteger;
 
 
 public class ShardUtil
 {
+
+  public static final int REWARD_MATH_BASE_SHIFT=128;
+
 
   /*
    *         0
@@ -104,6 +112,7 @@ public class ShardUtil
   /** Return the number of generations of this shard.
    * The block reward should be 1 / pow(2, generation_number)
    * Shard zero is generation zero
+   * also can be used as a bit shift value
    */
   public static int getShardGeneration(int shard_id)
   {
@@ -122,7 +131,64 @@ public class ShardUtil
   }
 
 
+  /**
+   * Get Block Reward for this shard block not including fees
+   */ 
+  public static long getBlockReward(NetworkParams params, BlockHeader header)
+  {
+    BigInteger reward_sum = BigInteger.ZERO;
 
+    // We need to go higher percision math but still with integers
+    // So we use BigInteger and shift everything way to the left to give
+    // us some wiggle room.
+
+    BigInteger general_block_reward = BigInteger.valueOf(PowUtil.getBlockReward(params, header.getBlockHeight() )).shiftLeft(REWARD_MATH_BASE_SHIFT);
+    BigInteger block_reward_direct_faction = general_block_reward.shiftRight(2).multiply( BigInteger.valueOf(3L));
+    BigInteger block_reward_indirect_faction = general_block_reward.shiftRight(2);
+
+    int shard_gen = getShardGeneration(header.getShardId());
+
+    // Direct reward for this block
+    reward_sum = reward_sum.add( block_reward_direct_faction.shiftRight(shard_gen ) );
+
+    // Indirect reward for self
+    reward_sum = reward_sum.add(block_reward_indirect_faction.shiftRight(shard_gen*2));
+
+    for(Map.Entry<Integer, BlockImportList> me : header.getShardImportMap().entrySet())
+    {
+      reward_sum = reward_sum.add(getImportReward(params, header.getShardId(), me.getKey(), me.getValue()));
+    }
+
+    // Remove the shift and return
+    return reward_sum.shiftRight(REWARD_MATH_BASE_SHIFT).longValue();
+  }
+
+  /**
+   *
+   * @param params NetworkParemters
+   * @param src_shard the shard id of the block including these other blocks
+   * @param shard the shard id of the blocks being imported
+   * @param import_list the list of imported headers
+   * @return number of snow flakes, shifted left by REWARD_MATH_BASE_SHIFT
+   */
+  public static BigInteger getImportReward(NetworkParams params, int src_shard, int shard, BlockImportList import_list)
+  {
+    BigInteger reward_sum = BigInteger.ZERO;
+    int shard_gen = getShardGeneration(shard);
+    int src_shard_gen = getShardGeneration(src_shard);
+    
+    for(int height : import_list.getHeightMap().keySet())
+    {
+      BigInteger general_block_reward = BigInteger.valueOf(PowUtil.getBlockReward(params, height )).shiftLeft(REWARD_MATH_BASE_SHIFT);
+      BigInteger block_reward_indirect_faction = general_block_reward.shiftRight(2);
+
+      BigInteger import_reward = block_reward_indirect_faction.shiftRight(shard_gen + src_shard_gen);
+
+      reward_sum=reward_sum.add(import_reward);
+    }
+
+    return reward_sum;
+  }
 
 
 }
