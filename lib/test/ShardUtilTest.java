@@ -124,6 +124,11 @@ public class ShardUtilTest
     return lst;
   }
 
+  /**
+   * This test takes a list of shards, makes a bunch of fake blocks
+   * for those shards, has the blocks include each other
+   * and then see if the total block rewards add up as they should
+   */
   @Test
   public void testBlockRewardSum()
   {
@@ -146,16 +151,19 @@ public class ShardUtilTest
 
     Random rnd = new Random();
 
+    
     for(List<Integer> shards : shard_lists)
-    {
+    { // This is the real test case, do a simulation with this list of shards
       ArrayList<BlockHeader.Builder> headers = new ArrayList<>();
       Assert.assertTrue(ShardUtil.isProperSet(shards));
       
       long expected_total = 0;
       List<Integer> height_list = new LinkedList<>();
 
+      // Selecting a height where we cross a halving
+      // to make sure we are accounting for the included blocks reward
+      // which may be different from the block that includes it
       for(int h=blocks_four_years - 25; h<=blocks_four_years+25; h++)
-      //for(int h=0; h<100; h++)
 			{
         height_list.add(h);
         expected_total += PowUtil.getBlockReward(params, h);
@@ -166,6 +174,7 @@ public class ShardUtilTest
       {
         ArrayList<BlockHeader.Builder> shard_headers = new ArrayList<>();
 
+        // Make a fake header for each height
         for(int h : height_list)
         {
           BlockHeader.Builder b = BlockHeader.newBuilder();
@@ -181,6 +190,9 @@ public class ShardUtilTest
           {
             for(int h : height_list)
             {
+              // Header to stick this block in
+              // These will be all out of order and crazy but it doesn't matter
+              // We just need each block included in each other shard chain somewhere
               BlockHeader.Builder b = shard_headers.get( rnd.nextInt(shard_headers.size()));
 
               if (!b.getShardImportMap().containsKey(o))
