@@ -7,6 +7,7 @@ import duckutil.MultiAtomicLong;
 import duckutil.RateReporter;
 import duckutil.TimeRecord;
 import duckutil.TimeRecordAuto;
+import duckutil.RateLimit;
 import java.io.File;
 import java.math.BigInteger;
 import java.nio.Buffer;
@@ -61,6 +62,7 @@ public class PoolMiner implements PoolClientOperator
 
   private TimeRecord time_record;
   private RateReporter rate_report=new RateReporter();
+  private RateLimit rate_limit = null;
 
   private AtomicLong share_submit_count = new AtomicLong(0L);
   private AtomicLong share_reject_count = new AtomicLong(0L);
@@ -94,6 +96,11 @@ public class PoolMiner implements PoolClientOperator
     {
       time_record = new TimeRecord();
       TimeRecord.setSharedRecord(time_record);
+    }
+
+    if (config.isSet("rate_limit"))
+    {
+      rate_limit = new RateLimit( config.getDouble("rate_limit"), 1.0);
     }
 
     pool_client.subscribe();
@@ -206,6 +213,12 @@ public class PoolMiner implements PoolClientOperator
     int proof_field;
     byte[] nonce = new byte[Globals.NONCE_LENGTH];
 
+    /**
+     * If using rate limiting, this is how much
+     * remaining quota this thread has already allocated
+     */
+    int rate_limit_quota;
+
     public MinerThread()
     {
       setName("MinerThread");
@@ -216,6 +229,17 @@ public class PoolMiner implements PoolClientOperator
 
     private void runPass() throws Exception
     {
+      if (rate_limit != null)
+      {
+        if (rate_limit_quota <= 0)
+        {
+          rate_limit.waitForRate(1000.0);
+          rate_limit_quota = 1000;
+        }
+
+        rate_limit_quota--;
+
+      }
       WorkUnit wu = last_work_unit;
       if (wu == null)
       {
