@@ -143,6 +143,7 @@ public class ShardUtilTest
     shard_lists.add(getGeneration(5)); //32 shards
     shard_lists.add(getGeneration(7)); //128 shards
     shard_lists.add(getGeneration(8)); //256 shards
+    //shard_lists.add(getGeneration(10)); //1024 shards
 
     NetworkParams params = new NetworkParamsRegtest();
     long blocks_per_day = 86400 / (params.getBlockTimeTarget() / 1000);

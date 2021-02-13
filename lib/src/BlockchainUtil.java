@@ -45,7 +45,7 @@ public class BlockchainUtil
     return new BigInteger(s);
   }
 
-  public static BlockSummary getNewSummary(BlockHeader header, BlockSummary prev_summary, NetworkParams params, long tx_count)
+  public static BlockSummary getNewSummary(BlockHeader header, BlockSummary prev_summary, NetworkParams params, long tx_count, long tx_body_sum)
   {
     BlockSummary.Builder bs = BlockSummary.newBuilder();
 
@@ -66,6 +66,14 @@ public class BlockchainUtil
     BigInteger prev_work_sum = BlockchainUtil.readInteger(prev_summary.getWorkSum());
 
     bs.setTotalTransactions( prev_summary.getTotalTransactions() + tx_count );
+
+    { // update the tx body running average
+      long prev_tx_size_average = prev_summary.getTxSizeAverage();
+      long prev_w = prev_tx_size_average * (1000L - params.getAvgWeight());
+      long new_w = tx_body_sum * params.getAvgWeight();
+      long new_avg = (prev_w + new_w) / 1000L;
+      bs.setTxSizeAverage(new_avg);
+    }
 
     BigInteger worksum = prev_work_sum.add(work_in_block);
 

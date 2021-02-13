@@ -180,7 +180,14 @@ public class BlockIngestor implements ChainStateSource
         return false;
       }
 
-      BlockSummary summary = BlockchainUtil.getNewSummary(blk.getHeader(), prev_summary, node.getParams(), blk.getTransactionsCount() );
+      long tx_body_size = 0;
+      for(Transaction tx : blk.getTransactionsList())
+      {
+        tx_body_size += tx.getInnerData().size();
+        tx_body_size += tx.getTxHash().size();
+      }
+
+      BlockSummary summary = BlockchainUtil.getNewSummary(blk.getHeader(), prev_summary, node.getParams(), blk.getTransactionsCount(), tx_body_size );
 
       Validation.deepBlockValidation(node.getParams(), node.getUtxoHashedTrie(), blk, prev_summary);
 

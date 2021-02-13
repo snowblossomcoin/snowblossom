@@ -409,6 +409,7 @@ message BlockSummary {
  
   // Current highest imported blocks from other shards
   map<int32, BlockHeader> imported_shards = 9;
+  int64 tx_size_average = 10;
 }
 
 message PeerList {

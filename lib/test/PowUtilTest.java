@@ -129,7 +129,7 @@ public class PowUtilTest
         .setTimestamp(time)
         .build();
 
-      bs = BlockchainUtil.getNewSummary(header, bs, params, 1L);
+      bs = BlockchainUtil.getNewSummary(header, bs, params, 1L, 600L);
 
       Assert.assertEquals(time, bs.getHeader().getTimestamp());
 
@@ -161,7 +161,7 @@ public class PowUtilTest
         .setTimestamp(time)
         .build();
 
-      bs = BlockchainUtil.getNewSummary(header, bs, params, 1L);
+      bs = BlockchainUtil.getNewSummary(header, bs, params, 1L, 600L);
 
       Assert.assertEquals(time, bs.getHeader().getTimestamp());
 

@@ -330,7 +330,7 @@ public class Validation
         fee_sum += deepTransactionCheck(tx, utxo_buffer, blk.getHeader(), params);
       }
 
-      long reward = PowUtil.getBlockReward(params, blk.getHeader().getBlockHeight());
+      long reward = ShardUtil.getBlockReward(params, blk.getHeader());
       long coinbase_sum = fee_sum + reward;
 
       long coinbase_spent = 0L;
