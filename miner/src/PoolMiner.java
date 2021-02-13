@@ -100,7 +100,11 @@ public class PoolMiner implements PoolClientOperator
 
     if (config.isSet("rate_limit"))
     {
-      rate_limit = new RateLimit( config.getDouble("rate_limit"), 1.0);
+      double limit = config.getDouble("rate_limit");
+      rate_limit = new RateLimit( limit, 1.0);
+
+      logger.info("APPLYING RATE LIMIT: " + limit + " hashes per second");
+
     }
 
     pool_client.subscribe();
