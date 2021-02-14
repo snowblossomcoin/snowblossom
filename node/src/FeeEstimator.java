@@ -38,9 +38,9 @@ public class FeeEstimator
     BlockSummary head = node.getBlockIngestor().getHead();
     ChainHash utxo_root = new ChainHash(head.getHeader().getUtxoRootHash());
 
-    long test_size = Globals.MAX_BLOCK_SIZE*2/3;
+    long test_size =  node.getParams().getMaxBlockSize()*2/3;
 
-    List<Transaction> tx_list = node.getMemPool().getTransactionsForBlock(utxo_root, Globals.MAX_BLOCK_SIZE*2/3);
+    List<Transaction> tx_list = node.getMemPool().getTransactionsForBlock(utxo_root, (int)test_size);
     long total_size = 0L;
     long total_fee = 0L;
 

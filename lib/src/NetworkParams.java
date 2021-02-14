@@ -73,7 +73,19 @@ public abstract class NetworkParams
 
   // SIP-4
   public int getActivationHeightTxInValue() { return Integer.MAX_VALUE; }
+
+  public int getActivationHeightShards() { return Integer.MAX_VALUE; }
+
+  /**
+   * Minimum number of blocks in a shard before considering forking it to
+   * additiional shards.
+   */
+  public int minShardLength() { return 144; }
+
   
+  public int getGrpcMaxMessageSize(){return getMaxBlockSize() + 60000;}
+
+  public abstract int getMaxBlockSize();
 
   /**
    * Returns a mapping of field seeds, which also

@@ -50,6 +50,9 @@ public class NetworkParamsRegtest extends NetworkParams
   public long getBlockTimeTarget() { return 1000L; } //1 second
 
   @Override
+  public int getMaxBlockSize(){ return 3800000; }
+
+  @Override
   public List<String> getSeedNodes()
   {
     return ImmutableList.of("seed-regtest.snowblossom.org");

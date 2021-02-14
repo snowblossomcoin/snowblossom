@@ -73,6 +73,8 @@ public class BlockchainUtil
       long new_w = tx_body_sum * params.getAvgWeight();
       long new_avg = (prev_w + new_w) / 1000L;
       bs.setTxSizeAverage(new_avg);
+
+      bs.setShardLength( prev_summary.getShardLength() + 1 );
     }
 
     BigInteger worksum = prev_work_sum.add(work_in_block);

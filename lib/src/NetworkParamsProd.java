@@ -91,6 +91,9 @@ public class NetworkParamsProd extends NetworkParams
   @Override
   public ByteString getBlockZeroRemark() { return ByteString.copyFrom(new String("00000000000000000019d1562bd02674302db7ddd6ccdb77be3e6daaa8eb8a51").getBytes()); }
 
+  @Override
+  public int getMaxBlockSize(){ return 3800000; }
+
   // SIP3
   @Override
   public int getActivationHeightTxOutRequirements() { return 35000; }

@@ -163,7 +163,7 @@ public class SnowBlossomNode
           .forPort(port)
           .addService(user_service)
           .addService(peer_service)
-          .maxInboundMessageSize(Globals.GRPC_MAX_MESSAGE_SIZE)
+          .maxInboundMessageSize(params.getGrpcMaxMessageSize())
           .build();
         s.start();
       }
@@ -198,7 +198,7 @@ public class SnowBlossomNode
           .forPort(port)
           .addService(user_service)
           .addService(peer_service)
-          .maxInboundMessageSize(Globals.GRPC_MAX_MESSAGE_SIZE)
+          .maxInboundMessageSize(params.getGrpcMaxMessageSize())
           .sslContext(ssl_ctx)
           .build();
         s.start();

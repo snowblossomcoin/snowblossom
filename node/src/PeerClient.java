@@ -30,7 +30,7 @@ public class PeerClient
         .forAddress(info.getHost(), info.getPort())
         .useTransportSecurity()
         .sslContext(ssl_ctx)
-        .maxInboundMessageSize(Globals.GRPC_MAX_MESSAGE_SIZE)
+        .maxInboundMessageSize(node.getParams().getGrpcMaxMessageSize())
         .build();
     }
     else if (info.getConnectionType().equals(PeerInfo.ConnectionType.GRPC_TCP))
@@ -38,7 +38,7 @@ public class PeerClient
       channel = ManagedChannelBuilder
         .forAddress(info.getHost(), info.getPort())
         .usePlaintext()
-        .maxInboundMessageSize(Globals.GRPC_MAX_MESSAGE_SIZE)
+        .maxInboundMessageSize(node.getParams().getGrpcMaxMessageSize())
         .build();
     }
     else

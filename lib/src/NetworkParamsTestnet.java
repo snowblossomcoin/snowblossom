@@ -62,6 +62,9 @@ public class NetworkParamsTestnet extends NetworkParams
   public ByteString getBlockZeroRemark() { return ByteString.copyFrom(new String("testnet2-20180516").getBytes()); }
 
   @Override
+  public int getMaxBlockSize(){ return 3800000; }
+
+  @Override
   public int getActivationHeightTxOutRequirements() { return 16000; }
 
   @Override
