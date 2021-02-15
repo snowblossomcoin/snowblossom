@@ -731,7 +731,7 @@ public class Validation
 
   	checkBlockHeaderBasics(params, import_blk.getHeader(), false);
 
-    Set<Integer> inherit_set = ShardUtil.getInheritSet(my_shard_id);
+    Set<Integer> inherit_set = ShardUtil.getCoverSet(my_shard_id, params);
     TreeSet<Integer> expected_set = new TreeSet<>();
   
     for(int s : inherit_set)

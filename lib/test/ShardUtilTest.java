@@ -1,18 +1,16 @@
 package lib.test;
 
-import org.junit.Test;
-import org.junit.Assert;
-import java.util.*;
-
-import snowblossom.lib.ShardUtil;
 import com.google.common.collect.ImmutableList;
-import snowblossom.proto.BlockHeader;
-import snowblossom.proto.BlockImportList;
-import snowblossom.lib.PowUtil;
+import com.google.protobuf.ByteString;
+import java.util.*;
+import org.junit.Assert;
+import org.junit.Test;
 import snowblossom.lib.NetworkParams;
 import snowblossom.lib.NetworkParamsRegtest;
-import com.google.protobuf.ByteString;
-
+import snowblossom.lib.PowUtil;
+import snowblossom.lib.ShardUtil;
+import snowblossom.proto.BlockHeader;
+import snowblossom.proto.BlockImportList;
 
 public class ShardUtilTest
 {
@@ -35,7 +33,7 @@ public class ShardUtilTest
       //System.out.println("Expand list: " + expand_list);
       testShardList(expand_list, all_shards);
       int shard = expand_list.pollFirst();
-      if (shard > 1000000)
+      if (shard > 100000)
       {
         // avoid overflow
         expand_list.add(shard);
@@ -124,6 +122,28 @@ public class ShardUtilTest
     return lst;
   }
 
+  private void assertCompleteCoverage(List<Integer> shards, int max)
+  {
+    TreeSet<Integer> covered=new TreeSet<>();
+
+    for(int s : shards)
+    {
+      Set<Integer> cov = ShardUtil.getCoverSet(s, max);
+      int v1 = covered.size();
+      covered.addAll(cov);
+      Assert.assertEquals(v1 + cov.size(), covered.size());
+
+    }
+    for(int i=0; i<=max; i++)
+    {
+      Assert.assertTrue("" + shards.toString() + " missing " + i, covered.contains(i));
+    }
+
+
+    Assert.assertEquals(max+1, covered.size());
+
+  }
+
   /**
    * This test takes a list of shards, makes a bunch of fake blocks
    * for those shards, has the blocks include each other
@@ -143,6 +163,7 @@ public class ShardUtilTest
     shard_lists.add(getGeneration(5)); //32 shards
     shard_lists.add(getGeneration(7)); //128 shards
     shard_lists.add(getGeneration(8)); //256 shards
+    shard_lists.add(getGeneration(9)); //512 shards
     //shard_lists.add(getGeneration(10)); //1024 shards
 
     NetworkParams params = new NetworkParamsRegtest();
@@ -157,6 +178,7 @@ public class ShardUtilTest
     { // This is the real test case, do a simulation with this list of shards
       ArrayList<BlockHeader.Builder> headers = new ArrayList<>();
       Assert.assertTrue(ShardUtil.isProperSet(shards));
+      assertCompleteCoverage(shards, 10000);
       
       long expected_total = 0;
       List<Integer> height_list = new LinkedList<>();
@@ -164,8 +186,8 @@ public class ShardUtilTest
       // Selecting a height where we cross a halving
       // to make sure we are accounting for the included blocks reward
       // which may be different from the block that includes it
-      for(int h=blocks_four_years - 25; h<=blocks_four_years+25; h++)
-			{
+      for(int h=blocks_four_years - 5; h<=blocks_four_years+5; h++)
+      {
         height_list.add(h);
         expected_total += PowUtil.getBlockReward(params, h);
       }
@@ -211,7 +233,7 @@ public class ShardUtilTest
         }
 
         headers.addAll(shard_headers);
-			}
+      }
 
       long found_reward=0;
       for(BlockHeader.Builder b : headers)

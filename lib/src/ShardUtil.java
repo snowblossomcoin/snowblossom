@@ -1,17 +1,17 @@
 package snowblossom.lib;
 
-import java.util.List;
 import com.google.common.collect.ImmutableList;
-import java.util.TreeSet;
-import java.util.Set;
-import java.util.Map;
+import com.google.common.collect.ImmutableSet;
+import duckutil.LRUCache;
+import java.math.BigInteger;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
 import snowblossom.proto.BlockHeader;
 import snowblossom.proto.BlockImportList;
-
-import java.math.BigInteger;
-
 
 public class ShardUtil
 {
@@ -59,6 +59,58 @@ public class ShardUtil
     }
 
     return inherit_set;
+  }
+
+
+  private static LRUCache<String, Set<Integer> > cover_cache = new LRUCache<>(5000);
+  
+  public static Set<Integer> getCoverSet(int shard_id, NetworkParams params)
+  {
+    return getCoverSet(shard_id, params.getMaxShardId());
+  }
+  
+  /**
+   * return the set of all shard IDs that should be imported with this shard.
+   * this includes the inherit set from parent shards (as appropriate),
+   * this shard itself and any children shards up to the max_shard_id.
+   */
+  public static Set<Integer> getCoverSet(int shard_id, int max_shard_id)
+  {
+    String key = "" + shard_id + "," + max_shard_id;
+    synchronized(cover_cache)
+    {
+      if (cover_cache.containsKey(key)) return cover_cache.get(key);
+    }
+
+    TreeSet<Integer> cover_set = new TreeSet<>();
+
+    cover_set.addAll(getInheritSet(shard_id));
+    cover_set.addAll(getChildrenRecursive(shard_id, max_shard_id));
+
+    ImmutableSet<Integer> im_set = ImmutableSet.copyOf(cover_set);
+    synchronized(cover_cache)
+    {
+      cover_cache.put(key, im_set);
+    }
+
+    return cover_set;
+
+  }
+
+  public static Set<Integer> getChildrenRecursive(int shard_id, int max_shard_id)
+  {
+    TreeSet<Integer> s = new TreeSet<>();
+
+    if (shard_id <= max_shard_id)
+    {
+      s.add(shard_id);
+      for(int c : getShardChildIds(shard_id) )
+      {
+        s.addAll( getChildrenRecursive(c, max_shard_id) );
+      }
+    }
+
+    return s;
   }
 
   /**
@@ -125,7 +177,7 @@ public class ShardUtil
   /**
    * The block reward for this shard should be 1/divisor
    */
-	public static int getShardShareDivisor(int shard_id)
+  public static int getShardShareDivisor(int shard_id)
   {
     return 1 << getShardGeneration(shard_id);
   }
@@ -192,4 +244,3 @@ public class ShardUtil
 
 
 }
-

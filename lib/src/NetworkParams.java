@@ -80,8 +80,12 @@ public abstract class NetworkParams
    * Minimum number of blocks in a shard before considering forking it to
    * additiional shards.
    */
-  public int minShardLength() { return 144; }
+  public int getMinShardLength() { return 144; }
+  public int getMaxShardId() {return 1022; } //allows 512 shards
 
+  // When a shard is over the min shard length and the running average
+  // for block transaction data is over this, then split this shard
+  public int getShardForkThreshold() { return getMaxBlockSize() / 2; }
   
   public int getGrpcMaxMessageSize(){return getMaxBlockSize() + 60000;}
 
