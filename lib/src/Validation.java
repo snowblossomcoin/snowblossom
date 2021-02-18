@@ -34,10 +34,11 @@ public class Validation
       BlockHeader header = blk.getHeader();
       if (header == null) throw new ValidationException("Header missing");
 
-      if (header.getVersion() != 1)
+      if ((header.getVersion() != 1) && (header.getVersion() != 2))
       {
         throw new ValidationException(String.format("Unknown block version: %d", header.getVersion()));
       }
+
       if (header.getTimestamp() > System.currentTimeMillis() + params.getMaxClockSkewMs())
       {
         throw new ValidationException("Block too far into future");
@@ -98,27 +99,50 @@ public class Validation
         throw new ValidationException("POW Hash does not match");
       }
 
-      int my_shard_id = header.getShardId();
-
-      for(Map.Entry<Integer, ByteString> me : header.getShardExportRootHashMap().entrySet())
+      if (header.getVersion() == 1)
       {
-        int export_shart_id = me.getKey();
-        if (my_shard_id == export_shart_id)
+        if (header.getShardId() != 0)
         {
-          throw new ValidationException("Has shard_export_root_hash for self");
+          throw new ValidationException("Header version 1 must not have shard id");
         }
-        validateChainHash( me.getValue(), "shard_export_root_hash utxo for " + export_shart_id); 
+        if (header.getShardExportRootHashMap().size() != 0)
+        {
+          throw new ValidationException("Header version 1 must not have export map");
+        }
+        if (header.getShardImportMap().size() != 0)
+        {
+          throw new ValidationException("Header version 1 must not have shard import map");
+        }   
+
       }
-
-      for(int import_shard_id : header.getShardImportMap().keySet())
+      else if (header.getVersion() == 2)
       {
-        BlockImportList bil = header.getShardImportMap().get(import_shard_id);
-        for(int import_height : bil.getHeightMap().keySet())
+
+        int my_shard_id = header.getShardId();
+        Set<Integer> my_cover_set = ShardUtil.getCoverSet(my_shard_id, params);
+
+        for(Map.Entry<Integer, ByteString> me : header.getShardExportRootHashMap().entrySet())
         {
-					validateNonNegValue(import_shard_id, "import_shard_id");
-					validateNonNegValue(import_height, "import_height");
-					validateChainHash( bil.getHeightMap().get(import_height), "shard_import_blocks");
+          int export_shard_id = me.getKey();
+          if (my_cover_set.contains(export_shard_id))
+          {
+            throw new ValidationException("Has shard_export_root_hash for self");
+          }
+          validateChainHash( me.getValue(), "shard_export_root_hash utxo for " + export_shard_id); 
         }
+
+        for(int import_shard_id : header.getShardImportMap().keySet())
+        {
+          BlockImportList bil = header.getShardImportMap().get(import_shard_id);
+          for(int import_height : bil.getHeightMap().keySet())
+          {
+            validateNonNegValue(import_shard_id, "import_shard_id");
+            validateNonNegValue(import_height, "import_height");
+            validateChainHash( bil.getHeightMap().get(import_height), "shard_import_blocks");
+          }
+        }
+
+        validatePositiveValue(header.getTxDataSizeSum(), "tx_data_size_sum");
       }
 
       if (!ignore_target)
@@ -312,23 +336,36 @@ public class Validation
         new ChainHash(prev_summary.getHeader().getUtxoRootHash()));
 
 
-      // TODO check import block list in header against imported block data
-      // TODO check block hight differences against summary
-      // TODO check shard set completeness
-
-      // Add in imported outputs
-      for(ImportedBlock ib : blk.getImportedBlocksList())
-      {
-        validateShardImport(params, ib, blk.getHeader().getShardId(), utxo_buffer);
-      }
-
 
       long fee_sum = 0L;
+      long tx_size_sum = 0L;
 
       for(Transaction tx : blk.getTransactionsList())
       {
         fee_sum += deepTransactionCheck(tx, utxo_buffer, blk.getHeader(), params);
+        tx_size_sum += tx.getInnerData().size() + tx.getTxHash().size();
       }
+
+      if (blk.getHeader().getVersion() == 2)
+      {
+        if (blk.getHeader().getTxDataSizeSum() != tx_size_sum)
+        {
+          throw new ValidationException("tx_data_size_sum mismatch");
+
+        }
+
+        // TODO check import block list in header against imported block data
+        // TODO check block hight differences against summary
+        // TODO check shard set completeness
+
+        // Add in imported outputs
+        for(ImportedBlock ib : blk.getImportedBlocksList())
+        {
+          validateShardImport(params, ib, blk.getHeader().getShardId(), utxo_buffer);
+        }
+
+      }
+
 
       long reward = ShardUtil.getBlockReward(params, blk.getHeader());
       long coinbase_sum = fee_sum + reward;

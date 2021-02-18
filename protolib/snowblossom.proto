@@ -64,6 +64,10 @@ message BlockHeader {
   int32 snow_field = 9; // Number of which snow field is in use
   bytes snow_hash = 10; // From POW function, becomes block hash
   repeated SnowPowProof pow_proof = 11;
+
+  // Things below here added for shards
+  // Version 2 things
+
   int32 shard_id = 12;
 
   // UTXO roots of all outputs we are mapping to other shards
@@ -71,6 +75,10 @@ message BlockHeader {
 
   // Shard -> list of blocks
   map<int32, BlockImportList > shard_import = 14;
+
+  // Might need to add the transaction data size sum if we want 
+  // to have light validation of shard splits
+  int32 tx_data_size_sum = 15;
 
 }
 

@@ -47,38 +47,39 @@ public class PowUtil
       md.update(header.getUtxoRootHash().toByteArray());
       md.update(header.getTarget().toByteArray());
 
-      if (header.getShardId() != 0)
+      if (header.getVersion() == 2)
       {
-        byte[] shard_id = new byte[4];
-        ByteBuffer bb_s = ByteBuffer.wrap(shard_id);
-        bb_s.putInt(header.getShardId());
-
-        md.update(shard_id);
-      }
-      for(Map.Entry<Integer, ByteString> me : header.getShardExportRootHashMap().entrySet())
-      {
-        int id = me.getKey();
-        byte[] shard_id = new byte[4];
-        ByteBuffer bb_s = ByteBuffer.wrap(shard_id);
-        bb_s.putInt(id);
-        md.update(shard_id);
-        md.update(me.getValue().toByteArray());
-      }
-
-      for(int import_shard_id : inOrder(header.getShardImportMap().keySet()))
-      {
-        BlockImportList bil = header.getShardImportMap().get(import_shard_id);
-        for(int import_height : inOrder(bil.getHeightMap().keySet()))
         {
           byte[] shard_id = new byte[8];
           ByteBuffer bb_s = ByteBuffer.wrap(shard_id);
-          bb_s.putInt(import_shard_id);
-          bb_s.putInt(import_height);
+          bb_s.putInt(header.getShardId());
+          bb_s.putInt(header.getTxDataSizeSum());
+
           md.update(shard_id);
+        }
+        for(Map.Entry<Integer, ByteString> me : header.getShardExportRootHashMap().entrySet())
+        {
+          int id = me.getKey();
+          byte[] shard_id = new byte[4];
+          ByteBuffer bb_s = ByteBuffer.wrap(shard_id);
+          bb_s.putInt(id);
+          md.update(shard_id);
+          md.update(me.getValue().toByteArray());
+        }
 
-          md.update(bil.getHeightMap().get(import_height).toByteArray());
+        for(int import_shard_id : inOrder(header.getShardImportMap().keySet()))
+        {
+          BlockImportList bil = header.getShardImportMap().get(import_shard_id);
+          for(int import_height : inOrder(bil.getHeightMap().keySet()))
+          {
+            byte[] shard_id = new byte[8];
+            ByteBuffer bb_s = ByteBuffer.wrap(shard_id);
+            bb_s.putInt(import_shard_id);
+            bb_s.putInt(import_height);
+            md.update(shard_id);
 
-
+            md.update(bil.getHeightMap().get(import_height).toByteArray());
+          }
         }
 
       }
