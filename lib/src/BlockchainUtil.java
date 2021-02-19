@@ -5,6 +5,7 @@ import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import org.junit.Assert;
 import snowblossom.proto.*;
+import java.util.List;
 
 public class BlockchainUtil
 {
@@ -45,7 +46,7 @@ public class BlockchainUtil
     return new BigInteger(s);
   }
 
-  public static BlockSummary getNewSummary(BlockHeader header, BlockSummary prev_summary, NetworkParams params, long tx_count, long tx_body_sum)
+  public static BlockSummary getNewSummary(BlockHeader header, BlockSummary prev_summary, NetworkParams params, long tx_count, long tx_body_sum, List<ImportedBlock> imported_blocks)
   {
     BlockSummary.Builder bs = BlockSummary.newBuilder();
 
@@ -75,6 +76,13 @@ public class BlockchainUtil
       bs.setTxSizeAverage(new_avg);
 
       bs.setShardLength( prev_summary.getShardLength() + 1 );
+    }
+
+    bs.putAllImportedShards( prev_summary.getImportedShardsMap() );
+    for(ImportedBlock imb : imported_blocks)
+    {
+      int imp_shard = imb.getHeader().getShardId();
+      bs.putImportedShards(imp_shard, imb.getHeader() );
     }
 
     BigInteger worksum = prev_work_sum.add(work_in_block);
@@ -124,6 +132,8 @@ public class BlockchainUtil
         .add(target.multiply(weight_bi))
         .divide(BigInteger.valueOf(1000L))
         .toString());
+
+    //
 
     bs.setHeader(header);
 

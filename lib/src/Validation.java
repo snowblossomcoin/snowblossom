@@ -509,7 +509,6 @@ public class Validation
     }
     if (header.getBlockHeight() < params.getActivationHeightTxOutExtras())
     {
-      
       if (out.getForBenefitOfSpecHash().size() > 0)
       {
         throw new ValidationException("TxOut extras not enabled yet");
@@ -526,6 +525,25 @@ public class Validation
     if (out.getForBenefitOfSpecHash().size() > 0)
     {
       validateAddressSpecHash(out.getForBenefitOfSpecHash(), "TxOut for_benefit_of_spec_hash");
+    }
+
+    if (header.getVersion() == 1)
+    {
+      int target_shard = out.getTargetShard();
+      if (target_shard != 0)
+      {
+        throw new ValidationException("Target shard must be zero for version 1 block");
+      }
+    }
+    if (header.getVersion() == 2)
+    {
+      int target_shard = out.getTargetShard();
+      validateNonNegValue(target_shard,"target_shard");
+      if (target_shard > params.getMaxShardId())
+      {
+        throw new ValidationException("Target shard must be less than or equal max shard id");
+      }
+
     }
 
 
