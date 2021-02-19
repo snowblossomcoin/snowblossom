@@ -68,7 +68,9 @@ public class BlockchainUtil
 
     bs.setTotalTransactions( prev_summary.getTotalTransactions() + tx_count );
 
-    { // update the tx body running average
+    if (header.getVersion() == 2)
+    { 
+      // update the tx body running average
       long prev_tx_size_average = prev_summary.getTxSizeAverage();
       long prev_w = prev_tx_size_average * (1000L - params.getAvgWeight());
       long new_w = tx_body_sum * params.getAvgWeight();
@@ -76,13 +78,13 @@ public class BlockchainUtil
       bs.setTxSizeAverage(new_avg);
 
       bs.setShardLength( prev_summary.getShardLength() + 1 );
-    }
-
-    bs.putAllImportedShards( prev_summary.getImportedShardsMap() );
-    for(ImportedBlock imb : imported_blocks)
-    {
-      int imp_shard = imb.getHeader().getShardId();
-      bs.putImportedShards(imp_shard, imb.getHeader() );
+      
+      bs.putAllImportedShards( prev_summary.getImportedShardsMap() );
+      for(ImportedBlock imb : imported_blocks)
+      {
+        int imp_shard = imb.getHeader().getShardId();
+        bs.putImportedShards(imp_shard, imb.getHeader() );
+      }
     }
 
     BigInteger worksum = prev_work_sum.add(work_in_block);
@@ -133,7 +135,6 @@ public class BlockchainUtil
         .divide(BigInteger.valueOf(1000L))
         .toString());
 
-    //
 
     bs.setHeader(header);
 

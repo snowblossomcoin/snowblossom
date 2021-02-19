@@ -12,6 +12,14 @@ import snowblossom.lib.trie.HashedTrie;
 import snowblossom.lib.trie.TrieDBMem;
 import snowblossom.proto.*;
 
+
+/**
+ * This is the heart of a cryptocurrency.  The block validation.
+ * The network peers can all scream lies at each other.
+ * The miners could be tricksters running elaborate scams.
+ * Here is where the truth comes out.
+ * As long as this is correct, nothing else can be that bad.
+ */
 public class Validation
 {
   public static void checkBlockHeaderBasics(NetworkParams params, BlockHeader header, boolean ignore_target)
@@ -37,6 +45,21 @@ public class Validation
       if ((header.getVersion() != 1) && (header.getVersion() != 2))
       {
         throw new ValidationException(String.format("Unknown block version: %d", header.getVersion()));
+      }
+      if (header.getBlockHeight() < params.getActivationHeightShards())
+      {
+        if (header.getVersion() != 1)
+        {
+          throw new ValidationException(String.format("Block version must be 1 before shard activation"));
+        }
+      }
+      else
+      {
+        if (header.getVersion() != 2)
+        {
+          throw new ValidationException("Block version must be 2 after shard activation");
+
+        }
       }
 
       if (header.getTimestamp() > System.currentTimeMillis() + params.getMaxClockSkewMs())
@@ -355,6 +378,7 @@ public class Validation
         }
 
         // TODO check import block list in header against imported block data
+        //   done - I think
         // TODO check block hight differences against summary
         // TODO check shard set completeness
 

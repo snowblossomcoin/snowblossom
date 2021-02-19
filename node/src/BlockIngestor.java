@@ -35,7 +35,7 @@ public class BlockIngestor implements ChainStateSource
 
   private static final ByteString HEAD = ByteString.copyFrom(new String("head").getBytes());
 
-  public static final int SUMMARY_VERSION = 3;
+  public static final int SUMMARY_VERSION = 4;
 
   private LRUCache<ChainHash, Long> block_pull_map = new LRUCache<>(2000);
   private LRUCache<ChainHash, Long> tx_cluster_pull_map = new LRUCache<>(2000);
