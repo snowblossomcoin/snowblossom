@@ -1,5 +1,4 @@
 syntax = "proto3";
-
 option java_multiple_files = true;
 option java_package = "snowblossom.proto";
 option java_outer_classname = "SnowBlossomProto";
@@ -26,6 +25,7 @@ message ImportedBlock {
 
   // As we might be including inherited parent blocks
   // we might be bring in more than one list of outputs
+  // Map of shard id (that we are importing) to list of outputs
   map<int32, ImportedOutputList> import_outputs = 2;
 }
 
@@ -38,7 +38,7 @@ message ImportedOutputList {
 message ImportedOutput {
   bytes raw_output = 1;
   bytes tx_id = 2;
-  int32 out_idx = 3;;
+  int32 out_idx = 3;
 }
 
 
@@ -116,8 +116,6 @@ message TransactionInner {
   //TransactionRequirements requirements = 7;
   int64 fee = 8;
   bytes extra = 10; //Limited to 100 bytes, so short letters to grandma
-  int32 shard = 11; // which shard this transaction should be on
-                    // All transaction inputs must be on this shard
 }
 
 message CoinbaseExtras {
@@ -491,4 +489,3 @@ message SignedMessagePayload {
     bytes tls_public_key = 5;
   }
 }
-

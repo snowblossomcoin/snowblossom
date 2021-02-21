@@ -3,9 +3,9 @@ package snowblossom.lib;
 import com.google.protobuf.ByteString;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
+import java.util.List;
 import org.junit.Assert;
 import snowblossom.proto.*;
-import java.util.List;
 
 public class BlockchainUtil
 {
@@ -71,13 +71,27 @@ public class BlockchainUtil
     if (header.getVersion() == 2)
     { 
       // update the tx body running average
-      long prev_tx_size_average = prev_summary.getTxSizeAverage();
+      long prev_tx_size_average;
+      int prev_shard_len;
+
+      if (prev_summary.getHeader().getShardId() != header.getShardId())
+      { // shard split
+
+        prev_tx_size_average = 0;
+        prev_shard_len = 0;
+      }
+      else
+      {
+        prev_tx_size_average = prev_summary.getTxSizeAverage();
+        prev_shard_len = prev_summary.getShardLength();
+      }
+
       long prev_w = prev_tx_size_average * (1000L - params.getAvgWeight());
       long new_w = tx_body_sum * params.getAvgWeight();
       long new_avg = (prev_w + new_w) / 1000L;
       bs.setTxSizeAverage(new_avg);
 
-      bs.setShardLength( prev_summary.getShardLength() + 1 );
+      bs.setShardLength( prev_shard_len + 1 );
       
       bs.putAllImportedShards( prev_summary.getImportedShardsMap() );
       for(ImportedBlock imb : imported_blocks)

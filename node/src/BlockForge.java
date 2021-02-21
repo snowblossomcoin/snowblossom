@@ -9,6 +9,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.Set;
 import java.util.TreeMap;
 import org.junit.Assert;
 import snowblossom.lib.*;
@@ -63,6 +64,8 @@ public class BlockForge
     header_builder.setTarget(BlockchainUtil.targetBigIntegerToBytes(target));
     header_builder.setSnowField(head.getActivatedField());
 
+    // TODO Select shard ID
+
     try
     {
 
@@ -70,16 +73,24 @@ public class BlockForge
         new ChainHash(head.getHeader().getUtxoRootHash()));
       List<Transaction> regular_transactions = getTransactions(new ChainHash(head.getHeader().getUtxoRootHash()));
       long fee_sum = 0L;
+
+      Set<Integer> shard_cover_set = ShardUtil.getCoverSet(header_builder.getShardId(), params);
+      Map<Integer, UtxoUpdateBuffer> export_utxo_buffer = new TreeMap<>();
+
       for(Transaction tx : regular_transactions)
       {
-         fee_sum += Validation.deepTransactionCheck(tx, utxo_buffer, header_builder.build(), params);
+         fee_sum += Validation.deepTransactionCheck(tx, utxo_buffer, header_builder.build(), params,
+          shard_cover_set, export_utxo_buffer);
       }
 
       Transaction coinbase = buildCoinbase( header_builder.getBlockHeight(), fee_sum, mine_to);
-      Validation.deepTransactionCheck(coinbase, utxo_buffer, header_builder.build(), params);
+      Validation.deepTransactionCheck(coinbase, utxo_buffer, header_builder.build(), params,
+        shard_cover_set, export_utxo_buffer);
 
       block_builder.addTransactions(coinbase);
       block_builder.addAllTransactions(regular_transactions);
+
+      // TODO Save export utxo data
 
 
       LinkedList<ChainHash> tx_list = new LinkedList<ChainHash>();

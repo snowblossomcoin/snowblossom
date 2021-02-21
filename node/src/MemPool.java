@@ -490,10 +490,15 @@ public class MemPool
       .setBlockHeight( chain_state_source.getHeight() + 1)
       .setTimestamp(System.currentTimeMillis())
       .build();
+    // TODO - assign shard correctly
+
+    Set<Integer> shard_cover_set = ShardUtil.getCoverSet(dummy_header.getShardId(), chain_state_source.getParams());
+    Map<Integer, UtxoUpdateBuffer> export_utxo_buffer = new TreeMap<>();
 
     for (Transaction t : ordered_list)
     {
-      Validation.deepTransactionCheck(t, test_buffer, dummy_header, chain_state_source.getParams());
+      Validation.deepTransactionCheck(t, test_buffer, dummy_header, chain_state_source.getParams(),
+        shard_cover_set, export_utxo_buffer);
     }
     TimeRecord.record(t1, "utxo_sim");
 

@@ -83,6 +83,14 @@ public abstract class NetworkParams
   public int getMinShardLength() { return 144; }
   public int getMaxShardId() {return 1022; } //allows 512 shards
 
+  /** 
+   * max number of shards old we allow the other shards to be
+   *
+   * example: if we are validating height 1000, all other shards must be at least
+   * on 994.
+   */
+  public int getMaxShardSkewHeight() {return 6; } 
+
   // When a shard is over the min shard length and the running average
   // for block transaction data is over this, then split this shard
   public int getShardForkThreshold() { return getMaxBlockSize() / 2; }
