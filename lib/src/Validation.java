@@ -558,11 +558,57 @@ public class Validation
       }
     }
 
-
-    // TODO check imported headers reference only valid hashes for shards in this chain
-    //   Need some sort of chain DB for this.  Really we just need the last N hashes for this chain
-
     
+    // check imported headers reference only valid hashes for shards in this chain
+
+    LinkedList<BlockHeader> all_headers = new LinkedList<>();
+    all_headers.add(header);
+
+    for(ImportedBlock ib : blk.getImportedBlocksList())
+    {
+      BlockHeader h = ib.getHeader();
+      all_headers.add(h);
+    }
+    TreeMap<String, ChainHash> known_map=new TreeMap<>();
+    checkCollisions(known_map, prev_summary.getShardHistoryMap());
+    for(BlockHeader h : all_headers)
+    {
+      checkCollisions(known_map, h.getShardImportMap());
+    }
+
+
+  }
+
+  /**
+   * Make sure very block referenced matches from all blocks.
+   * checking by shard id and height to see if hashes match
+   */
+  public static void checkCollisions(TreeMap<String, ChainHash> known_map, Map<Integer, BlockImportList> map)
+    throws ValidationException
+  {
+    for(int shard : map.keySet())
+    {
+      for(Map.Entry<Integer, ByteString> me : map.get(shard).getHeightMap().entrySet())
+      {
+        int height = me.getKey();
+        ChainHash hash = new ChainHash(me.getValue());
+        String key = "" + shard + "," + height;
+        if (known_map.containsKey(key))
+        {
+          if (!hash.equals(known_map.get(key)))
+          {
+            throw new ValidationException("Block collision on: " + key);
+          }
+        }
+        else
+        {
+          known_map.put(key, hash);
+        }
+
+      }
+
+    }
+
   }
 
   /**

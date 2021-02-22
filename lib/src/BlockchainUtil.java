@@ -3,7 +3,10 @@ package snowblossom.lib;
 import com.google.protobuf.ByteString;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 import org.junit.Assert;
 import snowblossom.proto.*;
 
@@ -92,13 +95,63 @@ public class BlockchainUtil
       bs.setTxSizeAverage(new_avg);
 
       bs.setShardLength( prev_shard_len + 1 );
-      
+     
+
       bs.putAllImportedShards( prev_summary.getImportedShardsMap() );
       for(ImportedBlock imb : imported_blocks)
       {
         int imp_shard = imb.getHeader().getShardId();
         bs.putImportedShards(imp_shard, imb.getHeader() );
       }
+
+      // Import previous shard history and prune it down
+      for(Map.Entry<Integer, BlockImportList> me : prev_summary.getShardHistoryMap().entrySet())
+      {
+        int shard = me.getKey();
+        BlockImportList prev_hist = me.getValue();
+
+        TreeMap<Integer, ByteString> height_map = new TreeMap<>();
+        height_map.putAll( prev_hist.getHeightMapMap() );
+
+        while(height_map.size() > 5 * params.getMaxShardSkewHeight() )
+        {
+          height_map.pollFirstEntry();
+        }
+
+        BlockImportList.Builder sh = BlockImportList.newBuilder();
+
+        sh.putAllHeightMap( height_map );
+
+        bs.putShardHistoryMap( shard, sh.build() );
+      }
+
+      // Read all headers and stick them into the shard histories
+      LinkedList<BlockHeader> all_headers = new LinkedList<>();
+      all_headers.add(header);
+      for(ImportedBlock imb : imported_blocks)
+      {
+        int imp_shard = imb.getHeader().getShardId();
+        all_headers.add( imb.getHeader() );
+      }
+
+      // Add all blocks into history
+      for(BlockHeader bh : all_headers)
+      {
+        addBlockToHistory(bs, bh.getShardId(), bh.getBlockHeight(), new ChainHash(bh.getSnowHash()));
+        for(Map.Entry<Integer, BlockImportList> me : bh.getShardImportMap().entrySet() )
+        {
+          int shard = me.getKey();
+          BlockImportList bil = me.getValue();
+          for(Map.Entry<Integer, ByteString> b_me : bil.getHeightMap().entrySet())
+          {
+            int height = b_me.getKey();
+            ChainHash hash = new ChainHash(b_me.getValue());
+            addBlockToHistory(bs, shard, height, hash);
+          }
+
+        }
+      }
+
     }
 
     BigInteger worksum = prev_work_sum.add(work_in_block);
@@ -157,5 +210,22 @@ public class BlockchainUtil
   }
 
 
+  private static void addBlockToHistory(BlockSummary.Builder bs, int shard, int height, ChainHash hash)
+  {
+    if (!bs.getShardHistoryMap().containsKey(shard))
+    {
+      bs.putShardHistoryMap(shard, BlockImportList.newBuilder().build());
+    }
+
+    BlockImportList.Builder b = BlockImportList.newBuilder();
+    
+    b.mergeFrom(bs.getShardHistoryMap().get(shard));
+    b.putHeightMap(height, hash.getBytes());
+
+    bs.putShardHistoryMap(shard, b.build());
+
+  }
+
+  
   
 }
