@@ -573,25 +573,16 @@ public class Validation
     checkCollisions(known_map, prev_summary.getShardHistoryMap());
     for(BlockHeader h : all_headers)
     {
+      checkCollisions(known_map, h.getShardId(), h.getBlockHeight(), new ChainHash(h.getSnowHash()));
       checkCollisions(known_map, h.getShardImportMap());
     }
 
 
   }
 
-  /**
-   * Make sure very block referenced matches from all blocks.
-   * checking by shard id and height to see if hashes match
-   */
-  public static void checkCollisions(TreeMap<String, ChainHash> known_map, Map<Integer, BlockImportList> map)
+  public static void checkCollisions(TreeMap<String, ChainHash> known_map, int shard, int height, ChainHash hash)
     throws ValidationException
   {
-    for(int shard : map.keySet())
-    {
-      for(Map.Entry<Integer, ByteString> me : map.get(shard).getHeightMap().entrySet())
-      {
-        int height = me.getKey();
-        ChainHash hash = new ChainHash(me.getValue());
         String key = "" + shard + "," + height;
         if (known_map.containsKey(key))
         {
@@ -605,10 +596,24 @@ public class Validation
           known_map.put(key, hash);
         }
 
+
+  }
+  /**
+   * Make sure very block referenced matches from all blocks.
+   * checking by shard id and height to see if hashes match
+   */
+  public static void checkCollisions(TreeMap<String, ChainHash> known_map, Map<Integer, BlockImportList> map)
+    throws ValidationException
+  {
+    for(int shard : map.keySet())
+    {
+      for(Map.Entry<Integer, ByteString> me : map.get(shard).getHeightMap().entrySet())
+      {
+        int height = me.getKey();
+        ChainHash hash = new ChainHash(me.getValue());
+        checkCollisions(known_map, shard, height, hash);
       }
-
     }
-
   }
 
   /**
