@@ -31,7 +31,6 @@ public class DB implements DBFace
   protected ProtoDBMap<Transaction> tx_map;
   protected DBMapMutationSet special_map_set;
 
-
   protected DBMap chain_index_map;
   protected HashedTrie chain_index_trie;
   protected HashedTrie utxo_hashed_trie;
@@ -124,18 +123,31 @@ public class DB implements DBFace
   @Override
   public ChainHash getBlockHashAtHeight(int height)
   {
-    ByteBuffer bb = ByteBuffer.allocate(4);
+    return getBlockHashAtHeight(0, height);
+  }
+  @Override
+  public ChainHash getBlockHashAtHeight(int shard, int height)
+  {
+    ByteBuffer bb = ByteBuffer.allocate(8);
+    bb.putInt(shard);
     bb.putInt(height);
     ByteString hash = block_height_map.get(ByteString.copyFrom(bb.array()));
+    if (hash == null)
+    { // old mode - height only
+      bb = ByteBuffer.allocate(4);
+      bb.putInt(height);
+      hash = block_height_map.get(ByteString.copyFrom(bb.array()));
+    }
     if (hash == null) return null;
 
     return new ChainHash(hash);
   }
 
   @Override
-  public void setBlockHashAtHeight(int height, ChainHash hash)
+  public void setBlockHashAtHeight(int shard, int height, ChainHash hash)
   {
-    ByteBuffer bb = ByteBuffer.allocate(4);
+    ByteBuffer bb = ByteBuffer.allocate(8);
+    bb.putInt(shard);
     bb.putInt(height);
 
     block_height_map.put(ByteString.copyFrom(bb.array()), hash.getBytes());

@@ -12,8 +12,9 @@ public interface DBFace
   public ProtoDBMap<BlockSummary> getBlockSummaryMap();
   public ProtoDBMap<Transaction> getTransactionMap();
 
+  public ChainHash getBlockHashAtHeight(int shard, int height);
   public ChainHash getBlockHashAtHeight(int height);
-  public void setBlockHashAtHeight(int height, ChainHash hash);
+  public void setBlockHashAtHeight(int shard, int height, ChainHash hash);
 
   public DBMap getSpecialMap();
   public DBMapMutationSet getSpecialMapSet();

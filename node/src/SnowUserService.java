@@ -326,7 +326,9 @@ public class SnowUserService extends UserServiceGrpc.UserServiceImplBase impleme
     }
     else
     {
-      ChainHash block_hash = node.getDB().getBlockHashAtHeight(req.getBlockHeight());
+      int height = req.getBlockHeight();
+      int shard = req.getShardId();
+      ChainHash block_hash = node.getDB().getBlockHashAtHeight(shard, req.getBlockHeight());
       if (block_hash == null)
       {
         responseObserver.onNext(null);
@@ -349,7 +351,7 @@ public class SnowUserService extends UserServiceGrpc.UserServiceImplBase impleme
     }
     else
     {
-      block_hash = node.getDB().getBlockHashAtHeight(req.getBlockHeight());
+      block_hash = node.getDB().getBlockHashAtHeight(req.getShardId(), req.getBlockHeight());
     }
 
     BlockHeader answer = null;

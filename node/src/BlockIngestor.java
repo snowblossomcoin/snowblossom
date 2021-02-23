@@ -325,12 +325,14 @@ public class BlockIngestor implements ChainStateSource
     while(true)
     {
       int height = summary.getHeader().getBlockHeight();
-      ChainHash found = db.getBlockHashAtHeight(height);
+      int shard = summary.getHeader().getShardId();
+
+      ChainHash found = db.getBlockHashAtHeight(shard, height);
       ChainHash hash = new ChainHash(summary.getHeader().getSnowHash());
       if ((found == null) || (!found.equals(hash)))
       {
-        db.setBlockHashAtHeight(height, hash);
-        node.getBlockHeightCache().setHash(height, hash);
+        db.setBlockHashAtHeight(shard, height, hash);
+        //node.getBlockHeightCache(shard).setHash(height, hash);
         if (height == 0) return;
         summary = db.getBlockSummaryMap().get(summary.getHeader().getPrevBlockHash());
       }
