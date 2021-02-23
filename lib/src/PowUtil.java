@@ -182,7 +182,6 @@ public class PowUtil
   {
     if (prev_summary.getHeader().getTimestamp() == 0) return params.getMaxTarget();
 
-
     long weight = params.getAvgWeight();
     long decay = 1000L - weight;
 
@@ -214,7 +213,6 @@ public class PowUtil
     BigInteger scale_bi = BigInteger.valueOf(scale);
     BigInteger thousand = BigInteger.valueOf(1000L);
 
-
     BigInteger new_target = prev_target_average.add( 
       prev_target_average.multiply(scale_bi).divide(thousand) );
     //long new_target = prev_summary.getTargetAverage() + prev_summary.getTargetAverage() * scale / 1000;
@@ -222,6 +220,13 @@ public class PowUtil
     logger.log(Level.FINE, String.format("Delta_t: %d (%d) scale: %d",averaged_delta_t, target_delta_t, scale));
 
     ByteBuffer bb = ByteBuffer.allocate(8);
+    
+    // account for shard split
+    if (ShardUtil.shardSplit(prev_summary, params))
+    {
+      // new shards should have half the difficulty
+      new_target = new_target.multiply( BigInteger.valueOf(2L) );
+    }
 
     new_target = new_target.min(params.getMaxTarget());
 
@@ -234,6 +239,7 @@ public class PowUtil
       HashUtils.getHexString(new_target_display), 
       df.format(diff),
       df.format(avg_diff)));
+
 
     return new_target;
 

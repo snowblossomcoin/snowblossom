@@ -448,8 +448,7 @@ public class Validation
     // shard id is same as prev block unless it was a split
     boolean shard_split=false;
 
-    if ((prev_summary.getTxSizeAverage() > params.getShardForkThreshold()) 
-      && (prev_summary.getShardLength() >= params.getMinShardLength()))
+    if (ShardUtil.shardSplit(prev_summary, params))
     {
       if (ShardUtil.getShardParentId(header.getShardId()) != prev_summary.getHeader().getShardId())
       {
@@ -503,7 +502,10 @@ public class Validation
     // Model these blocks into our view of the chains
     TreeMap<Integer, BlockHeader> shard_friends = new TreeMap<>();
 
+    // Put all previous heads on the friends map
     shard_friends.putAll( prev_summary.getImportedShardsMap() );
+
+    // put ourself in
     shard_friends.put( header.getShardId(), header );
 
     for(ImportedBlock ib : blk.getImportedBlocksList())
@@ -533,6 +535,7 @@ public class Validation
       {
         throw new ValidationException("Parent height mismatch for imported block");
       }
+
       for(int c : ShardUtil.getShardChildIds(s))
       {
         if (shard_friends.containsKey(c))
@@ -544,6 +547,10 @@ public class Validation
     }
 
     // Check ages of our shard friends - make sure we are getting the full braid
+    // The proof for this is kinda fun.  Base case is shard 0.  We need to have it and recent
+    // or we need to have both children.
+    // If we have both children, those will be checked.
+    // The nice thing about this way
     for(int shard : shard_friends.keySet())
     {
       if (!shard_friends.keySet().containsAll( ShardUtil.getShardChildIds(shard)))
@@ -560,7 +567,8 @@ public class Validation
 
     
     // check imported headers reference only valid hashes for shards in this chain
-
+    // put another way, make sure all the shards are using each other and not
+    // some other nonsense
     LinkedList<BlockHeader> all_headers = new LinkedList<>();
     all_headers.add(header);
 
@@ -583,21 +591,20 @@ public class Validation
   public static void checkCollisions(TreeMap<String, ChainHash> known_map, int shard, int height, ChainHash hash)
     throws ValidationException
   {
-        String key = "" + shard + "," + height;
-        if (known_map.containsKey(key))
-        {
-          if (!hash.equals(known_map.get(key)))
-          {
-            throw new ValidationException("Block collision on: " + key);
-          }
-        }
-        else
-        {
-          known_map.put(key, hash);
-        }
-
-
+    String key = "" + shard + "," + height;
+    if (known_map.containsKey(key))
+    {
+      if (!hash.equals(known_map.get(key)))
+      {
+        throw new ValidationException("Block collision on: " + key);
+      }
+    }
+    else
+    {
+      known_map.put(key, hash);
+    }
   }
+
   /**
    * Make sure very block referenced matches from all blocks.
    * checking by shard id and height to see if hashes match

@@ -71,6 +71,9 @@ public class BlockchainUtil
 
     bs.setTotalTransactions( prev_summary.getTotalTransactions() + tx_count );
 
+    // true if this is the first block of a fresh split
+    boolean fresh_block_split=false;
+
     if (header.getVersion() == 2)
     { 
       // update the tx body running average
@@ -82,6 +85,7 @@ public class BlockchainUtil
 
         prev_tx_size_average = 0;
         prev_shard_len = 0;
+        fresh_block_split = true;
       }
       else
       {
@@ -178,6 +182,13 @@ public class BlockchainUtil
       block_time = header.getTimestamp() - prev_summary.getHeader().getTimestamp();
       prev_block_time = prev_summary.getBlocktimeAverageMs();
       prev_target_avg = BlockchainUtil.readInteger(prev_summary.getTargetAverage());
+
+      if (fresh_block_split)
+      { //With a split, the difficulty drops
+        //We can make a quick trick block stack
+        //We can make a quick trick clock stack
+        prev_target_avg = prev_target_avg.multiply( BigInteger.valueOf(2L) );
+      }
     }
     int field = prev_summary.getActivatedField();
     bs.setActivatedField( field );

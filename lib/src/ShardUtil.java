@@ -11,6 +11,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 import snowblossom.proto.BlockHeader;
+import snowblossom.proto.BlockSummary;
 import snowblossom.proto.BlockImportList;
 
 public class ShardUtil
@@ -242,5 +243,21 @@ public class ShardUtil
     return reward_sum;
   }
 
+  /**
+   * If this returns true, it indicates that the block the summary is about 
+   * must be the last block in the shard it is part of and its children must
+   * be two new shards.
+   */
+  public static boolean shardSplit(BlockSummary summary, NetworkParams params)
+  {
+		if (summary.getHeader().getVersion() == 2)
+    if (summary.getTxSizeAverage() > params.getShardForkThreshold())
+    if (summary.getShardLength() >= params.getMinShardLength())
+    {
+      return true;
+    }
+    return false;
+
+  }
 
 }
