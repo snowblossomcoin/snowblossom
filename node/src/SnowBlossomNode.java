@@ -63,7 +63,6 @@ public class SnowBlossomNode
   private BlockForge forge;
   private MemPool mem_pool;
   private Peerage peerage;
-  private Map<Integer,BlockHeightCache> block_height_cache_map;
 
   private ImmutableList<Integer> service_ports;
   private ImmutableList<Integer> tls_service_ports;
@@ -134,8 +133,6 @@ public class SnowBlossomNode
 
     peerage = new Peerage(this);
     mem_pool.setPeerage(peerage);
-
-    block_height_cache_map = new TreeMap<>();
 
   }
 
@@ -287,20 +284,6 @@ public class SnowBlossomNode
   public Peerage getPeerage(){return peerage;}
   public SnowUserService getUserService() {return user_service;}
 
-  @Deprecated
-  public BlockHeightCache getBlockHeightCacheFace(int shard_id)
-  {
-    synchronized(block_height_cache_map)
-    {
-      BlockHeightCache cache = block_height_cache_map.get(shard_id);
-      if (cache == null)
-      {
-        cache = new BlockHeightCache(this, shard_id);
-        block_height_cache_map.put(shard_id, cache);
-      }
-      return cache; 
-    }
-  }
   public ImmutableList<Integer> getServicePorts() {return service_ports;}
   public ImmutableList<Integer> getTlsServicePorts() {return tls_service_ports;}
   public AddressSpecHash getTlsAddress(){return node_tls_address;}

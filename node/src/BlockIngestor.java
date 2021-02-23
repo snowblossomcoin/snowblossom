@@ -332,7 +332,6 @@ public class BlockIngestor implements ChainStateSource
       if ((found == null) || (!found.equals(hash)))
       {
         db.setBlockHashAtHeight(shard, height, hash);
-        //node.getBlockHeightCache(shard).setHash(height, hash);
         if (height == 0) return;
         summary = db.getBlockSummaryMap().get(summary.getHeader().getPrevBlockHash());
       }
