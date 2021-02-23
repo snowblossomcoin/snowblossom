@@ -13,6 +13,12 @@ public class BlockForgeTest
 {
   private NetworkParams params = new NetworkParamsRegtest();
 
+  public BlockForgeTest()
+  {
+    Globals.addCryptoProvider();
+  }
+
+
   @Test
   public void testCoinbaseOutputBasic()
     throws Exception
