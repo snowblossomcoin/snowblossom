@@ -19,13 +19,50 @@ java_library(
 
 
 java_test(
-    name = "node.test",
-    test_class = "node.test.AllTests",
-    srcs = glob(["test/**/*.java", "test/*.java"]),
+    name = "node.test.MemPoolTest",
+    test_class = "node.test.MemPoolTest",
+    srcs = glob(["test/MemPoolTest.java"]),
     deps = [
-		    "//node:node",
+        "//node:node",
         "//lib:lib",
         "//protolib:protogrpc",
         "@duckutil//:duckutil_lib",
     ]
 )
+
+java_test(
+    name = "node.test.BlockIngestorTest",
+    test_class = "node.test.BlockIngestorTest",
+    srcs = glob(["test/BlockIngestorTest.java"]),
+    deps = [
+        "//node:node",
+        "//lib:lib",
+        "//protolib:protogrpc",
+        "@duckutil//:duckutil_lib",
+    ]
+)
+
+java_test(
+    name = "node.test.BlockForgeTest",
+    test_class = "node.test.BlockForgeTest",
+    srcs = glob(["test/BlockForgeTest.java"]),
+    deps = [
+        "//node:node",
+        "//lib:lib",
+        "//protolib:protogrpc",
+        "@duckutil//:duckutil_lib",
+    ]
+)
+
+java_test(
+    name = "node.test.ForBenefitOfUtilTest",
+    test_class = "node.test.ForBenefitOfUtilTest",
+    srcs = glob(["test/ForBenefitOfUtilTest.java"]),
+    deps = [
+        "//node:node",
+        "//lib:lib",
+        "//protolib:protogrpc",
+        "@duckutil//:duckutil_lib",
+    ]
+)
+

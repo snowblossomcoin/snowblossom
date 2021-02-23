@@ -1,8 +1,8 @@
 package(default_visibility = ["//visibility:public"])
 
 java_test(
-    name = "systemtests.test",
-    test_class = "systemtests.test.AllTests",
+    name = "systemtests.test.SpoonTest",
+    test_class = "systemtests.test.SpoonTest",
     srcs = glob(["test/**/*.java", "test/*.java"]),
     deps = [
         "//lib:lib",
@@ -14,5 +14,6 @@ java_test(
         "//shackleton:shackleton",
         "@duckutil//:duckutil_lib",
         "@build_stack_rules_proto//java:grpc_netty",
-    ]
+    ],
+    size = "medium",
 )
