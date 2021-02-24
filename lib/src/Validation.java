@@ -450,6 +450,10 @@ public class Validation
 
     if (ShardUtil.shardSplit(prev_summary, params))
     {
+      if (header.getShardId() == prev_summary.getHeader().getShardId())
+      {
+        throw new ValidationException("Must split");
+      }
       if (ShardUtil.getShardParentId(header.getShardId()) != prev_summary.getHeader().getShardId())
       {
         throw new ValidationException("Shard split with wrong child");

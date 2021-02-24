@@ -180,7 +180,7 @@ public class SnowBlossomNode
 
   private Object open_shard_lock = new Object();
 
-  private void openShard(int shard_id)
+  public void openShard(int shard_id)
     throws Exception
   {
     if (shard_comps.containsKey(shard_id)) return;
@@ -196,7 +196,6 @@ public class SnowBlossomNode
       m.put(shard_id, shard_c);
 
       shard_comps = ImmutableMap.copyOf(m);
-
     }
   }
 
@@ -313,7 +312,7 @@ public class SnowBlossomNode
   public boolean areWeSynced()
   {
     // Regtest network doesn't have this check for single instance networks
-    if (params.getNetworkName().equals("spoon")) return true;
+    if (params.allowSingleHost()) return true;
 
     int height = 0;
     int seen_height = 0;

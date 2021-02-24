@@ -248,6 +248,21 @@ public class BlockIngestor implements ChainStateSource
         chainhead_work_sum = BlockchainUtil.readInteger(chainhead.getWorkSum());
       }
 
+      if (ShardUtil.shardSplit(summary, params))
+      {
+        for(int child : ShardUtil.getShardChildIds(summary.getHeader().getShardId()))
+        {
+          try
+          {
+            node.openShard(child);
+          }
+          catch(Exception e)
+          {
+            logger.warning("  Unable to open shard: " + e);
+          }
+        }
+      }
+
       if (summary_work_sum.compareTo(chainhead_work_sum) > 0)
       {
         chainhead = summary;
@@ -274,6 +289,8 @@ public class BlockIngestor implements ChainStateSource
         node.getMemPool().tickleBlocks(new ChainHash(summary.getHeader().getUtxoRootHash()));
 
         node.getPeerage().sendAllTips();
+
+        
       }
 
 

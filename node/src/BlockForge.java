@@ -41,6 +41,7 @@ public class BlockForge
 
     BlockHeader.Builder header_builder = BlockHeader.newBuilder();
 
+    
     header_builder.setVersion(1);
 
     if (head == null)
@@ -54,8 +55,13 @@ public class BlockForge
     }
     else
     {
+      
       header_builder.setBlockHeight(head.getHeader().getBlockHeight() + 1);
       header_builder.setPrevBlockHash(head.getHeader().getSnowHash());
+      if (header_builder.getBlockHeight() >= params.getActivationHeightShards())
+      {
+        header_builder.setVersion(2);
+      }
     }
 
 
@@ -97,10 +103,17 @@ public class BlockForge
       // TODO Save export utxo data
 
 
+      int tx_size_total = 0;
       LinkedList<ChainHash> tx_list = new LinkedList<ChainHash>();
       for(Transaction tx : block_builder.getTransactionsList())
       {
         tx_list.add( new ChainHash(tx.getTxHash()));
+        tx_size_total += tx.getInnerData().size() + tx.getTxHash().size();
+      }
+
+      if (header_builder.getVersion() == 2)
+      {
+        header_builder.setTxDataSizeSum(tx_size_total);
       }
 
       header_builder.setMerkleRootHash( DigestUtil.getMerkleRootForTxList(tx_list).getBytes());

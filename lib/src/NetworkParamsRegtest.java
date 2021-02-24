@@ -42,6 +42,9 @@ public class NetworkParamsRegtest extends NetworkParams
 
   @Override
   public String getNetworkName() { return "spoon"; }
+  
+  @Override
+  public boolean allowSingleHost() {return true; }
 
   @Override
   public int getBIP44CoinNumber() { return 2339; }

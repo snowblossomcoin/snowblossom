@@ -146,18 +146,24 @@ public class SpoonTest
 
   protected File setupSnow() throws Exception
   {
-    NetworkParams params = new NetworkParamsRegtest();
+    return setupSnow("spoon");
+  }
+  protected File setupSnow(String network) throws Exception
+  {
+    TreeMap<String, String> config_map = new TreeMap<>();
+    config_map.put("network", network);
+
+    NetworkParams params = NetworkParams.loadFromConfig(new ConfigMem(config_map));
 
     String test_folder_base = test_folder.newFolder().getPath();
 
     File snow_path = new File(test_folder.newFolder(), "snow");
 
-
     for (int i = 0; i < 4; i++)
     {
       SnowFieldInfo info = params.getSnowFieldInfo(i);
 
-      String name = "spoon." + i;
+      String name = network + "." + i;
 
       File field_path = new File(snow_path, name);
       field_path.mkdirs();
@@ -174,6 +180,10 @@ public class SpoonTest
 
   protected SnowBlossomNode startNode(int port) throws Exception
   {
+    return startNode(port, "spoon");
+  }
+  protected SnowBlossomNode startNode(int port, String network) throws Exception
+  {
 
     String test_folder_base = test_folder.newFolder().getPath();
 
@@ -181,7 +191,7 @@ public class SpoonTest
     config_map.put("db_path", test_folder_base + "/db");
     config_map.put("db_type", "rocksdb");
     config_map.put("service_port", "" + port);
-    config_map.put("network", "spoon");
+    config_map.put("network", network);
     config_map.put("tx_index", "true");
     config_map.put("addr_index", "true");
 
@@ -190,6 +200,10 @@ public class SpoonTest
   }
 
   protected MrPlow startMrPlow(int node_port, AddressSpecHash pool_addr) throws Exception
+  {
+    return startMrPlow(node_port, pool_addr, "spoon");
+  }
+  protected MrPlow startMrPlow(int node_port, AddressSpecHash pool_addr, String network) throws Exception
   {
     String plow_db_path = test_folder.newFolder().getPath();
     Map<String, String> config_map = new TreeMap<>();
@@ -201,7 +215,7 @@ public class SpoonTest
     config_map.put("pool_fee", "0.01");
     config_map.put("pool_address", pool_addr.toAddressString(new NetworkParamsRegtest()));
     config_map.put("mining_pool_port", "" +(node_port+1));
-    config_map.put("network", "spoon");
+    config_map.put("network", network);
     config_map.put("min_diff", "11");
 
     return new MrPlow(new ConfigMem(config_map));
@@ -211,13 +225,18 @@ public class SpoonTest
 
   protected SnowBlossomMiner startMiner(int port, AddressSpecHash mine_to, File snow_path) throws Exception
   {
+    return startMiner(port, mine_to, snow_path, "spoon");
+  }
+  protected SnowBlossomMiner startMiner(int port, AddressSpecHash mine_to, File snow_path, String network) throws Exception
+  {
     Map<String, String> config_map = new TreeMap<>();
     config_map.put("node_host", "localhost");
     config_map.put("node_port", "" + port);
     config_map.put("threads", "1");
-    config_map.put("mine_to_address", mine_to.toAddressString(new NetworkParamsRegtest()));
     config_map.put("snow_path", snow_path.getPath());
-    config_map.put("network", "spoon");
+    config_map.put("network", network);
+    NetworkParams params = NetworkParams.loadFromConfig(new ConfigMem(config_map));
+    config_map.put("mine_to_address", mine_to.toAddressString(params));
     if (port % 2 == 1)
     {
       config_map.put("memfield", "true");
@@ -229,8 +248,10 @@ public class SpoonTest
 
   protected PoolMiner startPoolMiner(int port, AddressSpecHash mine_to, File snow_path) throws Exception
   {
-
-    
+    return startPoolMiner(port, mine_to, snow_path, "spoon");
+  }
+  protected PoolMiner startPoolMiner(int port, AddressSpecHash mine_to, File snow_path, String network) throws Exception
+  {
     String addr = mine_to.toAddressString(new NetworkParamsRegtest());
     System.out.println("Starting miner with " + addr);
 
@@ -240,7 +261,7 @@ public class SpoonTest
     config_map.put("threads", "1");
     config_map.put("mine_to_address", addr);
     config_map.put("snow_path", snow_path.getPath());
-    config_map.put("network", "spoon");
+    config_map.put("network", network);
     if (port % 2 == 1)
     {
       config_map.put("memfield", "true");

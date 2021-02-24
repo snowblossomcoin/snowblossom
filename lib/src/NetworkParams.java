@@ -68,6 +68,9 @@ public abstract class NetworkParams
   public int getDefaultPort() { return 2338; }
   public int getDefaultTlsPort() { return 2348; }
 
+  // Used only for single machine test networks
+  public boolean allowSingleHost() {return false; }
+
   public int getActivationHeightTxOutRequirements() { return Integer.MAX_VALUE; }
   public int getActivationHeightTxOutExtras() { return Integer.MAX_VALUE; }
 
@@ -150,6 +153,11 @@ public abstract class NetworkParams
       {
         logger.info("Using network spoon - regtest");
         return new NetworkParamsRegtest();
+      }
+      else if (network.equals("regshard"))
+      {
+        logger.info("Using network regshard");
+        return new NetworkParamsRegShard();
       }
       else
       {
