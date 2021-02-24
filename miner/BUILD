@@ -19,9 +19,29 @@ java_library(
 )
 
 java_test(
-    name = "miner.test",
-    test_class = "miner.test.AllTests",
-    srcs = glob(["test/**/*.java", "test/*.java"]),
+    name = "miner.test.ShareManagerTest",
+    test_class = "miner.test.ShareManagerTest",
+    srcs = glob(["test/ShareManagerTest.java"]),
+    deps = [
+		    "//miner:miner",
+        "//lib:lib",
+        "//protolib:protogrpc",
+    ]
+)
+java_test(
+    name = "miner.test.SnowMerkleProofTest",
+    test_class = "miner.test.SnowMerkleProofTest",
+    srcs = glob(["test/SnowMerkleProofTest.java"]),
+    deps = [
+		    "//miner:miner",
+        "//lib:lib",
+        "//protolib:protogrpc",
+    ]
+)
+java_test(
+    name = "miner.test.FaQueueTest",
+    test_class = "miner.test.FaQueueTest",
+    srcs = glob(["test/FaQueueTest.java"]),
     deps = [
 		    "//miner:miner",
         "//lib:lib",

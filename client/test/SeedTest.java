@@ -21,6 +21,11 @@ public class SeedTest
 {
   private static final Logger logger = Logger.getLogger("SeedTest");
 
+  public SeedTest()
+  {
+    Globals.addCryptoProvider();
+  }
+
   @Test
   public void testMnemonicCode()
   {

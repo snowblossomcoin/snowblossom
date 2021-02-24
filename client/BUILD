@@ -21,9 +21,61 @@ java_library(
 )
 
 java_test(
-    name = "client.test",
-    test_class = "client.test.AllTests",
-    srcs = glob(["test/**/*.java", "test/*.java"]),
+    name = "client.test.WalletTest",
+    test_class = "client.test.WalletTest",
+    srcs = glob(["test/WalletTest.java"]),
+    deps = [
+        "//client:client",
+        "//lib:lib",
+        "//protolib:protogrpc",
+        "@duckutil//:duckutil_lib",
+        "@maven//:org_bitcoinj_bitcoinj_core",
+    ]
+)
+
+java_test(
+    name = "client.test.PurseTest",
+    test_class = "client.test.PurseTest",
+    srcs = glob(["test/PurseTest.java"]),
+    deps = [
+        "//client:client",
+        "//lib:lib",
+        "//protolib:protogrpc",
+        "@duckutil//:duckutil_lib",
+        "@maven//:org_bitcoinj_bitcoinj_core",
+    ]
+)
+
+java_test(
+    name = "client.test.SeedTest",
+    test_class = "client.test.SeedTest",
+    srcs = glob(["test/SeedTest.java"]),
+    deps = [
+        "//client:client",
+        "//lib:lib",
+        "//protolib:protogrpc",
+        "@duckutil//:duckutil_lib",
+        "@maven//:org_bitcoinj_bitcoinj_core",
+    ]
+)
+
+java_test(
+    name = "client.test.TransactionFactoryTest",
+    test_class = "client.test.TransactionFactoryTest",
+    srcs = glob(["test/TransactionFactoryTest.java"]),
+    deps = [
+        "//client:client",
+        "//lib:lib",
+        "//protolib:protogrpc",
+        "@duckutil//:duckutil_lib",
+        "@maven//:org_bitcoinj_bitcoinj_core",
+    ]
+)
+
+java_test(
+    name = "client.test.PasswordCryptTest",
+    test_class = "client.test.PasswordCryptTest",
+    srcs = glob(["test/PasswordCryptTest.java"]),
     deps = [
         "//client:client",
         "//lib:lib",
