@@ -254,6 +254,8 @@ public class BlockIngestor implements ChainStateSource
         {
           try
           {
+            // TODO - we don't always want to open the child shard,
+            // we might just be interested in one branch
             node.openShard(child);
           }
           catch(Exception e)

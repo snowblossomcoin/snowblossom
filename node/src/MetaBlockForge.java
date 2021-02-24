@@ -28,6 +28,7 @@ public class MetaBlockForge
       try
       {
         Block b = node.getBlockForge(shard_id).getBlockTemplate(mine_to);
+        // TODO - make sure block is actually usable - braid check
         if (b != null)
         mineable.add(b);
       }
