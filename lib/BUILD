@@ -159,12 +159,19 @@ java_test(
     ]
 )
 
-<<<<<<< HEAD
 java_test(
     name = "lib.test.shard",
     test_class = "lib.test.ShardUtilTest",
     srcs = glob(["test/**/*.java", "test/*.java"]),
-=======
+    deps = [
+        "//lib:lib",
+        "//lib:rocksdb",
+        "//protolib:protogrpc",
+        "@maven//:commons_codec_commons_codec",
+        "@maven//:org_bouncycastle_bcprov_jdk15on",
+    ]
+)
+
 
 java_test(
     name = "lib.test.PRNGStreamTest",
