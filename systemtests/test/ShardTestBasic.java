@@ -32,9 +32,12 @@ public class ShardTestBasic extends SpoonTest
 
     SnowBlossomMiner miner = startMiner(port, to_addr, snow_path, "regshard");
 
-    waitForMoreBlocks(node, 18);
+    waitForHeight(node, 0, 19);
+    waitForHeight(node, 1, 21);
+    waitForHeight(node, 2, 21);
 
     System.out.println(node.getBlockIngestor(0).getHead());
+    System.out.println(node.getBlockIngestor(2).getHead());
 
 
     miner.stop();

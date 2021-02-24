@@ -102,6 +102,8 @@ public class BlockchainUtil
      
 
       bs.putAllImportedShards( prev_summary.getImportedShardsMap() );
+      // put myself in
+      bs.putImportedShards(header.getShardId(), header);
       for(ImportedBlock imb : imported_blocks)
       {
         int imp_shard = imb.getHeader().getShardId();

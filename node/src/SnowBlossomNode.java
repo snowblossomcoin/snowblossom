@@ -1,8 +1,8 @@
 package snowblossom.node;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import duckutil.Config;
 import duckutil.ConfigFile;
 import duckutil.ConfigMem;
@@ -14,18 +14,19 @@ import io.netty.handler.ssl.SslContext;
 import java.io.File;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
-import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import snowblossom.client.WalletUtil;
 import snowblossom.lib.*;
 import snowblossom.lib.SystemUtil;
 import snowblossom.lib.db.DB;
+import snowblossom.lib.db.atomicfile.AtomicFileDB;
 import snowblossom.lib.db.lobstack.LobstackDB;
 import snowblossom.lib.db.rocksdb.JRocksDB;
-import snowblossom.lib.db.atomicfile.AtomicFileDB;
 import snowblossom.lib.tls.CertGen;
 import snowblossom.lib.trie.HashedTrie;
 import snowblossom.proto.WalletDatabase;
@@ -63,6 +64,7 @@ public class SnowBlossomNode
   private DB db;
   private NetworkParams params;
   private Peerage peerage;
+  private MetaBlockForge meta_blockforge;
 
   private ImmutableList<Integer> service_ports;
   private ImmutableList<Integer> tls_service_ports;
@@ -156,6 +158,7 @@ public class SnowBlossomNode
   {
 
     peerage = new Peerage(this);
+    meta_blockforge = new MetaBlockForge(this);
 
   }
 
@@ -344,8 +347,10 @@ public class SnowBlossomNode
   public NetworkParams getParams(){return params;}
 
   public BlockIngestor getBlockIngestor(){return getBlockIngestor(0);}
-  public BlockForge getBlockForge(){return getBlockForge(0);}
+  public MetaBlockForge getBlockForge(){return meta_blockforge;}
   public MemPool getMemPool(){return getMemPool(0);}
+
+  public Set<Integer> getActiveShards(){return shard_comps.keySet(); }
 
   public BlockIngestor getBlockIngestor(int shard_id)
   {

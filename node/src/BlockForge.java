@@ -43,19 +43,52 @@ public class BlockForge
 
     
     header_builder.setVersion(1);
+    header_builder.setShardId(shard_id);
+
+    ChainHash prev_utxo_root = null;
 
     if (head == null)
     {
       header_builder.setBlockHeight(0);
       header_builder.setPrevBlockHash(ChainHash.ZERO_HASH.getBytes());
 
+      prev_utxo_root = new ChainHash( HashUtils.hashOfEmpty() );
+
       head = BlockSummary.newBuilder()
                .setHeader(BlockHeader.newBuilder().setUtxoRootHash( HashUtils.hashOfEmpty() ).build())
              .build();
+      if (shard_id != 0)
+      {
+        int parent_shard = ShardUtil.getShardParentId(shard_id);
+        head = node.getBlockIngestor(parent_shard).getHead();
+        if (head == null) return null;
+        
+        header_builder.setVersion(2);
+        header_builder.setBlockHeight(head.getHeader().getBlockHeight() + 1);
+        header_builder.setPrevBlockHash(head.getHeader().getSnowHash());
+
+        if (ShardUtil.getInheritSet(shard_id).contains(parent_shard))
+        {
+      
+          prev_utxo_root = new ChainHash(head.getHeader().getUtxoRootHash());
+        }
+        else
+        {
+          prev_utxo_root = new ChainHash( HashUtils.hashOfEmpty() );
+        }
+      }
     }
     else
     {
-      
+      if (ShardUtil.shardSplit(head, params))
+      {
+        // Can't mine on this shard any more
+        return null;
+      }
+
+      prev_utxo_root = new ChainHash(head.getHeader().getUtxoRootHash());
+
+     
       header_builder.setBlockHeight(head.getHeader().getBlockHeight() + 1);
       header_builder.setPrevBlockHash(head.getHeader().getSnowHash());
       if (header_builder.getBlockHeight() >= params.getActivationHeightShards())
@@ -72,7 +105,6 @@ public class BlockForge
     header_builder.setTimestamp(time);
     header_builder.setTarget(BlockchainUtil.targetBigIntegerToBytes(target));
     header_builder.setSnowField(head.getActivatedField());
-    header_builder.setShardId(shard_id);
 
     // TODO Select shard ID
 
@@ -80,7 +112,7 @@ public class BlockForge
     {
 
       UtxoUpdateBuffer utxo_buffer = new UtxoUpdateBuffer( node.getUtxoHashedTrie(), 
-        new ChainHash(head.getHeader().getUtxoRootHash()));
+        prev_utxo_root);
       List<Transaction> regular_transactions = getTransactions(new ChainHash(head.getHeader().getUtxoRootHash()));
       long fee_sum = 0L;
 
@@ -93,7 +125,7 @@ public class BlockForge
           shard_cover_set, export_utxo_buffer);
       }
 
-      Transaction coinbase = buildCoinbase( header_builder.getBlockHeight(), fee_sum, mine_to);
+      Transaction coinbase = buildCoinbase( header_builder.build(), fee_sum, mine_to);
       Validation.deepTransactionCheck(coinbase, utxo_buffer, header_builder.build(), params,
         shard_cover_set, export_utxo_buffer);
 
@@ -129,10 +161,11 @@ public class BlockForge
 
   }
 
-  private Transaction buildCoinbase(int height, long fees, SubscribeBlockTemplateRequest mine_to)
+  private Transaction buildCoinbase(BlockHeader header, long fees, SubscribeBlockTemplateRequest mine_to)
     throws ValidationException
   {
     Transaction.Builder tx = Transaction.newBuilder();
+    int height = header.getBlockHeight();
 
     TransactionInner.Builder inner = TransactionInner.newBuilder();
     inner.setVersion(1);
@@ -146,12 +179,16 @@ public class BlockForge
       ext.setRemarks(params.getBlockZeroRemark());
     }
     ext.setBlockHeight(height);
+    ext.setShardId(header.getShardId());
 
     inner.setCoinbaseExtras(ext.build());
 
-    long total_reward = PowUtil.getBlockReward(params, height) + fees;
 
-    inner.addAllOutputs( makeCoinbaseOutputs( params, total_reward, mine_to));
+    //long total_reward = PowUtil.getBlockReward(params, height) + fees;
+    long total_reward = ShardUtil.getBlockReward(params, header) + fees;
+    
+
+    inner.addAllOutputs( makeCoinbaseOutputs( params, total_reward, mine_to, shard_id));
 
 
     ByteString inner_data = inner.build().toByteString();
@@ -165,7 +202,7 @@ public class BlockForge
     return tx.build();
   }
 
-  public static List<TransactionOutput> makeCoinbaseOutputs(NetworkParams params, long total_reward, SubscribeBlockTemplateRequest req)
+  public static List<TransactionOutput> makeCoinbaseOutputs(NetworkParams params, long total_reward, SubscribeBlockTemplateRequest req, int target_shard)
     throws ValidationException
   {
     if (req.getPayRewardToSpecHash().size() > 0)
@@ -176,6 +213,7 @@ public class BlockForge
         TransactionOutput.newBuilder()
           .setValue(total_reward)
           .setRecipientSpecHash(addr.getBytes())
+          .setTargetShard(target_shard)
           .build());
     }
     double total_weight = 0.0;
@@ -223,6 +261,7 @@ public class BlockForge
         TransactionOutput.newBuilder()
           .setValue(me.getValue())
           .setRecipientSpecHash(addr.getBytes())
+          .setTargetShard(target_shard)
           .build());
     }
 

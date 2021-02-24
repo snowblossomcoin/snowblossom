@@ -125,6 +125,7 @@ message CoinbaseExtras {
   bytes remarks = 2; //remarks from the miner for the good of the blockchain
   repeated int32 motions_approved = 3;
   repeated int32 motions_rejected = 4;
+  int32 shard_id = 5; // Same idea as the block height
 }
 
 // If any of these are defined then
@@ -422,6 +423,7 @@ message BlockSummary {
   int32 shard_length = 11; // Number of blocks in this shard so far
 
   // Maps shard id to shard history
+  // longer history, but just has heights and hashes, not full headers
   map<int32, BlockImportList> shard_history_map = 12;
 }
 

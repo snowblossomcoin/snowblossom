@@ -52,10 +52,14 @@ public class SpoonTest
 
   protected void waitForMoreBlocks(SnowBlossomNode node, int wait_for) throws Exception
   {
+    waitForMoreBlocks(node, 0, wait_for);
+  }
+  protected void waitForMoreBlocks(SnowBlossomNode node, int shard_id, int wait_for) throws Exception
+  {
     int start = -1;
-    if (node.getBlockIngestor().getHead()!=null)
+    if (node.getBlockIngestor(shard_id).getHead()!=null)
     {
-      start = node.getBlockIngestor().getHead().getHeader().getBlockHeight();
+      start = node.getBlockIngestor(shard_id).getHead().getHeader().getBlockHeight();
     }
     int target = start + wait_for;
 
@@ -63,12 +67,43 @@ public class SpoonTest
     for (int i = 0; i < 15; i++)
     {
       Thread.sleep(1000);
-      height = node.getBlockIngestor().getHead().getHeader().getBlockHeight();
+      height = node.getBlockIngestor(shard_id).getHead().getHeader().getBlockHeight();
       if (height >= target) return;
     }
     Assert.fail(String.format("Waiting for %d blocks, only got %d", wait_for, height - start));
 
   }
+
+  protected void waitForHeight(SnowBlossomNode node, int shard_id, int target) throws Exception
+  {
+
+    int height=-1;
+    for (int i = 0; i < 15; i++)
+    {
+      Thread.sleep(1000);
+      if (node.getBlockIngestor(shard_id) != null)
+      if (node.getBlockIngestor(shard_id).getHead() != null)
+      {
+        height = node.getBlockIngestor(shard_id).getHead().getHeader().getBlockHeight();
+        if (height >= target) return;
+      }
+    }
+    Assert.fail(String.format("Waiting for %d blocks, only got %d", target, height));
+
+  }
+
+
+  protected void waitForShardOpen(SnowBlossomNode node, int shard_id) throws Exception
+  {
+    for(int i=0; i<15; i++)
+    {
+      if (node.getActiveShards().contains(shard_id)) return;
+      Thread.sleep(1000);
+    }
+    Assert.fail(String.format("Shard %d did not become active", shard_id));
+
+  }
+
 
   protected void waitForFunds(SnowBlossomClient client, AddressSpecHash addr, int max_seconds)
     throws Exception

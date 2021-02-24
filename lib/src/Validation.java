@@ -351,6 +351,10 @@ public class Validation
       {
         throw new ValidationException("Block height in block header does not match block height in coinbase");
       }
+      if (coinbase_inner.getCoinbaseExtras().getShardId() != blk.getHeader().getShardId())
+      {
+        throw new ValidationException("Block shard_id in block header does not match shard_id in coinbase");
+      }
       if (blk.getHeader().getBlockHeight() == 0)
       {
         if (!coinbase_inner.getCoinbaseExtras().getRemarks().startsWith( params.getBlockZeroRemark()))
@@ -554,19 +558,10 @@ public class Validation
     // The proof for this is kinda fun.  Base case is shard 0.  We need to have it and recent
     // or we need to have both children.
     // If we have both children, those will be checked.
-    // The nice thing about this way
-    for(int shard : shard_friends.keySet())
+    if (!checkShardCompleteness(header.getBlockHeight(), params, shard_friends, 0))
     {
-      if (!shard_friends.keySet().containsAll( ShardUtil.getShardChildIds(shard)))
-      { // if both children of this shard are in, then we don't worry about it.
-        // otherwise...
+      throw new ValidationException("Incomplete or old braid");
 
-        int h_delta = header.getBlockHeight() - shard_friends.get(shard).getBlockHeight();
-        if (h_delta > params.getMaxShardSkewHeight())
-        {
-          throw new ValidationException("Shard " + shard + " is too old");
-        }
-      }
     }
 
     
@@ -588,7 +583,31 @@ public class Validation
       checkCollisions(known_map, h.getShardId(), h.getBlockHeight(), new ChainHash(h.getSnowHash()));
       checkCollisions(known_map, h.getShardImportMap());
     }
+  }
 
+  
+  public static boolean checkShardCompleteness(int build_height, NetworkParams params, Map<Integer, BlockHeader> shard_friends, int shard)
+  {
+    if (shard > params.getMaxShardId())
+    {
+      return false;
+    }
+    int good_children = 0;
+    for(int c : ShardUtil.getShardChildIds(shard))
+    {
+      if (checkShardCompleteness(build_height, params, shard_friends, c)) good_children++;
+
+    }
+    if (good_children == 2) return true;
+
+    if (!shard_friends.containsKey(shard)) return false;
+
+    int h_delta = build_height - shard_friends.get(shard).getBlockHeight();
+    if (h_delta > params.getMaxShardSkewHeight())
+    {
+      return false;
+    }
+    return true;
 
   }
 
