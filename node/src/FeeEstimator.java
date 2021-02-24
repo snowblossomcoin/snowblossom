@@ -13,10 +13,12 @@ public class FeeEstimator
   public static final long FEE_RECALC_TIME = 30000L;
 
   private SnowBlossomNode node;
+  private final int shard_id;
 
-  public FeeEstimator(SnowBlossomNode node)
+  public FeeEstimator(SnowBlossomNode node, int shard_id)
   {
     this.node = node;
+    this.shard_id = shard_id;
   }
 
   private long last_calc_time = 0L;
@@ -35,12 +37,12 @@ public class FeeEstimator
 
   private void recalcFee()
   {
-    BlockSummary head = node.getBlockIngestor().getHead();
+    BlockSummary head = node.getBlockIngestor(shard_id).getHead();
     ChainHash utxo_root = new ChainHash(head.getHeader().getUtxoRootHash());
 
     long test_size =  node.getParams().getMaxBlockSize()*2/3;
 
-    List<Transaction> tx_list = node.getMemPool().getTransactionsForBlock(utxo_root, (int)test_size);
+    List<Transaction> tx_list = node.getMemPool(shard_id).getTransactionsForBlock(utxo_root, (int)test_size);
     long total_size = 0L;
     long total_fee = 0L;
 
@@ -78,8 +80,6 @@ public class FeeEstimator
     logger.fine("Average fee: " + average_fee + " " + end_fee + " " + end_size);
 
     last_fee = Math.max(Globals.BASIC_FEE, average_fee * 1.01);
-
-    
 
     last_calc_time = System.currentTimeMillis();
   }

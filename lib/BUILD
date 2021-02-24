@@ -160,9 +160,9 @@ java_test(
 )
 
 java_test(
-    name = "lib.test.shard",
+    name = "lib.test.ShardUtilTest",
     test_class = "lib.test.ShardUtilTest",
-    srcs = glob(["test/**/*.java", "test/*.java"]),
+    srcs = glob(["test/ShardUtilTest.java"]),
     deps = [
         "//lib:lib",
         "//lib:rocksdb",

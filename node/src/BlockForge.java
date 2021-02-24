@@ -24,15 +24,18 @@ public class BlockForge
 
   private SnowBlossomNode node;
   private NetworkParams params;
-  public BlockForge(SnowBlossomNode node)
+  private final int shard_id;
+  
+  public BlockForge(SnowBlossomNode node, int shard_id)
   {
     this.node = node;
     this.params = node.getParams();
+    this.shard_id = shard_id;
   }
 
   public Block getBlockTemplate(SubscribeBlockTemplateRequest mine_to)
   {
-    BlockSummary head = node.getBlockIngestor().getHead();
+    BlockSummary head = node.getBlockIngestor(shard_id).getHead();
 
     Block.Builder block_builder = Block.newBuilder();
 
@@ -63,6 +66,7 @@ public class BlockForge
     header_builder.setTimestamp(time);
     header_builder.setTarget(BlockchainUtil.targetBigIntegerToBytes(target));
     header_builder.setSnowField(head.getActivatedField());
+    header_builder.setShardId(shard_id);
 
     // TODO Select shard ID
 
@@ -215,7 +219,7 @@ public class BlockForge
 
   private List<Transaction> getTransactions(ChainHash prev_utxo_root)
   {
-    return node.getMemPool().getTransactionsForBlock(prev_utxo_root, node.getParams().getMaxBlockSize());
+    return node.getMemPool(shard_id).getTransactionsForBlock(prev_utxo_root, node.getParams().getMaxBlockSize());
   }
 
 

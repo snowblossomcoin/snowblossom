@@ -11,6 +11,7 @@ import java.util.logging.Logger;
 import snowblossom.lib.*;
 import snowblossom.proto.*;
 import snowblossom.trie.proto.TrieNode;
+import duckutil.LRUCache;
 
 public class SnowUserService extends UserServiceGrpc.UserServiceImplBase implements MemPoolTickleInterface
 {
@@ -21,7 +22,7 @@ public class SnowUserService extends UserServiceGrpc.UserServiceImplBase impleme
 
   private SnowBlossomNode node;
   private Object tickle_trigger = new Object();
-  private FeeEstimator fee_est;
+  private LRUCache<Integer, FeeEstimator> fee_est_map;
 
   public SnowUserService(SnowBlossomNode node)
   {
@@ -29,8 +30,7 @@ public class SnowUserService extends UserServiceGrpc.UserServiceImplBase impleme
 
     this.node = node;
 
-    fee_est = new FeeEstimator(node);
-
+    fee_est_map = new LRUCache<>(2000);
 
   }
 
@@ -76,6 +76,7 @@ public class SnowUserService extends UserServiceGrpc.UserServiceImplBase impleme
   {
     if (node.areWeSynced())
     {
+      // TODO - select other shards
       Block block = node.getBlockForge().getBlockTemplate(info.req);
       info.sink.onNext(block);
     }
@@ -99,7 +100,8 @@ public class SnowUserService extends UserServiceGrpc.UserServiceImplBase impleme
   @Override
   public void tickleMemPool(Transaction tx, Collection<AddressSpecHash> involved)
   {
-    ChainHash utxo_root = new ChainHash(node.getBlockIngestor().getHead().getHeader().getUtxoRootHash());
+    // TODO - shards
+    ChainHash utxo_root = new ChainHash(node.getBlockIngestor(0).getHead().getHeader().getUtxoRootHash());
     sendAddressUpdates(involved, utxo_root);
 
   }
@@ -118,7 +120,7 @@ public class SnowUserService extends UserServiceGrpc.UserServiceImplBase impleme
       address_watchers.get(hash).add(ob);
     }
 
-    ChainHash utxo_root = new ChainHash(node.getBlockIngestor().getHead().getHeader().getUtxoRootHash());
+    ChainHash utxo_root = new ChainHash(node.getBlockIngestor(0).getHead().getHeader().getUtxoRootHash());
     sendAddressUpdate(hash, utxo_root, ob);
 
   }
@@ -418,9 +420,23 @@ public class SnowUserService extends UserServiceGrpc.UserServiceImplBase impleme
   @Override
   public void getFeeEstimate(NullRequest null_request, StreamObserver<FeeEstimate> observer)
   {
-    //observer.onNext( FeeEstimate.newBuilder().setFeePerByte( Globals.BASIC_FEE ).build() );
-    observer.onNext( FeeEstimate.newBuilder().setFeePerByte( fee_est.getFeeEstimate()).build());
+    // TODO - get shard id from request
+    int shard_id = 0;
+    observer.onNext( FeeEstimate.newBuilder().setFeePerByte( getFeeEstimator(shard_id).getFeeEstimate()).build());
     observer.onCompleted();
+  }
+
+  public FeeEstimator getFeeEstimator(int shard_id)
+  {
+    synchronized(fee_est_map)
+    {
+      if (fee_est_map.containsKey(shard_id)) return fee_est_map.get(shard_id);
+
+      FeeEstimator f = new FeeEstimator(node, shard_id);
+
+      fee_est_map.put(shard_id, f);
+      return f;
+    }
   }
 
   @Override

@@ -1,6 +1,8 @@
 package snowblossom.node;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableMap;
 import duckutil.Config;
 import duckutil.ConfigFile;
 import duckutil.ConfigMem;
@@ -13,6 +15,7 @@ import java.io.File;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.TreeMap;
+import java.util.TreeSet;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -59,15 +62,15 @@ public class SnowBlossomNode
   private SnowPeerService peer_service;
   private DB db;
   private NetworkParams params;
-  private BlockIngestor ingestor;
-  private BlockForge forge;
-  private MemPool mem_pool;
   private Peerage peerage;
 
   private ImmutableList<Integer> service_ports;
   private ImmutableList<Integer> tls_service_ports;
   private AddressSpecHash node_tls_address;
   private ImmutableList<StatusInterface> status_list;
+  private ImmutableSet<Integer> shard_interest_set;
+
+  private Map<Integer, ShardComponents> shard_comps = ImmutableMap.of();
 
   private volatile boolean terminate;
 
@@ -96,6 +99,7 @@ public class SnowBlossomNode
     setupParams();
     loadDB();
     loadWidgets();
+    openShards();
 
     startServices();
 
@@ -107,12 +111,36 @@ public class SnowBlossomNode
   public void stop()
   {
     terminate=true;
-
   }
 
   private void setupParams()
   {
     params = NetworkParams.loadFromConfig(config);
+    
+    TreeSet<Integer> cover_set = new TreeSet<>();
+
+    if (config.isSet("shards"))
+    {
+      for(String shard_str : config.getList("shards"))
+      {
+        int shard_id = Integer.parseInt(shard_str);
+
+        // Add this shard and all shards down from it
+        cover_set.addAll( ShardUtil.getCoverSet(shard_id, params) );
+
+        // We need to trace all parents in order to get the entry point
+        // into this shard
+        cover_set.addAll( ShardUtil.getAllParents(shard_id) );
+      }
+    }
+    else
+    {
+      cover_set.addAll( ShardUtil.getCoverSet(0, params) );
+    }
+    logger.info("Shard interest set: " + cover_set);
+
+    shard_interest_set = ImmutableSet.copyOf(cover_set);
+
   }
 
   public void setStatus(String status)
@@ -121,19 +149,55 @@ public class SnowBlossomNode
     {
       si.setStatus(status);
     }
-
   }
 
   private void loadWidgets()
     throws Exception
   {
-    ingestor = new BlockIngestor(this);
-    forge = new BlockForge(this);
-    mem_pool = new MemPool(db.getUtxoHashedTrie(), ingestor);
 
     peerage = new Peerage(this);
-    mem_pool.setPeerage(peerage);
 
+  }
+
+  /**
+   * open shards where we know about a head
+   */
+  private void openShards()
+    throws Exception
+  {
+    for(int shard_id : shard_interest_set)
+    {
+      if ( new BlockIngestor(this, shard_id).getHead() != null)
+      {
+        openShard(shard_id);
+      }
+
+    }
+    // If we have nothing, open shard zero regardless
+    if(shard_comps.size() == 0) openShard(0);
+
+  }
+
+  private Object open_shard_lock = new Object();
+
+  private void openShard(int shard_id)
+    throws Exception
+  {
+    if (shard_comps.containsKey(shard_id)) return;
+
+    synchronized(open_shard_lock)
+    {
+      if (shard_comps.containsKey(shard_id)) return;
+
+      ShardComponents shard_c = new ShardComponents(this, shard_id);
+
+      TreeMap<Integer, ShardComponents> m = new TreeMap<>();
+      m.putAll(shard_comps);
+      m.put(shard_id, shard_c);
+
+      shard_comps = ImmutableMap.copyOf(m);
+
+    }
   }
 
   private void startWidgets()
@@ -257,9 +321,11 @@ public class SnowBlossomNode
     {
       return false;
     }
-    if (getBlockIngestor().getHead() != null)
+
+    // TODO - be shard aware
+    if (getBlockIngestor(0).getHead() != null)
     {
-      height = getBlockIngestor().getHead().getHeader().getBlockHeight();
+      height = getBlockIngestor(0).getHead().getHeader().getBlockHeight();
     }
     if (peerage.getHighestSeenHeader() != null)
     {
@@ -277,15 +343,50 @@ public class SnowBlossomNode
   public Config getConfig(){return config;}
   public DB getDB(){return db;}
   public NetworkParams getParams(){return params;}
-  public BlockIngestor getBlockIngestor(){ return ingestor; }
-  public BlockForge getBlockForge() {return forge;}
+
+  public BlockIngestor getBlockIngestor(){return getBlockIngestor(0);}
+  public BlockForge getBlockForge(){return getBlockForge(0);}
+  public MemPool getMemPool(){return getMemPool(0);}
+
+  public BlockIngestor getBlockIngestor(int shard_id)
+  {
+    return shard_comps.get(shard_id).ingestor; 
+  }
+
+  public BlockForge getBlockForge(int shard_id)
+  {
+    return shard_comps.get(shard_id).forge;
+  }
+
+  public MemPool getMemPool(int shard_id)
+  {
+    return shard_comps.get(shard_id).mem_pool;
+  }
+
   public HashedTrie getUtxoHashedTrie(){return db.getUtxoHashedTrie();}
-  public MemPool getMemPool(){return mem_pool;}
   public Peerage getPeerage(){return peerage;}
   public SnowUserService getUserService() {return user_service;}
 
   public ImmutableList<Integer> getServicePorts() {return service_ports;}
   public ImmutableList<Integer> getTlsServicePorts() {return tls_service_ports;}
   public AddressSpecHash getTlsAddress(){return node_tls_address;}
+
+
+  public class ShardComponents
+  {
+    protected BlockIngestor ingestor;
+    protected BlockForge forge;
+    protected MemPool mem_pool;
+
+    public ShardComponents(SnowBlossomNode node, int shard_id)
+      throws Exception
+    {
+      ingestor = new BlockIngestor(node, shard_id);
+      forge = new BlockForge(node, shard_id);
+      mem_pool = new MemPool(db.getUtxoHashedTrie(), ingestor);
+      mem_pool.setPeerage(peerage);
+    }
+
+  }
 
 }

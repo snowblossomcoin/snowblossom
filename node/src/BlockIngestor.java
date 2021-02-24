@@ -33,8 +33,6 @@ public class BlockIngestor implements ChainStateSource
   
   private volatile BlockSummary chainhead;
 
-  private static final ByteString HEAD = ByteString.copyFrom(new String("head").getBytes());
-
   public static final int SUMMARY_VERSION = 4;
 
   private LRUCache<ChainHash, Long> block_pull_map = new LRUCache<>(2000);
@@ -45,13 +43,24 @@ public class BlockIngestor implements ChainStateSource
 
   private final boolean tx_index;
   private final boolean addr_index;
+  private final int shard_id;
+  private final ByteString HEAD;
 
-  public BlockIngestor(SnowBlossomNode node)
+  public BlockIngestor(SnowBlossomNode node, int shard_id)
     throws Exception
   {
     this.node = node;
     this.db = node.getDB();
     this.params = node.getParams();
+    this.shard_id = shard_id;
+    if (shard_id == 0)
+    {
+      HEAD = ByteString.copyFrom(new String("head").getBytes());
+    }
+    else
+    { 
+      HEAD = ByteString.copyFrom(new String("head-" + shard_id).getBytes());
+    }
 
     tx_index = node.getConfig().getBoolean("tx_index");
     addr_index = node.getConfig().getBoolean("addr_index");
@@ -70,7 +79,8 @@ public class BlockIngestor implements ChainStateSource
     chainhead = db.getBlockSummaryMap().get(HEAD);
     if (chainhead != null)
     {
-      node.setStatus(String.format("Loaded chain tip: %d %s", 
+      node.setStatus(String.format("Loaded chain tip: shard %d height %d %s",
+        shard_id,
         chainhead.getHeader().getBlockHeight(), 
         new ChainHash(chainhead.getHeader().getSnowHash())));
       checkResummary();
@@ -152,6 +162,11 @@ public class BlockIngestor implements ChainStateSource
       mlog.setOperation("ingest_block");
       mlog.setModule("block_ingestor");
       Validation.checkBlockBasics(node.getParams(), blk, true, false);
+
+      if (blk.getHeader().getShardId() != shard_id)
+      {
+        throw new ValidationException("Block for incorrect shard");
+      }
 
       blockhash = new ChainHash(blk.getHeader().getSnowHash());
 
@@ -242,7 +257,7 @@ public class BlockIngestor implements ChainStateSource
 
         updateHeights(summary);
 
-        logger.info(String.format("New chain tip: Height %d %s (tx:%d sz:%d)", blk.getHeader().getBlockHeight(), blockhash, blk.getTransactionsCount(), blk.toByteString().size()));
+        logger.info(String.format("New chain tip: Shard %d Height %d %s (tx:%d sz:%d)", shard_id, blk.getHeader().getBlockHeight(), blockhash, blk.getTransactionsCount(), blk.toByteString().size()));
 
         String age = MiscUtils.getAgeSummary( System.currentTimeMillis() - blk.getHeader().getTimestamp() );
 

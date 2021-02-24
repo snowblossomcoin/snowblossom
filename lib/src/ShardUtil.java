@@ -114,6 +114,22 @@ public class ShardUtil
     return s;
   }
 
+  public static Set<Integer> getAllParents(int shard_id)
+  {
+    TreeSet<Integer> s = new TreeSet<>();
+
+    int v = shard_id;
+
+    while(v>0)
+    {
+      v = getShardParentId(v);
+      s.add(v);
+    }
+    s.add(v);
+
+    return s;
+  }
+
   /**
    * reverse getShardChildId()
    */
