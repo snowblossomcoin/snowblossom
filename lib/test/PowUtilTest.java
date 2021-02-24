@@ -5,6 +5,7 @@ import java.util.Random;
 import org.junit.Assert;
 import org.junit.Test;
 import snowblossom.lib.BlockchainUtil;
+import snowblossom.lib.Globals;
 import snowblossom.lib.HexUtil;
 import snowblossom.lib.NetworkParams;
 import snowblossom.lib.NetworkParamsProd;
@@ -15,6 +16,11 @@ import snowblossom.proto.*;
 
 public class PowUtilTest
 {
+
+  public PowUtilTest()
+  {
+    Globals.addCryptoProvider();
+  }
   @Test
   public void testCalcNextTargetInitial()
   {
