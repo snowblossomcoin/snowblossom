@@ -170,23 +170,32 @@ public class SnowBlossomNode
   {
     for(int shard_id : shard_interest_set)
     {
+      // if we are interested and have a head for it, open it up
       if ( new BlockIngestor(this, shard_id).getHead() != null)
       {
         openShard(shard_id);
       }
 
     }
+
     // If we have nothing, open shard zero regardless
+    // probably always want zero regardless, but whatever
     if(shard_comps.size() == 0) openShard(0);
 
   }
 
   private Object open_shard_lock = new Object();
 
+  /**
+   * open a shard for this node to interact with it
+   * assuming we don't already have it open and it is
+   * part of out interest set
+   */
   public void openShard(int shard_id)
     throws Exception
   {
     if (shard_comps.containsKey(shard_id)) return;
+    if (!shard_interest_set.contains(shard_id)) return;
 
     synchronized(open_shard_lock)
     {
