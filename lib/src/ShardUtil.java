@@ -269,6 +269,7 @@ public class ShardUtil
 		if (summary.getHeader().getVersion() == 2)
     if (summary.getTxSizeAverage() > params.getShardForkThreshold())
     if (summary.getShardLength() >= params.getMinShardLength())
+    if (getShardChildIdRight(summary.getHeader().getShardId()) <= params.getMaxShardId())
     {
       return true;
     }

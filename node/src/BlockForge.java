@@ -11,6 +11,7 @@ import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.TreeSet;
 import org.junit.Assert;
 import snowblossom.lib.*;
 import snowblossom.lib.trie.HashUtils;
@@ -106,13 +107,15 @@ public class BlockForge
     header_builder.setTarget(BlockchainUtil.targetBigIntegerToBytes(target));
     header_builder.setSnowField(head.getActivatedField());
 
-    // TODO Select shard ID
-
     try
     {
 
       UtxoUpdateBuffer utxo_buffer = new UtxoUpdateBuffer( node.getUtxoHashedTrie(), 
         prev_utxo_root);
+
+      importShards(head, block_builder, header_builder, utxo_buffer);
+
+
       List<Transaction> regular_transactions = getTransactions(new ChainHash(head.getHeader().getUtxoRootHash()));
       long fee_sum = 0L;
 
@@ -132,8 +135,13 @@ public class BlockForge
       block_builder.addTransactions(coinbase);
       block_builder.addAllTransactions(regular_transactions);
 
-      // TODO Save export utxo data
 
+      // Save export UTXO data
+      for(int export_shard_id : export_utxo_buffer.keySet())
+      {
+        UtxoUpdateBuffer export_buffer = export_utxo_buffer.get(export_shard_id);
+        header_builder.putShardExportRootHash(export_shard_id, export_buffer.simulateUpdates().getBytes());
+      }
 
       int tx_size_total = 0;
       LinkedList<ChainHash> tx_list = new LinkedList<ChainHash>();
@@ -161,6 +169,109 @@ public class BlockForge
 
   }
 
+  /**
+   * Decide what other shard blocks to bring in (if any).
+   * for any included, put them in the block imported_block list
+   * and then in the header shard_import list
+   * and simulate the utxo changes into the utxo_buffer.
+   * Easy as eating pancakes
+   */
+  private void importShards(BlockSummary prev_block_summary, Block.Builder block_builder, BlockHeader.Builder header_builder, UtxoUpdateBuffer utxo_buffer)
+  {
+    // In the future, we will want to consider adding blocks that we hear about second hand or from trusted peers
+    // but for now, only considering blocks we have direct knowledge about (aka, are in the local db and the shard
+    // is an active local shard).
+
+    Set<Integer> exclude_set = new TreeSet<>();
+    exclude_set.addAll(ShardUtil.getCoverSet(header_builder.getShardId(), params));
+    exclude_set.addAll(ShardUtil.getAllParents(header_builder.getShardId()));
+    exclude_set.add(header_builder.getShardId());
+
+    // Anything not on that list should be fair game
+
+    TreeMap<Integer, ChainHash> effective_head = new TreeMap<>();
+
+    for(Map.Entry<Integer, BlockHeader> me : prev_block_summary.getImportedShardsMap().entrySet())
+    {
+      effective_head.put(me.getKey(), new ChainHash(me.getValue().getSnowHash()));
+    }
+
+    System.out.println("ZZZ working imports for " + shard_id);
+    for(int external_shard_id : node.getActiveShards())
+    {
+      if (!exclude_set.contains(external_shard_id))
+      {
+        ChainHash start_point = null;
+        if (effective_head.get(external_shard_id) != null)
+        {
+          start_point = effective_head.get(external_shard_id);
+        }
+        else
+        {
+          // We don't have this shard at all yet, start from what we do have
+          int parent = ShardUtil.getShardParentId(external_shard_id);
+          start_point = effective_head.get(parent) ;
+        }
+        
+
+        if (start_point != null)
+        {
+          System.out.println("ZZZ we have a start point for " + external_shard_id);
+
+          BlockImportList path = getPath(start_point, external_shard_id);
+
+
+          if (path != null)
+          {
+            System.out.println("ZZZ Importing path: " + path);
+            // Add header
+            header_builder.putShardImport(external_shard_id, path);
+            for(int height : PowUtil.inOrder(path.getHeightMap().keySet()))
+            {
+              ChainHash hash = new ChainHash(path.getHeightMap().get(height));
+              // update effective_head
+              effective_head.put( external_shard_id, hash);
+              
+              // Add output lists
+              BlockHeader header = node.getDB().getBlockSummaryMap().get(hash.getBytes()).getHeader();
+
+              block_builder.addImportedBlocks( ImportedBlock.newBuilder().setHeader(header).build() );
+              //TODO import the exports
+            }
+
+
+          }
+        }
+
+      }
+    }
+  }
+
+  private BlockImportList getPath(ChainHash start_point, int external_shard_id)
+  {
+    BlockImportList.Builder bil = BlockImportList.newBuilder();
+
+    BlockSummary head = node.getBlockIngestor(external_shard_id).getHead();
+    if (head == null) {
+      System.out.println("ZZZ we have no head");
+      return null;
+    }
+
+    BlockHeader cur = head.getHeader();
+    while(true)
+    {
+      if (start_point.equals(cur.getSnowHash())) return bil.build();
+      if (cur.getShardId() != external_shard_id) return null;
+      if (bil.getHeightMap().size() > node.getParams().getMaxShardSkewHeight()) return null;
+
+      bil.putHeightMap( cur.getBlockHeight(), cur.getSnowHash() );
+
+      cur = node.getDB().getBlockSummaryMap().get(cur.getPrevBlockHash()).getHeader();
+
+    }
+
+  }
+
   private Transaction buildCoinbase(BlockHeader header, long fees, SubscribeBlockTemplateRequest mine_to)
     throws ValidationException
   {
@@ -183,10 +294,7 @@ public class BlockForge
 
     inner.setCoinbaseExtras(ext.build());
 
-
-    //long total_reward = PowUtil.getBlockReward(params, height) + fees;
     long total_reward = ShardUtil.getBlockReward(params, header) + fees;
-    
 
     inner.addAllOutputs( makeCoinbaseOutputs( params, total_reward, mine_to, shard_id));
 
@@ -271,6 +379,8 @@ public class BlockForge
 
   private List<Transaction> getTransactions(ChainHash prev_utxo_root)
   {
+    // TODO - we need to pass along the view of the UTXO with the shards imported for mempool to consider
+
     return node.getMemPool(shard_id).getTransactionsForBlock(prev_utxo_root, node.getParams().getMaxBlockSize());
   }
 

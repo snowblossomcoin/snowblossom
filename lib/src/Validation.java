@@ -155,9 +155,9 @@ public class Validation
 
         for(int import_shard_id : header.getShardImportMap().keySet())
         {
-          if (!my_cover_set.contains(import_shard_id))
+          if (my_cover_set.contains(import_shard_id))
           {
-            throw new ValidationException("Import for shard from cover set");
+            throw new ValidationException(String.format("Import for shard from cover set.  Importing %d into %d",import_shard_id, my_shard_id));
           }
 
           BlockImportList bil = header.getShardImportMap().get(import_shard_id);

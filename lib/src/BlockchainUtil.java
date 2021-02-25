@@ -59,8 +59,12 @@ public class BlockchainUtil
 
     // So a block at max target is 'slice' number of work units
     // A block at half the target (harder) is twice the number of slices.
+    // Ok, so whoever wrote those two lines clearly had some concept in mind.
+    // I wonder what the hell it was.
 
+    
     BigInteger work_in_block = params.getMaxTarget().multiply(slice).divide(target);
+    // TODO - add in work from imported blocks
 
     // SIP2 - work is multipled by 4^activated_field.  That way, a higher field
     // takes precedence.
