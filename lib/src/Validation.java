@@ -431,7 +431,9 @@ public class Validation
         throw new ValidationException(String.format("Coinbase could have spent %d but spent %d", coinbase_sum, coinbase_spent));
       }
 
+      System.out.println("Checking overall block utxo " + blk.getHeader().getShardId());
       utxo_buffer.commitIfEqual(blk.getHeader().getUtxoRootHash());
+      System.out.println("Checking overall block utxo done");
     }
   
   }

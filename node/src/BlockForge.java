@@ -228,8 +228,24 @@ public class BlockForge
               ChainHash hash = new ChainHash(path.getHeightMap().get(height));
               // update effective_head
               effective_head.put( external_shard_id, hash);
+
+              ImportedBlock ib = node.getShardUtxoImport().getImportBlockForTarget(hash, shard_id);
+
+              // Add utxos to buffer
+              for(ImportedOutputList lst : ib.getImportOutputsMap().values())
+              {
+                try
+                {
+                  utxo_buffer.addOutputs(lst);
+                }
+                catch(ValidationException e)
+                {
+                  throw new RuntimeException(e);
+                }
+              }
               
-              block_builder.addImportedBlocks( node.getShardUtxoImport().getImportBlockForTarget(hash, shard_id));
+              // Add imported blocks
+              block_builder.addImportedBlocks( ib );
 
             }
           }
@@ -290,7 +306,8 @@ public class BlockForge
 
     long total_reward = ShardUtil.getBlockReward(params, header) + fees;
 
-    inner.addAllOutputs( makeCoinbaseOutputs( params, total_reward, mine_to, shard_id));
+    int target_shard = shard_id;
+    inner.addAllOutputs( makeCoinbaseOutputs( params, total_reward, mine_to, target_shard));
 
 
     ByteString inner_data = inner.build().toByteString();
