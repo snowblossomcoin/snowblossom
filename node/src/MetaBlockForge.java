@@ -3,6 +3,8 @@ package snowblossom.node;
 import java.util.ArrayList;
 import java.util.Random;
 import java.util.logging.Logger;
+import java.util.TreeMap;
+
 import snowblossom.lib.*;
 import snowblossom.proto.*;
 
@@ -21,16 +23,40 @@ public class MetaBlockForge
 
   public Block getBlockTemplate(SubscribeBlockTemplateRequest mine_to)
   {
+    Random rnd = new Random();
     ArrayList<Block> mineable = new ArrayList<>();
+    TreeMap<Double, Block> mineable_map = new TreeMap<>();
 
     for(int shard_id : node.getActiveShards())
     {
       try
       {
         Block b = node.getBlockForge(shard_id).getBlockTemplate(mine_to);
-        // TODO - make sure block is actually usable - braid check
+
+        if (b.getHeader().getVersion() == 2)
+        {
+          BlockSummary prev = node.getDB().getBlockSummaryMap().get(b.getHeader().getPrevBlockHash());
+           
+          BlockHeader bh = BlockHeader.newBuilder()
+            .mergeFrom(b.getHeader())
+            .setSnowHash(ChainHash.getRandom().getBytes())
+            .build();
+          Block test_block = Block.newBuilder().mergeFrom(b).setHeader(bh).build();
+
+          Validation.checkShardBasics(test_block, prev, node.getParams());
+        }
         if (b != null)
-        mineable.add(b);
+        {
+          mineable.add(b);
+          mineable_map.put(rnd.nextDouble() + b.getHeader().getBlockHeight(), b);
+        }
+
+      }
+      catch(ValidationException e)
+      {
+      
+        logger.info("Can't make block for shard: " + e);
+        e.printStackTrace();
       }
       catch(Throwable e)
       {
@@ -39,11 +65,11 @@ public class MetaBlockForge
       }
     }
 
-    Random rnd = new Random();
     if (mineable.size() ==0) return null;
 
     // TODO - lols
-    return mineable.get( rnd.nextInt(mineable.size()));
+    return mineable_map.firstEntry().getValue();
+
 
   }
 

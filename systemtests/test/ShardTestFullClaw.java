@@ -4,17 +4,17 @@ import java.io.File;
 import java.security.KeyPair;
 import java.util.*;
 import org.junit.Test;
-import snowblossom.client.SnowBlossomClient;
 import snowblossom.lib.AddressSpecHash;
 import snowblossom.lib.AddressUtil;
 import snowblossom.lib.KeyUtil;
+import snowblossom.lib.NetworkParamsRegShard;
 import snowblossom.lib.SignatureUtil;
 import snowblossom.miner.SnowBlossomMiner;
 import snowblossom.node.SnowBlossomNode;
 import snowblossom.proto.*;
 import snowblossom.util.proto.*;
 
-public class ShardTestBasic extends SpoonTest
+public class ShardTestFullClaw extends SpoonTest
 {
   @Test
   public void shardTest() throws Exception
@@ -32,12 +32,10 @@ public class ShardTestBasic extends SpoonTest
 
     SnowBlossomMiner miner = startMiner(port, to_addr, snow_path, "regshard");
 
-    waitForHeight(node, 0, 19);
-    waitForHeight(node, 1, 28);
-    waitForHeight(node, 2, 28);
-
-    System.out.println(node.getBlockIngestor(0).getHead());
-    System.out.println(node.getBlockIngestor(2).getHead());
+    for(int i=0; i<=Math.min(20,new NetworkParamsRegShard().getMaxShardId()); i++)
+    {
+      waitForShardHead(node, i);
+    }
 
     miner.stop();
     Thread.sleep(500);

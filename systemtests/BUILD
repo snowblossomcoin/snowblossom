@@ -90,4 +90,23 @@ java_test(
     size = "medium",
 )
 
+java_test(
+    name = "systemtests.test.ShardTestFullClaw",
+    test_class = "systemtests.test.ShardTestFullClaw",
+    srcs = ["test/SpoonTest.java", "test/ShardTestFullClaw.java"],
+    deps = [
+        "//lib:lib",
+        "//lib:rocksdb",
+        "//protolib:protogrpc",
+        "//miner:miner",
+        "//node",
+        "//client:client",
+        "//shackleton:shackleton",
+        "@duckutil//:duckutil_lib",
+        "@build_stack_rules_proto//java:grpc_netty",
+    ],
+    size = "medium",
+)
+
+
 

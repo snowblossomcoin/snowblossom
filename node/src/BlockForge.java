@@ -196,7 +196,6 @@ public class BlockForge
       effective_head.put(me.getKey(), new ChainHash(me.getValue().getSnowHash()));
     }
 
-    System.out.println("ZZZ working imports for " + shard_id);
     for(int external_shard_id : node.getActiveShards())
     {
       if (!exclude_set.contains(external_shard_id))
@@ -216,14 +215,12 @@ public class BlockForge
 
         if (start_point != null)
         {
-          System.out.println("ZZZ we have a start point for " + external_shard_id);
 
           BlockImportList path = getPath(start_point, external_shard_id);
 
 
           if (path != null)
           {
-            System.out.println("ZZZ Importing path: " + path);
             // Add header
             header_builder.putShardImport(external_shard_id, path);
             for(int height : PowUtil.inOrder(path.getHeightMap().keySet()))
@@ -232,14 +229,9 @@ public class BlockForge
               // update effective_head
               effective_head.put( external_shard_id, hash);
               
-              // Add output lists
-              BlockHeader header = node.getDB().getBlockSummaryMap().get(hash.getBytes()).getHeader();
+              block_builder.addImportedBlocks( node.getShardUtxoImport().getImportBlockForTarget(hash, shard_id));
 
-              block_builder.addImportedBlocks( ImportedBlock.newBuilder().setHeader(header).build() );
-              //TODO import the exports
             }
-
-
           }
         }
 
@@ -247,13 +239,15 @@ public class BlockForge
     }
   }
 
+  /**
+   * Going to have to get fancier with this
+   */
   private BlockImportList getPath(ChainHash start_point, int external_shard_id)
   {
     BlockImportList.Builder bil = BlockImportList.newBuilder();
 
     BlockSummary head = node.getBlockIngestor(external_shard_id).getHead();
     if (head == null) {
-      System.out.println("ZZZ we have no head");
       return null;
     }
 

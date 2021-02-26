@@ -1,6 +1,7 @@
 package snowblossom.lib;
 
 import com.google.protobuf.ByteString;
+import java.util.Random;
 import org.junit.Assert;
 import snowblossom.lib.trie.ByteStringComparator;
 import snowblossom.lib.trie.HashUtils;
@@ -74,6 +75,14 @@ public class ChainHash implements Comparable<ChainHash>
     }
     return super.equals(o);
 
+  }
+
+  public static ChainHash getRandom()
+  {
+    byte[] b = new byte[Globals.BLOCKCHAIN_HASH_LEN];
+    Random rnd = new Random();
+    rnd.nextBytes(b);
+    return new ChainHash(b);
   }
 
 }

@@ -103,6 +103,21 @@ public class SpoonTest
     Assert.fail(String.format("Shard %d did not become active", shard_id));
 
   }
+  protected void waitForShardHead(SnowBlossomNode node, int shard_id) throws Exception
+  {
+    for(int i=0; i<15; i++)
+    {
+      if (node.getActiveShards().contains(shard_id))
+      if (node.getBlockIngestor(shard_id).getHead() != null)
+      {
+        return;
+      }
+      Thread.sleep(1000);
+    }
+    Assert.fail(String.format("Shard %d did not become active", shard_id));
+
+  }
+
 
 
   protected void waitForFunds(SnowBlossomClient client, AddressSpecHash addr, int max_seconds)
