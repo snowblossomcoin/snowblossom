@@ -64,7 +64,12 @@ public class BlockchainUtil
 
     
     BigInteger work_in_block = params.getMaxTarget().multiply(slice).divide(target);
-    // TODO - add in work from imported blocks
+    // add in work from imported blocks
+    for(ImportedBlock ib : imported_blocks)
+    {
+      BigInteger import_target = BlockchainUtil.targetBytesToBigInteger(ib.getHeader().getTarget());
+      work_in_block = work_in_block.add( params.getMaxTarget().multiply(slice).divide(import_target) );
+    }
 
     // SIP2 - work is multipled by 4^activated_field.  That way, a higher field
     // takes precedence.

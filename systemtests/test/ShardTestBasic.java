@@ -4,7 +4,6 @@ import java.io.File;
 import java.security.KeyPair;
 import java.util.*;
 import org.junit.Test;
-import snowblossom.client.SnowBlossomClient;
 import snowblossom.lib.AddressSpecHash;
 import snowblossom.lib.AddressUtil;
 import snowblossom.lib.KeyUtil;

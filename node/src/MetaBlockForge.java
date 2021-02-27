@@ -13,7 +13,7 @@ public class MetaBlockForge
 
   private SnowBlossomNode node;
   private NetworkParams params;
-   private static final Logger logger = Logger.getLogger("snowblossom.node");
+  private static final Logger logger = Logger.getLogger("snowblossom.node");
   
   public MetaBlockForge(SnowBlossomNode node)
   {
@@ -55,21 +55,55 @@ public class MetaBlockForge
       catch(ValidationException e)
       {
       
-        logger.info("Can't make block for shard: " + e);
+        logState();
+        logger.info(String.format("Can't make block for shard %d: %s",shard_id, e));
         e.printStackTrace();
       }
       catch(Throwable e)
       {
-        logger.info("Can't make block for shard: " + e);
+        logger.info(String.format("Can't make block for shard %d: %s",shard_id, e));
         e.printStackTrace();
       }
     }
 
-    if (mineable.size() ==0) return null;
+
+    if (mineable.size() ==0)
+    {
+      logger.info(String.format("With active set %s, nothing minable", node.getActiveShards()));
+      return null;
+    }
 
     // TODO - lols
     return mineable_map.firstEntry().getValue();
 
+
+  }
+
+  private void logState()
+  {
+    logger.info("My active shards: " + node.getActiveShards());
+    for(int s : node.getActiveShards())
+    {
+      BlockSummary head = node.getBlockIngestor(s).getHead();
+      if (head == null)
+      {
+        logger.info(String.format("  Shard %d - no head", s));
+      }
+      else
+      {
+        logger.info(String.format("  Shard %d - %s %d", s, 
+          new ChainHash(head.getHeader().getSnowHash()).toString(), 
+          head.getHeader().getBlockHeight()));
+        for(int is : head.getImportedShardsMap().keySet())
+        {
+          BlockHeader h = head.getImportedShardsMap().get(is);
+          logger.info(String.format("    Imported: %d - %s %d", is,
+            new ChainHash(h.getSnowHash()).toString(),
+            h.getBlockHeight()));
+        }
+      }
+
+    }
 
   }
 

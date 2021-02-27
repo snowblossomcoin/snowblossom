@@ -234,6 +234,10 @@ public class SpoonTest
   }
   protected SnowBlossomNode startNode(int port, String network) throws Exception
   {
+    return startNode(port, network, null);
+  }
+  protected SnowBlossomNode startNode(int port, String network, Map<String, String> extra) throws Exception
+  {
 
     String test_folder_base = test_folder.newFolder().getPath();
 
@@ -244,6 +248,11 @@ public class SpoonTest
     config_map.put("network", network);
     config_map.put("tx_index", "true");
     config_map.put("addr_index", "true");
+
+    if (extra!=null)
+    {
+      config_map.putAll(extra);
+    }
 
     return new SnowBlossomNode(new ConfigMem(config_map));
 
@@ -287,6 +296,7 @@ public class SpoonTest
     config_map.put("network", network);
     NetworkParams params = NetworkParams.loadFromConfig(new ConfigMem(config_map));
     config_map.put("mine_to_address", mine_to.toAddressString(params));
+    config_map.put("rate_limit","100000.0"); 
     if (port % 2 == 1)
     {
       config_map.put("memfield", "true");

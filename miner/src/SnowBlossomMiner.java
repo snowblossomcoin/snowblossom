@@ -6,6 +6,7 @@ import duckutil.ConfigFile;
 import duckutil.MultiAtomicLong;
 import duckutil.TimeRecord;
 import duckutil.TimeRecordAuto;
+import duckutil.RateLimit;
 import io.grpc.ManagedChannel;
 import io.grpc.stub.StreamObserver;
 import java.io.File;
@@ -66,6 +67,7 @@ public class SnowBlossomMiner
   private MultiAtomicLong op_count = new MultiAtomicLong();
   private long last_stats_time = System.currentTimeMillis();
   private Config config;
+  private RateLimit rate_limit = null;
 
   private File snow_path;
 
@@ -96,6 +98,16 @@ public class SnowBlossomMiner
       time_record = new TimeRecord();
       TimeRecord.setSharedRecord(time_record);
     }
+
+    if (config.isSet("rate_limit"))
+    {
+      double limit = config.getDouble("rate_limit");
+      rate_limit = new RateLimit( limit, 1.0);
+
+      logger.info("APPLYING RATE LIMIT: " + limit + " hashes per second");
+
+    }
+
 
     int threads = config.getIntWithDefault("threads", 8);
     logger.info("Starting " + threads + " threads");
@@ -268,6 +280,13 @@ public class SnowBlossomMiner
     int proof_field;
     byte[] nonce = new byte[Globals.NONCE_LENGTH];
 
+    /**
+     * If using rate limiting, this is how much
+     * remaining quota this thread has already allocated
+     */
+    int rate_limit_quota;
+
+
     public MinerThread()
     {
       setName("MinerThread");
@@ -278,6 +297,17 @@ public class SnowBlossomMiner
 
     private void runPass() throws Exception
     {
+      if (rate_limit != null)
+      {
+        if (rate_limit_quota <= 0)
+        {
+          rate_limit.waitForRate(1000.0);
+          rate_limit_quota = 1000;
+        }
+
+        rate_limit_quota--;
+      }
+ 
       Block b = last_block_template;
       if (b == null)
       {
