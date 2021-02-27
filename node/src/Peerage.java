@@ -105,13 +105,13 @@ public class Peerage
       links.put(link.getLinkId(), link);
     }
 
-    link.writeMessage(PeerMessage.newBuilder().setTip(getTip()).build());
+    link.writeMessage(PeerMessage.newBuilder().setTip(getTip(0)).build());
   }
 
-  private PeerChainTip getTip()
+  private PeerChainTip getTip(int shard_id)
   {
     PeerChainTip.Builder tip = PeerChainTip.newBuilder();
-    BlockSummary summary = node.getBlockIngestor().getHead();
+    BlockSummary summary = node.getBlockIngestor(shard_id).getHead();
 
     tip.setNetworkName(node.getParams().getNetworkName());
     tip.setVersion(Globals.VERSION);
@@ -226,9 +226,10 @@ public class Peerage
     return highest_seen_header;
   }
 
-  public void sendAllTips()
+  /** Sends tips related to a particular shard_id */
+  public void sendAllTips(int shard_id)
   {
-    PeerChainTip tip = getTip();
+    PeerChainTip tip = getTip(shard_id);
     for(PeerLink link : getLinkList())
     {
       try
@@ -357,6 +358,8 @@ public class Peerage
 
     public void run()
     {
+      Random rnd = new Random();
+
       while(true)
       {   
         try
@@ -364,7 +367,16 @@ public class Peerage
           connectToPeers();
           Thread.sleep(10000);
           pruneLinks();
-          sendAllTips();
+          // TODO - don't send all tips all the time
+          // might want to do a rotation through shards
+          ArrayList<Integer> my_shards = new ArrayList<>();
+          my_shards.addAll(node.getActiveShards());
+
+          for(int s : my_shards)
+          {
+            sendAllTips(s);
+            //my_shards.get(rnd.nextInt(my_shards.size())));
+          }
 
           if (last_learn_time + REFRESH_LEARN_TIME < System.currentTimeMillis())
           {
@@ -565,6 +577,7 @@ public class Peerage
             .setVersion(Globals.VERSION)
             .setNodeId(node_id)
             .setConnectionType(PeerInfo.ConnectionType.GRPC_TCP)
+            .addAllShardIdSet( node.getActiveShards() )
             .build();
 
           self_peers.add(pi);
@@ -589,6 +602,7 @@ public class Peerage
             .setNodeId(node_id)
             .setConnectionType(PeerInfo.ConnectionType.GRPC_TLS)
             .setNodeSnowAddress(node.getTlsAddress().getBytes())
+            .addAllShardIdSet( node.getActiveShards() )
             .build();
 
           self_peers.add(pi);

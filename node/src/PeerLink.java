@@ -33,7 +33,7 @@ public class PeerLink implements StreamObserver<PeerMessage>
   private boolean got_first_tip = false;
   private PeerInfo peer_info; //only set when we are client
 
-  private TreeMap<Integer, ChainHash> peer_block_map = new TreeMap<Integer, ChainHash>();
+  private TreeMap<ShardBlock, ChainHash> peer_block_map = new TreeMap<>();
 
   public PeerLink(SnowBlossomNode node, StreamObserver<PeerMessage> sink)
   {
@@ -200,16 +200,17 @@ public class PeerLink implements StreamObserver<PeerMessage>
         Block blk = msg.getBlock();
         try
         {
-          if (node.getBlockIngestor().ingestBlock(blk))
+          if (node.getBlockIngestor(blk.getHeader().getShardId()).ingestBlock(blk))
           { // we could eat it, think about getting more blocks
             int next = blk.getHeader().getBlockHeight()+1;
+            ShardBlock next_sb = new ShardBlock(blk.getHeader().getShardId(), next);
             synchronized(peer_block_map)
             {
-              if (peer_block_map.containsKey(next))
+              if (peer_block_map.containsKey(next_sb))
               {
-                ChainHash target = peer_block_map.get(next);
+                ChainHash target = peer_block_map.get(next_sb);
 
-                if (node.getBlockIngestor().reserveBlock(target))
+                if (node.getBlockIngestor(blk.getHeader().getShardId()).reserveBlock(target))
                 {
                   writeMessage( PeerMessage.newBuilder()
                     .setReqBlock(
@@ -290,10 +291,20 @@ public class PeerLink implements StreamObserver<PeerMessage>
    */
   private void considerBlockHeader(BlockHeader header)
   {
+    int shard_id = header.getShardId();
+    try
+    {
+      node.openShard(shard_id);
+    }catch(Exception e)
+    {
+      throw new RuntimeException(e);
+    }
+    if (!node.getActiveShards().contains(shard_id)) return;
 
     synchronized(peer_block_map)
     {
-      peer_block_map.put(header.getBlockHeight(), new ChainHash(header.getSnowHash()));
+      // TODO - is this important for sharding?
+      peer_block_map.put(new ShardBlock(header), new ChainHash(header.getSnowHash()));
     }
 
     // if we don't have this block
@@ -302,7 +313,7 @@ public class PeerLink implements StreamObserver<PeerMessage>
       int height = header.getBlockHeight();
       if ((height == 0) || (node.getDB().getBlockSummaryMap().get(header.getPrevBlockHash())!=null))
       { // but we have the prev block - get this block 
-        if (node.getBlockIngestor().reserveBlock(new ChainHash(header.getSnowHash())))
+        if (node.getBlockIngestor(shard_id).reserveBlock(new ChainHash(header.getSnowHash())))
         {
           writeMessage( PeerMessage.newBuilder()
             .setReqBlock(
@@ -313,11 +324,11 @@ public class PeerLink implements StreamObserver<PeerMessage>
       else
       { //get more headers, still in the woods
         int next = header.getBlockHeight();
-        if (node.getBlockIngestor().getHeight() + Globals.BLOCK_CHUNK_HEADER_DOWNLOAD_SIZE < next)
+        if (node.getBlockIngestor(shard_id).getHeight() + Globals.BLOCK_CHUNK_HEADER_DOWNLOAD_SIZE < next)
         {
-          next = node.getBlockIngestor().getHeight() + Globals.BLOCK_CHUNK_HEADER_DOWNLOAD_SIZE;
+          next = node.getBlockIngestor(shard_id).getHeight() + Globals.BLOCK_CHUNK_HEADER_DOWNLOAD_SIZE;
         }
-        while(peer_block_map.containsKey(next))
+        while(peer_block_map.containsKey(new ShardBlock(shard_id, next)))
         {
           next--;
         }
@@ -327,15 +338,15 @@ public class PeerLink implements StreamObserver<PeerMessage>
           ChainHash prev = new ChainHash(header.getPrevBlockHash());
           synchronized(peer_block_map)
           {
-            if (peer_block_map.containsKey(next))
+            if (peer_block_map.containsKey(new ShardBlock(shard_id,next)))
             {
-              if (peer_block_map.get(next).equals(prev)) return;
+              if (peer_block_map.get(new ShardBlock(shard_id,next)).equals(prev)) return;
             }
           }
 
           writeMessage( PeerMessage.newBuilder()
             .setReqHeader(
-              RequestBlockHeader.newBuilder().setBlockHeight(next).build())
+              RequestBlockHeader.newBuilder().setBlockHeight(next).setShardId(shard_id).build())
             .build());
         }
       }

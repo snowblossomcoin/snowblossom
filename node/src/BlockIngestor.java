@@ -287,12 +287,8 @@ public class BlockIngestor implements ChainStateSource
           u.tickleBlocks();
         }
         node.getMemPool().tickleBlocks(new ChainHash(summary.getHeader().getUtxoRootHash()));
-
-        node.getPeerage().sendAllTips();
-
-        
+        node.getPeerage().sendAllTips(summary.getHeader().getShardId());
       }
-
 
     }
 

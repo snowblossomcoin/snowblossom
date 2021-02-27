@@ -39,17 +39,22 @@ public class SpoonTestReconsile extends SpoonTest
     testMinedBlocks(node1);
     testMinedBlocks(node2);
 
+    // Two nodes are on different blocks, they are not connected
     Assert.assertNotEquals(node1.getDB().getBlockHashAtHeight(2), node2.getDB().getBlockHashAtHeight(2));
 
 
+    // Connect them
     node2.getPeerage().connectPeer("localhost", port);
 
-    Thread.sleep(1000);
-    Assert.assertEquals(node1.getDB().getBlockHashAtHeight(2), node2.getDB().getBlockHashAtHeight(2));
-
+    Thread.sleep(2000);
 
     miner1.stop();
     miner2.stop();
+    Thread.sleep(500);
+    //Then they should be the same
+    Assert.assertEquals(node1.getDB().getBlockHashAtHeight(2), node2.getDB().getBlockHashAtHeight(2));
+
+
     Thread.sleep(500);
     node1.stop();
     node2.stop();
