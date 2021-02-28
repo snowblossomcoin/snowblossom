@@ -28,42 +28,54 @@ public class ShardTestJambo extends SpoonTest
     Random rnd = new Random();
     int port = 20000 + rnd.nextInt(30000);
 
-    SnowBlossomNode node1 = startNode(port, "regshard", ImmutableMap.of("shards","3,4"));
-    SnowBlossomNode node2 = startNode(port+1, "regshard", ImmutableMap.of("shards","4,5"));
-    SnowBlossomNode node3 = startNode(port+2, "regshard", ImmutableMap.of("shards","5,6"));
-    SnowBlossomNode node4 = startNode(port+3, "regshard", ImmutableMap.of("shards","6,3"));
+    SnowBlossomNode node0 = startNode(port-1, "regshard", ImmutableMap.of("shards","0"));
+    SnowBlossomNode node1 = startNode(port+0, "regshard", ImmutableMap.of("shards","3,4"));
+    SnowBlossomNode node2 = startNode(port+1, "regshard", ImmutableMap.of("shards","3,5"));
+    SnowBlossomNode node3 = startNode(port+2, "regshard", ImmutableMap.of("shards","3,6"));
+    SnowBlossomNode node4 = startNode(port+3, "regshard", ImmutableMap.of("shards","4,5"));
+    SnowBlossomNode node5 = startNode(port+4, "regshard", ImmutableMap.of("shards","4,6"));
+    SnowBlossomNode node6 = startNode(port+5, "regshard", ImmutableMap.of("shards","5,6"));
     Thread.sleep(100);
-    node1.getPeerage().connectPeer("localhost", port+1);
-    node2.getPeerage().connectPeer("localhost", port+2);
-    node3.getPeerage().connectPeer("localhost", port+3);
-    node4.getPeerage().connectPeer("localhost", port+0);
-    Thread.sleep(15000);
+    node1.getPeerage().connectPeer("localhost", port-1);
+    node2.getPeerage().connectPeer("localhost", port-1);
+    node3.getPeerage().connectPeer("localhost", port-1);
+    node4.getPeerage().connectPeer("localhost", port-1);
+    node5.getPeerage().connectPeer("localhost", port-1);
+    node6.getPeerage().connectPeer("localhost", port-1);
+    Thread.sleep(1000);
 
     KeyPair key_pair = KeyUtil.generateECCompressedKey();
     AddressSpec claim = AddressUtil.getSimpleSpecForKey(key_pair.getPublic(), SignatureUtil.SIG_TYPE_ECDSA_COMPRESSED);
     AddressSpecHash to_addr = AddressUtil.getHashForSpec(claim);
 
-    SnowBlossomMiner miner1 = startMiner(port, to_addr, snow_path, "regshard");
+    SnowBlossomMiner miner1 = startMiner(port+0, to_addr, snow_path, "regshard");
     SnowBlossomMiner miner2 = startMiner(port+1, to_addr, snow_path, "regshard");
     SnowBlossomMiner miner3 = startMiner(port+2, to_addr, snow_path, "regshard");
     SnowBlossomMiner miner4 = startMiner(port+3, to_addr, snow_path, "regshard");
+    SnowBlossomMiner miner5 = startMiner(port+4, to_addr, snow_path, "regshard");
+    SnowBlossomMiner miner6 = startMiner(port+5, to_addr, snow_path, "regshard");
 
-    Thread.sleep(45000);
+    Thread.sleep(35000);
 
-    waitForHeight(node1, 3, 31);
-    waitForHeight(node2, 4, 31);
-    waitForHeight(node3, 5, 31);
-    waitForHeight(node4, 6, 31);
+    waitForHeight(node0, 3, 36);
+    waitForHeight(node0, 4, 36);
+    waitForHeight(node0, 5, 36);
+    waitForHeight(node0, 6, 36);
     
     miner1.stop();
     miner2.stop();
     miner3.stop();
     miner4.stop();
+    miner5.stop();
+    miner6.stop();
     Thread.sleep(500);
+    node0.stop();
     node1.stop();
     node2.stop();
     node3.stop();
     node4.stop();
+    node5.stop();
+    node6.stop();
   }
 
 

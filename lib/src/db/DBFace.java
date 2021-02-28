@@ -19,6 +19,10 @@ public interface DBFace
   public DBMap getSpecialMap();
   public DBMapMutationSet getSpecialMapSet();
 
+
+  public DBMapMutationSet getChildBlockMapSet();
+
+
   public HashedTrie getChainIndexTrie();
   public HashedTrie getUtxoHashedTrie();
 

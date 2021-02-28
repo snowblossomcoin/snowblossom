@@ -32,21 +32,21 @@ public class MetaBlockForge
       try
       {
         Block b = node.getBlockForge(shard_id).getBlockTemplate(mine_to);
-
-        if (b.getHeader().getVersion() == 2)
+        if (b!=null)
         {
-          BlockSummary prev = node.getDB().getBlockSummaryMap().get(b.getHeader().getPrevBlockHash());
-           
-          BlockHeader bh = BlockHeader.newBuilder()
-            .mergeFrom(b.getHeader())
-            .setSnowHash(ChainHash.getRandom().getBytes())
-            .build();
-          Block test_block = Block.newBuilder().mergeFrom(b).setHeader(bh).build();
+          if (b.getHeader().getVersion() == 2)
+          {
+            BlockSummary prev = node.getDB().getBlockSummaryMap().get(b.getHeader().getPrevBlockHash());
+             
+            BlockHeader bh = BlockHeader.newBuilder()
+              .mergeFrom(b.getHeader())
+              .setSnowHash(ChainHash.getRandom().getBytes())
+              .build();
+            Block test_block = Block.newBuilder().mergeFrom(b).setHeader(bh).build();
 
-          Validation.checkShardBasics(test_block, prev, node.getParams());
-        }
-        if (b != null)
-        {
+            Validation.checkShardBasics(test_block, prev, node.getParams());
+          }
+
           mineable.add(b);
           mineable_map.put(rnd.nextDouble() + b.getHeader().getBlockHeight(), b);
         }

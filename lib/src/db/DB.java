@@ -30,6 +30,7 @@ public class DB implements DBFace
   protected DBMap special_map;
   protected ProtoDBMap<Transaction> tx_map;
   protected DBMapMutationSet special_map_set;
+  protected DBMapMutationSet child_block_map_set;
 
   protected DBMap chain_index_map;
   protected HashedTrie chain_index_trie;
@@ -75,6 +76,7 @@ public class DB implements DBFace
       // Lobstack for example doesn't have multation map set implemented
       // but most htings don't need this so whatever
       special_map_set = prov.openMutationMapSet("special_map_set");
+      child_block_map_set = prov.openMutationMapSet("cbms");
     }
     catch(Throwable t){}
 
@@ -119,6 +121,16 @@ public class DB implements DBFace
   @Override
   public DBMapMutationSet getSpecialMapSet() { return special_map_set; }
 
+  /**
+   * Maps of block hash to set(block hash) of known child blocks
+   * to be used by BlockForge and MetaBlockForge to figure out
+   * what block template to make
+   */
+  @Override
+  public DBMapMutationSet getChildBlockMapSet()
+  {
+    return child_block_map_set;
+  }
 
   @Override
   public ChainHash getBlockHashAtHeight(int height)

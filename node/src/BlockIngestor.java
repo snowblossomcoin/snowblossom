@@ -227,6 +227,10 @@ public class BlockIngestor implements ChainStateSource
         db.getBlockMap().put( blockhash.getBytes(), blk);
 
 
+        saveBlockChildMapping( new ChainHash(blk.getHeader().getPrevBlockHash()), blockhash);
+
+
+
         // THIS IS SUPER IMPORTANT!!!!
         // the summary being saved in the summary map acts as a signal that
         // - this block is fully stored
@@ -239,13 +243,6 @@ public class BlockIngestor implements ChainStateSource
         // a valid and correct block that goes all the way back to block 0.
         // It might not be in the main chain, but it can be counted on to be valid chain
         db.getBlockSummaryMap().put( blockhash.getBytes(), summary);
-      }
-
-      BigInteger summary_work_sum = BlockchainUtil.readInteger(summary.getWorkSum());
-      BigInteger chainhead_work_sum = BigInteger.ZERO;
-      if (chainhead != null)
-      {
-        chainhead_work_sum = BlockchainUtil.readInteger(chainhead.getWorkSum());
       }
 
       if (ShardUtil.shardSplit(summary, params))
@@ -263,7 +260,7 @@ public class BlockIngestor implements ChainStateSource
         }
       }
 
-      if (summary_work_sum.compareTo(chainhead_work_sum) > 0)
+      if (BlockchainUtil.isBetter( chainhead, summary ))
       {
         chainhead = summary;
         db.getBlockSummaryMap().put(HEAD, summary);
@@ -413,6 +410,18 @@ public class BlockIngestor implements ChainStateSource
       }
       tx_cluster_pull_map.put(hash, tm);
       return true;
+    }
+  }
+
+
+  /**
+   * Save the mapping of this parent to child block
+   */ 
+  private void saveBlockChildMapping(ChainHash parent, ChainHash child)
+  {
+    if (node.getDB().getChildBlockMapSet() != null)
+    {
+      node.getDB().getChildBlockMapSet().add(parent.getBytes(), child.getBytes());
     }
   }
 

@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 import org.junit.Assert;
+import snowblossom.lib.trie.ByteStringComparator;
 import snowblossom.proto.*;
 
 public class BlockchainUtil
@@ -248,6 +249,31 @@ public class BlockchainUtil
 
   }
 
+  /**
+   * return true iff b is a better block than a for head purposes
+   */
+  public static boolean isBetter(BlockSummary a, BlockSummary b)
+  {
+    if (a == null) return true;
+
+    BigInteger a_work_sum = BlockchainUtil.readInteger(a.getWorkSum());
+    BigInteger b_work_sum = BlockchainUtil.readInteger(b.getWorkSum());
+
+    if (b_work_sum.compareTo(a_work_sum) > 0) return true;
+    if (b_work_sum.compareTo(a_work_sum) < 0) return false;
+
+    // tie breaker - oldest wins
+    if (b.getHeader().getTimestamp() < a.getHeader().getTimestamp()) return true;
+    if (a.getHeader().getTimestamp() > b.getHeader().getTimestamp()) return false;
+
+    // tie breaker - lowest hash wins
+    if (ByteStringComparator.compareStatic(b.getHeader().getSnowHash(), a.getHeader().getSnowHash()) < 0) return true;
+    if (ByteStringComparator.compareStatic(b.getHeader().getSnowHash(), a.getHeader().getSnowHash()) > 0) return false;
+
+
+    return false;
+
+  }
   
   
 }
