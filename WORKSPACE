@@ -7,8 +7,8 @@ RULES_JVM_EXTERNAL_SHA = "62133c125bf4109dfd9d2af64830208356ce4ef8b165a6ef15bbff
 git_repository(
     name = "rules_jvm_external",
     remote = "https://github.com/bazelbuild/rules_jvm_external",
-    commit = "e797572b56e2eb0d8b86bb1a4b1a7392d80c30fe",
-    shallow_since = "1601631482 +0800"
+    commit = "ec2c5617b339844312d4adef4400dcc2ccb73c4f",
+    shallow_since = "1614596935 +0000"
 )
 
 load("@rules_jvm_external//:defs.bzl", "maven_install")
@@ -16,7 +16,7 @@ load("@rules_jvm_external//:defs.bzl", "maven_install")
 git_repository(
   name = "build_stack_rules_proto",
   remote = "https://github.com/fireduck64/rules_proto",
-  commit = "8ab7bf0c7c992c893813f7151af4794ec5dd3e3f",
+  commit = "3e0b10c45c5e15b3ee17b3aa8a7ffe6e16b018cc",
   shallow_since = "1579204983 -0800"
 )
 
@@ -37,8 +37,8 @@ java_grpc_library()
 git_repository(
   name = "duckutil",
   remote = "https://github.com/fireduck64/duckutil",
-  commit = "146587d3efd0a15539027aa93ca91ab8dc7e02b4",
-  shallow_since = "1594916994 -0700",
+  commit = "bf1f4e4ba46a814c6e40b53de4921ebea950d84c",
+  shallow_since = "1605330022 -0800",
 )
 
 maven_install(
