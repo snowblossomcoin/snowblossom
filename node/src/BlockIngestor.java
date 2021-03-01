@@ -18,6 +18,7 @@ import snowblossom.lib.trie.HashUtils;
 import snowblossom.proto.Block;
 import snowblossom.proto.BlockHeader;
 import snowblossom.proto.BlockSummary;
+import snowblossom.proto.ImportedBlock;
 import snowblossom.proto.Transaction;
 
 /**
@@ -227,9 +228,12 @@ public class BlockIngestor implements ChainStateSource
         db.getBlockMap().put( blockhash.getBytes(), blk);
 
 
-        saveBlockChildMapping( new ChainHash(blk.getHeader().getPrevBlockHash()), blockhash);
-
-
+        saveBlockChildMapping( blk.getHeader().getPrevBlockHash(), blockhash.getBytes());
+        for(ImportedBlock ib : blk.getImportedBlocksList())
+        {
+          // not positive we actually need this, but what the hell
+          saveBlockChildMapping( ib.getHeader().getPrevBlockHash(), ib.getHeader().getSnowHash());
+        }
 
         // THIS IS SUPER IMPORTANT!!!!
         // the summary being saved in the summary map acts as a signal that
@@ -413,6 +417,11 @@ public class BlockIngestor implements ChainStateSource
     }
   }
 
+  
+  private void saveBlockChildMapping(ByteString parent, ByteString child)
+  {
+    saveBlockChildMapping( new ChainHash(parent), new ChainHash(child) );
+  }
 
   /**
    * Save the mapping of this parent to child block

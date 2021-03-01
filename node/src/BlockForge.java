@@ -33,79 +33,86 @@ public class BlockForge
     this.params = node.getParams();
     this.shard_id = shard_id;
   }
-
+ 
+  /**
+   * auto mode - use head if it exists or make it if appropriate
+   */
   public Block getBlockTemplate(SubscribeBlockTemplateRequest mine_to)
   {
-    BlockSummary head = node.getBlockIngestor(shard_id).getHead();
+    BlockSummary prev_summary = node.getBlockIngestor(shard_id).getHead();
 
-    Block.Builder block_builder = Block.newBuilder();
-
-    BlockHeader.Builder header_builder = BlockHeader.newBuilder();
-
-    
-    header_builder.setVersion(1);
-    header_builder.setShardId(shard_id);
-
-    ChainHash prev_utxo_root = null;
-
-    if (head == null)
+    if (prev_summary == null)
     {
-      header_builder.setBlockHeight(0);
-      header_builder.setPrevBlockHash(ChainHash.ZERO_HASH.getBytes());
 
-      prev_utxo_root = new ChainHash( HashUtils.hashOfEmpty() );
-
-      head = BlockSummary.newBuilder()
-               .setHeader(BlockHeader.newBuilder().setUtxoRootHash( HashUtils.hashOfEmpty() ).build())
+      prev_summary = BlockSummary.newBuilder()
+               .setHeader(BlockHeader.newBuilder().setUtxoRootHash( HashUtils.hashOfEmpty() )
+               .setBlockHeight(-1)
+               .setSnowHash(ChainHash.ZERO_HASH.getBytes())
+               .build())
              .build();
       if (shard_id != 0)
       {
         int parent_shard = ShardUtil.getShardParentId(shard_id);
-        head = node.getBlockIngestor(parent_shard).getHead();
-        if (head == null) return null;
-        
-        header_builder.setVersion(2);
-        header_builder.setBlockHeight(head.getHeader().getBlockHeight() + 1);
-        header_builder.setPrevBlockHash(head.getHeader().getSnowHash());
+        prev_summary = node.getBlockIngestor(parent_shard).getHead();
+        if (prev_summary == null) return null;
 
         if (ShardUtil.getInheritSet(shard_id).contains(parent_shard))
         {
-      
-          prev_utxo_root = new ChainHash(head.getHeader().getUtxoRootHash());
+          // Leave utxo alone
         }
         else
         {
-          prev_utxo_root = new ChainHash( HashUtils.hashOfEmpty() );
+          // Smash in empty utxo root
+          prev_summary = BlockSummary.newBuilder()
+            .mergeFrom(prev_summary)
+            .setHeader(BlockHeader.newBuilder().mergeFrom(prev_summary.getHeader())
+              .setUtxoRootHash(HashUtils.hashOfEmpty())
+              .build())
+            .build();
         }
       }
     }
-    else
+    
+    return getBlockTemplate(prev_summary, mine_to);
+
+  }
+
+  /**
+   * Create a new block from the given prev block.
+   * Assumes the prev_summary is set correctly
+   * in terms of utxo (as should be added by this block) as per shard rules
+   */
+  public Block getBlockTemplate(BlockSummary prev_summary, SubscribeBlockTemplateRequest mine_to)
+  {
+    
+    Block.Builder block_builder = Block.newBuilder();
+    BlockHeader.Builder header_builder = BlockHeader.newBuilder();
+    
+    header_builder.setVersion(1);
+    header_builder.setShardId(shard_id);
+
+    ChainHash prev_utxo_root = new ChainHash(prev_summary.getHeader().getUtxoRootHash());
+
+    if (ShardUtil.shardSplit(prev_summary, params))
+    if (prev_summary.getHeader().getShardId() == shard_id)
     {
-      if (ShardUtil.shardSplit(head, params))
-      {
-        // Can't mine on this shard any more
-        return null;
-      }
-
-      prev_utxo_root = new ChainHash(head.getHeader().getUtxoRootHash());
-
+      // Can't mine on this shard any more
+      return null;
+    }
      
-      header_builder.setBlockHeight(head.getHeader().getBlockHeight() + 1);
-      header_builder.setPrevBlockHash(head.getHeader().getSnowHash());
-      if (header_builder.getBlockHeight() >= params.getActivationHeightShards())
-      {
+    header_builder.setBlockHeight(prev_summary.getHeader().getBlockHeight() + 1);
+    header_builder.setPrevBlockHash(prev_summary.getHeader().getSnowHash());
+    if (header_builder.getBlockHeight() >= params.getActivationHeightShards())
+    {
         header_builder.setVersion(2);
-      }
     }
 
-
     long time = System.currentTimeMillis();
-    BigInteger target = PowUtil.calcNextTarget(head, params, time);
-
+    BigInteger target = PowUtil.calcNextTarget(prev_summary, params, time);
 
     header_builder.setTimestamp(time);
     header_builder.setTarget(BlockchainUtil.targetBigIntegerToBytes(target));
-    header_builder.setSnowField(head.getActivatedField());
+    header_builder.setSnowField(prev_summary.getActivatedField());
 
     try
     {
@@ -113,10 +120,10 @@ public class BlockForge
       UtxoUpdateBuffer utxo_buffer = new UtxoUpdateBuffer( node.getUtxoHashedTrie(), 
         prev_utxo_root);
 
-      importShards(head, block_builder, header_builder, utxo_buffer);
+      importShards(prev_summary, block_builder, header_builder, utxo_buffer);
 
 
-      List<Transaction> regular_transactions = getTransactions(new ChainHash(head.getHeader().getUtxoRootHash()));
+      List<Transaction> regular_transactions = getTransactions(new ChainHash(prev_summary.getHeader().getUtxoRootHash()));
       long fee_sum = 0L;
 
       Set<Integer> shard_cover_set = ShardUtil.getCoverSet(header_builder.getShardId(), params);
@@ -262,6 +269,8 @@ public class BlockForge
   {
     BlockImportList.Builder bil = BlockImportList.newBuilder();
 
+    // TODO - switch from using the shard head to just going as far as we can along
+    //  the given tree using the block child map set.
     BlockSummary head = node.getBlockIngestor(external_shard_id).getHead();
     if (head == null) {
       return null;

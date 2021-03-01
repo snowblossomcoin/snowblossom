@@ -21,6 +21,15 @@ public class MetaBlockForge
     this.params = node.getParams();
   }
 
+  // Moving to a new strategy
+  // Switch getPath nonssense tht is reaching for head on other shards to
+  // using the child map to reach for the highest work chain for each shard
+  // if the head of that shard is in there, it will get used.
+  // Then make block forge allow for passing in the prev_block to use
+  // maybe try head, but then decend down the tree and then ascend back up
+  // to get a bunch to try.  Take the highest work_sum.
+
+
   public Block getBlockTemplate(SubscribeBlockTemplateRequest mine_to)
   {
     Random rnd = new Random();
