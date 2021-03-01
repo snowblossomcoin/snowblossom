@@ -286,7 +286,6 @@ public class BlockForge
       bil.putHeightMap( cur.getBlockHeight(), cur.getSnowHash() );
 
       cur = node.getDB().getBlockSummaryMap().get(cur.getPrevBlockHash()).getHeader();
-
     }
 
   }
