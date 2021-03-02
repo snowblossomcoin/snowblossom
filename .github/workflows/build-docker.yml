@@ -22,7 +22,7 @@ jobs:
                   [[ "$GITHUB_REF" == *"tags"* ]] && TAGS=$TAGS,$REPOSITORY:latest
                   echo "TAGS=$TAGS" >> $GITHUB_ENV
 
-            - if: ${{ secrets.DOCKERHUB_USERNAME }}
+            - if: ${{ boolean(secrets.DOCKERHUB_USERNAME) }}
               name: Login to DockerHub
               uses: docker/login-action@v1
               with:
@@ -32,7 +32,8 @@ jobs:
             - name: Build and Push
               uses: docker/build-push-action@v2
               with:
-                  push: ${{ Boolean(secrets.DOCKERHUB_USERNAME) }}
+                  push: ${{ boolean( secrets.DOCKERHUB_USERNAME) }}
                   cache-from: type=registry,ref=${{ env.REPOSITORY }}:${{ env.REF }}
                   cache-to: type=inline
                   tags: ${{ env.TAGS }}
+  
