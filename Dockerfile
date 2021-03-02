@@ -10,10 +10,11 @@ RUN \
 
 
 
-RUN git clone --depth 1 --branch 1.8.0 https://github.com/snowblossomcoin/snowblossom.git /snow-master.git
-WORKDIR /snow-master.git
+RUN git clone --depth 1 --branch master https://github.com/snowblossomcoin/snowblossom.git /snowblossom
+WORKDIR /snowblossom
 RUN bazel build :Everything_deploy.jar
 
+RUN rm -rf /snowblossom/.git
 COPY .git /snowblossom/.git
 
 WORKDIR /snowblossom
