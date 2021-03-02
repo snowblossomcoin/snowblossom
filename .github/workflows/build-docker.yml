@@ -5,17 +5,26 @@ jobs:
         name: "Build Docker Image"
         runs-on: ubuntu-20.04
         steps:
-            - name: Checkout
+            - name: Checkout Repo
               uses: actions/checkout@v2
 
             - name: Determine Tag
               id: vars
+              run: echo "::set-output name=ref::$( basename ${{ github.ref }} )"
+
+            - name: Fetch Docker Image Cache
               run: |
-                  echo "::set-output name=ref::$( basename ${{ github.ref }} )"
+                  docker pull snowblossom/snowblossom:${{ steps.vars.outputs.ref }} || true
+              allow-failure: true
 
             - name: Build
               uses: docker/build-push-action@v2
               with:
+                  username: ${{ secrets.DOCKERHUB_USERNAME }}
+                  password: ${{ secrets.DOCKERHUB_PASSWORD }}
+                  push: true
+                  cache-from: type=registry,ref=snowblossom/snowblossom:${{ steps.vars.outputs.ref }}
+                  cache-to: type=inline
                   tags: |
                       snowblossom/snowblossom:${{ steps.vars.outputs.ref }},
                       snowblossom/snowblossom:${{ steps.vars.outputs.ref }}-${{ github.sha }},
