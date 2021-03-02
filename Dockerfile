@@ -1,6 +1,7 @@
 FROM l.gcr.io/google/bazel as build
 # mkdir line debian/openjdk bug https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=863199#23
-COPY .git /snowblossom/.git
+
+COPY . /snowblossom/
 RUN \
   set -eux && \
   mkdir -p /usr/share/man/man1 && \
@@ -8,7 +9,6 @@ RUN \
   apt-get update -q && \
   apt-get install -yqq --no-install-recommends openjdk-11-jdk-headless && \
   cd /snowblossom && \
-  git checkout . && \
   bazel build :Everything_deploy.jar  
 
 
