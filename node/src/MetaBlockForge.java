@@ -32,8 +32,6 @@ public class MetaBlockForge
   // Then make block forge allow for passing in the prev_block to use
   // maybe try head, but then decend down the tree and then ascend back up
   // to get a bunch to try.  Take the highest work_sum.
-
-
   public Block getBlockTemplate(SubscribeBlockTemplateRequest mine_to)
   {
     Random rnd = new Random();
@@ -42,42 +40,21 @@ public class MetaBlockForge
 
     for(int shard_id : node.getActiveShards())
     {
-      try
-      {
         Block b = getBestBlockForShard(mine_to, shard_id);
-        if (b!=null)
+        String block_str = "null";
+        if (b != null)
         {
-          if (b.getHeader().getVersion() == 2)
-          {
-            
-            BlockSummary prev = node.getDB().getBlockSummaryMap().get(b.getHeader().getPrevBlockHash());
-             
-            BlockHeader bh = BlockHeader.newBuilder()
-              .mergeFrom(b.getHeader())
-              .setSnowHash(ChainHash.getRandom().getBytes())
-              .build();
-            Block test_block = Block.newBuilder().mergeFrom(b).setHeader(bh).build();
-
-            Validation.checkShardBasics(test_block, prev, node.getParams());
-          }
-
+          block_str = String.format("s:%d h:%d imp:%d", 
+            b.getHeader().getShardId(), b.getHeader().getBlockHeight(), b.getImportedBlocksCount());
+        }
+        logger.info(String.format("ZZZ Getting best block of shard %d: %s", shard_id, block_str));
+        if (testBlock(b))
+        {
+          logger.info(String.format("ZZZ Minable best block of shard %d: %s", shard_id, block_str));
           mineable.add(b);
           mineable_map.put(rnd.nextDouble() + b.getHeader().getBlockHeight(), b);
         }
-
-      }
-      catch(ValidationException e)
-      {
-      
-        logState();
-        logger.info(String.format("Can't make block for shard %d: %s",shard_id, e));
-        e.printStackTrace();
-      }
-      catch(Throwable e)
-      {
-        logger.info(String.format("Can't make block for shard %d: %s",shard_id, e));
-        e.printStackTrace();
-      }
+        logger.info(String.format("ZZZ failed best block of shard %d: %s", shard_id, block_str));
     }
 
 
@@ -88,11 +65,17 @@ public class MetaBlockForge
     }
 
     // TODO - lols
-    return mineable_map.firstEntry().getValue();
+    //return mineable_map.lastEntry().getValue();
+    return mineable.get( rnd.nextInt(mineable.size() ) );
   }
 
-  private boolean testBlock(BlockSummary prev, Block b)
+  private boolean testBlock(Block b)
   {
+    if (b==null) return false;
+    if (b.getHeader().getVersion() == 1) return true;
+    if (b.getHeader().getBlockHeight()==0) return true;
+
+    BlockSummary prev = node.getDB().getBlockSummaryMap().get(b.getHeader().getPrevBlockHash());
     try
     {
       BlockHeader bh = BlockHeader.newBuilder()
@@ -106,6 +89,7 @@ public class MetaBlockForge
     }
     catch(ValidationException e)
     {
+      logger.info("Validation failed: " + e);
       return false;
     }
   }
@@ -129,19 +113,23 @@ public class MetaBlockForge
 
     TreeMap<BigInteger, Block> possible_blocks = new TreeMap<>();
 
-    for(ChainHash start : getBlocks(new ChainHash(head.getHeader().getSnowHash()), 6, shard_id))
-    {
-      BlockSummary bs = node.getDB().getBlockSummaryMap().get(start.getBytes());
+    Set<ChainHash> possible_source_blocks = getBlocks(new ChainHash(head.getHeader().getSnowHash()), 6, shard_id);
+    System.out.println("ZZZ possible source blocks: " + possible_source_blocks.size());
 
-      Block blk = node.getBlockForge(shard_id).getBlockTemplate(bs, mine_to);
-      if (testBlock(bs, blk))
+
+    for(ChainHash start : possible_source_blocks)
+    {
+      BlockSummary prev = node.getDB().getBlockSummaryMap().get(start.getBytes());
+      Block blk = node.getBlockForge(shard_id).getBlockTemplate(prev, mine_to);
+
+      if (testBlock(blk))
       {
         BlockSummary new_summary = BlockchainUtil.getNewSummary(
           BlockHeader.newBuilder()
             .mergeFrom(blk.getHeader())
             .setSnowHash(ChainHash.getRandom().getBytes())
             .build(),
-          bs, node.getParams(), 
+          prev, node.getParams(), 
           blk.getTransactionsCount(), 
           blk.getHeader().getTxDataSizeSum(), 
           blk.getImportedBlocksList());
@@ -166,7 +154,7 @@ public class MetaBlockForge
   {
     ChainHash tree_root = descend(start, shard_id);
 
-    return climb(start, shard_id);
+    return climb(tree_root, shard_id);
 
 
   }
@@ -197,7 +185,7 @@ public class MetaBlockForge
 
     BlockSummary bs = node.getDB().getBlockSummaryMap().get(start.getBytes());
     if (bs == null) return null;
-    return descend(new ChainHash(bs.getHeader().getSnowHash()), depth-1);
+    return descend(new ChainHash(bs.getHeader().getPrevBlockHash()), depth-1);
 
   }
 

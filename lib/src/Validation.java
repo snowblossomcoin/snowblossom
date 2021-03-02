@@ -558,10 +558,20 @@ public class Validation
     // The proof for this is kinda fun.  Base case is shard 0.  We need to have it and recent
     // or we need to have both children.
     // If we have both children, those will be checked.
+
+
     if (!checkBraidCompleteness(header.getBlockHeight(), params, shard_friends, 0))
     {
+      {
+        // map shard to block height
+        TreeMap<Integer, Integer> sh_map = new TreeMap<>();
+        for(Map.Entry<Integer, BlockHeader> me : shard_friends.entrySet())
+        {
+          sh_map.put(me.getKey(), me.getValue().getBlockHeight());
+        }
+        System.out.println(String.format("Braid check fail: shard:%d h:%d friends:%s",header.getShardId(),header.getBlockHeight(), sh_map.toString()));
+      }
       throw new ValidationException("Incomplete or old braid");
-
     }
 
     
@@ -588,6 +598,7 @@ public class Validation
   
   public static boolean checkBraidCompleteness(int build_height, NetworkParams params, Map<Integer, BlockHeader> shard_friends, int shard)
   {
+
     if (shard > params.getMaxShardId())
     {
       return false;
@@ -596,7 +607,6 @@ public class Validation
     for(int c : ShardUtil.getShardChildIds(shard))
     {
       if (checkBraidCompleteness(build_height, params, shard_friends, c)) good_children++;
-
     }
     if (good_children == 2) return true;
 

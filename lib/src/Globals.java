@@ -6,6 +6,7 @@ public class Globals
 {
   public static final String VERSION = "1.8.0-shardo-dev";
 
+
   public static final int POW_LOOK_PASSES = 6;
 
   /** Used for the merkle proofs of data in snow files */
