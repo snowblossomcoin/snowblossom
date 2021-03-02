@@ -9,12 +9,13 @@ jobs:
 
             - name: Determine Tag
               id: vars
-              run: echo ::set-output name::sha_short::$(echo ${{ github.sha }} | cut -c1-8)
+              run: |
+                  echo "::set-output name=ref::$( basename ${{ github.ref }} )"
 
             - name: Build
               uses: docker/build-push-action@v2
               with:
                   tags: |
-                      snowblossom/snowblossom:${{ github.ref }},\
-                      snowblossom/snowblossom:${{ github.ref }}-${{ steps.vars.outputs.sha_short }},\
-                      snowblossom/snowblossom:${{ steps.vars.outputs.sha_short }}
+                      snowblossom/snowblossom:${{ steps.vars.outputs.ref }},
+                      snowblossom/snowblossom:${{ steps.vars.outputs.ref }}-${{ github.sha }},
+                      snowblossom/snowblossom:${{ github.sha }}
