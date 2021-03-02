@@ -8,19 +8,15 @@ RUN \
   apt-get update -q && \
   apt-get install -yqq --no-install-recommends openjdk-11-jdk-headless 
 
-
-
-RUN git clone --depth 1 --branch master https://github.com/snowblossomcoin/snowblossom.git /snowblossom
-WORKDIR /snowblossom
+RUN git clone --depth 1 --branch master https://github.com/snowblossomcoin/snowblossom.git /snowblossom-cache
+WORKDIR /snowblossom-cache
 RUN bazel build :Everything_deploy.jar
 
-RUN rm -rf /snowblossom/.git
 COPY .git /snowblossom/.git
 
 WORKDIR /snowblossom
 RUN git checkout .
 RUN bazel build :Everything_deploy.jar  
-
 
 FROM openjdk:11-slim as run
 
