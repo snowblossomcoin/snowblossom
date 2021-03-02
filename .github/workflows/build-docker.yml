@@ -12,11 +12,6 @@ jobs:
               id: vars
               run: echo "::set-output name=ref::$( basename ${{ github.ref }} )"
 
-            - name: Fetch Docker Image Cache
-              run: |
-                  docker pull snowblossom/snowblossom:${{ steps.vars.outputs.ref }} || true
-              allow-failure: true
-
             - name: Build
               uses: docker/build-push-action@v2
               with:
