@@ -11,6 +11,7 @@ import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.TreeMap;
 import java.util.TreeSet;
 import org.junit.Assert;
 import snowblossom.lib.*;
@@ -223,10 +224,9 @@ public class BlockForge
         if (start_point != null)
         {
 
-          BlockImportList path = getPath(start_point, external_shard_id);
+          BlockImportList path = getPath(start_point, external_shard_id). pollLastEntry().getValue();
 
-
-          if (path != null)
+          if ((path != null) && (path.getHeightMap().size() > 0))
           {
             // Add header
             header_builder.putShardImport(external_shard_id, path);
@@ -262,32 +262,40 @@ public class BlockForge
     }
   }
 
+
+
   /**
-   * Going to have to get fancier with this
+   * Explore down the tree of blocks and find the path to the one with the highest work_sum
    */
-  private BlockImportList getPath(ChainHash start_point, int external_shard_id)
+  private TreeMap<BigInteger,BlockImportList> getPath(ChainHash start_point, int external_shard_id)
   {
-    BlockImportList.Builder bil = BlockImportList.newBuilder();
+    TreeMap<BigInteger,BlockImportList> options = new TreeMap<>();
 
-    // TODO - switch from using the shard head to just going as far as we can along
-    //  the given tree using the block child map set.
-    BlockSummary head = node.getBlockIngestor(external_shard_id).getHead();
-    if (head == null) {
-      return null;
-    }
+    options.put(BigInteger.ZERO, BlockImportList.newBuilder().build());
 
-    BlockHeader cur = head.getHeader();
-    while(true)
+    for(ByteString next_hash : node.getDB().getChildBlockMapSet().getSet( start_point.getBytes(), 20) )
     {
-      if (start_point.equals(cur.getSnowHash())) return bil.build();
-      if (cur.getShardId() != external_shard_id) return null;
-      if (bil.getHeightMap().size() > node.getParams().getMaxShardSkewHeight()) return null;
+      BlockSummary bs = node.getDB().getBlockSummaryMap().get(next_hash);
+      if (bs != null)
+      if (bs.getHeader().getShardId() == external_shard_id)
+      {
+        BigInteger work = BlockchainUtil.readInteger(bs.getWorkSum());
+        BlockImportList.Builder bil = BlockImportList.newBuilder();
+        bil.putHeightMap( bs.getHeader().getBlockHeight(), bs.getHeader().getSnowHash() );
+        
+        options.put(work, bil.build());
 
-      bil.putHeightMap( cur.getBlockHeight(), cur.getSnowHash() );
+        TreeMap<BigInteger,BlockImportList> down = getPath(new ChainHash(bs.getHeader().getSnowHash()), 
+          external_shard_id);
 
-      cur = node.getDB().getBlockSummaryMap().get(cur.getPrevBlockHash()).getHeader();
+        for(Map.Entry<BigInteger, BlockImportList> me : down.entrySet())
+        {
+          options.put( me.getKey(), bil.mergeFrom(me.getValue()).build());
+        }
+      }
     }
 
+    return options;
   }
 
   private Transaction buildCoinbase(BlockHeader header, long fees, SubscribeBlockTemplateRequest mine_to)
