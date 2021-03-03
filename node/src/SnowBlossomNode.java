@@ -64,7 +64,7 @@ public class SnowBlossomNode
   private DB db;
   private NetworkParams params;
   private Peerage peerage;
-  private MetaBlockForge meta_blockforge;
+  private ShardBlockForge shard_blockforge;
   private ShardUtxoImport shard_utxo_import;
 
   private ImmutableList<Integer> service_ports;
@@ -159,7 +159,7 @@ public class SnowBlossomNode
   {
 
     peerage = new Peerage(this);
-    meta_blockforge = new MetaBlockForge(this);
+    shard_blockforge = new ShardBlockForge(this);
     shard_utxo_import = new ShardUtxoImport(this);
 
   }
@@ -358,12 +358,14 @@ public class SnowBlossomNode
   public NetworkParams getParams(){return params;}
 
   public BlockIngestor getBlockIngestor(){return getBlockIngestor(0);}
-  public MetaBlockForge getBlockForge(){return meta_blockforge;}
+  public ShardBlockForge getBlockForge(){return shard_blockforge;}
   public MemPool getMemPool(){return getMemPool(0);}
 
   public ShardUtxoImport getShardUtxoImport(){return shard_utxo_import;}
 
   public Set<Integer> getActiveShards(){return shard_comps.keySet(); }
+  public Set<Integer> getInterestShards(){return shard_interest_set; }
+
 
   public BlockIngestor getBlockIngestor(int shard_id)
   {

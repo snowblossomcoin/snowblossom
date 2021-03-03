@@ -136,7 +136,7 @@ public class BlockForge
           shard_cover_set, export_utxo_buffer);
       }
 
-      Transaction coinbase = buildCoinbase( header_builder.build(), fee_sum, mine_to);
+      Transaction coinbase = buildCoinbase( params, header_builder.build(), fee_sum, mine_to, shard_id);
       Validation.deepTransactionCheck(coinbase, utxo_buffer, header_builder.build(), params,
         shard_cover_set, export_utxo_buffer);
 
@@ -298,7 +298,7 @@ public class BlockForge
     return options;
   }
 
-  private Transaction buildCoinbase(BlockHeader header, long fees, SubscribeBlockTemplateRequest mine_to)
+  public static Transaction buildCoinbase(NetworkParams params, BlockHeader header, long fees, SubscribeBlockTemplateRequest mine_to, int target_shard)
     throws ValidationException
   {
     Transaction.Builder tx = Transaction.newBuilder();
@@ -322,7 +322,6 @@ public class BlockForge
 
     long total_reward = ShardUtil.getBlockReward(params, header) + fees;
 
-    int target_shard = shard_id;
     inner.addAllOutputs( makeCoinbaseOutputs( params, total_reward, mine_to, target_shard));
 
 
