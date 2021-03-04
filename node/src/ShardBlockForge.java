@@ -7,6 +7,7 @@ import java.math.BigInteger;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.ArrayList;
 import java.util.Map;
 import java.util.Random;
 import java.util.Set;
@@ -61,29 +62,27 @@ public class ShardBlockForge
       }
     }
 
-    Random rnd = new Random();
-    BigInteger million = BigInteger.valueOf(1000000L);
-
-    TreeMap<BigInteger, BlockConcept> possible_map = new TreeMap<>();
+    TreeSet<BlockConcept> possible_set = new TreeSet<>();
     for(BlockConcept bc : concept_list)
     {
       for(BlockConcept bc_with : importShards(bc))
       {
         if (testBlock(bc_with))
         {
-          BigInteger w = bc_with.getWorkSum()
-            .multiply(million)
-            .add(BigInteger.valueOf(rnd.nextInt(1000000)));
 
-          possible_map.put(w, bc_with);
+          possible_set.add(bc_with);
         }
       }
     }
   
-    System.out.println("ZZZ Possible blocks: " + possible_map.size());
-    if (possible_map.size() == 0) return null; 
+    System.out.println("ZZZ Possible blocks: " + possible_set.size());
+    for(BlockConcept c : possible_set)
+    {
+      System.out.println("ZZZ " + c.toString());
+    }
+    if (possible_set.size() == 0) return null; 
 
-    BlockConcept selected = possible_map.lastEntry().getValue();
+    BlockConcept selected = possible_set.first();
 
     try
     {
@@ -316,7 +315,7 @@ public class ShardBlockForge
   {
     LinkedList<BlockConcept> lst = new LinkedList<>();
     
-    lst.add(concept);
+    lst.add(concept); // no imports - why not
 
     int shard_id = concept.getHeader().getShardId();
 
@@ -326,7 +325,8 @@ public class ShardBlockForge
     exclude_set.add(shard_id);
 
 
-    LinkedList<Integer> shards_to_add = new LinkedList<>();
+
+    TreeSet<Integer> shards_to_add = new TreeSet<>();
     for(int s : node.getActiveShards())
     {
       if (!exclude_set.contains(s))
@@ -334,18 +334,71 @@ public class ShardBlockForge
         shards_to_add.add(s);
       }
     }
-    Collections.shuffle(shards_to_add);
-
-    for(int s : shards_to_add)
+    
+    BlockConcept working_c = concept;
+    while(shards_to_add.size() > 0)
     {
-			
+      ArrayList<Integer> shards_to_add_lst = new ArrayList<>();
+      shards_to_add_lst.addAll(shards_to_add);
+      Collections.shuffle(shards_to_add_lst);
+      int selected_shard = shards_to_add_lst.get(0);
+      
+      BlockConcept imp_c = attempImportShard(working_c, selected_shard);
+      if (imp_c == null)
+      {
+        shards_to_add.remove(selected_shard);
+      }
+      else
+      {
+        working_c = imp_c;
+        //lst.add(working_c);
+      }
 
     }
-
-    //TODO
-    lst.add(concept);
+    lst.add(working_c);
 
     return lst;
+
+  }
+
+  /**
+   * Try to add a block from the given shard to the block concept
+   * if it seems possible, return the new BlockConcept
+   * else return null.
+   * Note: if it returns a BlockConcept, further calls for this shard
+   * may result in more blocks
+   */ 
+  private BlockConcept attempImportShard(BlockConcept working_c, int selected_shard)
+  {
+    BlockHeader cur = working_c.getShardHeads().get(selected_shard);
+    if (cur == null)
+    {
+      cur = working_c.getShardHeads().get( ShardUtil.getShardParentId(selected_shard) );
+    }
+    if (cur == null) return null;
+
+    TreeMap<BigInteger,BlockImportList> path = getPath(new ChainHash( cur.getSnowHash() ), selected_shard);
+    BlockImportList bil = path.lastEntry().getValue();
+    if (bil.getHeightMap().size() == 0)
+    {
+      return null;
+    }
+    TreeMap<Integer, ByteString> height_map = new TreeMap<>();
+    height_map.putAll(bil.getHeightMap());
+    ByteString hash = height_map.firstEntry().getValue();
+
+    BlockSummary imp_sum = node.getDB().getBlockSummaryMap().get( hash );
+    if (imp_sum == null) return null;
+
+    BlockConcept c_add = working_c.importShard( imp_sum.getHeader() );
+    if (checkCollisions(c_add))
+    {
+      return c_add;
+    }
+    else
+    {
+      return null;
+    }
 
   }
 
@@ -391,7 +444,6 @@ public class ShardBlockForge
     for(ImportedBlock ib : input)
     {
       map.put(new Pair<Integer,Integer>(ib.getHeader().getShardId(), ib.getHeader().getBlockHeight()) ,ib);
-
     }
     return ImmutableList.copyOf(map.values());
 
@@ -400,7 +452,7 @@ public class ShardBlockForge
   /**
    * Represents a block we could flesh out and mine, if it makes sense to do so
    */
-  public class BlockConcept
+  public class BlockConcept implements Comparable<BlockConcept>
   {
     // inputs
     private BlockSummary prev_summary;
@@ -409,7 +461,11 @@ public class ShardBlockForge
 
     // Calculated
     private BigInteger work_sum;
+    private BigInteger sort_work;
+    private BigInteger rnd_val;
     private TreeMap<Integer, BlockHeader> shard_heads;
+    private int advances_shard = 0;
+
 
     public BlockConcept(BlockSummary prev_summary, BlockHeader header)
     {
@@ -420,6 +476,18 @@ public class ShardBlockForge
       this.prev_summary = prev_summary;
       this.header = header;
       this.imported_blocks = ImmutableList.copyOf(imported_blocks);
+
+      if (node.getBlockIngestor(header.getShardId()).getHead() == null)
+      {
+        advances_shard=1;
+      }
+      else
+      {
+        if (node.getBlockIngestor(header.getShardId()).getHead().getHeader().getBlockHeight() < header.getBlockHeight())
+        {
+          advances_shard=1;
+        }
+      }
 
       { // Populate shard heads
         shard_heads = new TreeMap<>();
@@ -446,6 +514,13 @@ public class ShardBlockForge
           imported_blocks);
 
         work_sum = BlockchainUtil.readInteger( test_summary.getWorkSum() );
+
+        Random rnd = new Random();
+        sort_work = work_sum
+          .multiply(BigInteger.valueOf(1000000L))
+          .add(BigInteger.valueOf(rnd.nextInt(1000000)));
+
+        rnd_val = BigInteger.valueOf( rnd.nextLong() );
       }
     }
 
@@ -480,7 +555,46 @@ public class ShardBlockForge
     public BlockHeader getHeader(){return header;}
     public BlockSummary getPrevSummary(){return prev_summary;}
     public List<ImportedBlock> getImportedBlocks(){return imported_blocks;}
+    public int getAdvancesShard(){return advances_shard; }
+    public int getHeight(){return getHeader().getBlockHeight(); }
+    public Map<Integer, BlockHeader> getShardHeads(){return shard_heads; }
+    private BigInteger getSortWork(){return sort_work; }
+    private BigInteger getRandomVal(){return rnd_val;}
 
+
+
+    /** sorting such that best block is first */
+    @Override
+    public int compareTo(ShardBlockForge.BlockConcept o)
+    {
+      // Advancing a shard is best
+      if (getAdvancesShard() > o.getAdvancesShard()) return -1;
+      if (getAdvancesShard() < o.getAdvancesShard()) return 1;
+
+      if (getAdvancesShard() == 1)
+      { 
+        // smallest height is next best - grow the shorter shard
+        if (getHeight() < o.getHeight()) return -1;
+        if (getHeight() > o.getHeight()) return 1;
+
+        // larger is better
+        return o.getSortWork().compareTo(getSortWork());
+      }
+
+      return getRandomVal().compareTo(o.getRandomVal());
+
+
+    }
+    @Override
+    public String toString()
+    {
+      return String.format("Concept{ a:%d h:%d w:%s shard:%d imp:%d }",
+        getAdvancesShard(),
+        getHeight(),
+        getWorkSum().toString(),
+        getHeader().getShardId(),
+        getImportedBlocks().size());
+    }
 
   }
 
