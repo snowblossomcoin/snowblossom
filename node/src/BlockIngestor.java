@@ -234,6 +234,9 @@ public class BlockIngestor implements ChainStateSource
           // not positive we actually need this, but what the hell
           saveBlockChildMapping( ib.getHeader().getPrevBlockHash(), ib.getHeader().getSnowHash());
         }
+        db.setBestBlockAt( blk.getHeader().getShardId(), blk.getHeader().getBlockHeight(), 
+          BlockchainUtil.readInteger(summary.getWorkSum()));
+
 
         // THIS IS SUPER IMPORTANT!!!!
         // the summary being saved in the summary map acts as a signal that

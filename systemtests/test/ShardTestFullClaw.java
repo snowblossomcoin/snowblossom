@@ -31,9 +31,9 @@ public class ShardTestFullClaw extends SpoonTest
     AddressSpecHash to_addr = AddressUtil.getHashForSpec(claim);
 
     SnowBlossomMiner miner = startMiner(port, to_addr, snow_path, "regshard");
-    Thread.sleep(10000);
+    Thread.sleep(30000);
 
-    for(int i=0; i<=Math.min(20,new NetworkParamsRegShard().getMaxShardId()); i++)
+    for(int i=0; i<=Math.min(10,new NetworkParamsRegShard().getMaxShardId()); i++)
     {
       waitForShardHead(node, i);
     }

@@ -53,7 +53,7 @@ public class NetworkParamsRegShard extends NetworkParams
   public int getBIP44CoinNumber() { return 2340; }
 
   @Override
-  public long getBlockTimeTarget() { return 1000L; } //1 second
+  public long getBlockTimeTarget() { return 10000L; } //10 second
 
   @Override
   public int getMaxBlockSize(){ return 3800000; }

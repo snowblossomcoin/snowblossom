@@ -16,6 +16,7 @@ import snowblossom.lib.trie.TrieDBMap;
 import snowblossom.proto.Block;
 import snowblossom.proto.BlockSummary;
 import snowblossom.proto.Transaction;
+import java.math.BigInteger;
 
 public class DB implements DBFace
 {
@@ -28,6 +29,7 @@ public class DB implements DBFace
   protected DBMap utxo_node_map;
   protected DBMap block_height_map;
   protected DBMap special_map;
+  protected DBMap best_block_map;
   protected ProtoDBMap<Transaction> tx_map;
   protected DBMapMutationSet special_map_set;
   protected DBMapMutationSet child_block_map_set;
@@ -66,6 +68,7 @@ public class DB implements DBFace
     block_height_map = prov.openMap("height");
     special_map = prov.openMap("special");
     chain_index_map = prov.openMap("cit");
+    best_block_map = prov.openMap("bbm");
 
     chain_index_trie = new HashedTrie(new TrieDBMap(chain_index_map), true, true);
     utxo_hashed_trie = new HashedTrie(new TrieDBMap(utxo_node_map), true, false);
@@ -165,6 +168,38 @@ public class DB implements DBFace
     block_height_map.put(ByteString.copyFrom(bb.array()), hash.getBytes());
   }
 
+  @Override
+  public BigInteger getBestBlockAt(int shard, int height)
+  {
+    ByteBuffer bb = ByteBuffer.allocate(8);
+    bb.putInt(shard);
+    bb.putInt(height);
+    ByteString hash = best_block_map.get(ByteString.copyFrom(bb.array()));
+
+    if (hash == null) return BigInteger.ZERO;
+
+    return new BigInteger(hash.toByteArray());
+
+  }
+  
+  @Override
+  public void setBestBlockAt(int shard, int height, BigInteger work_sum)
+  {
+    // There is a race condition here, but as the worst case scenario is we end up burning
+    // some cycles making blocks that are not in fact better, not a huge deal
+
+    BigInteger prev = getBestBlockAt(shard, height);
+
+    if (work_sum.compareTo(prev) > 0)
+    {
+
+      ByteBuffer bb = ByteBuffer.allocate(8);
+      bb.putInt(shard);
+      bb.putInt(height);
+      best_block_map.put(ByteString.copyFrom(bb.array()), ByteString.copyFrom(work_sum.toByteArray()));
+    }
+
+  }
 
   protected void dbShutdownHandler()
   {

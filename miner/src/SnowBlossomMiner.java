@@ -51,7 +51,7 @@ public class SnowBlossomMiner
 
     while (true)
     {
-      Thread.sleep(15000);
+      Thread.sleep(45000);
       miner.printStats();
     }
   }
@@ -447,9 +447,7 @@ public class SnowBlossomMiner
     {
       logger.finer("Got block template: height:" + b.getHeader().getBlockHeight() + " transactions:" + b.getTransactionsCount());
 
-
       int min_field = b.getHeader().getSnowField();
-
 
       logger.finer("Required field: " + min_field + " - " + params.getSnowFieldInfo(min_field).getName());
 

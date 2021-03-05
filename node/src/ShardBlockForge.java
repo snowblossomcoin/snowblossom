@@ -34,51 +34,69 @@ public class ShardBlockForge
 
   public Block getBlockTemplate(SubscribeBlockTemplateRequest mine_to)
   {
+    // Source blocks to mangle
     HashSet<ChainHash> possible_source_blocks = new HashSet<>();
 
-    for(int shard_id : node.getActiveShards())
-    {
-      BlockSummary head = node.getBlockIngestor(shard_id).getHead();
 
-      // This handles the case of starting a new shard
-      if ((head == null) && (shard_id == 0))
-      {
-        // Let the old thing do the genesis gag
-        return node.getBlockForge(0).getBlockTemplate(mine_to);
-      }
-      if (head != null)
-      {
-        possible_source_blocks.addAll( getBlocks(new ChainHash(head.getHeader().getSnowHash()), 6, shard_id) );
-      }
-    }
-
-    LinkedList<BlockConcept> concept_list = new LinkedList<>();
-    for(ChainHash hash : possible_source_blocks)
-    {
-      BlockSummary bs = node.getDB().getBlockSummaryMap().get(hash.getBytes());
-      if (bs != null)
-      {
-        concept_list.addAll( initiateBlockConcepts(bs) );
-      }
-    }
-
+    // Possible blocks to mine
     TreeSet<BlockConcept> possible_set = new TreeSet<>();
-    for(BlockConcept bc : concept_list)
-    {
-      for(BlockConcept bc_with : importShards(bc))
-      {
-        if (testBlock(bc_with))
-        {
 
-          possible_set.add(bc_with);
+    int check_depth=0;
+
+    while(possible_set.size() == 0)
+    {
+      check_depth++;
+      System.out.println("Looking for solutions at depth: " + check_depth);
+      if (check_depth > node.getParams().getMaxShardSkewHeight()) break;
+
+      for(int shard_id : node.getActiveShards())
+      {
+        BlockSummary head = node.getBlockIngestor(shard_id).getHead();
+
+        // This handles the case of starting a new shard
+        if ((head == null) && (shard_id == 0))
+        {
+          // Let the old thing do the genesis gag
+          return node.getBlockForge(0).getBlockTemplate(mine_to);
+        }
+        if (head != null)
+        {
+          possible_source_blocks.addAll( getBlocks(new ChainHash(head.getHeader().getSnowHash()), check_depth, shard_id) );
+        }
+      }
+      System.out.println("Possible source blocks: " + possible_source_blocks.size());
+
+      // Concepts to explore
+      LinkedList<BlockConcept> concept_list = new LinkedList<>();
+
+      for(ChainHash hash : possible_source_blocks)
+      {
+        BlockSummary bs = node.getDB().getBlockSummaryMap().get(hash.getBytes());
+        if (bs != null)
+        {
+          concept_list.addAll( initiateBlockConcepts(bs) );
+        }
+      }
+
+      for(BlockConcept bc : concept_list)
+      {
+        for(BlockConcept bc_with : importShards(bc))
+        {
+          if ((testBlock(bc_with)) && (isBetter(bc_with)))
+          {
+            possible_set.add(bc_with);
+          }
         }
       }
     }
   
     System.out.println("ZZZ Possible blocks: " + possible_set.size());
+    int printed = 0;
     for(BlockConcept c : possible_set)
     {
       System.out.println("ZZZ " + c.toString());
+      printed++;
+      if (printed > 20) break;
     }
     if (possible_set.size() == 0) return null; 
 
@@ -91,28 +109,38 @@ public class ShardBlockForge
     }
     catch(ValidationException e)
     {
-      logger.warning("Validation failed: " + e);
+      logger.warning("Validation failed in block fleshOut: " + e);
       return null;
     }
-
-
   }
 
   private boolean checkCollisions(BlockConcept b)
   {
-    TreeMap<String, ChainHash> known_map = new TreeMap<>();
-
     try
     {
+			TreeMap<String, ChainHash> known_map = new TreeMap<>();
+			
+			// Check summary map list
+			Validation.checkCollisions(known_map, b.getPrevSummary().getShardHistoryMap());
+
+			// Check all imported shard headers
+			for(ImportedBlock ib : b.getImportedBlocks())
+			{
+				BlockHeader h = ib.getHeader();
+				Validation.checkCollisions(known_map, h.getShardId(), h.getBlockHeight(), new ChainHash(h.getSnowHash()));
+				Validation.checkCollisions(known_map, h.getShardImportMap());
+			}
+
       Validation.checkCollisions(known_map, b.getPrevSummary().getShardHistoryMap());
       Validation.checkCollisions(known_map, b.getHeader().getShardImportMap());
+      Validation.checkCollisions(known_map, b.getHeader().getShardId(), b.getHeader().getBlockHeight(), ChainHash.getRandom());
+      return true;
     }
     catch(ValidationException e)
     {
       return false;
     }
 
-    return true;
   }
 
   private boolean testBlock(BlockConcept b)
@@ -137,9 +165,22 @@ public class ShardBlockForge
     }
     catch(ValidationException e)
     {
-      logger.info("Validation failed: " + e);
+      // logger.info("Validation failed in testBlock: " + e);
       return false;
     }
+  }
+
+  private boolean isBetter(BlockConcept b)
+  {
+    if (b.getAdvancesShard() > 0) return true;
+
+    BlockHeader header = b.getHeader();
+
+    if (b.getWorkSum().compareTo(
+      node.getDB().getBestBlockAt(header.getShardId(), header.getBlockHeight())) > 0) return true;
+
+    return false;
+
   }
 
   /**
@@ -166,10 +207,14 @@ public class ShardBlockForge
       set.add(new ChainHash(bs.getHeader().getSnowHash()));
     }
 
-    for(ByteString next : node.getDB().getChildBlockMapSet().getSet(start.getBytes(), 20))
+    //System.out.println("climb: " + bs.getHeader().getBlockHeight());
+
+    for(ByteString next : node.getDB().getChildBlockMapSet().getSet(start.getBytes(), 200))
     {
       set.addAll(climb(new ChainHash(next), shard_id));
     }
+
+    //System.out.println("climb e: " + bs.getHeader().getBlockHeight() + " " + set.size());
 
     return set;
     
@@ -222,6 +267,10 @@ public class ShardBlockForge
       {
         if (node.getInterestShards().contains(c))
         {
+					try
+					{
+					node.openShard(c); } catch(Exception e){e.printStackTrace(); }
+
           header_builder.setShardId(c);
           lst.add(new BlockConcept(prev_summary, header_builder.build()));
         }
@@ -314,8 +363,11 @@ public class ShardBlockForge
   public List<BlockConcept> importShards(BlockConcept concept)
   {
     LinkedList<BlockConcept> lst = new LinkedList<>();
-    
-    lst.add(concept); // no imports - why not
+   
+    if (testBlock(concept) && isBetter(concept))
+    {
+      lst.add(concept); // no imports - why not
+    }
 
     int shard_id = concept.getHeader().getShardId();
 
@@ -323,8 +375,6 @@ public class ShardBlockForge
     exclude_set.addAll(ShardUtil.getCoverSet(shard_id, params));
     exclude_set.addAll(ShardUtil.getAllParents(shard_id));
     exclude_set.add(shard_id);
-
-
 
     TreeSet<Integer> shards_to_add = new TreeSet<>();
     for(int s : node.getActiveShards())
@@ -343,7 +393,7 @@ public class ShardBlockForge
       Collections.shuffle(shards_to_add_lst);
       int selected_shard = shards_to_add_lst.get(0);
       
-      BlockConcept imp_c = attempImportShard(working_c, selected_shard);
+      BlockConcept imp_c = attemptImportShard(working_c, selected_shard);
       if (imp_c == null)
       {
         shards_to_add.remove(selected_shard);
@@ -351,7 +401,6 @@ public class ShardBlockForge
       else
       {
         working_c = imp_c;
-        //lst.add(working_c);
       }
 
     }
@@ -368,7 +417,7 @@ public class ShardBlockForge
    * Note: if it returns a BlockConcept, further calls for this shard
    * may result in more blocks
    */ 
-  private BlockConcept attempImportShard(BlockConcept working_c, int selected_shard)
+  private BlockConcept attemptImportShard(BlockConcept working_c, int selected_shard)
   {
     BlockHeader cur = working_c.getShardHeads().get(selected_shard);
     if (cur == null)
@@ -378,7 +427,11 @@ public class ShardBlockForge
     if (cur == null) return null;
 
     TreeMap<BigInteger,BlockImportList> path = getPath(new ChainHash( cur.getSnowHash() ), selected_shard);
-    BlockImportList bil = path.lastEntry().getValue();
+    ArrayList<BlockImportList> path_lists = new ArrayList<>();
+    path_lists.addAll(path.values());
+    Collections.shuffle(path_lists);
+
+    BlockImportList bil = path_lists.get(0);
     if (bil.getHeightMap().size() == 0)
     {
       return null;
@@ -411,7 +464,7 @@ public class ShardBlockForge
 
     options.put(BigInteger.ZERO, BlockImportList.newBuilder().build());
 
-    for(ByteString next_hash : node.getDB().getChildBlockMapSet().getSet( start_point.getBytes(), 20) )
+    for(ByteString next_hash : node.getDB().getChildBlockMapSet().getSet( start_point.getBytes(), 200) )
     {
       BlockSummary bs = node.getDB().getBlockSummaryMap().get(next_hash);
       if (bs != null)
@@ -576,12 +629,13 @@ public class ShardBlockForge
         // smallest height is next best - grow the shorter shard
         if (getHeight() < o.getHeight()) return -1;
         if (getHeight() > o.getHeight()) return 1;
+      }
 
         // larger is better
         return o.getSortWork().compareTo(getSortWork());
-      }
+      
 
-      return getRandomVal().compareTo(o.getRandomVal());
+      //return getRandomVal().compareTo(o.getRandomVal());
 
 
     }

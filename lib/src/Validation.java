@@ -569,7 +569,7 @@ public class Validation
         {
           sh_map.put(me.getKey(), me.getValue().getBlockHeight());
         }
-        System.out.println(String.format("Braid check fail: shard:%d h:%d friends:%s",header.getShardId(),header.getBlockHeight(), sh_map.toString()));
+        //System.out.println(String.format("Braid check fail: shard:%d h:%d friends:%s",header.getShardId(),header.getBlockHeight(), sh_map.toString()));
       }
       throw new ValidationException("Incomplete or old braid");
     }
