@@ -1,0 +1,30 @@
+name: Unit Test
+on: [push, pull_request]
+
+jobs:
+  test:
+    name: Run unit tests
+    runs-on: ubuntu-20.04
+    container:
+      image: debian:bullseye-slim
+
+    steps:
+      - name: 'Checkout'
+        uses: actions/checkout@v2
+
+      - name: 'Install Dependencies'
+        env:
+          DEBIAN_FRONTEND: noninteractive
+        run: |
+          # https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=863199#23
+          mkdir -p /usr/share/man/man1
+          apt-get -qq update
+          apt-get -qq install --no-install-recommends --no-install-suggests \
+            git \
+            bazel-bootstrap
+
+      - name: 'Build'
+        run: bazel build //...
+
+      - name: 'Test'
+        run: bazel test //...
