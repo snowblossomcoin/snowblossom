@@ -270,13 +270,15 @@ public class ShardBlockForge
         }
       }
       //System.out.println("Shard heads: " + head_shards);
-      Map<Integer, BlockHeader> gold = getGoldenSetRecursive(  head_shards, ImmutableMap.of());
+      Map<Integer, BlockHeader> gold = getGoldenSetRecursive(head_shards, ImmutableMap.of(), true);
 
       if (gold == null)
       {
         System.out.println("No gold set - depth " + depth);
         return new HashSet<ChainHash>();
       }
+
+      gold = goldUpgrade(gold);
 
       HashSet<ChainHash> gold_set = new HashSet<ChainHash>();
 
@@ -291,11 +293,25 @@ public class ShardBlockForge
     }
   }
 
+  private Map<Integer, BlockHeader> goldUpgrade( Map<Integer, BlockHeader> gold_in)
+  {
+    try(TimeRecordAuto tra_blk = TimeRecord.openAuto("ShardBlockForge.goldUpgrade"))
+    {
+      Map<Integer,Set<ChainHash> > head_shards = new TreeMap<Integer, Set<ChainHash> >();
+      for(int s : gold_in.keySet())
+      {
+        head_shards.put(s, climb( new ChainHash(gold_in.get(s).getSnowHash()), s));
+
+      }
+      return getGoldenSetRecursive(head_shards, ImmutableMap.of(), false);
+    }
+  }
+
   /**
    * Find blocks for the remaining_shards that don't conflict with anything in known_map.
    * @returns the map of shards to headers that is the best
    */
-  private Map<Integer, BlockHeader> getGoldenSetRecursive(Map<Integer, Set<ChainHash> > remaining_shards, ImmutableMap<String, ChainHash> known_map)
+  private Map<Integer, BlockHeader> getGoldenSetRecursive(Map<Integer, Set<ChainHash> > remaining_shards, ImmutableMap<String, ChainHash> known_map, boolean short_cut)
   {
     try(TimeRecordAuto tra_blk = TimeRecord.openAuto("ShardBlockForge.getGoldenSetRecursive"))
     {
@@ -318,7 +334,7 @@ public class ShardBlockForge
         // If this block doesn't collide
         if (block_known_map != null)
         {
-          Map<Integer, BlockHeader> sub_solution = getGoldenSetRecursive( rem_shards_tree, ImmutableMap.copyOf(block_known_map));
+          Map<Integer, BlockHeader> sub_solution = getGoldenSetRecursive( rem_shards_tree, ImmutableMap.copyOf(block_known_map), short_cut);
           if (sub_solution != null)
           {
             sub_solution.put(shard_id, bs.getHeader());
@@ -332,6 +348,10 @@ public class ShardBlockForge
             {
               best_solution = sub_solution;
               best_solution_val = val_sum;
+              if (short_cut)
+              {
+                return best_solution; // short circuit
+              }
             }
           }
         }
@@ -380,7 +400,7 @@ public class ShardBlockForge
     }
 
 
-    for(ByteString next : node.getDB().getChildBlockMapSet().getSet(start.getBytes(), 200))
+    for(ByteString next : node.getDB().getChildBlockMapSet().getSet(start.getBytes(), 2000))
     {
       set.addAll(climb(new ChainHash(next), shard_id));
     }
@@ -542,7 +562,6 @@ public class ShardBlockForge
     {
       LinkedList<BlockConcept> lst = new LinkedList<>();
      
-      lst.add(concept); // no imports - why not
 
       int shard_id = concept.getHeader().getShardId();
 
@@ -642,7 +661,7 @@ public class ShardBlockForge
 
     options.put(BigInteger.ZERO, BlockImportList.newBuilder().build());
 
-    for(ByteString next_hash : node.getDB().getChildBlockMapSet().getSet( start_point.getBytes(), 200) )
+    for(ByteString next_hash : node.getDB().getChildBlockMapSet().getSet( start_point.getBytes(), 2000) )
     {
       BlockSummary bs = getDBSummary(next_hash);
       if (bs != null)
