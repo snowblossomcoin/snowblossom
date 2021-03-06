@@ -235,14 +235,13 @@ public class ShardBlockForge
   /**
    * Returns the highest value set of blocks that all work together that we can find
    */ 
-  public Set<ChainHash> getGoldenSet()
+  public Set<ChainHash> getGoldenSet(int depth)
   {
-    int depth = 2;
-    try(TimeRecordAuto tra_blk = TimeRecord.openAuto("ShardBlockForge.getGoldenSet"))
+    try(TimeRecordAuto tra_blk = TimeRecord.openAuto("ShardBlockForge.getGoldenSet(" + depth + ")"))
     {
       // TODO find a better way to get the set of shards we need
      
-      System.out.println("Finding golden set");
+      System.out.println("Finding golden set - depth " + depth);
       Map<Integer,Set<ChainHash> > head_shards = new TreeMap<Integer, Set<ChainHash> >();
 
       int max_height = 0;
@@ -270,11 +269,12 @@ public class ShardBlockForge
           }
         }
       }
+      //System.out.println("Shard heads: " + head_shards);
       Map<Integer, BlockHeader> gold = getGoldenSetRecursive(  head_shards, ImmutableMap.of());
 
       if (gold == null)
       {
-        System.out.println("No gold set");
+        System.out.println("No gold set - depth " + depth);
         return new HashSet<ChainHash>();
       }
 
@@ -308,7 +308,7 @@ public class ShardBlockForge
 
       Set<ChainHash> shard_blocks = rem_shards_tree.pollFirstEntry().getValue();
 
-      int best_solution_val = 0;
+      int best_solution_val = -1;
       Map<Integer, BlockHeader> best_solution = null;
 
       for(ChainHash hash : shard_blocks)
@@ -395,6 +395,7 @@ public class ShardBlockForge
 
     BlockSummary bs = getDBSummary(start);
     if (bs == null) return null;
+    if (bs.getHeader().getBlockHeight()==0) return start;
     return descend(new ChainHash(bs.getHeader().getPrevBlockHash()), depth-1);
 
   }
@@ -853,21 +854,16 @@ public class ShardBlockForge
       // Possible blocks to mine
       TreeSet<BlockConcept> possible_set = new TreeSet<>();
 
-      int check_depth=0;
-
-      //while(possible_set.size() == 0)
+        
+      if (node.getBlockIngestor(0).getHead() == null)
       {
-        //if (check_depth > node.getParams().getMaxShardSkewHeight()) break;
-
-        for(int shard_id : node.getActiveShards())
+        // Let the old thing do the genesis gag
+        return;
+      }
+        /*for(int shard_id : node.getActiveShards())
         {
           BlockSummary head = node.getBlockIngestor(shard_id).getHead();
 
-          if ((head == null) && (shard_id == 0))
-          {
-            // Let the old thing do the genesis gag
-            return;
-          }
           if (head != null)
           {
             if (head.getHeader().getBlockHeight() < 10)
@@ -878,15 +874,20 @@ public class ShardBlockForge
         }
         System.out.println("Possible source blocks: " + possible_source_blocks.size());
 
-        possible_set.addAll(exploreBlocks(possible_source_blocks, true));
+        possible_set.addAll(exploreBlocks(possible_source_blocks, true));*/
 
-        if (possible_set.size()==0)
+        
+        int depth=0;
+        while (possible_set.size()==0)
         {
-          possible_set.addAll(exploreBlocks(getGoldenSet(), false));
+          Set<ChainHash> gold = getGoldenSet(depth);
+          possible_set.addAll(exploreBlocks(gold, false));
+          depth++;
+          if (depth > 6) break;
         }
 
         //check_depth++;
-      }
+      //}
     
       System.out.println("ZZZ Possible blocks: " + possible_set.size());
       int printed = 0;

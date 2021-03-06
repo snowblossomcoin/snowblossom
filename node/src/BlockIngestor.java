@@ -270,6 +270,13 @@ public class BlockIngestor implements ChainStateSource
       logger.info(String.format("New block: Shard %d Height %d %s (tx:%d sz:%d)", shard_id, blk.getHeader().getBlockHeight(), blockhash, blk.getTransactionsCount(), blk.toByteString().size()));
       node.getBlockForge().tickle();
 
+      SnowUserService u = node.getUserService();
+      if (u != null)
+      {
+        u.tickleBlocks();
+      }
+
+
       if (BlockchainUtil.isBetter( chainhead, summary ))
       {
         chainhead = summary;
@@ -288,7 +295,6 @@ public class BlockIngestor implements ChainStateSource
           params.getSnowFieldInfo(chainhead.getActivatedField()).getName(),
           age));
 
-        SnowUserService u = node.getUserService();
         if (u != null)
         {
           u.tickleBlocks();
