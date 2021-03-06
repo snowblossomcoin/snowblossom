@@ -445,7 +445,10 @@ public class SnowBlossomMiner
 
     public void onNext(Block b)
     {
-      logger.finer("Got block template: height:" + b.getHeader().getBlockHeight() + " transactions:" + b.getTransactionsCount());
+      logger.finer(String.format("Got block template: shard:%d height:%d transactions:%d",
+        b.getHeader().getShardId(),
+        b.getHeader().getBlockHeight(),
+        b.getTransactionsCount()));
 
       int min_field = b.getHeader().getSnowField();
 

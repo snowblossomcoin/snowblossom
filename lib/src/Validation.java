@@ -621,7 +621,7 @@ public class Validation
 
   }
 
-  public static void checkCollisions(TreeMap<String, ChainHash> known_map, int shard, int height, ChainHash hash)
+  public static void checkCollisions(Map<String, ChainHash> known_map, int shard, int height, ChainHash hash)
     throws ValidationException
   {
     String key = "" + shard + "," + height;
@@ -642,7 +642,7 @@ public class Validation
    * Make sure very block referenced matches from all blocks.
    * checking by shard id and height to see if hashes match
    */
-  public static void checkCollisions(TreeMap<String, ChainHash> known_map, Map<Integer, BlockImportList> map)
+  public static void checkCollisions(Map<String, ChainHash> known_map, Map<Integer, BlockImportList> map)
     throws ValidationException
   {
     for(int shard : map.keySet())

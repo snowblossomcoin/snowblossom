@@ -268,6 +268,7 @@ public class BlockIngestor implements ChainStateSource
       }
         
       logger.info(String.format("New block: Shard %d Height %d %s (tx:%d sz:%d)", shard_id, blk.getHeader().getBlockHeight(), blockhash, blk.getTransactionsCount(), blk.toByteString().size()));
+      node.getBlockForge().tickle();
 
       if (BlockchainUtil.isBetter( chainhead, summary ))
       {

@@ -1,135 +1,165 @@
 package snowblossom.node;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.protobuf.ByteString;
 import duckutil.Pair;
+import duckutil.TimeRecord;
+import duckutil.TimeRecordAuto;
+import java.io.FileOutputStream;
+import java.io.PrintStream;
 import java.math.BigInteger;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.ArrayList;
 import java.util.Map;
 import java.util.Random;
 import java.util.Set;
-import java.util.Collections;
 import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.logging.Logger;
 import snowblossom.lib.*;
 import snowblossom.lib.trie.HashUtils;
 import snowblossom.proto.*;
+import duckutil.PeriodicThread;
+import duckutil.LRUCache;
 
 public class ShardBlockForge
 {
 
+  public static final int IMPORT_PASSES=4;
+
   private SnowBlossomNode node;
   private NetworkParams params;
   private static final Logger logger = Logger.getLogger("snowblossom.node");
-  
+ 
+  private final PrintStream forge_log;
+  private TimeRecord time_record;
+
+  private volatile long last_template_request = 0L;
+  private volatile ArrayList<BlockConcept> current_top_concepts = null;
+  private ConceptUpdateThread concept_update_thread;
+
   public ShardBlockForge(SnowBlossomNode node)
+    throws Exception
   {
     this.node = node;
     this.params = node.getParams();
+    if (node.getConfig().isSet("forge_log"))
+    {
+      forge_log = new PrintStream(new FileOutputStream(node.getConfig().get("forge_log"), true));
+      time_record = new TimeRecord();
+      TimeRecord.setSharedRecord(time_record);
+    }
+    else
+    {
+      forge_log = null;
+    }
+
+    concept_update_thread = new ConceptUpdateThread();
+    concept_update_thread.start();
+
   }
 
   public Block getBlockTemplate(SubscribeBlockTemplateRequest mine_to)
   {
-    // Source blocks to mangle
-    HashSet<ChainHash> possible_source_blocks = new HashSet<>();
+    try(TimeRecordAuto tra_gbt = TimeRecord.openAuto("ShardBlockForge.getBlockTemplate"))
+    {
+      last_template_request = System.currentTimeMillis();
 
+      if (node.getBlockIngestor(0).getHead() == null)
+      {
+        // Let the old thing do the genesis gag
+        return node.getBlockForge(0).getBlockTemplate(mine_to);
+      }
 
-    // Possible blocks to mine
+      ArrayList<BlockConcept> possible_set = current_top_concepts;
+
+      if (possible_set == null)
+      {
+        concept_update_thread.wakeAndWait();
+        possible_set = current_top_concepts;
+      }
+      if (possible_set == null) return null;
+      if (possible_set.size() == 0) return null; 
+
+      Random rnd = new Random();
+
+      BlockConcept selected = possible_set.get( rnd.nextInt(possible_set.size()) );
+
+      try
+      {
+        return fleshOut(selected, mine_to); 
+
+      }
+      catch(ValidationException e)
+      {
+        logger.warning("Validation failed in block fleshOut: " + e);
+        return null;
+      }
+    }
+    catch(Throwable t)
+    {
+      logger.warning("Exception in getBlockTemplate: " + t);
+      t.printStackTrace();
+      return null;
+    }
+  }
+
+  private Set<BlockConcept> exploreBlocks(Set<ChainHash> possible_source_blocks, boolean require_better)
+  {
+    // Concepts to explore
+    LinkedList<BlockConcept> concept_list = new LinkedList<>();
+
+    for(ChainHash hash : possible_source_blocks)
+    {
+      BlockSummary bs = getDBSummary(hash.getBytes());
+      if (bs != null)
+      if (node.getInterestShards().contains(bs.getHeader().getShardId()))
+      {
+        concept_list.addAll( initiateBlockConcepts(bs) );
+      }
+    }
+
     TreeSet<BlockConcept> possible_set = new TreeSet<>();
 
-    int check_depth=0;
-
-    while(possible_set.size() == 0)
+    for(BlockConcept bc : concept_list)
     {
-      check_depth++;
-      System.out.println("Looking for solutions at depth: " + check_depth);
-      if (check_depth > node.getParams().getMaxShardSkewHeight()) break;
-
-      for(int shard_id : node.getActiveShards())
+      for(BlockConcept bc_with : importShards(bc))
       {
-        BlockSummary head = node.getBlockIngestor(shard_id).getHead();
-
-        // This handles the case of starting a new shard
-        if ((head == null) && (shard_id == 0))
+        if (testBlock(bc_with))
         {
-          // Let the old thing do the genesis gag
-          return node.getBlockForge(0).getBlockTemplate(mine_to);
-        }
-        if (head != null)
-        {
-          possible_source_blocks.addAll( getBlocks(new ChainHash(head.getHeader().getSnowHash()), check_depth, shard_id) );
-        }
-      }
-      System.out.println("Possible source blocks: " + possible_source_blocks.size());
-
-      // Concepts to explore
-      LinkedList<BlockConcept> concept_list = new LinkedList<>();
-
-      for(ChainHash hash : possible_source_blocks)
-      {
-        BlockSummary bs = node.getDB().getBlockSummaryMap().get(hash.getBytes());
-        if (bs != null)
-        {
-          concept_list.addAll( initiateBlockConcepts(bs) );
-        }
-      }
-
-      for(BlockConcept bc : concept_list)
-      {
-        for(BlockConcept bc_with : importShards(bc))
-        {
-          if ((testBlock(bc_with)) && (isBetter(bc_with)))
+          if ((!require_better) || isBetter(bc_with))
           {
             possible_set.add(bc_with);
           }
         }
       }
     }
-  
-    System.out.println("ZZZ Possible blocks: " + possible_set.size());
-    int printed = 0;
-    for(BlockConcept c : possible_set)
-    {
-      System.out.println("ZZZ " + c.toString());
-      printed++;
-      if (printed > 20) break;
-    }
-    if (possible_set.size() == 0) return null; 
 
-    BlockConcept selected = possible_set.first();
+    return possible_set;
 
-    try
-    {
-      return fleshOut(selected, mine_to); 
-
-    }
-    catch(ValidationException e)
-    {
-      logger.warning("Validation failed in block fleshOut: " + e);
-      return null;
-    }
   }
 
   private boolean checkCollisions(BlockConcept b)
   {
-    try
+    try(TimeRecordAuto tra_blk = TimeRecord.openAuto("ShardBlockForge.checkCollisions(b)"))
     {
-			TreeMap<String, ChainHash> known_map = new TreeMap<>();
-			
-			// Check summary map list
-			Validation.checkCollisions(known_map, b.getPrevSummary().getShardHistoryMap());
+      TreeMap<String, ChainHash> known_map = new TreeMap<>();
+      
+      // Check summary map list
+      Validation.checkCollisions(known_map, b.getPrevSummary().getShardHistoryMap());
 
-			// Check all imported shard headers
-			for(ImportedBlock ib : b.getImportedBlocks())
-			{
-				BlockHeader h = ib.getHeader();
-				Validation.checkCollisions(known_map, h.getShardId(), h.getBlockHeight(), new ChainHash(h.getSnowHash()));
-				Validation.checkCollisions(known_map, h.getShardImportMap());
-			}
+      // Check all imported shard headers
+      for(ImportedBlock ib : b.getImportedBlocks())
+      {
+        BlockHeader h = ib.getHeader();
+        Validation.checkCollisions(known_map, h.getShardId(), h.getBlockHeight(), new ChainHash(h.getSnowHash()));
+        Validation.checkCollisions(known_map, h.getShardImportMap());
+      }
 
       Validation.checkCollisions(known_map, b.getPrevSummary().getShardHistoryMap());
       Validation.checkCollisions(known_map, b.getHeader().getShardImportMap());
@@ -145,28 +175,31 @@ public class ShardBlockForge
 
   private boolean testBlock(BlockConcept b)
   {
-    if (b==null) return false;
-    if (b.getHeader().getVersion() == 1) return true;
-    if (b.getHeader().getBlockHeight()==0) return true;
-
-    try
+    try(TimeRecordAuto tra_blk = TimeRecord.openAuto("ShardBlockForge.testBlock"))
     {
-      BlockHeader bh = BlockHeader.newBuilder()
-        .mergeFrom(b.getHeader())
-        .setSnowHash(ChainHash.getRandom().getBytes())
-        .build();
-      Block test_block = Block.newBuilder()
-        .setHeader(bh)
-        .addAllImportedBlocks(b.getImportedBlocks())
-        .build();
+      if (b==null) return false;
+      if (b.getHeader().getVersion() == 1) return true;
+      if (b.getHeader().getBlockHeight()==0) return true;
 
-      Validation.checkShardBasics(test_block, b.getPrevSummary(), params);
-      return true;
-    }
-    catch(ValidationException e)
-    {
-      // logger.info("Validation failed in testBlock: " + e);
-      return false;
+      try
+      {
+        BlockHeader bh = BlockHeader.newBuilder()
+          .mergeFrom(b.getHeader())
+          .setSnowHash(ChainHash.getRandom().getBytes())
+          .build();
+        Block test_block = Block.newBuilder()
+          .setHeader(bh)
+          .addAllImportedBlocks(b.getImportedBlocks())
+          .build();
+
+        Validation.checkShardBasics(test_block, b.getPrevSummary(), params);
+        return true;
+      }
+      catch(ValidationException e)
+      {
+        // logger.info("Validation failed in testBlock: " + e);
+        return false;
+      }
     }
   }
 
@@ -187,19 +220,158 @@ public class ShardBlockForge
    * Go down by depth and then return all blocks that are decendend from that one
    * and are on the same shard id.
    */
-  public Set<ChainHash> getBlocks(ChainHash start, int depth, int shard_id)
+  public Set<ChainHash> getBlocksAround(ChainHash start, int depth, int shard_id)
   {
-    ChainHash tree_root = descend(start, shard_id);
 
-    return climb(tree_root, shard_id);
+    try(TimeRecordAuto tra_blk = TimeRecord.openAuto("ShardBlockForge.getBlocksAround"))
+    {
+      ChainHash tree_root = descend(start, depth);
 
+      return climb(tree_root, shard_id);
+    }
+  }
+
+
+  /**
+   * Returns the highest value set of blocks that all work together that we can find
+   */ 
+  public Set<ChainHash> getGoldenSet()
+  {
+    int depth = 2;
+    try(TimeRecordAuto tra_blk = TimeRecord.openAuto("ShardBlockForge.getGoldenSet"))
+    {
+      // TODO find a better way to get the set of shards we need
+     
+      System.out.println("Finding golden set");
+      Map<Integer,Set<ChainHash> > head_shards = new TreeMap<Integer, Set<ChainHash> >();
+
+      int max_height = 0;
+      for(int s : node.getActiveShards())
+      {
+        if (node.getBlockIngestor(s).getHead()!=null)
+        {
+          max_height = Math.max( max_height, node.getBlockIngestor(s).getHead().getHeader().getBlockHeight() );
+        }
+
+      }
+
+
+      for(int s : node.getActiveShards())
+      {
+        if (node.getBlockIngestor(s).getHead()!=null)
+        {
+          BlockHeader h = node.getBlockIngestor(s).getHead().getHeader();
+
+          if (h.getBlockHeight() + params.getMaxShardSkewHeight()*2 >= max_height)
+          { // anything super short is probably irrelvant noise - an old shard that is no longer extended
+
+            head_shards.put(s, 
+              getBlocksAround( new ChainHash(h.getSnowHash()), depth, s));
+          }
+        }
+      }
+      Map<Integer, BlockHeader> gold = getGoldenSetRecursive(  head_shards, ImmutableMap.of());
+
+      if (gold == null)
+      {
+        System.out.println("No gold set");
+        return new HashSet<ChainHash>();
+      }
+
+      HashSet<ChainHash> gold_set = new HashSet<ChainHash>();
+
+      for(BlockHeader bh : gold.values())
+      {
+        gold_set.add(new ChainHash(bh.getSnowHash()));
+      }
+
+      System.out.println("Gold set found: " + gold_set);
+
+      return gold_set;
+    }
+  }
+
+  /**
+   * Find blocks for the remaining_shards that don't conflict with anything in known_map.
+   * @returns the map of shards to headers that is the best
+   */
+  private Map<Integer, BlockHeader> getGoldenSetRecursive(Map<Integer, Set<ChainHash> > remaining_shards, ImmutableMap<String, ChainHash> known_map)
+  {
+    try(TimeRecordAuto tra_blk = TimeRecord.openAuto("ShardBlockForge.getGoldenSetRecursive"))
+    {
+      if (remaining_shards.size() == 0) return new TreeMap<Integer, BlockHeader>();
+
+      TreeMap<Integer, Set<ChainHash> > rem_shards_tree = new TreeMap<>();
+      rem_shards_tree.putAll(remaining_shards);
+
+      int shard_id = rem_shards_tree.firstEntry().getKey();
+
+      Set<ChainHash> shard_blocks = rem_shards_tree.pollFirstEntry().getValue();
+
+      int best_solution_val = 0;
+      Map<Integer, BlockHeader> best_solution = null;
+
+      for(ChainHash hash : shard_blocks)
+      {
+        BlockSummary bs = getDBSummary(hash);
+        Map<String, ChainHash> block_known_map = checkCollisions( known_map, bs);
+        // If this block doesn't collide
+        if (block_known_map != null)
+        {
+          Map<Integer, BlockHeader> sub_solution = getGoldenSetRecursive( rem_shards_tree, ImmutableMap.copyOf(block_known_map));
+          if (sub_solution != null)
+          {
+            sub_solution.put(shard_id, bs.getHeader());
+            int val_sum = 0;
+            for(BlockHeader h : sub_solution.values())
+            {
+              val_sum += h.getBlockHeight();
+            }
+
+            if (val_sum > best_solution_val)
+            {
+              best_solution = sub_solution;
+              best_solution_val = val_sum;
+            }
+          }
+        }
+      }
+
+
+      return best_solution;
+    }
+  }
+
+  private Map<String, ChainHash> checkCollisions(ImmutableMap<String, ChainHash> known_map_in, BlockSummary bs)
+  {
+
+    try(TimeRecordAuto tra_blk = TimeRecord.openAuto("ShardBlockForge.checkCollisions(m,bs)"))
+    {
+      HashMap<String, ChainHash> known_map = new HashMap<>(2048,0.5f);
+      known_map.putAll( known_map_in);
+
+      BlockHeader h = bs.getHeader();
+
+      try
+      {
+        Validation.checkCollisions(known_map, bs.getShardHistoryMap());
+        Validation.checkCollisions(known_map, h.getShardId(), h.getBlockHeight(), new ChainHash(h.getSnowHash()));
+        Validation.checkCollisions(known_map, h.getShardImportMap());
+        return known_map;
+
+      }
+      catch(ValidationException e)
+      {
+        return null;
+      }
+    }
 
   }
 
   public Set<ChainHash> climb(ChainHash start, int shard_id)
   {
     HashSet<ChainHash> set = new HashSet<>();
-    BlockSummary bs = node.getDB().getBlockSummaryMap().get(start.getBytes());
+    BlockSummary bs = getDBSummary(start);
   
     if (bs != null)
     if (bs.getHeader().getShardId() == shard_id)
@@ -207,14 +379,11 @@ public class ShardBlockForge
       set.add(new ChainHash(bs.getHeader().getSnowHash()));
     }
 
-    //System.out.println("climb: " + bs.getHeader().getBlockHeight());
 
     for(ByteString next : node.getDB().getChildBlockMapSet().getSet(start.getBytes(), 200))
     {
       set.addAll(climb(new ChainHash(next), shard_id));
     }
-
-    //System.out.println("climb e: " + bs.getHeader().getBlockHeight() + " " + set.size());
 
     return set;
     
@@ -224,7 +393,7 @@ public class ShardBlockForge
   {
     if (depth==0) return start;
 
-    BlockSummary bs = node.getDB().getBlockSummaryMap().get(start.getBytes());
+    BlockSummary bs = getDBSummary(start);
     if (bs == null) return null;
     return descend(new ChainHash(bs.getHeader().getPrevBlockHash()), depth-1);
 
@@ -237,176 +406,184 @@ public class ShardBlockForge
    */
   public List<BlockConcept> initiateBlockConcepts(BlockSummary prev_summary)
   {
-    
-    LinkedList<BlockConcept> lst = new LinkedList<>();
-
-    BlockHeader.Builder header_builder = BlockHeader.newBuilder();
-    header_builder.setShardId( prev_summary.getHeader().getShardId() );
-    header_builder.setBlockHeight( prev_summary.getHeader().getBlockHeight() +1);
-    header_builder.setPrevBlockHash( prev_summary.getHeader().getSnowHash() );
-
-    if (header_builder.getBlockHeight() >= params.getActivationHeightShards())
+    try(TimeRecordAuto tra_blk = TimeRecord.openAuto("ShardBlockForge.initiateBlockConcepts"))
     {
-      header_builder.setVersion(2);
-    }
-    else
-    {
-      header_builder.setVersion(1);
-    }
+      
+      LinkedList<BlockConcept> lst = new LinkedList<>();
 
-    long time = System.currentTimeMillis();
-    BigInteger target = PowUtil.calcNextTarget(prev_summary, params, time);
+      BlockHeader.Builder header_builder = BlockHeader.newBuilder();
+      header_builder.setShardId( prev_summary.getHeader().getShardId() );
+      header_builder.setBlockHeight( prev_summary.getHeader().getBlockHeight() +1);
+      header_builder.setPrevBlockHash( prev_summary.getHeader().getSnowHash() );
 
-    header_builder.setTimestamp(time);
-    header_builder.setTarget(BlockchainUtil.targetBigIntegerToBytes(target));
-    header_builder.setSnowField(prev_summary.getActivatedField());
-
-    if (ShardUtil.shardSplit(prev_summary, params))
-    { // split
-      for(int c : ShardUtil.getShardChildIds( prev_summary.getHeader().getShardId() ))
+      if (header_builder.getBlockHeight() >= params.getActivationHeightShards())
       {
-        if (node.getInterestShards().contains(c))
-        {
-					try
-					{
-					node.openShard(c); } catch(Exception e){e.printStackTrace(); }
+        header_builder.setVersion(2);
+      }
+      else
+      {
+        header_builder.setVersion(1);
+      }
 
-          header_builder.setShardId(c);
-          lst.add(new BlockConcept(prev_summary, header_builder.build()));
+      long time = System.currentTimeMillis();
+      BigInteger target = PowUtil.calcNextTarget(prev_summary, params, time);
+
+      header_builder.setTimestamp(time);
+      header_builder.setTarget(BlockchainUtil.targetBigIntegerToBytes(target));
+      header_builder.setSnowField(prev_summary.getActivatedField());
+
+      if (ShardUtil.shardSplit(prev_summary, params))
+      { // split
+        for(int c : ShardUtil.getShardChildIds( prev_summary.getHeader().getShardId() ))
+        {
+          if (node.getInterestShards().contains(c))
+          {
+            try
+            {
+            node.openShard(c); } catch(Exception e){e.printStackTrace(); }
+
+            header_builder.setShardId(c);
+            lst.add(new BlockConcept(prev_summary, header_builder.build()));
+          }
         }
       }
+      else
+      {
+        lst.add(new BlockConcept(prev_summary, header_builder.build()));
+      }
+      return lst;
     }
-    else
-    {
-      lst.add(new BlockConcept(prev_summary, header_builder.build()));
-    }
-    return lst;
 
   }
 
   public Block fleshOut(BlockConcept concept, SubscribeBlockTemplateRequest mine_to)
     throws ValidationException
   {
-    Block.Builder block_builder = Block.newBuilder();
-    BlockHeader.Builder header_builder = BlockHeader.newBuilder().mergeFrom(concept.getHeader());
-    BlockSummary prev_summary = concept.getPrevSummary();
-
-    ChainHash prev_utxo_root = new ChainHash(prev_summary.getHeader().getUtxoRootHash());
-    if (header_builder.getShardId() != prev_summary.getHeader().getShardId())
-    if (!ShardUtil.getInheritSet(header_builder.getShardId()).contains(prev_summary.getHeader().getShardId()))
+    try(TimeRecordAuto tra_blk = TimeRecord.openAuto("ShardBlockForge.fleshOut"))
     {
-      // If we are a split and do not inherit, start with clean slate
-      prev_utxo_root = new ChainHash(HashUtils.hashOfEmpty());
-    }
-    UtxoUpdateBuffer utxo_buffer = new UtxoUpdateBuffer( node.getUtxoHashedTrie(), prev_utxo_root);
+      Block.Builder block_builder = Block.newBuilder();
+      BlockHeader.Builder header_builder = BlockHeader.newBuilder().mergeFrom(concept.getHeader());
+      BlockSummary prev_summary = concept.getPrevSummary();
 
-    
-    // Add import shards to utxo buffer
-    block_builder.addAllImportedBlocks( concept.getImportedBlocks() );
-    for(ImportedBlock ib : block_builder.getImportedBlocksList())
-    {
-      for(ImportedOutputList lst : ib.getImportOutputsMap().values())
+      ChainHash prev_utxo_root = new ChainHash(prev_summary.getHeader().getUtxoRootHash());
+      if (header_builder.getShardId() != prev_summary.getHeader().getShardId())
+      if (!ShardUtil.getInheritSet(header_builder.getShardId()).contains(prev_summary.getHeader().getShardId()))
       {
-        utxo_buffer.addOutputs(lst);
+        // If we are a split and do not inherit, start with clean slate
+        prev_utxo_root = new ChainHash(HashUtils.hashOfEmpty());
       }
-    }
+      UtxoUpdateBuffer utxo_buffer = new UtxoUpdateBuffer( node.getUtxoHashedTrie(), prev_utxo_root);
 
-    List<Transaction> regular_transactions = node.getMemPool(header_builder.getShardId())
-      .getTransactionsForBlock(prev_utxo_root, node.getParams().getMaxBlockSize());
-   
-    long fee_sum = 0L;
+      
+      // Add import shards to utxo buffer
+      block_builder.addAllImportedBlocks( concept.getImportedBlocks() );
+      for(ImportedBlock ib : block_builder.getImportedBlocksList())
+      {
+        for(ImportedOutputList lst : ib.getImportOutputsMap().values())
+        {
+          utxo_buffer.addOutputs(lst);
+        }
+      }
 
-    Set<Integer> shard_cover_set = ShardUtil.getCoverSet(header_builder.getShardId(), params);
-    Map<Integer, UtxoUpdateBuffer> export_utxo_buffer = new TreeMap<>();
+      List<Transaction> regular_transactions = node.getMemPool(header_builder.getShardId())
+        .getTransactionsForBlock(prev_utxo_root, node.getParams().getMaxBlockSize());
+     
+      long fee_sum = 0L;
 
-    for(Transaction tx : regular_transactions)
-    {
-       fee_sum += Validation.deepTransactionCheck(tx, utxo_buffer, header_builder.build(), params,
+      Set<Integer> shard_cover_set = ShardUtil.getCoverSet(header_builder.getShardId(), params);
+      Map<Integer, UtxoUpdateBuffer> export_utxo_buffer = new TreeMap<>();
+
+      for(Transaction tx : regular_transactions)
+      {
+         fee_sum += Validation.deepTransactionCheck(tx, utxo_buffer, header_builder.build(), params,
+          shard_cover_set, export_utxo_buffer);
+      }
+
+      Transaction coinbase = BlockForge.buildCoinbase( params, header_builder.build(), fee_sum, mine_to, header_builder.getShardId());
+      Validation.deepTransactionCheck(coinbase, utxo_buffer, header_builder.build(), params,
         shard_cover_set, export_utxo_buffer);
+
+      block_builder.addTransactions(coinbase);
+      block_builder.addAllTransactions(regular_transactions);
+
+      // Save export UTXO data
+      for(int export_shard_id : export_utxo_buffer.keySet())
+      {
+        UtxoUpdateBuffer export_buffer = export_utxo_buffer.get(export_shard_id);
+        header_builder.putShardExportRootHash(export_shard_id, export_buffer.simulateUpdates().getBytes());
+      }
+
+      int tx_size_total = 0;
+      LinkedList<ChainHash> tx_list = new LinkedList<ChainHash>();
+      for(Transaction tx : block_builder.getTransactionsList())
+      {
+        tx_list.add( new ChainHash(tx.getTxHash()));
+        tx_size_total += tx.getInnerData().size() + tx.getTxHash().size();
+      }
+
+      if (header_builder.getVersion() == 2)
+      {
+        header_builder.setTxDataSizeSum(tx_size_total);
+      }
+
+      header_builder.setMerkleRootHash( DigestUtil.getMerkleRootForTxList(tx_list).getBytes());
+      header_builder.setUtxoRootHash( utxo_buffer.simulateUpdates().getBytes());
+
+      block_builder.setHeader(header_builder.build());
+
+      return block_builder.build();
     }
-
-    Transaction coinbase = BlockForge.buildCoinbase( params, header_builder.build(), fee_sum, mine_to, header_builder.getShardId());
-    Validation.deepTransactionCheck(coinbase, utxo_buffer, header_builder.build(), params,
-      shard_cover_set, export_utxo_buffer);
-
-    block_builder.addTransactions(coinbase);
-    block_builder.addAllTransactions(regular_transactions);
-
-    // Save export UTXO data
-    for(int export_shard_id : export_utxo_buffer.keySet())
-    {
-      UtxoUpdateBuffer export_buffer = export_utxo_buffer.get(export_shard_id);
-      header_builder.putShardExportRootHash(export_shard_id, export_buffer.simulateUpdates().getBytes());
-    }
-
-    int tx_size_total = 0;
-    LinkedList<ChainHash> tx_list = new LinkedList<ChainHash>();
-    for(Transaction tx : block_builder.getTransactionsList())
-    {
-      tx_list.add( new ChainHash(tx.getTxHash()));
-      tx_size_total += tx.getInnerData().size() + tx.getTxHash().size();
-    }
-
-    if (header_builder.getVersion() == 2)
-    {
-      header_builder.setTxDataSizeSum(tx_size_total);
-    }
-
-    header_builder.setMerkleRootHash( DigestUtil.getMerkleRootForTxList(tx_list).getBytes());
-    header_builder.setUtxoRootHash( utxo_buffer.simulateUpdates().getBytes());
-
-    block_builder.setHeader(header_builder.build());
-
-    return block_builder.build();
   }
 
   public List<BlockConcept> importShards(BlockConcept concept)
   {
-    LinkedList<BlockConcept> lst = new LinkedList<>();
-   
-    if (testBlock(concept) && isBetter(concept))
+    try(TimeRecordAuto tra_blk = TimeRecord.openAuto("ShardBlockForge.importShards"))
     {
+      LinkedList<BlockConcept> lst = new LinkedList<>();
+     
       lst.add(concept); // no imports - why not
-    }
 
-    int shard_id = concept.getHeader().getShardId();
+      int shard_id = concept.getHeader().getShardId();
 
-    Set<Integer> exclude_set = new TreeSet<>();
-    exclude_set.addAll(ShardUtil.getCoverSet(shard_id, params));
-    exclude_set.addAll(ShardUtil.getAllParents(shard_id));
-    exclude_set.add(shard_id);
+      Set<Integer> exclude_set = new TreeSet<>();
+      exclude_set.addAll(ShardUtil.getCoverSet(shard_id, params));
+      exclude_set.addAll(ShardUtil.getAllParents(shard_id));
+      exclude_set.add(shard_id);
 
-    TreeSet<Integer> shards_to_add = new TreeSet<>();
-    for(int s : node.getActiveShards())
-    {
-      if (!exclude_set.contains(s))
+      for(int i=0; i<IMPORT_PASSES; i++)
       {
-        shards_to_add.add(s);
-      }
-    }
-    
-    BlockConcept working_c = concept;
-    while(shards_to_add.size() > 0)
-    {
-      ArrayList<Integer> shards_to_add_lst = new ArrayList<>();
-      shards_to_add_lst.addAll(shards_to_add);
-      Collections.shuffle(shards_to_add_lst);
-      int selected_shard = shards_to_add_lst.get(0);
-      
-      BlockConcept imp_c = attemptImportShard(working_c, selected_shard);
-      if (imp_c == null)
-      {
-        shards_to_add.remove(selected_shard);
-      }
-      else
-      {
-        working_c = imp_c;
+        TreeSet<Integer> shards_to_add = new TreeSet<>();
+        for(int s : node.getActiveShards())
+        {
+          if (!exclude_set.contains(s))
+          {
+            shards_to_add.add(s);
+          }
+        }
+        BlockConcept working_c = concept;
+        while(shards_to_add.size() > 0)
+        {
+          ArrayList<Integer> shards_to_add_lst = new ArrayList<>();
+          shards_to_add_lst.addAll(shards_to_add);
+          Collections.shuffle(shards_to_add_lst);
+          int selected_shard = shards_to_add_lst.get(0);
+          
+          BlockConcept imp_c = attemptImportShard(working_c, selected_shard);
+          if (imp_c == null)
+          {
+            shards_to_add.remove(selected_shard);
+          }
+          else
+          {
+            working_c = imp_c;
+          }
+
+        }
+        lst.add(working_c);
       }
 
+      return lst;
     }
-    lst.add(working_c);
-
-    return lst;
 
   }
 
@@ -440,7 +617,7 @@ public class ShardBlockForge
     height_map.putAll(bil.getHeightMap());
     ByteString hash = height_map.firstEntry().getValue();
 
-    BlockSummary imp_sum = node.getDB().getBlockSummaryMap().get( hash );
+    BlockSummary imp_sum = getDBSummary( hash );
     if (imp_sum == null) return null;
 
     BlockConcept c_add = working_c.importShard( imp_sum.getHeader() );
@@ -466,7 +643,7 @@ public class ShardBlockForge
 
     for(ByteString next_hash : node.getDB().getChildBlockMapSet().getSet( start_point.getBytes(), 200) )
     {
-      BlockSummary bs = node.getDB().getBlockSummaryMap().get(next_hash);
+      BlockSummary bs = getDBSummary(next_hash);
       if (bs != null)
       if (bs.getHeader().getShardId() == external_shard_id)
       {
@@ -652,4 +829,135 @@ public class ShardBlockForge
 
   }
 
+  public class ConceptUpdateThread extends PeriodicThread
+  {
+    public ConceptUpdateThread()
+    {
+      super(15000);
+      setName("ShardBlockForge.ConceptUpdateThread");
+    }
+
+    public void runPass()
+    {
+      // If no template requests for 5 minutes, don't bother
+      if (last_template_request + 300000L < System.currentTimeMillis())
+      {
+        current_top_concepts = null;
+				tickleUserService();
+        return;
+      }
+    
+      // Source blocks to mangle
+      HashSet<ChainHash> possible_source_blocks = new HashSet<>();
+
+      // Possible blocks to mine
+      TreeSet<BlockConcept> possible_set = new TreeSet<>();
+
+      int check_depth=0;
+
+      //while(possible_set.size() == 0)
+      {
+        //if (check_depth > node.getParams().getMaxShardSkewHeight()) break;
+
+        for(int shard_id : node.getActiveShards())
+        {
+          BlockSummary head = node.getBlockIngestor(shard_id).getHead();
+
+          if ((head == null) && (shard_id == 0))
+          {
+            // Let the old thing do the genesis gag
+            return;
+          }
+          if (head != null)
+          {
+            if (head.getHeader().getBlockHeight() < 10)
+            {
+              possible_source_blocks.addAll( getBlocksAround(new ChainHash(head.getHeader().getSnowHash()), check_depth, shard_id) );
+            }
+          }
+        }
+        System.out.println("Possible source blocks: " + possible_source_blocks.size());
+
+        possible_set.addAll(exploreBlocks(possible_source_blocks, true));
+
+        if (possible_set.size()==0)
+        {
+          possible_set.addAll(exploreBlocks(getGoldenSet(), false));
+        }
+
+        //check_depth++;
+      }
+    
+      System.out.println("ZZZ Possible blocks: " + possible_set.size());
+      int printed = 0;
+      ArrayList<BlockConcept> good_concepts = new ArrayList<>();
+      for(BlockConcept c : possible_set)
+      {
+        System.out.println("ZZZ " + c.toString());
+        printed++;
+        good_concepts.add(c);
+        if (printed > 10) break;
+      }
+      current_top_concepts = good_concepts;
+
+			tickleUserService();
+
+      if (forge_log != null)
+      {
+        forge_log.println("--------------------------------");
+        time_record.printReport(forge_log);
+        time_record.reset();
+        forge_log.println("--------------------------------");
+      }
+
+
+    }
+		private void tickleUserService()
+		{
+     	SnowUserService u = node.getUserService();
+      if (u != null)
+      {
+      	u.tickleBlocks();
+      }
+
+
+		}
+
+  }
+
+  private LRUCache<ByteString, BlockSummary> block_summary_cache = new LRUCache<>(5000);
+  public BlockSummary getDBSummary(ByteString bytes)
+  {
+    
+    try(TimeRecordAuto tra_blk = TimeRecord.openAuto("ShardBlockForge.getDBSummary"))
+    {
+      synchronized(block_summary_cache)
+      {
+        BlockSummary bs = block_summary_cache.get(bytes);
+        if (bs != null) return bs;
+
+      }
+      BlockSummary bs = node.getDB().getBlockSummaryMap().get(bytes);
+      if (bs != null)
+      {
+        synchronized(block_summary_cache)
+        {
+          block_summary_cache.put(bytes, bs);
+        }
+
+      }
+
+      return bs;
+    }
+  }
+
+  public BlockSummary getDBSummary(ChainHash hash)
+  {
+    return getDBSummary(hash.getBytes());
+  }
+ 
+  public void tickle()
+  {
+    concept_update_thread.wake();
+  }
 }
