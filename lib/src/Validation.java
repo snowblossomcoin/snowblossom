@@ -656,6 +656,43 @@ public class Validation
     }
   }
 
+  public static boolean checkCollisionsNT(Map<String, ChainHash> known_map, int shard, int height, ChainHash hash)
+  {
+    String key = "" + shard + "," + height;
+    if (known_map.containsKey(key))
+    {
+      if (!hash.equals(known_map.get(key)))
+      {
+        //System.out.println("Collision on " + key);
+        return false;
+      }
+    }
+    else
+    {
+      known_map.put(key, hash);
+    }
+    return true;
+  }
+
+  /**
+   * Make sure very block referenced matches from all blocks.
+   * checking by shard id and height to see if hashes match
+   */
+  public static boolean checkCollisionsNT(Map<String, ChainHash> known_map, Map<Integer, BlockImportList> map)
+  {
+    for(int shard : map.keySet())
+    {
+      for(Map.Entry<Integer, ByteString> me : map.get(shard).getHeightMap().entrySet())
+      {
+        int height = me.getKey();
+        ChainHash hash = new ChainHash(me.getValue());
+        if (!checkCollisionsNT(known_map, shard, height, hash)) return false;
+      }
+    }
+    return true;
+  }
+
+
   /**
    * The block header need not be complete or real
    * It only needs block height and timestamp set for the purpose of this check

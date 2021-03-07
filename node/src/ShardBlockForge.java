@@ -21,6 +21,8 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.logging.Logger;
+import java.io.FileInputStream;
+import java.util.Scanner;
 import snowblossom.lib.*;
 import snowblossom.lib.trie.HashUtils;
 import snowblossom.proto.*;
@@ -62,6 +64,40 @@ public class ShardBlockForge
     concept_update_thread = new ConceptUpdateThread();
     concept_update_thread.start();
 
+    if (node.getConfig().isSet("forge_col_check"))
+    {
+      testingCollisionCheck();
+    }
+
+  }
+
+  public void testingCollisionCheck()
+    throws Exception
+  {
+    Scanner scan = new Scanner(new FileInputStream(node.getConfig().get("forge_col_check")));
+
+    Map<String, ChainHash> known_map = new HashMap<>();
+
+    while(scan.hasNext())
+    {
+      String h = scan.next().replace(",","").trim();
+      ChainHash hash = new ChainHash(h);
+      BlockSummary bs = getDBSummary(hash);
+
+      known_map = checkCollisions(known_map, bs);
+      if (known_map==null)
+      {
+        System.out.println(String.format("Check for %s failed", hash.toString()));
+        return;
+      }
+      else
+      {
+        System.out.println(String.format("Check for %s ok.  Entries: %d", hash.toString(), known_map.size()));
+      }
+
+    }
+
+
   }
 
   public Block getBlockTemplate(SubscribeBlockTemplateRequest mine_to)
@@ -88,8 +124,11 @@ public class ShardBlockForge
 
       Random rnd = new Random();
 
-      BlockConcept selected = possible_set.get( rnd.nextInt(possible_set.size()) );
+      // Random
+      //BlockConcept selected = possible_set.get( rnd.nextInt(possible_set.size()) );
 
+      // First 4
+      BlockConcept selected = possible_set.get( rnd.nextInt(Math.min(4,possible_set.size())) );
       try
       {
         return fleshOut(selected, mine_to); 
@@ -109,7 +148,13 @@ public class ShardBlockForge
     }
   }
 
-  private Set<BlockConcept> exploreBlocks(Set<ChainHash> possible_source_blocks, boolean require_better)
+  /**
+   * Return a set of block concepts
+   * @param possible_source_blocks - blocks to use as parents of new blocks
+   * @param require_better - require that any proposed blocks be better, either longer chain or higher worksum that existing
+   * @param restrict_known_map - restrict shard imports to those that do not conflict with this map
+   */
+  private Set<BlockConcept> exploreBlocks(Set<ChainHash> possible_source_blocks, boolean require_better, Map<String, ChainHash> restrict_known_map)
   {
     // Concepts to explore
     LinkedList<BlockConcept> concept_list = new LinkedList<>();
@@ -128,7 +173,7 @@ public class ShardBlockForge
 
     for(BlockConcept bc : concept_list)
     {
-      for(BlockConcept bc_with : importShards(bc))
+      for(BlockConcept bc_with : importShards(bc, restrict_known_map))
       {
         if (testBlock(bc_with))
         {
@@ -148,7 +193,7 @@ public class ShardBlockForge
   {
     try(TimeRecordAuto tra_blk = TimeRecord.openAuto("ShardBlockForge.checkCollisions(b)"))
     {
-      TreeMap<String, ChainHash> known_map = new TreeMap<>();
+      HashMap<String, ChainHash> known_map = new HashMap<>();
       
       // Check summary map list
       Validation.checkCollisions(known_map, b.getPrevSummary().getShardHistoryMap());
@@ -232,6 +277,21 @@ public class ShardBlockForge
   }
 
 
+  public Map<String, ChainHash> getKnownMap(Set<ChainHash> hash_set)
+  {
+    Map<String, ChainHash> known_map = new HashMap<>(2048,0.5f);
+
+    for(ChainHash ch : hash_set)
+    {
+      BlockSummary bs = getDBSummary(ch);
+      known_map = checkCollisions(known_map, bs);
+      if (known_map == null) throw new RuntimeException("getKnownMap on conflicting data set");
+
+    }
+    return known_map;
+
+  }
+
   /**
    * Returns the highest value set of blocks that all work together that we can find
    */ 
@@ -270,7 +330,7 @@ public class ShardBlockForge
         }
       }
       //System.out.println("Shard heads: " + head_shards);
-      Map<Integer, BlockHeader> gold = getGoldenSetRecursive(head_shards, ImmutableMap.of(), true);
+      Map<Integer, BlockSummary> gold = getGoldenSetRecursive(head_shards, ImmutableMap.of(), false);
 
       if (gold == null)
       {
@@ -282,9 +342,9 @@ public class ShardBlockForge
 
       HashSet<ChainHash> gold_set = new HashSet<ChainHash>();
 
-      for(BlockHeader bh : gold.values())
+      for(BlockSummary bs : gold.values())
       {
-        gold_set.add(new ChainHash(bh.getSnowHash()));
+        gold_set.add(new ChainHash(bs.getHeader().getSnowHash()));
       }
 
       System.out.println("Gold set found: " + gold_set);
@@ -293,15 +353,14 @@ public class ShardBlockForge
     }
   }
 
-  private Map<Integer, BlockHeader> goldUpgrade( Map<Integer, BlockHeader> gold_in)
+  private Map<Integer, BlockSummary> goldUpgrade( Map<Integer, BlockSummary> gold_in)
   {
     try(TimeRecordAuto tra_blk = TimeRecord.openAuto("ShardBlockForge.goldUpgrade"))
     {
       Map<Integer,Set<ChainHash> > head_shards = new TreeMap<Integer, Set<ChainHash> >();
       for(int s : gold_in.keySet())
       {
-        head_shards.put(s, climb( new ChainHash(gold_in.get(s).getSnowHash()), s));
-
+        head_shards.put(s, climb( new ChainHash(gold_in.get(s).getHeader().getSnowHash()), s));
       }
       return getGoldenSetRecursive(head_shards, ImmutableMap.of(), false);
     }
@@ -311,11 +370,11 @@ public class ShardBlockForge
    * Find blocks for the remaining_shards that don't conflict with anything in known_map.
    * @returns the map of shards to headers that is the best
    */
-  private Map<Integer, BlockHeader> getGoldenSetRecursive(Map<Integer, Set<ChainHash> > remaining_shards, ImmutableMap<String, ChainHash> known_map, boolean short_cut)
+  private Map<Integer, BlockSummary> getGoldenSetRecursive(Map<Integer, Set<ChainHash> > remaining_shards, ImmutableMap<String, ChainHash> known_map, boolean short_cut)
   {
     try(TimeRecordAuto tra_blk = TimeRecord.openAuto("ShardBlockForge.getGoldenSetRecursive"))
     {
-      if (remaining_shards.size() == 0) return new TreeMap<Integer, BlockHeader>();
+      if (remaining_shards.size() == 0) return new TreeMap<Integer, BlockSummary>();
 
       TreeMap<Integer, Set<ChainHash> > rem_shards_tree = new TreeMap<>();
       rem_shards_tree.putAll(remaining_shards);
@@ -324,33 +383,40 @@ public class ShardBlockForge
 
       Set<ChainHash> shard_blocks = rem_shards_tree.pollFirstEntry().getValue();
 
-      int best_solution_val = -1;
-      Map<Integer, BlockHeader> best_solution = null;
+      BigInteger best_solution_val = BigInteger.valueOf(-1L);
+      Map<Integer, BlockSummary> best_solution = null;
+      
 
       for(ChainHash hash : shard_blocks)
       {
         BlockSummary bs = getDBSummary(hash);
         Map<String, ChainHash> block_known_map = checkCollisions( known_map, bs);
+
         // If this block doesn't collide
         if (block_known_map != null)
         {
-          Map<Integer, BlockHeader> sub_solution = getGoldenSetRecursive( rem_shards_tree, ImmutableMap.copyOf(block_known_map), short_cut);
-          if (sub_solution != null)
+          // Add in blocker for self on next block to make sure no one has ideas for it
+          if (Validation.checkCollisionsNT( block_known_map, shard_id, bs.getHeader().getBlockHeight()+1, ChainHash.ZERO_HASH))
           {
-            sub_solution.put(shard_id, bs.getHeader());
-            int val_sum = 0;
-            for(BlockHeader h : sub_solution.values())
-            {
-              val_sum += h.getBlockHeight();
-            }
 
-            if (val_sum > best_solution_val)
+            Map<Integer, BlockSummary> sub_solution = getGoldenSetRecursive( rem_shards_tree, ImmutableMap.copyOf(block_known_map), short_cut);
+            if (sub_solution != null)
             {
-              best_solution = sub_solution;
-              best_solution_val = val_sum;
-              if (short_cut)
+              sub_solution.put(shard_id, bs);
+              BigInteger val_sum = BigInteger.ZERO;
+              for(BlockSummary bs_sub : sub_solution.values())
               {
-                return best_solution; // short circuit
+                val_sum  = val_sum.add( BlockchainUtil.readInteger( bs.getWorkSum() ));
+              }
+          
+              if (val_sum.compareTo(best_solution_val) > 0)
+              {
+                best_solution = sub_solution;
+                best_solution_val = val_sum;
+                if (short_cut)
+                {
+                  return best_solution; // short circuit
+                }
               }
             }
           }
@@ -362,28 +428,25 @@ public class ShardBlockForge
     }
   }
 
-  private Map<String, ChainHash> checkCollisions(ImmutableMap<String, ChainHash> known_map_in, BlockSummary bs)
+  // TODO - we can also squeeze some more performance by stacking the maps rather than copying into these immutable maps all the time
+  private Map<String, ChainHash> checkCollisions(Map<String, ChainHash> known_map_in, BlockSummary bs)
   {
 
     try(TimeRecordAuto tra_blk = TimeRecord.openAuto("ShardBlockForge.checkCollisions(m,bs)"))
     {
       HashMap<String, ChainHash> known_map = new HashMap<>(2048,0.5f);
-      known_map.putAll( known_map_in);
+      known_map.putAll( known_map_in );
 
       BlockHeader h = bs.getHeader();
 
-      try
-      {
-        Validation.checkCollisions(known_map, bs.getShardHistoryMap());
-        Validation.checkCollisions(known_map, h.getShardId(), h.getBlockHeight(), new ChainHash(h.getSnowHash()));
-        Validation.checkCollisions(known_map, h.getShardImportMap());
+        // TODO switch to non-exception throwing methods
+        //  exceptions are expensive with the stack trace introspection and we throw a ton of them
+        if (Validation.checkCollisionsNT(known_map, bs.getShardHistoryMap()))
+        if (Validation.checkCollisionsNT(known_map, h.getShardId(), h.getBlockHeight(), new ChainHash(h.getSnowHash())))
+        if (Validation.checkCollisionsNT(known_map, h.getShardImportMap()))
         return known_map;
 
-      }
-      catch(ValidationException e)
-      {
         return null;
-      }
     }
 
   }
@@ -556,12 +619,11 @@ public class ShardBlockForge
     }
   }
 
-  public List<BlockConcept> importShards(BlockConcept concept)
+  public List<BlockConcept> importShards(BlockConcept concept, Map<String, ChainHash> restrict_known_map)
   {
     try(TimeRecordAuto tra_blk = TimeRecord.openAuto("ShardBlockForge.importShards"))
     {
       LinkedList<BlockConcept> lst = new LinkedList<>();
-     
 
       int shard_id = concept.getHeader().getShardId();
 
@@ -588,7 +650,7 @@ public class ShardBlockForge
           Collections.shuffle(shards_to_add_lst);
           int selected_shard = shards_to_add_lst.get(0);
           
-          BlockConcept imp_c = attemptImportShard(working_c, selected_shard);
+          BlockConcept imp_c = attemptImportShard(working_c, selected_shard, restrict_known_map);
           if (imp_c == null)
           {
             shards_to_add.remove(selected_shard);
@@ -614,7 +676,7 @@ public class ShardBlockForge
    * Note: if it returns a BlockConcept, further calls for this shard
    * may result in more blocks
    */ 
-  private BlockConcept attemptImportShard(BlockConcept working_c, int selected_shard)
+  private BlockConcept attemptImportShard(BlockConcept working_c, int selected_shard, Map<String, ChainHash> restrict_known_map)
   {
     BlockHeader cur = working_c.getShardHeads().get(selected_shard);
     if (cur == null)
@@ -623,12 +685,18 @@ public class ShardBlockForge
     }
     if (cur == null) return null;
 
-    TreeMap<BigInteger,BlockImportList> path = getPath(new ChainHash( cur.getSnowHash() ), selected_shard);
+    TreeMap<BigInteger,BlockImportList> path = getPath(new ChainHash( cur.getSnowHash() ), selected_shard, restrict_known_map);
     ArrayList<BlockImportList> path_lists = new ArrayList<>();
     path_lists.addAll(path.values());
     Collections.shuffle(path_lists);
 
+
+    // Use random
     BlockImportList bil = path_lists.get(0);
+
+    // Use "best"
+    bil = path.lastEntry().getValue();
+
     if (bil.getHeightMap().size() == 0)
     {
       return null;
@@ -655,7 +723,7 @@ public class ShardBlockForge
   /**
    * Explore down the tree of blocks and find the path to the one with the highest work_sum
    */
-  private TreeMap<BigInteger,BlockImportList> getPath(ChainHash start_point, int external_shard_id)
+  private TreeMap<BigInteger,BlockImportList> getPath(ChainHash start_point, int external_shard_id, Map<String, ChainHash> restrict_known_map)
   {
     TreeMap<BigInteger,BlockImportList> options = new TreeMap<>();
 
@@ -666,6 +734,7 @@ public class ShardBlockForge
       BlockSummary bs = getDBSummary(next_hash);
       if (bs != null)
       if (bs.getHeader().getShardId() == external_shard_id)
+      if (checkCollisions( restrict_known_map, bs) != null)
       {
         BigInteger work = BlockchainUtil.readInteger(bs.getWorkSum());
         BlockImportList.Builder bil = BlockImportList.newBuilder();
@@ -674,7 +743,7 @@ public class ShardBlockForge
         options.put(work, bil.build());
 
         TreeMap<BigInteger,BlockImportList> down = getPath(new ChainHash(bs.getHeader().getSnowHash()),
-          external_shard_id);
+          external_shard_id, restrict_known_map);
 
         for(Map.Entry<BigInteger, BlockImportList> me : down.entrySet())
         {
@@ -879,30 +948,34 @@ public class ShardBlockForge
         // Let the old thing do the genesis gag
         return;
       }
-        /*for(int shard_id : node.getActiveShards())
+        for(int shard_id : node.getActiveShards())
         {
           BlockSummary head = node.getBlockIngestor(shard_id).getHead();
 
           if (head != null)
           {
-            if (head.getHeader().getBlockHeight() < 10)
+            int check_depth=1;
+            //if (head.getHeader().getBlockHeight() < 10)
             {
-              possible_source_blocks.addAll( getBlocksAround(new ChainHash(head.getHeader().getSnowHash()), check_depth, shard_id) );
+              //possible_source_blocks.addAll( getBlocksAround(new ChainHash(head.getHeader().getSnowHash()), check_depth, shard_id) );
             }
           }
         }
         System.out.println("Possible source blocks: " + possible_source_blocks.size());
 
-        possible_set.addAll(exploreBlocks(possible_source_blocks, true));*/
+        possible_set.addAll(exploreBlocks(possible_source_blocks, true, ImmutableMap.of()));
 
         
         int depth=0;
         while (possible_set.size()==0)
         {
           Set<ChainHash> gold = getGoldenSet(depth);
-          possible_set.addAll(exploreBlocks(gold, false));
+          Map<String, ChainHash> gold_known_map = getKnownMap(gold);
+
+          System.out.println("Gold restrict size: " + gold_known_map.size());
+          possible_set.addAll(exploreBlocks(gold, false, ImmutableMap.copyOf(gold_known_map)));
           depth++;
-          if (depth > 6) break;
+          if (depth > 8) break;
         }
 
         //check_depth++;
@@ -980,4 +1053,7 @@ public class ShardBlockForge
   {
     concept_update_thread.wake();
   }
+
+
+
 }
