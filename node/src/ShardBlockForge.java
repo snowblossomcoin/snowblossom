@@ -311,10 +311,9 @@ public class ShardBlockForge
         {
           max_height = Math.max( max_height, node.getBlockIngestor(s).getHead().getHeader().getBlockHeight() );
         }
-
       }
 
-
+      int total_sources = 0;
       for(int s : node.getActiveShards())
       {
         if (node.getBlockIngestor(s).getHead()!=null)
@@ -324,11 +323,14 @@ public class ShardBlockForge
           if (h.getBlockHeight() + params.getMaxShardSkewHeight()*2 >= max_height)
           { // anything super short is probably irrelvant noise - an old shard that is no longer extended
 
-            head_shards.put(s, 
-              getBlocksAround( new ChainHash(h.getSnowHash()), depth, s));
+            Set<ChainHash> hs = getBlocksAround( new ChainHash(h.getSnowHash()), depth, s);
+            total_sources += hs.size();
+            head_shards.put(s, hs);
           }
         }
       }
+      System.out.println("Gold search block count: " + total_sources);
+
       //System.out.println("Shard heads: " + head_shards);
       Map<Integer, BlockSummary> gold = getGoldenSetRecursive(head_shards, ImmutableMap.of(), false);
 
@@ -678,44 +680,47 @@ public class ShardBlockForge
    */ 
   private BlockConcept attemptImportShard(BlockConcept working_c, int selected_shard, Map<String, ChainHash> restrict_known_map)
   {
-    BlockHeader cur = working_c.getShardHeads().get(selected_shard);
-    if (cur == null)
+    try(TimeRecordAuto tra_gbt = TimeRecord.openAuto("ShardBlockForge.attemptImportShard"))
     {
-      cur = working_c.getShardHeads().get( ShardUtil.getShardParentId(selected_shard) );
-    }
-    if (cur == null) return null;
+      BlockHeader cur = working_c.getShardHeads().get(selected_shard);
+      if (cur == null)
+      {
+        cur = working_c.getShardHeads().get( ShardUtil.getShardParentId(selected_shard) );
+      }
+      if (cur == null) return null;
 
-    TreeMap<BigInteger,BlockImportList> path = getPath(new ChainHash( cur.getSnowHash() ), selected_shard, restrict_known_map);
-    ArrayList<BlockImportList> path_lists = new ArrayList<>();
-    path_lists.addAll(path.values());
-    Collections.shuffle(path_lists);
+      TreeMap<BigInteger,BlockImportList> path = getPath(new ChainHash( cur.getSnowHash() ), selected_shard, restrict_known_map);
+      ArrayList<BlockImportList> path_lists = new ArrayList<>();
+      path_lists.addAll(path.values());
+      Collections.shuffle(path_lists);
 
 
-    // Use random
-    BlockImportList bil = path_lists.get(0);
+      // Use random
+      BlockImportList bil = path_lists.get(0);
 
-    // Use "best"
-    bil = path.lastEntry().getValue();
+      // Use "best"
+      bil = path.lastEntry().getValue();
 
-    if (bil.getHeightMap().size() == 0)
-    {
-      return null;
-    }
-    TreeMap<Integer, ByteString> height_map = new TreeMap<>();
-    height_map.putAll(bil.getHeightMap());
-    ByteString hash = height_map.firstEntry().getValue();
+      if (bil.getHeightMap().size() == 0)
+      {
+        return null;
+      }
+      TreeMap<Integer, ByteString> height_map = new TreeMap<>();
+      height_map.putAll(bil.getHeightMap());
+      ByteString hash = height_map.firstEntry().getValue();
 
-    BlockSummary imp_sum = getDBSummary( hash );
-    if (imp_sum == null) return null;
+      BlockSummary imp_sum = getDBSummary( hash );
+      if (imp_sum == null) return null;
 
-    BlockConcept c_add = working_c.importShard( imp_sum.getHeader() );
-    if (checkCollisions(c_add))
-    {
-      return c_add;
-    }
-    else
-    {
-      return null;
+      BlockConcept c_add = working_c.importShard( imp_sum.getHeader() );
+      if (checkCollisions(c_add))
+      {
+        return c_add;
+      }
+      else
+      {
+        return null;
+      }
     }
 
   }
@@ -725,34 +730,37 @@ public class ShardBlockForge
    */
   private TreeMap<BigInteger,BlockImportList> getPath(ChainHash start_point, int external_shard_id, Map<String, ChainHash> restrict_known_map)
   {
-    TreeMap<BigInteger,BlockImportList> options = new TreeMap<>();
-
-    options.put(BigInteger.ZERO, BlockImportList.newBuilder().build());
-
-    for(ByteString next_hash : node.getDB().getChildBlockMapSet().getSet( start_point.getBytes(), 2000) )
+    try(TimeRecordAuto tra_gbt = TimeRecord.openAuto("ShardBlockForge.getPath"))
     {
-      BlockSummary bs = getDBSummary(next_hash);
-      if (bs != null)
-      if (bs.getHeader().getShardId() == external_shard_id)
-      if (checkCollisions( restrict_known_map, bs) != null)
+      TreeMap<BigInteger,BlockImportList> options = new TreeMap<>();
+
+      options.put(BigInteger.ZERO, BlockImportList.newBuilder().build());
+
+      for(ByteString next_hash : node.getDB().getChildBlockMapSet().getSet( start_point.getBytes(), 2000) )
       {
-        BigInteger work = BlockchainUtil.readInteger(bs.getWorkSum());
-        BlockImportList.Builder bil = BlockImportList.newBuilder();
-        bil.putHeightMap( bs.getHeader().getBlockHeight(), bs.getHeader().getSnowHash() );
-
-        options.put(work, bil.build());
-
-        TreeMap<BigInteger,BlockImportList> down = getPath(new ChainHash(bs.getHeader().getSnowHash()),
-          external_shard_id, restrict_known_map);
-
-        for(Map.Entry<BigInteger, BlockImportList> me : down.entrySet())
+        BlockSummary bs = getDBSummary(next_hash);
+        if (bs != null)
+        if (bs.getHeader().getShardId() == external_shard_id)
+        if (checkCollisions( restrict_known_map, bs) != null)
         {
-          options.put( me.getKey(), bil.mergeFrom(me.getValue()).build());
+          BigInteger work = BlockchainUtil.readInteger(bs.getWorkSum());
+          BlockImportList.Builder bil = BlockImportList.newBuilder();
+          bil.putHeightMap( bs.getHeader().getBlockHeight(), bs.getHeader().getSnowHash() );
+
+          options.put(work, bil.build());
+
+          TreeMap<BigInteger,BlockImportList> down = getPath(new ChainHash(bs.getHeader().getSnowHash()),
+            external_shard_id, restrict_known_map);
+
+          for(Map.Entry<BigInteger, BlockImportList> me : down.entrySet())
+          {
+            options.put( me.getKey(), bil.mergeFrom(me.getValue()).build());
+          }
         }
       }
-    }
 
-    return options;
+      return options;
+    }
   }
 
 
@@ -848,25 +856,28 @@ public class ShardBlockForge
      */
     public BlockConcept importShard(BlockHeader import_header)
     {
-      BlockHeader.Builder new_header = BlockHeader.newBuilder();
-      new_header.mergeFrom(header);
-
-      LinkedList<ImportedBlock> lst = new LinkedList<>();
-      lst.addAll(imported_blocks);
-      lst.add( node.getShardUtxoImport().getImportBlockForTarget(new ChainHash( import_header.getSnowHash() ), header.getShardId()));
-
-      // Rebuild shard import map
-      int shard_import = import_header.getShardId();
-
-      BlockImportList.Builder bil = BlockImportList.newBuilder();
-      if (new_header.getShardImportMap().containsKey(shard_import))
+      try(TimeRecordAuto tra_gbt = TimeRecord.openAuto("ShardBlockForge.bc.importShard"))
       {
-        bil.mergeFrom( new_header.getShardImportMap().get(shard_import) );
-      }
-      bil.putHeightMap( import_header.getBlockHeight(), import_header.getSnowHash() );
-      new_header.putShardImport(shard_import, bil.build());
+        BlockHeader.Builder new_header = BlockHeader.newBuilder();
+        new_header.mergeFrom(header);
 
-      return new BlockConcept(prev_summary, new_header.build(), sortImportedBlocks(lst) );
+        LinkedList<ImportedBlock> lst = new LinkedList<>();
+        lst.addAll(imported_blocks);
+        lst.add( node.getShardUtxoImport().getImportBlockForTarget(new ChainHash( import_header.getSnowHash() ), header.getShardId()));
+
+        // Rebuild shard import map
+        int shard_import = import_header.getShardId();
+
+        BlockImportList.Builder bil = BlockImportList.newBuilder();
+        if (new_header.getShardImportMap().containsKey(shard_import))
+        {
+          bil.mergeFrom( new_header.getShardImportMap().get(shard_import) );
+        }
+        bil.putHeightMap( import_header.getBlockHeight(), import_header.getSnowHash() );
+        new_header.putShardImport(shard_import, bil.build());
+
+        return new BlockConcept(prev_summary, new_header.build(), sortImportedBlocks(lst) );
+      }
 
     }
 

@@ -19,6 +19,9 @@ public class ShardTestJambo extends SpoonTest
   /**
    * Run four nodes, each with some sub sets, but with overlap
    * so that blocks can be linked.
+   * node-0 has no miner and views entire network. 
+   * using it as an easy way to see that network status
+   * and as a p2p networking gateway
    */
   @Test
   public void shardTest() throws Exception
