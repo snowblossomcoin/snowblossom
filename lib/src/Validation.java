@@ -624,7 +624,7 @@ public class Validation
   public static void checkCollisions(Map<String, ChainHash> known_map, int shard, int height, ChainHash hash)
     throws ValidationException
   {
-    String key = "" + shard + "," + height;
+    String key = "s" + shard + "h" + height;
     if (known_map.containsKey(key))
     {
       if (!hash.equals(known_map.get(key)))
@@ -658,12 +658,14 @@ public class Validation
 
   public static boolean checkCollisionsNT(Map<String, ChainHash> known_map, int shard, int height, ChainHash hash)
   {
-    String key = "" + shard + "," + height;
+    String key = "s" + shard + "h" + height;
     if (known_map.containsKey(key))
     {
       if (!hash.equals(known_map.get(key)))
       {
         //System.out.println("Collision on " + key);
+        //System.out.println("Map has: " + known_map.get(key));
+        //System.out.println("We have: " + hash);
         return false;
       }
     }

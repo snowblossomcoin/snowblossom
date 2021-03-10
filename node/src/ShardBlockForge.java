@@ -88,7 +88,7 @@ public class ShardBlockForge
       if (known_map==null)
       {
         System.out.println(String.format("Check for %s failed", hash.toString()));
-        return;
+        //return;
       }
       else
       {
@@ -96,6 +96,8 @@ public class ShardBlockForge
       }
 
     }
+
+    System.exit(-1);
 
 
   }
@@ -627,9 +629,20 @@ public class ShardBlockForge
   {
     try(TimeRecordAuto tra_blk = TimeRecord.openAuto("ShardBlockForge.importShards"))
     {
-      LinkedList<BlockConcept> lst = new LinkedList<>();
 
+      LinkedList<BlockConcept> lst = new LinkedList<>();
       int shard_id = concept.getHeader().getShardId();
+
+      { // make sure we are not already on the restrict list
+        HashMap<String, ChainHash> kmap = new HashMap<>();
+        kmap.putAll(restrict_known_map);
+
+        if (!Validation.checkCollisionsNT(kmap, shard_id, concept.getHeader().getBlockHeight(), ChainHash.getRandom()))
+        {
+          return lst;
+        }
+      }
+
 
       Set<Integer> exclude_set = new TreeSet<>();
       exclude_set.addAll(ShardUtil.getCoverSet(shard_id, params));
