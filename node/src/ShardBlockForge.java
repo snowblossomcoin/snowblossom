@@ -402,6 +402,12 @@ public class ShardBlockForge
         if (block_known_map != null)
         {
           // Add in blocker for self on next block to make sure no one has ideas for it
+          // TODO - not always correct, this shard could be just about for split
+          // But if we did track it correctly, then this would fail because then we are trying to not
+          // include a block in the gold set that has children also in the gold set
+          // so we might want to not include this shard, but if it is here the shard forking is recent
+          // and we might need to reorg away from the forking so can't quite do that.
+          // So we leave it as basically double bug cancel out but working
           if (Validation.checkCollisionsNT( block_known_map, shard_id, bs.getHeader().getBlockHeight()+1, ChainHash.ZERO_HASH))
           {
 
