@@ -48,16 +48,14 @@ public class ShardTestJambo extends SpoonTest
     AddressSpecHash to_addr = AddressUtil.getHashForSpec(claim);
 
     SnowBlossomMiner miner1 = startMiner(port+0, to_addr, snow_path, "regshard");
-    SnowBlossomMiner miner2 = startMiner(port+1, to_addr, snow_path, "regshard");
+    SnowBlossomMiner miner2 = startMiner(port-1, to_addr, snow_path, "regshard");
     SnowBlossomMiner miner3 = startMiner(port+2, to_addr, snow_path, "regshard");
     SnowBlossomMiner miner4 = startMiner(port+3, to_addr, snow_path, "regshard");
 
-    Thread.sleep(75000);
-
-    waitForHeight(node0, 3, 36);
-    waitForHeight(node0, 4, 36);
-    waitForHeight(node0, 5, 36);
-    waitForHeight(node0, 6, 36);
+    waitForHeight(node0, 3, 36, 180);
+    waitForHeight(node0, 4, 36, 180);
+    waitForHeight(node0, 5, 36, 180);
+    waitForHeight(node0, 6, 36, 180);
     
     miner1.stop();
     miner2.stop();

@@ -369,7 +369,10 @@ public class SnowBlossomNode
 
   public BlockIngestor getBlockIngestor(int shard_id)
   {
-    return shard_comps.get(shard_id).ingestor; 
+    ShardComponents sc = shard_comps.get(shard_id);
+    if (sc == null) return null;
+
+    return sc.ingestor; 
   }
 
   public BlockForge getBlockForge(int shard_id)

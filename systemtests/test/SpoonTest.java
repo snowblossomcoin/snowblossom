@@ -76,9 +76,13 @@ public class SpoonTest
 
   protected void waitForHeight(SnowBlossomNode node, int shard_id, int target) throws Exception
   {
+    waitForHeight(node, shard_id, target, 15);
+  }
+  protected void waitForHeight(SnowBlossomNode node, int shard_id, int target, int max_wait) throws Exception
+  {
 
     int height=-1;
-    for (int i = 0; i < 15; i++)
+    for (int i = 0; i < max_wait; i++)
     {
       Thread.sleep(1000);
       if (node.getBlockIngestor(shard_id) != null)
