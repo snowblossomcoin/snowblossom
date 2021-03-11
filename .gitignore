@@ -4,3 +4,5 @@ bazel-*
 .project-data-dir/
 example/deployment/snowblossom-*
 *.swp
+*.idea
+*.iml
