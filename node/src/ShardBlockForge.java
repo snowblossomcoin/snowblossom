@@ -176,6 +176,8 @@ public class ShardBlockForge
       }
     }
 
+    Collections.shuffle(concept_list);
+
     TreeSet<BlockConcept> possible_set = new TreeSet<>();
 
     for(BlockConcept bc : concept_list)
@@ -190,6 +192,11 @@ public class ShardBlockForge
           }
         }
       }
+      if ((possible_set.size() > 20) && (possible_set.first().getAdvancesShard() > 0))
+      {
+        break;
+      }
+
     }
 
     return possible_set;
@@ -523,7 +530,6 @@ public class ShardBlockForge
 
       long time = System.currentTimeMillis();
       BigInteger target = PowUtil.calcNextTarget(prev_summary, params, time);
-
       header_builder.setTimestamp(time);
       header_builder.setTarget(BlockchainUtil.targetBigIntegerToBytes(target));
       header_builder.setSnowField(prev_summary.getActivatedField());
@@ -561,6 +567,11 @@ public class ShardBlockForge
       BlockHeader.Builder header_builder = BlockHeader.newBuilder().mergeFrom(concept.getHeader());
       BlockSummary prev_summary = concept.getPrevSummary();
 
+      long time = System.currentTimeMillis();
+      BigInteger target = PowUtil.calcNextTarget(prev_summary, params, time);
+      header_builder.setTimestamp(time);
+      header_builder.setTarget(BlockchainUtil.targetBigIntegerToBytes(target));
+ 
       ChainHash prev_utxo_root = new ChainHash(prev_summary.getHeader().getUtxoRootHash());
       if (header_builder.getShardId() != prev_summary.getHeader().getShardId())
       if (!ShardUtil.getInheritSet(header_builder.getShardId()).contains(prev_summary.getHeader().getShardId()))
@@ -635,6 +646,9 @@ public class ShardBlockForge
   {
     try(TimeRecordAuto tra_blk = TimeRecord.openAuto("ShardBlockForge.importShards"))
     {
+
+      // TODO - retool this such that we don't have to check for collisions from scratch each time
+      // it should start from the current knownmap and then add to it as shards are added.
 
       LinkedList<BlockConcept> lst = new LinkedList<>();
       int shard_id = concept.getHeader().getShardId();
