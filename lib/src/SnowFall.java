@@ -123,7 +123,7 @@ public class SnowFall
 
     // Passes controls how many writes we do.
     // Each page will be written on average 'PASSES' times
-    // This of course means that we can't garantee that any
+    // This of course means that we can't guarantee that any
     // given page will be rewritten at all
     long writes = size * PASSES / (long)PAGESIZE / MULTIPLICITY;
     byte[][] loc_data = new byte[MULTIPLICITY][8];
