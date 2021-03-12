@@ -4,7 +4,7 @@ import java.security.Security;
 
 public class Globals
 {
-  public static final String VERSION = "1.8.0-shardoo-dev";
+  public static final String VERSION = "1.8.0-shardo-dev";
 
   public static final int POW_LOOK_PASSES = 6;
 
