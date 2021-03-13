@@ -87,8 +87,8 @@ public class NetworkParamsRegShard extends NetworkParams
   @Override
   public int getShardForkThreshold() {return 0; }
 
-  //public int getMaxShardId() {return 14; } //allows 16 shards
   @Override
+  //public int getMaxShardId() {return 14; } //allows 16 shards
   public int getMaxShardId() {return 1022; } //allows 512 shards
   
   @Override

@@ -159,8 +159,8 @@ public class SnowBlossomNode
   {
 
     peerage = new Peerage(this);
-    shard_blockforge = new ShardBlockForge(this);
     shard_utxo_import = new ShardUtxoImport(this);
+    shard_blockforge = new ShardBlockForge(this);
 
   }
 

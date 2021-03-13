@@ -52,7 +52,10 @@ public class OverlayMap<K,V> implements Map<K,V>
   @Override
   public Set<Map.Entry<K,V>> entrySet()
   {
-    throw new UnsupportedOperationException();
+    HashSet<Map.Entry<K,V>> es = new HashSet<>();
+    es.addAll( under_map.entrySet() );
+    es.addAll( map.entrySet() );
+    return es;
   }
 
   @Override

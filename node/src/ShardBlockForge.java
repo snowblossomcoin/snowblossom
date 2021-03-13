@@ -1,6 +1,7 @@
 package snowblossom.node;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableMap;
 import com.google.protobuf.ByteString;
 import duckutil.Pair;
@@ -28,6 +29,7 @@ import snowblossom.lib.trie.HashUtils;
 import snowblossom.proto.*;
 import duckutil.PeriodicThread;
 import duckutil.LRUCache;
+import org.junit.Assert;
 
 public class ShardBlockForge
 {
@@ -78,6 +80,9 @@ public class ShardBlockForge
 
     Map<String, ChainHash> known_map = new HashMap<>();
 
+    TreeMap<Integer, Set<ChainHash> > head_shards = new TreeMap<>();
+
+
     while(scan.hasNext())
     {
       String h = scan.next().replace(",","").trim();
@@ -85,6 +90,10 @@ public class ShardBlockForge
       BlockSummary bs = getDBSummary(hash);
 
       known_map = checkCollisions(known_map, bs);
+      if (!Validation.checkCollisionsNT(known_map, bs.getHeader().getShardId(), bs.getHeader().getBlockHeight()+1, ChainHash.ZERO_HASH))
+      {
+        known_map = null;
+      }
       if (known_map==null)
       {
         System.out.println(String.format("Check for %s failed", hash.toString()));
@@ -95,7 +104,26 @@ public class ShardBlockForge
         System.out.println(String.format("Check for %s ok.  Entries: %d", hash.toString(), known_map.size()));
       }
 
+      head_shards.put(bs.getHeader().getShardId(), ImmutableSet.of(hash));
     }
+
+    Map<Integer, BlockSummary> gold = getGoldenSetRecursive(head_shards, ImmutableMap.of(), false, ImmutableMap.of());
+    if (gold != null)
+    {
+      System.out.println("It is a gold set");
+    }
+    else
+    {
+      System.out.println("It is not a gold set");
+    }
+
+    for(int s : node.getInterestShards())
+    {
+      node.openShard(s);
+    }
+
+    getGoldenSet(1);
+
 
     System.exit(-1);
 
@@ -324,6 +352,8 @@ public class ShardBlockForge
         }
       }
 
+      Map<Integer, Integer> height_map = new TreeMap<>();
+
       int total_sources = 0;
       for(int s : node.getActiveShards())
       {
@@ -331,19 +361,24 @@ public class ShardBlockForge
         {
           BlockHeader h = node.getBlockIngestor(s).getHead().getHeader();
 
-          if (h.getBlockHeight() + params.getMaxShardSkewHeight()*2 >= max_height)
+          if (h.getBlockHeight() + params.getMaxShardSkewHeight() >= max_height)
           { // anything super short is probably irrelvant noise - an old shard that is no longer extended
 
             Set<ChainHash> hs = getBlocksAround( new ChainHash(h.getSnowHash()), depth, s);
             total_sources += hs.size();
             head_shards.put(s, hs);
+            //System.out.println("Gold search group: shard " + s + " " + hs);
+
+            height_map.put(s, h.getBlockHeight());
           }
         }
       }
       System.out.println("Gold search block count: " + total_sources);
+      System.out.println("Current shards: " + height_map);
+      System.out.println("Number of shards: " + height_map.size());
 
       //System.out.println("Shard heads: " + head_shards);
-      Map<Integer, BlockSummary> gold = getGoldenSetRecursive(head_shards, ImmutableMap.of(), false);
+      Map<Integer, BlockSummary> gold = getGoldenSetRecursive(head_shards, ImmutableMap.of(), false, ImmutableMap.of());
 
       if (gold == null)
       {
@@ -375,7 +410,7 @@ public class ShardBlockForge
       {
         head_shards.put(s, climb( new ChainHash(gold_in.get(s).getHeader().getSnowHash()), s));
       }
-      return getGoldenSetRecursive(head_shards, ImmutableMap.of(), false);
+      return getGoldenSetRecursive(head_shards, ImmutableMap.of(), false, ImmutableMap.of());
     }
   }
 
@@ -383,8 +418,11 @@ public class ShardBlockForge
    * Find blocks for the remaining_shards that don't conflict with anything in known_map.
    * @returns the map of shards to headers that is the best
    */
-  private Map<Integer, BlockSummary> getGoldenSetRecursive(Map<Integer, Set<ChainHash> > remaining_shards, ImmutableMap<String, ChainHash> known_map, boolean short_cut)
+  private Map<Integer, BlockSummary> getGoldenSetRecursive(Map<Integer, Set<ChainHash> > remaining_shards, 
+    Map<String, ChainHash> known_map, boolean short_cut, Map<Integer, BlockSummary> current_selections)
   {
+    // TODO need to handle the case where there are new children shards that should be ignored
+
     try(TimeRecordAuto tra_blk = TimeRecord.openAuto("ShardBlockForge.getGoldenSetRecursive"))
     {
       if (remaining_shards.size() == 0) return new TreeMap<Integer, BlockSummary>();
@@ -393,16 +431,16 @@ public class ShardBlockForge
       rem_shards_tree.putAll(remaining_shards);
 
       int shard_id = rem_shards_tree.firstEntry().getKey();
-
       Set<ChainHash> shard_blocks = rem_shards_tree.pollFirstEntry().getValue();
 
       BigInteger best_solution_val = BigInteger.valueOf(-1L);
       Map<Integer, BlockSummary> best_solution = null;
-      
 
       for(ChainHash hash : shard_blocks)
       {
+        //System.out.println("Checking shard " + shard_id + " hash " + hash);
         BlockSummary bs = getDBSummary(hash);
+        Assert.assertEquals(shard_id, bs.getHeader().getShardId());
         Map<String, ChainHash> block_known_map = checkCollisions( known_map, bs);
 
         // If this block doesn't collide
@@ -417,15 +455,17 @@ public class ShardBlockForge
           // So we leave it as basically double bug cancel out but working
           if (Validation.checkCollisionsNT( block_known_map, shard_id, bs.getHeader().getBlockHeight()+1, ChainHash.ZERO_HASH))
           {
-
-            Map<Integer, BlockSummary> sub_solution = getGoldenSetRecursive( rem_shards_tree, ImmutableMap.copyOf(block_known_map), short_cut);
+            Map<Integer, BlockSummary> sub_selections = new OverlayMap<>(current_selections, false);
+            sub_selections.put(shard_id, bs);
+            Map<Integer, BlockSummary> sub_solution = getGoldenSetRecursive( rem_shards_tree, block_known_map, short_cut, sub_selections);
             if (sub_solution != null)
             {
+              //System.out.println("Checking shard " + shard_id + " hash " + hash + " found sol");
               sub_solution.put(shard_id, bs);
               BigInteger val_sum = BigInteger.ZERO;
               for(BlockSummary bs_sub : sub_solution.values())
               {
-                val_sum  = val_sum.add( BlockchainUtil.readInteger( bs.getWorkSum() ));
+                val_sum  = val_sum.add( BlockchainUtil.readInteger( bs_sub.getWorkSum() ));
               }
           
               if (val_sum.compareTo(best_solution_val) > 0)
@@ -438,9 +478,40 @@ public class ShardBlockForge
                 }
               }
             }
+            else
+            {
+
+              //System.out.println("Checking shard " + shard_id + " hash " + hash + " no sol");
+            }
           }
         }
       }
+
+      // if my parent is present, try with and without me
+      if (best_solution == null)
+      if (shard_id > 0) 
+      if (current_selections.containsKey( ShardUtil.getShardParentId(shard_id)))
+      {
+        Map<Integer, BlockSummary> sub_solution = getGoldenSetRecursive(rem_shards_tree, known_map, short_cut, current_selections);
+
+        BigInteger val_sum = BigInteger.ZERO;
+        for(BlockSummary bs_sub : sub_solution.values())
+        {
+          val_sum  = val_sum.add( BlockchainUtil.readInteger( bs_sub.getWorkSum() ));
+        }
+          
+        if (val_sum.compareTo(best_solution_val) > 0)
+        {
+          best_solution = sub_solution;
+          best_solution_val = val_sum;
+          if (short_cut)
+          {
+            return best_solution; // short circuit
+          }
+        }
+
+      }
+
 
 
       return best_solution;
@@ -453,19 +524,19 @@ public class ShardBlockForge
 
     try(TimeRecordAuto tra_blk = TimeRecord.openAuto("ShardBlockForge.checkCollisions(m,bs)"))
     {
-      HashMap<String, ChainHash> known_map = new HashMap<>(2048,0.5f);
-      known_map.putAll( known_map_in );
+      OverlayMap<String, ChainHash> known_map = new OverlayMap<>(known_map_in, true);
+
+      //HashMap<String, ChainHash> known_map = new HashMap<>(2048,0.5f);
+      //known_map.putAll( known_map_in );
 
       BlockHeader h = bs.getHeader();
 
-        // TODO switch to non-exception throwing methods
-        //  exceptions are expensive with the stack trace introspection and we throw a ton of them
-        if (Validation.checkCollisionsNT(known_map, bs.getShardHistoryMap()))
-        if (Validation.checkCollisionsNT(known_map, h.getShardId(), h.getBlockHeight(), new ChainHash(h.getSnowHash())))
-        if (Validation.checkCollisionsNT(known_map, h.getShardImportMap()))
-        return known_map;
+      if (Validation.checkCollisionsNT(known_map, bs.getShardHistoryMap()))
+      if (Validation.checkCollisionsNT(known_map, h.getShardId(), h.getBlockHeight(), new ChainHash(h.getSnowHash())))
+      if (Validation.checkCollisionsNT(known_map, h.getShardImportMap()))
+      return known_map;
 
-        return null;
+      return null;
     }
 
   }
@@ -654,15 +725,13 @@ public class ShardBlockForge
       int shard_id = concept.getHeader().getShardId();
 
       { // make sure we are not already on the restrict list
-        HashMap<String, ChainHash> kmap = new HashMap<>();
-        kmap.putAll(restrict_known_map);
+        OverlayMap<String, ChainHash> kmap = new OverlayMap<>(restrict_known_map, false);
 
         if (!Validation.checkCollisionsNT(kmap, shard_id, concept.getHeader().getBlockHeight(), ChainHash.getRandom()))
         {
           return lst;
         }
       }
-
 
       Set<Integer> exclude_set = new TreeSet<>();
       exclude_set.addAll(ShardUtil.getCoverSet(shard_id, params));
@@ -1043,9 +1112,13 @@ public class ShardBlockForge
           Map<String, ChainHash> gold_known_map = getKnownMap(gold);
 
           System.out.println("Gold restrict size: " + gold_known_map.size());
-          possible_set.addAll(exploreBlocks(gold, false, ImmutableMap.copyOf(gold_known_map)));
+          possible_set.addAll(exploreBlocks(gold, false, gold_known_map));
           depth++;
-          if (depth > 8) break;
+          if (depth > 6)
+          {
+            logger.warning("No gold set found at max depth");
+            break;
+          }
         }
 
         //check_depth++;

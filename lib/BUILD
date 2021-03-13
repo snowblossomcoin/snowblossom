@@ -228,4 +228,18 @@ java_test(
     ]
 )
 
+java_test(
+    name = "lib.test.OverlayMapTest",
+    test_class = "lib.test.OverlayMapTest",
+    srcs = glob(["test/OverlayMapTest.java"]),
+    deps = [
+        "//lib:lib",
+        "//lib:rocksdb",
+        "//protolib:protogrpc",
+        "@maven//:commons_codec_commons_codec",
+        "@maven//:org_bouncycastle_bcprov_jdk15on",
+    ]
+)
+
+
 
