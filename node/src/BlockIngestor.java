@@ -270,7 +270,7 @@ public class BlockIngestor implements ChainStateSource
        
       ChainHash prev_hash = new ChainHash(blk.getHeader().getPrevBlockHash());
       logger.info(String.format("New block: Shard %d Height %d %s (tx:%d sz:%d) - from %s", shard_id, blk.getHeader().getBlockHeight(), blockhash, blk.getTransactionsCount(), blk.toByteString().size(),prev_hash ));
-      node.getBlockForge().tickle();
+      node.getBlockForge().tickle(summary);
 
       SnowUserService u = node.getUserService();
       if (u != null)

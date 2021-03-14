@@ -122,7 +122,7 @@ public class ShardBlockForge
       node.openShard(s);
     }
 
-    getGoldenSet(1);
+    getGoldenSet(0);
 
 
     System.exit(-1);
@@ -158,7 +158,11 @@ public class ShardBlockForge
       //BlockConcept selected = possible_set.get( rnd.nextInt(possible_set.size()) );
 
       // First 4
-      BlockConcept selected = possible_set.get( rnd.nextInt(Math.min(4,possible_set.size())) );
+      //BlockConcept selected = possible_set.get( rnd.nextInt(Math.min(4,possible_set.size())) );
+      
+      // First
+      BlockConcept selected = possible_set.get(0);
+
       try
       {
         return fleshOut(selected, mine_to); 
@@ -363,6 +367,7 @@ public class ShardBlockForge
 
           if (h.getBlockHeight() + params.getMaxShardSkewHeight() >= max_height)
           { // anything super short is probably irrelvant noise - an old shard that is no longer extended
+            
 
             Set<ChainHash> hs = getBlocksAround( new ChainHash(h.getSnowHash()), depth, s);
             total_sources += hs.size();
@@ -1148,18 +1153,16 @@ public class ShardBlockForge
 
 
     }
-		private void tickleUserService()
-		{
-     	SnowUserService u = node.getUserService();
-      if (u != null)
-      {
-      	u.tickleBlocks();
-      }
-
-
-		}
-
   }
+  private void tickleUserService()
+  {
+    SnowUserService u = node.getUserService();
+    if (u != null)
+    {
+      u.tickleBlocks();
+    }
+  }
+
 
   private LRUCache<ByteString, BlockSummary> block_summary_cache = new LRUCache<>(5000);
   public BlockSummary getDBSummary(ByteString bytes)
@@ -1192,9 +1195,30 @@ public class ShardBlockForge
     return getDBSummary(hash.getBytes());
   }
  
-  public void tickle()
+  public void tickle(BlockSummary bs)
   {
+    // TODO - prune concepts
+    ArrayList<BlockConcept> cur_top = current_top_concepts;
+    if (cur_top!=null)
+    {
+      ArrayList<BlockConcept> pruned_concepts = new ArrayList<>();
+      for(BlockConcept bc : cur_top)
+      {
+        if ((bs.getHeader().getShardId() != bc.getHeader().getShardId()) 
+          ||
+        (bs.getHeader().getBlockHeight() != bc.getHeader().getBlockHeight()))
+        {
+          pruned_concepts.add(bc);
+        }
+      }
+      current_top_concepts = pruned_concepts;
+      logger.info(String.format("Pruned block concepts. Previous: %d, Now: %d", cur_top.size(), pruned_concepts.size()));
+    }
     concept_update_thread.wake();
+
+    // Notify miners
+    tickleUserService();
+
   }
 
 
