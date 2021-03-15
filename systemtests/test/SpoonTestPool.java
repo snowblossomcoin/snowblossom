@@ -44,6 +44,7 @@ public class SpoonTestPool extends SpoonTest
     MrPlow plow = startMrPlow(port, to_addr2);
 
     PoolMiner miner = startPoolMiner(port+1, to_addr, snow_path);
+    Thread.sleep(12000);
 
     waitForMoreBlocks(node, 10);
 

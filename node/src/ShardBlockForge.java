@@ -19,6 +19,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.Set;
+import java.util.Collection;
 import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.logging.Logger;
@@ -188,7 +189,7 @@ public class ShardBlockForge
    * @param require_better - require that any proposed blocks be better, either longer chain or higher worksum that existing
    * @param restrict_known_map - restrict shard imports to those that do not conflict with this map
    */
-  private Set<BlockConcept> exploreBlocks(Set<ChainHash> possible_source_blocks, boolean require_better, Map<String, ChainHash> restrict_known_map)
+  private Set<BlockConcept> exploreBlocks(Collection<BlockSummary> possible_source_blocks, boolean require_better, Map<String, ChainHash> restrict_known_map)
   {
     // TODO - maybe sort by block height and select the first few rather than exploring entire space
     // like some sort of crab beast
@@ -198,10 +199,8 @@ public class ShardBlockForge
     // Concepts to explore
     LinkedList<BlockConcept> concept_list = new LinkedList<>();
 
-    for(ChainHash hash : possible_source_blocks)
+    for(BlockSummary bs : possible_source_blocks)
     {
-      BlockSummary bs = getDBSummary(hash.getBytes());
-      if (bs != null)
       if (node.getInterestShards().contains(bs.getHeader().getShardId()))
       {
         concept_list.addAll( initiateBlockConcepts(bs) );
@@ -320,13 +319,12 @@ public class ShardBlockForge
   }
 
 
-  public Map<String, ChainHash> getKnownMap(Set<ChainHash> hash_set)
+  public Map<String, ChainHash> getKnownMap(Collection<BlockSummary> lst)
   {
     Map<String, ChainHash> known_map = new HashMap<>(2048,0.5f);
 
-    for(ChainHash ch : hash_set)
+    for(BlockSummary bs : lst)
     {
-      BlockSummary bs = getDBSummary(ch);
       known_map = checkCollisions(known_map, bs);
       if (known_map == null) throw new RuntimeException("getKnownMap on conflicting data set");
 
@@ -337,8 +335,8 @@ public class ShardBlockForge
 
   /**
    * Returns the highest value set of blocks that all work together that we can find
-   */ 
-  public Set<ChainHash> getGoldenSet(int depth)
+   */
+  public Map<Integer, BlockSummary> getGoldenSet(int depth)
   {
     try(TimeRecordAuto tra_blk = TimeRecord.openAuto("ShardBlockForge.getGoldenSet(" + depth + ")"))
     {
@@ -388,10 +386,10 @@ public class ShardBlockForge
       if (gold == null)
       {
         System.out.println("No gold set - depth " + depth);
-        return new HashSet<ChainHash>();
+        return null;
       }
 
-      gold = goldUpgrade(gold);
+      gold = goldPrune(goldUpgrade(gold));
 
       HashSet<ChainHash> gold_set = new HashSet<ChainHash>();
 
@@ -402,8 +400,51 @@ public class ShardBlockForge
 
       System.out.println("Gold set found: " + gold_set);
 
-      return gold_set;
+      return gold;
     }
+  }
+
+  private String getGoldSummary(Map<Integer, BlockSummary> gold_in)
+  {
+    int min_height=1000000000;
+    int max_height=0;
+    int sum_height=0;
+    BigInteger sum_work = BigInteger.ZERO;
+
+    for(BlockSummary bs : gold_in.values())
+    {
+      min_height = Math.min(min_height, bs.getHeader().getBlockHeight());
+      max_height = Math.max(max_height, bs.getHeader().getBlockHeight());
+      sum_height += bs.getHeader().getBlockHeight();
+
+      sum_work = sum_work.add( BlockchainUtil.readInteger(bs.getWorkSum()));
+
+    }
+    return String.format("min:%d,max:%d,h_sum:%d w_sum=%s", min_height, max_height, sum_height, sum_work.toString());
+
+  }
+
+  /**
+   * Take a given gold set, remove any parents where both children are represented in the set
+   */
+  private Map<Integer, BlockSummary> goldPrune( Map<Integer, BlockSummary> gold_in)
+  {
+    Map<Integer, BlockSummary> out_map = new TreeMap<>();
+
+    for(int s : ImmutableSet.copyOf(gold_in.keySet()))
+    {
+      int count = 0;
+      for(int c : ShardUtil.getShardChildIds(s))
+      {
+        if (gold_in.containsKey(c)) count++;
+      }
+      if (count < 2)
+      {
+        out_map.put(s, gold_in.get(s));
+      }
+    }
+    return out_map;
+
   }
 
   private Map<Integer, BlockSummary> goldUpgrade( Map<Integer, BlockSummary> gold_in)
@@ -411,9 +452,26 @@ public class ShardBlockForge
     try(TimeRecordAuto tra_blk = TimeRecord.openAuto("ShardBlockForge.goldUpgrade"))
     {
       Map<Integer,Set<ChainHash> > head_shards = new TreeMap<Integer, Set<ChainHash> >();
+      // Existing shards
       for(int s : gold_in.keySet())
       {
         head_shards.put(s, climb( new ChainHash(gold_in.get(s).getHeader().getSnowHash()), s));
+      }
+
+      // Maybe merge in new children shards
+      for(int s : gold_in.keySet())
+      {
+        for(int c : ShardUtil.getShardChildIds(s))
+        {
+          if (!head_shards.containsKey(c))
+          if (node.getActiveShards().contains(c))
+          if (node.getBlockIngestor(c).getHead() != null)
+          {
+            BlockHeader h = node.getBlockIngestor(c).getHead().getHeader();
+            Set<ChainHash> hs = getBlocksAround( new ChainHash(h.getSnowHash()),1, c);
+            head_shards.put(c, hs);
+          }
+        }
       }
       return getGoldenSetRecursive(head_shards, ImmutableMap.of(), false, ImmutableMap.of());
     }
@@ -1070,6 +1128,8 @@ public class ShardBlockForge
       setName("ShardBlockForge.ConceptUpdateThread");
     }
 
+    Map<Integer, BlockSummary> last_gold_set = null;
+
     public void runPass()
     {
       // If no template requests for 5 minutes, don't bother
@@ -1085,49 +1145,53 @@ public class ShardBlockForge
 
       // Possible blocks to mine
       TreeSet<BlockConcept> possible_set = new TreeSet<>();
-
         
       if (node.getBlockIngestor(0).getHead() == null)
       {
         // Let the old thing do the genesis gag
         return;
       }
-        for(int shard_id : node.getActiveShards())
-        {
-          BlockSummary head = node.getBlockIngestor(shard_id).getHead();
 
-          if (head != null)
+      if (last_gold_set != null)
+      {
+        String old_gold = getGoldSummary(last_gold_set);
+        last_gold_set = goldPrune(goldUpgrade(last_gold_set));
+        String new_gold = getGoldSummary(last_gold_set);
+        logger.info(String.format("Gold set upgrade: %s to %s", old_gold, new_gold));
+      }
+
+      if (last_gold_set == null)
+      {
+      
+        int depth=0;
+        while (last_gold_set == null)
+        {
+          Map<Integer, BlockSummary> gold = getGoldenSet(depth);
+          if (gold != null)
           {
-            int check_depth=1;
-            //if (head.getHeader().getBlockHeight() < 10)
+            last_gold_set = gold;
+            String new_gold = getGoldSummary(last_gold_set);
+            logger.info(String.format("Gold set found: %s", new_gold));
+          }
+          else
+          {
+            depth++;
+            if (depth > 6)
             {
-              //possible_source_blocks.addAll( getBlocksAround(new ChainHash(head.getHeader().getSnowHash()), check_depth, shard_id) );
+              logger.warning("No gold set found at max depth");
+              break;
             }
           }
         }
-        System.out.println("Possible source blocks: " + possible_source_blocks.size());
+      }
 
-        possible_set.addAll(exploreBlocks(possible_source_blocks, true, ImmutableMap.of()));
+      if (last_gold_set != null)
+      {
+        Map<String, ChainHash> gold_known_map = getKnownMap(last_gold_set.values());
+        System.out.println("Gold restrict size: " + gold_known_map.size());
+        possible_set.addAll(exploreBlocks(last_gold_set.values(), false, gold_known_map));
+      }
 
-        
-        int depth=0;
-        while (possible_set.size()==0)
-        {
-          Set<ChainHash> gold = getGoldenSet(depth);
-          Map<String, ChainHash> gold_known_map = getKnownMap(gold);
-
-          System.out.println("Gold restrict size: " + gold_known_map.size());
-          possible_set.addAll(exploreBlocks(gold, false, gold_known_map));
-          depth++;
-          if (depth > 6)
-          {
-            logger.warning("No gold set found at max depth");
-            break;
-          }
-        }
-
-        //check_depth++;
-      //}
     
       System.out.println("ZZZ Possible blocks: " + possible_set.size());
       int printed = 0;

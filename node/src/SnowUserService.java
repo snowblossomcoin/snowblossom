@@ -76,7 +76,6 @@ public class SnowUserService extends UserServiceGrpc.UserServiceImplBase impleme
   {
     if (node.areWeSynced())
     {
-      // TODO - select other shards
       Block block = node.getBlockForge().getBlockTemplate(info.req);
       info.sink.onNext(block);
     }

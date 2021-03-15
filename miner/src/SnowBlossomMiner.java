@@ -420,6 +420,7 @@ public class SnowBlossomMiner
         {
           err = true;
           logger.warning("Error: " + t);
+          t.printStackTrace();
         }
 
         if (err)
@@ -445,7 +446,14 @@ public class SnowBlossomMiner
 
     public void onNext(Block b)
     {
-      logger.finer(String.format("Got block template: shard:%d height:%d transactions:%d",
+      if (b.getHeader().getTarget().size() == 0)
+      {
+        logger.info("Got null template, clearing block template");
+        last_block_template = null;
+        return;
+
+      }
+      logger.info(String.format("Got block template: shard:%d height:%d transactions:%d",
         b.getHeader().getShardId(),
         b.getHeader().getBlockHeight(),
         b.getTransactionsCount()));
