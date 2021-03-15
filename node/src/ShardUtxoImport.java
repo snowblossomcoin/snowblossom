@@ -32,7 +32,7 @@ public class ShardUtxoImport
    TOTO These objects might get big and we want to cache relative to number of
    active threads on the network.  Might want to get smarter here.
    */
-  private LRUCache<ChainHash, ImportedBlock> cache = new LRUCache<>(300);
+  private LRUCache<ChainHash, ImportedBlock> cache = new LRUCache<>(1000);
 
   public ShardUtxoImport(SnowBlossomNode node)
   {

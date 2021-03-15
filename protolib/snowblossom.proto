@@ -427,6 +427,11 @@ message BlockSummary {
   map<int32, BlockImportList> shard_history_map = 12;
 }
 
+message GoldSet {
+  // Maps shard id to block hash
+  map<int32, bytes> shard_to_hash = 1;
+}
+
 message PeerList {
   repeated PeerInfo peers = 1;
 }

@@ -48,6 +48,8 @@ public class ShardBlockForge
   private volatile ArrayList<BlockConcept> current_top_concepts = null;
   private ConceptUpdateThread concept_update_thread;
 
+  private ByteString GOLD_MAP_KEY = ByteString.copyFrom("forge".getBytes());
+
   public ShardBlockForge(SnowBlossomNode node)
     throws Exception
   {
@@ -145,10 +147,9 @@ public class ShardBlockForge
 
       ArrayList<BlockConcept> possible_set = current_top_concepts;
 
-      if (possible_set == null)
+      if ((possible_set == null) || (possible_set.size() == 0))
       {
-        concept_update_thread.wakeAndWait();
-        possible_set = current_top_concepts;
+        concept_update_thread.wake();
       }
       if (possible_set == null) return null;
       if (possible_set.size() == 0) return null; 
@@ -223,7 +224,7 @@ public class ShardBlockForge
           }
         }
       }
-      if ((possible_set.size() > 20) && (possible_set.first().getAdvancesShard() > 0))
+      if ((possible_set.size() > 50) && (possible_set.first().getAdvancesShard() > 0))
       {
         break;
       }
@@ -381,7 +382,7 @@ public class ShardBlockForge
       System.out.println("Number of shards: " + height_map.size());
 
       //System.out.println("Shard heads: " + head_shards);
-      Map<Integer, BlockSummary> gold = getGoldenSetRecursive(head_shards, ImmutableMap.of(), false, ImmutableMap.of());
+      Map<Integer, BlockSummary> gold = getGoldenSetRecursive(head_shards, ImmutableMap.of(), true, ImmutableMap.of());
 
       if (gold == null)
       {
@@ -406,6 +407,8 @@ public class ShardBlockForge
 
   private String getGoldSummary(Map<Integer, BlockSummary> gold_in)
   {
+    if (gold_in == null) return "null";
+
     int min_height=1000000000;
     int max_height=0;
     int sum_height=0;
@@ -557,19 +560,22 @@ public class ShardBlockForge
       {
         Map<Integer, BlockSummary> sub_solution = getGoldenSetRecursive(rem_shards_tree, known_map, short_cut, current_selections);
 
-        BigInteger val_sum = BigInteger.ZERO;
-        for(BlockSummary bs_sub : sub_solution.values())
+        if (sub_solution != null)
         {
-          val_sum  = val_sum.add( BlockchainUtil.readInteger( bs_sub.getWorkSum() ));
-        }
-          
-        if (val_sum.compareTo(best_solution_val) > 0)
-        {
-          best_solution = sub_solution;
-          best_solution_val = val_sum;
-          if (short_cut)
+          BigInteger val_sum = BigInteger.ZERO;
+          for(BlockSummary bs_sub : sub_solution.values())
           {
-            return best_solution; // short circuit
+            val_sum  = val_sum.add( BlockchainUtil.readInteger( bs_sub.getWorkSum() ));
+          }
+            
+          if (val_sum.compareTo(best_solution_val) > 0)
+          {
+            best_solution = sub_solution;
+            best_solution_val = val_sum;
+            if (short_cut)
+            {
+              return best_solution; // short circuit
+            }
           }
         }
 
@@ -1126,9 +1132,50 @@ public class ShardBlockForge
     {
       super(15000);
       setName("ShardBlockForge.ConceptUpdateThread");
+      last_gold_set = loadGoldSet();
+
+      String new_gold = getGoldSummary(last_gold_set);
+      logger.info(String.format("Gold set loaded from db: %s", new_gold));
     }
 
-    Map<Integer, BlockSummary> last_gold_set = null;
+    private Map<Integer, BlockSummary> loadGoldSet()
+    {
+      GoldSet gs = node.getDB().getGoldSetMap().get(GOLD_MAP_KEY);
+      if (gs == null) return null;
+
+      Map<Integer, BlockSummary> gold = new TreeMap<>();
+
+      for(Map.Entry<Integer,ByteString> me : gs.getShardToHashMap().entrySet())
+      {
+        int shard = me.getKey();
+        ChainHash hash = new ChainHash(me.getValue());
+        BlockSummary bs = getDBSummary(hash);
+        if (bs == null)
+        {
+          logger.warning(String.format("Unable to load gold set, summary not found: %d %s", shard, hash.toString()));
+          return null;
+        }
+        gold.put(shard, bs);
+      }
+      return gold;
+
+    }
+
+    private void saveGoldSet(Map<Integer, BlockSummary> gold)
+    {
+      GoldSet.Builder gs = GoldSet.newBuilder();
+
+      for(Map.Entry<Integer, BlockSummary> me : gold.entrySet())
+      {
+        int shard = me.getKey();
+        ByteString hash = me.getValue().getHeader().getSnowHash();
+        gs.putShardToHash(shard, hash);
+      }
+
+      node.getDB().getGoldSetMap().put(GOLD_MAP_KEY, gs.build());
+    }
+
+    Map<Integer, BlockSummary> last_gold_set;
 
     public void runPass()
     {
@@ -1158,6 +1205,7 @@ public class ShardBlockForge
         last_gold_set = goldPrune(goldUpgrade(last_gold_set));
         String new_gold = getGoldSummary(last_gold_set);
         logger.info(String.format("Gold set upgrade: %s to %s", old_gold, new_gold));
+        saveGoldSet(last_gold_set);
       }
 
       if (last_gold_set == null)
@@ -1172,6 +1220,7 @@ public class ShardBlockForge
             last_gold_set = gold;
             String new_gold = getGoldSummary(last_gold_set);
             logger.info(String.format("Gold set found: %s", new_gold));
+            saveGoldSet(last_gold_set);
           }
           else
           {
