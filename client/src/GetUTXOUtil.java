@@ -1,9 +1,11 @@
 package snowblossom.client;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.protobuf.ByteString;
 import duckutil.LRUCache;
 import java.util.HashMap;
+import java.util.TreeMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -26,8 +28,10 @@ public class GetUTXOUtil
   private LRUCache<String, List<TransactionBridge> > spendable_cache = new LRUCache<>(1000);
 
   private StubHolder stub_holder;
-  private long utxo_root_time = 0;
-  private ChainHash last_utxo_root = null;
+
+  private long utxo_shard_time = 0;
+  private ImmutableMap<Integer, ChainHash> utxo_shard_map = null;
+
   private NetworkParams params;
 
   public GetUTXOUtil(StubHolder stub_holder, NetworkParams params)
@@ -36,10 +40,10 @@ public class GetUTXOUtil
     this.params = params;
   }
 
-  public synchronized ChainHash getCurrentUtxoRootHash()
+
+  public synchronized Map<Integer,ChainHash> getCurrentUtxoShardHashes()
   {
-    
-    if (utxo_root_time + UTXO_ROOT_EXPIRE < System.currentTimeMillis())
+    if (utxo_shard_time + UTXO_ROOT_EXPIRE < System.currentTimeMillis())
     {
       NodeStatus ns = getStub().getNodeStatus( NullRequest.newBuilder().build() );
       if (ns.getNetwork().length() > 0)
@@ -50,15 +54,24 @@ public class GetUTXOUtil
             params.getNetworkName(),
             ns.getNetwork()));
         }
-
       }
 
-      last_utxo_root= new ChainHash(ns.getHeadSummary().getHeader().getUtxoRootHash());
-      utxo_root_time = System.currentTimeMillis();
-      logger.log(Level.FINE, "UTXO root hash: " + last_utxo_root);
+      TreeMap<Integer, ChainHash> utxo_map = new TreeMap<>();
+      for(Map.Entry<Integer, ByteString> me : ns.getShardUtxoMap().entrySet())
+      {
+        utxo_map.put(me.getKey(), new ChainHash(me.getValue()));
+      }
+
+      utxo_shard_map = ImmutableMap.copyOf(utxo_map);
+      utxo_shard_time = System.currentTimeMillis();
+
+      logger.log(Level.FINE, "UTXO shard map: " + utxo_shard_map);
     }
-    return last_utxo_root;
+    return utxo_shard_map;
   }
+
+
+
 
   private UserServiceBlockingStub getStub()
   {
@@ -127,24 +140,32 @@ public class GetUTXOUtil
   public List<TransactionBridge> getSpendableValidated(AddressSpecHash addr)
     throws ValidationException
   {
-    ChainHash utxo_root = getCurrentUtxoRootHash();
-    String key = addr.toString() + "/" + utxo_root;
-    synchronized(spendable_cache)
-    {
-      List<TransactionBridge> lst = spendable_cache.get(key);
-      if (lst != null) return lst;
-    }
+    Map<Integer, ChainHash> utxo_map = getCurrentUtxoShardHashes();
+    List<TransactionBridge> big_lst = new LinkedList<>();
 
-    List<TransactionBridge> lst = getSpendableValidatedStatic(addr, getStub(), utxo_root.getBytes());
-    
-    lst = ImmutableList.copyOf(lst);
-    synchronized(spendable_cache)
+    for(ChainHash utxo_root : utxo_map.values())
     {
-      spendable_cache.put(key, lst);
+      String key = addr.toString() + "/" + utxo_root;
+      synchronized(spendable_cache)
+      {
+        List<TransactionBridge> lst = spendable_cache.get(key);
+        if (lst != null) return lst;
+      }
+
+      List<TransactionBridge> lst = getSpendableValidatedStatic(addr, getStub(), utxo_root.getBytes());
+      
+      lst = ImmutableList.copyOf(lst);
+      synchronized(spendable_cache)
+      {
+        spendable_cache.put(key, lst);
+      }
+      big_lst.addAll(lst);
+
     }
-    return lst;
+    return big_lst;
 
   }
+
   public static List<TransactionBridge> getSpendableValidatedStatic(AddressSpecHash addr, UserServiceBlockingStub stub, ByteString utxo_root )
     throws ValidationException
   {

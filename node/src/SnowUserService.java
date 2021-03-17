@@ -258,27 +258,51 @@ public class SnowUserService extends UserServiceGrpc.UserServiceImplBase impleme
   public void getUTXONode(GetUTXONodeRequest request, StreamObserver<GetUTXONodeReply> responseObserver)
   {
     ChainHash utxo_root = null;
-    if (request.getUtxoRootHash().size() > 0)
+    if (request.getUtxoTypeCase() == GetUTXONodeRequest.UtxoTypeCase.UTXO_ROOT_HASH)
     {
       utxo_root = new ChainHash(request.getUtxoRootHash());
     }
-    else
+    else if (request.getUtxoTypeCase() == GetUTXONodeRequest.UtxoTypeCase.SHARD_ID)
     {
+      int shard_id = request.getShardId();
+
       utxo_root = UtxoUpdateBuffer.EMPTY;
-      BlockSummary summary = node.getBlockIngestor().getHead();
+      BlockSummary summary = node.getBlockIngestor(shard_id).getHead();
       if (summary != null)
       {
-      utxo_root = new ChainHash(summary.getHeader().getUtxoRootHash());
+        utxo_root = new ChainHash(summary.getHeader().getUtxoRootHash());
       }
     }
+    else if (request.getUtxoTypeCase() == GetUTXONodeRequest.UtxoTypeCase.ALL_SHARDS)
+    {
+      responseObserver.onError(new Exception("Unsupported all_shards request - use other method"));
+      return;
 
+    }
+    else
+    {
+      // Root of shard 0 case
+      utxo_root = UtxoUpdateBuffer.EMPTY;
+      BlockSummary summary = node.getBlockIngestor(0).getHead();
+      if (summary != null)
+      {
+        utxo_root = new ChainHash(summary.getHeader().getUtxoRootHash());
+      }
+
+    }
+
+    responseObserver.onNext(getUtxoNodeDetails(utxo_root, request));
+    responseObserver.onCompleted();
+  }
+
+  private GetUTXONodeReply getUtxoNodeDetails(ChainHash utxo_root, GetUTXONodeRequest request)
+  {
     ByteString target=request.getPrefix();
 
     LinkedList<TrieNode> proof = new LinkedList<>();
     LinkedList<TrieNode> results = new LinkedList<>();
     int max_results = 10000;
     if (request.getMaxResults() > 0) max_results = Math.min(max_results, request.getMaxResults());
-
 
     node.getUtxoHashedTrie().getNodeDetails(utxo_root.getBytes(), target, proof, results, max_results);
 
@@ -291,9 +315,33 @@ public class SnowUserService extends UserServiceGrpc.UserServiceImplBase impleme
       reply.addAllProof(proof);
     }
 
+    return reply.build();
+  }
+
+  @Override
+  public void getUTXONodeMulti(GetUTXONodeRequest request, StreamObserver<GetUTXOReplyList> responseObserver)
+  {
+    if (request.getUtxoTypeCase() != GetUTXONodeRequest.UtxoTypeCase.ALL_SHARDS)
+    {
+      responseObserver.onError(new Exception("unsupported type request - use other method"));
+      return;
+    }
+    GetUTXOReplyList.Builder reply = GetUTXOReplyList.newBuilder();
+
+    for(int s : node.getCurrentBuildingShards())
+    {
+      BlockSummary summary = node.getBlockIngestor(s).getHead();
+      if (summary != null)
+      {
+        ChainHash utxo_root = new ChainHash(summary.getHeader().getUtxoRootHash());
+        reply.putReplyMap(s, getUtxoNodeDetails( utxo_root, request ));
+      }
+    }
+    
     responseObserver.onNext(reply.build());
     responseObserver.onCompleted();
   }
+
 
   @Override
   public void getNodeStatus(NullRequest null_request, StreamObserver<NodeStatus> responseObserver)
@@ -312,6 +360,10 @@ public class SnowUserService extends UserServiceGrpc.UserServiceImplBase impleme
     if (node.getBlockIngestor().getHead() != null)
     {
       ns.setHeadSummary(node.getBlockIngestor().getHead());
+    }
+    for(int s : node.getCurrentBuildingShards())
+    {
+      ns.putShardUtxoMap(s, node.getBlockIngestor(s).getHead().getHeader().getUtxoRootHash());
     }
 
     responseObserver.onNext(ns.build());

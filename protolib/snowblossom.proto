@@ -214,6 +214,7 @@ service UserService {
   rpc SubmitBlock ( Block ) returns ( SubmitReply ) {}
   rpc SubmitTransaction ( Transaction ) returns ( SubmitReply ) {}
   rpc GetUTXONode( GetUTXONodeRequest ) returns ( GetUTXONodeReply ) {}
+  rpc GetUTXONodeMulti( GetUTXONodeRequest ) returns ( GetUTXOReplyList ) {}
   rpc GetMempoolTransactionList ( RequestAddress ) returns ( TransactionHashList ) {}
   rpc GetAddressHistory ( RequestAddress ) returns ( HistoryList ) {} 
 
@@ -269,7 +270,7 @@ message PeerInfo {
     GRPC_TLS = 1;
   }
   ConnectionType connection_type = 10;
-  repeated int32 shard_id_set = 11; // The set of shards I am tracking
+  repeated int32 shard_id_set = 11; // The set of shards I am configured for
 }
 
 message TransactionStatus {
@@ -327,10 +328,14 @@ message GetUTXONodeRequest {
   bool include_proof = 2;
   int32 max_results = 3;
 
-  // If specified, answer will use this specific utxo root as basis rather than current.
+  // If root hash specified, answer will use this specific utxo root as basis rather than current.
   // Can be used to ask about about previous block or get a consistent view regardless of new
   // blocks for a series of queries. Also, Series of Queries will be my new anti-folk acapella band.
-  bytes utxo_root_hash = 4;
+  oneof utxo_type {
+    bytes utxo_root_hash = 4; // If set, use only this root hash
+    int32 shard_id = 5; // if set, use current head of this shard
+    bool all_shards = 6; // if set, return results for all shards
+  }
 }
 
 message GetUTXONodeReply {
@@ -348,6 +353,11 @@ message GetUTXONodeReply {
   // The nodes that go from the top utxo root to the
   // requested prefix or would if they prefix node existed
   repeated TrieNode proof = 3;
+}
+
+message GetUTXOReplyList {
+  // Maps shard id to GetUTXONodeReply
+  map<int32, GetUTXONodeReply> reply_map = 1;
 }
 
 message RequestAddress {
@@ -401,6 +411,7 @@ message NodeStatus {
   string node_version = 5;
   map<string, int32> version_map = 6;
   string network = 7;
+  map<int32, bytes> shard_utxo_map = 8;
 }
 
 // -----------------------------------------------------------------------

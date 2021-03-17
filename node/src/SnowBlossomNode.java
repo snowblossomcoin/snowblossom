@@ -72,8 +72,8 @@ public class SnowBlossomNode
   private AddressSpecHash node_tls_address;
   private ImmutableList<StatusInterface> status_list;
   private ImmutableSet<Integer> shard_interest_set;
-
-  private Map<Integer, ShardComponents> shard_comps = ImmutableMap.of();
+  private ImmutableSet<Integer> shard_config_set;
+  private ImmutableMap<Integer, ShardComponents> shard_comps = ImmutableMap.of();
 
   private volatile boolean terminate;
 
@@ -121,12 +121,15 @@ public class SnowBlossomNode
     params = NetworkParams.loadFromConfig(config);
     
     TreeSet<Integer> cover_set = new TreeSet<>();
+    TreeSet<Integer> config_set = new TreeSet<>();
 
     if (config.isSet("shards"))
     {
       for(String shard_str : config.getList("shards"))
       {
         int shard_id = Integer.parseInt(shard_str);
+
+        config_set.add(shard_id);
 
         // Add this shard and all shards down from it
         cover_set.addAll( ShardUtil.getCoverSet(shard_id, params) );
@@ -139,10 +142,12 @@ public class SnowBlossomNode
     else
     {
       cover_set.addAll( ShardUtil.getCoverSet(0, params) );
+      config_set.add(0);
     }
     logger.info("Shard interest set: " + cover_set);
 
     shard_interest_set = ImmutableSet.copyOf(cover_set);
+    shard_config_set = ImmutableSet.copyOf(config_set);
 
   }
 
@@ -365,7 +370,32 @@ public class SnowBlossomNode
 
   public Set<Integer> getActiveShards(){return shard_comps.keySet(); }
   public Set<Integer> getInterestShards(){return shard_interest_set; }
+  public Set<Integer> getConfigShards(){return shard_config_set;}
 
+  public Set<Integer> getCurrentBuildingShards()
+  {
+    // TODO - don't recompute this every damn time
+    TreeSet<Integer> res = new TreeSet<>();
+
+    for(int s : getActiveShards())
+    {
+      if (getBlockIngestor(s).getHead() != null)
+      {
+        int child = 0;
+        for(int c : ShardUtil.getShardChildIds(s))
+        {
+          if (getActiveShards().contains(c))
+          if (getBlockIngestor(c).getHead() != null)
+          {     
+            child++;
+          }
+        }
+        if (child == 0) res.add(s);
+      }
+    }
+
+    return res;
+  }
 
   public BlockIngestor getBlockIngestor(int shard_id)
   {

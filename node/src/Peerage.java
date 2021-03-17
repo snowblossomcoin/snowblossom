@@ -577,7 +577,7 @@ public class Peerage
             .setVersion(Globals.VERSION)
             .setNodeId(node_id)
             .setConnectionType(PeerInfo.ConnectionType.GRPC_TCP)
-            .addAllShardIdSet( node.getActiveShards() )
+            .addAllShardIdSet( node.getConfigShards() )
             .build();
 
           self_peers.add(pi);
