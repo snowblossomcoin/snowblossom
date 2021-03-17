@@ -148,7 +148,7 @@ public class OverlayMap<K,V> implements Map<K,V>
   @Override
   public int size()
   {
-    return map.size() + under_map.size();
+    return entrySet().size();
   }
 
 

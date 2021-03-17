@@ -252,7 +252,7 @@ public class ShardBlockForge
 
       if (Validation.checkCollisionsNT(known_map, b.getPrevSummary().getShardHistoryMap()))
       if (Validation.checkCollisionsNT(known_map, b.getHeader().getShardImportMap()))
-      if (Validation.checkCollisionsNT(known_map, b.getHeader().getShardId(), b.getHeader().getBlockHeight(), ChainHash.getRandom()))
+      if (Validation.checkCollisionsNT(known_map, b.getHeader().getShardId(), b.getHeader().getBlockHeight(), ChainHash.ZERO_HASH))
       {
         return true;
       }
@@ -796,7 +796,7 @@ public class ShardBlockForge
       { // make sure we are not already on the restrict list
         OverlayMap<String, ChainHash> kmap = new OverlayMap<>(restrict_known_map, false);
 
-        if (!Validation.checkCollisionsNT(kmap, shard_id, concept.getHeader().getBlockHeight(), ChainHash.getRandom()))
+        if (!Validation.checkCollisionsNT(kmap, shard_id, concept.getHeader().getBlockHeight(), ChainHash.ZERO_HASH))
         {
           return lst;
         }
@@ -853,7 +853,7 @@ public class ShardBlockForge
    */ 
   private BlockConcept attemptImportShard(ContextCache cc, BlockConcept working_c, int selected_shard, Map<String, ChainHash> restrict_known_map)
   {
-    try(TimeRecordAuto tra_gbt = TimeRecord.openAuto("ShardBlockForge.attemptImportShard"))
+    try(TimeRecordAuto tra_is = TimeRecord.openAuto("ShardBlockForge.attemptImportShard"))
     {
       BlockHeader cur = working_c.getShardHeads().get(selected_shard);
       if (cur == null)
@@ -862,10 +862,18 @@ public class ShardBlockForge
       }
       if (cur == null) return null;
 
-      TreeMap<BigInteger,BlockImportList> path = getPathCached(cc, new ChainHash( cur.getSnowHash() ), selected_shard, restrict_known_map);
+      TreeMap<BigInteger,BlockImportList> path;
+      
+      try(TimeRecordAuto tra_path = TimeRecord.openAuto("ShardBlockForge.attemptImportShard_path"))
+      {
+        path = getPathCached(cc, new ChainHash( cur.getSnowHash() ), selected_shard, restrict_known_map);
+      }
       ArrayList<BlockImportList> path_lists = new ArrayList<>();
-      path_lists.addAll(path.values());
-      Collections.shuffle(path_lists);
+      try(TimeRecordAuto tra_path = TimeRecord.openAuto("ShardBlockForge.attemptImportShard_path_shuffle"))
+      {
+        path_lists.addAll(path.values());
+        Collections.shuffle(path_lists);
+      }
 
 
       // Use random
@@ -879,7 +887,11 @@ public class ShardBlockForge
         return null;
       }
       TreeMap<Integer, ByteString> height_map = new TreeMap<>();
-      height_map.putAll(bil.getHeightMap());
+      try(TimeRecordAuto tra_path = TimeRecord.openAuto("ShardBlockForge.attemptImportShard_heightmap"))
+      {
+
+        height_map.putAll(bil.getHeightMap());
+      }
       ByteString hash = height_map.firstEntry().getValue();
 
       BlockSummary imp_sum = getDBSummary( hash );
@@ -901,14 +913,14 @@ public class ShardBlockForge
 
   private TreeMap<BigInteger,BlockImportList> getPathCached(ContextCache cc, ChainHash start_point, int external_shard_id, Map<String, ChainHash> restrict_known_map)
   {
-    String key = "" +start_point +"_" + external_shard_id +"_" + restrict_known_map.hashCode();
+    String key = "" +start_point + "_" + external_shard_id;
 
     synchronized(cc.get_path_cache)
     {
-    if (cc.get_path_cache.containsKey(key))
-    {
-      return cc.get_path_cache.get(key);
-    }
+      if (cc.get_path_cache.containsKey(key))
+      {
+        return cc.get_path_cache.get(key);
+      }
     }
 
     TreeMap<BigInteger,BlockImportList> m = getPath(start_point, external_shard_id, restrict_known_map);
