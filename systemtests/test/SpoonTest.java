@@ -64,7 +64,7 @@ public class SpoonTest
     int target = start + wait_for;
 
     int height = start;
-    for (int i = 0; i < 15; i++)
+    for (int i = 0; i < 25; i++)
     {
       Thread.sleep(1000);
       height = node.getBlockIngestor(shard_id).getHead().getHeader().getBlockHeight();
@@ -76,7 +76,7 @@ public class SpoonTest
 
   protected void waitForHeight(SnowBlossomNode node, int shard_id, int target) throws Exception
   {
-    waitForHeight(node, shard_id, target, 15);
+    waitForHeight(node, shard_id, target, 25);
   }
   protected void waitForHeight(SnowBlossomNode node, int shard_id, int target, int max_wait) throws Exception
   {
@@ -99,7 +99,7 @@ public class SpoonTest
 
   protected void waitForShardOpen(SnowBlossomNode node, int shard_id) throws Exception
   {
-    for(int i=0; i<15; i++)
+    for(int i=0; i<25; i++)
     {
       if (node.getActiveShards().contains(shard_id)) return;
       Thread.sleep(1000);
@@ -109,7 +109,7 @@ public class SpoonTest
   }
   protected void waitForShardHead(SnowBlossomNode node, int shard_id) throws Exception
   {
-    for(int i=0; i<15; i++)
+    for(int i=0; i<25; i++)
     {
       if (node.getActiveShards().contains(shard_id))
       if (node.getBlockIngestor(shard_id).getHead() != null)

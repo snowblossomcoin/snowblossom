@@ -1,6 +1,7 @@
 package snowblossom.node;
 
 import com.google.protobuf.ByteString;
+import duckutil.LRUCache;
 import io.grpc.stub.StreamObserver;
 import java.util.Collection;
 import java.util.HashMap;
@@ -11,7 +12,6 @@ import java.util.logging.Logger;
 import snowblossom.lib.*;
 import snowblossom.proto.*;
 import snowblossom.trie.proto.TrieNode;
-import duckutil.LRUCache;
 
 public class SnowUserService extends UserServiceGrpc.UserServiceImplBase implements MemPoolTickleInterface
 {
@@ -36,7 +36,7 @@ public class SnowUserService extends UserServiceGrpc.UserServiceImplBase impleme
 
   public void start()
   {
-    node.getMemPool().registerListner(this);
+    node.getMemPool().registerListener(this);
     new Tickler().start();
   }
 

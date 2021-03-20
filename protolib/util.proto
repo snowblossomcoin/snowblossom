@@ -36,6 +36,12 @@ message TransactionFactoryConfig {
 
   bytes extra = 14;
   bool send_all = 15;
+
+  bool restrict_shard = 16; // Only use inputs from a specific shard
+  int32 restrict_shard_id = 17; // Specific shard id to use inputs from
+
+  bool allow_split_send = 18; // If needed, form multiple send transactions 
+                              // from different shards to complete the outputs
 }
 
 message UTXOEntry {

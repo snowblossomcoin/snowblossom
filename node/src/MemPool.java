@@ -571,7 +571,7 @@ public class MemPool
     this.peerage = peerage;
   }
 
-  public synchronized void registerListner(MemPoolTickleInterface listener)
+  public synchronized void registerListener(MemPoolTickleInterface listener)
   {
     LinkedList<MemPoolTickleInterface> l = new LinkedList<>();
     l.addAll(mempool_listener);
@@ -597,8 +597,6 @@ public class MemPool
     {
       if (peerage != null)
       {
-
-
         TransactionMempoolInfo info = getRandomPoolTransaction();
 
         if (info != null)

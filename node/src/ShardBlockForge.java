@@ -1,16 +1,20 @@
 package snowblossom.node;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.protobuf.ByteString;
+import duckutil.LRUCache;
 import duckutil.Pair;
+import duckutil.PeriodicThread;
 import duckutil.TimeRecord;
 import duckutil.TimeRecordAuto;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.PrintStream;
 import java.math.BigInteger;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -18,19 +22,15 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.Scanner;
 import java.util.Set;
-import java.util.Collection;
 import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.logging.Logger;
-import java.io.FileInputStream;
-import java.util.Scanner;
+import org.junit.Assert;
 import snowblossom.lib.*;
 import snowblossom.lib.trie.HashUtils;
 import snowblossom.proto.*;
-import duckutil.PeriodicThread;
-import duckutil.LRUCache;
-import org.junit.Assert;
 
 public class ShardBlockForge
 {
@@ -1195,7 +1195,7 @@ public class ShardBlockForge
       if (last_template_request + 300000L < System.currentTimeMillis())
       {
         current_top_concepts = null;
-				tickleUserService();
+        tickleUserService();
         return;
       }
     
@@ -1266,7 +1266,7 @@ public class ShardBlockForge
       }
       current_top_concepts = good_concepts;
 
-			tickleUserService();
+      tickleUserService();
 
       if (forge_log != null)
       {

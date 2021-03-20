@@ -14,7 +14,6 @@ import io.netty.handler.ssl.SslContext;
 import java.io.File;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
@@ -66,6 +65,7 @@ public class SnowBlossomNode
   private Peerage peerage;
   private ShardBlockForge shard_blockforge;
   private ShardUtxoImport shard_utxo_import;
+  private MetaMemPool meta_mem_pool;
 
   private ImmutableList<Integer> service_ports;
   private ImmutableList<Integer> tls_service_ports;
@@ -166,6 +166,7 @@ public class SnowBlossomNode
     peerage = new Peerage(this);
     shard_utxo_import = new ShardUtxoImport(this);
     shard_blockforge = new ShardBlockForge(this);
+    meta_mem_pool = new MetaMemPool(this);
 
   }
 
@@ -364,7 +365,7 @@ public class SnowBlossomNode
 
   public BlockIngestor getBlockIngestor(){return getBlockIngestor(0);}
   public ShardBlockForge getBlockForge(){return shard_blockforge;}
-  public MemPool getMemPool(){return getMemPool(0);}
+  public MetaMemPool getMemPool(){return meta_mem_pool;}
 
   public ShardUtxoImport getShardUtxoImport(){return shard_utxo_import;}
 

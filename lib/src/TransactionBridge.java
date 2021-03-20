@@ -22,12 +22,22 @@ public class TransactionBridge implements Comparable<TransactionBridge>
   public final TransactionOutput out;
   public final TransactionInput in;
   public final long value;
+  
+  // might not be the same shard id as the output is encoded to
+  // but the shard this output is currently on
+  public int shard_id; 
+  
 
   public boolean spent;
   public boolean unconfirmed;
 
   public TransactionBridge(TrieNode node)
   {
+    this(node, 0);
+  }
+  public TransactionBridge(TrieNode node, int shard_id)
+  {
+    this.shard_id = shard_id;
     Assert.assertTrue(node.getIsLeaf());
 
     try

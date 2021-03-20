@@ -7,8 +7,6 @@ import duckutil.TimeRecord;
 import duckutil.TimeRecordAuto;
 import java.io.FileOutputStream;
 import java.io.PrintStream;
-import java.math.BigInteger;
-import java.text.DecimalFormat;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.logging.Logger;
@@ -301,7 +299,7 @@ public class BlockIngestor implements ChainStateSource
         {
           u.tickleBlocks();
         }
-        node.getMemPool().tickleBlocks(new ChainHash(summary.getHeader().getUtxoRootHash()));
+        node.getMemPool(shard_id).tickleBlocks(new ChainHash(summary.getHeader().getUtxoRootHash()));
         node.getPeerage().sendAllTips(summary.getHeader().getShardId());
       }
 

@@ -143,8 +143,10 @@ public class GetUTXOUtil
     Map<Integer, ChainHash> utxo_map = getCurrentUtxoShardHashes();
     List<TransactionBridge> big_lst = new LinkedList<>();
 
-    for(ChainHash utxo_root : utxo_map.values())
+    for(Map.Entry<Integer, ChainHash> me : utxo_map.entrySet())
     {
+      int shard_id = me.getKey(); 
+      ChainHash utxo_root = me.getValue();
       String key = addr.toString() + "/" + utxo_root;
       synchronized(spendable_cache)
       {
@@ -152,7 +154,7 @@ public class GetUTXOUtil
         if (lst != null) return lst;
       }
 
-      List<TransactionBridge> lst = getSpendableValidatedStatic(addr, getStub(), utxo_root.getBytes());
+      List<TransactionBridge> lst = getSpendableValidatedStatic(addr, getStub(), utxo_root.getBytes(), shard_id);
       
       lst = ImmutableList.copyOf(lst);
       synchronized(spendable_cache)
@@ -166,16 +168,18 @@ public class GetUTXOUtil
 
   }
 
-  public static List<TransactionBridge> getSpendableValidatedStatic(AddressSpecHash addr, UserServiceBlockingStub stub, ByteString utxo_root )
+  public static List<TransactionBridge> getSpendableValidatedStatic(AddressSpecHash addr, 
+    UserServiceBlockingStub stub, ByteString utxo_root, int shard_id )
     throws ValidationException
   {
     logger.log(Level.FINE,String.format("Get Spendable (%s, %s)", addr.toString(), HexUtil.getHexString(utxo_root)));
-    return getSpendableValidatedStatic(addr.getBytes(), stub, utxo_root);
+    return getSpendableValidatedStatic(addr.getBytes(), stub, utxo_root, shard_id);
     
 
   }
 
-  public static List<TransactionBridge> getSpendableValidatedStatic(ByteString prefix, UserServiceBlockingStub stub, ByteString utxo_root )
+  public static List<TransactionBridge> getSpendableValidatedStatic(ByteString prefix, 
+    UserServiceBlockingStub stub, ByteString utxo_root, int shard_id )
     throws ValidationException
   {
     HashMap<ByteString, TrieNode> node_map = new HashMap<>(10000,0.5f);
@@ -186,7 +190,7 @@ public class GetUTXOUtil
       node_map.put(n.getPrefix(), n);
     }
 
-    descend(ByteString.EMPTY, prefix, stub, bridges, node_map, utxo_root, utxo_root);
+    descend(ByteString.EMPTY, prefix, stub, bridges, node_map, utxo_root, utxo_root, shard_id);
     
     logger.log(Level.FINE, String.format("Get Spendable: %d nodes, %d bridges", node_map.size(), bridges.size()));
 
@@ -201,7 +205,8 @@ public class GetUTXOUtil
     List<TransactionBridge> bridges,
     Map<ByteString, TrieNode> node_map,
     ByteString expected_hash,
-    ByteString utxo_root)
+    ByteString utxo_root,
+    int shard_id)
     throws ValidationException
   {
     if (prefix.size() > search.size())
@@ -228,7 +233,7 @@ public class GetUTXOUtil
     }
     if (node.getIsLeaf())
     {
-      bridges.add(new TransactionBridge(node));
+      bridges.add(new TransactionBridge(node, shard_id));
     }
     
     for(ChildEntry ce : node.getChildrenList())
@@ -238,14 +243,14 @@ public class GetUTXOUtil
       {
         if (search.startsWith(next))
         {
-          descend(next, search, stub, bridges, node_map, ce.getHash(), utxo_root);
+          descend(next, search, stub, bridges, node_map, ce.getHash(), utxo_root, shard_id);
         }
       }
       if (next.size() > search.size())
       {
         if (next.startsWith(search))
         {
-          descend(next, search, stub, bridges, node_map, ce.getHash(), utxo_root);
+          descend(next, search, stub, bridges, node_map, ce.getHash(), utxo_root, shard_id);
         }
       }
     }
