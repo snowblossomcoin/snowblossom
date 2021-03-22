@@ -85,12 +85,15 @@ public class SpoonTestFbo extends SpoonTest
 
       TransactionFactoryResult tr = TransactionFactory.createTransaction(config.build(), client.getPurse().getDB(), client);
 
-      SubmitReply submit = client.getStub().submitTransaction(tr.getTx());
-      System.out.println(submit);
+      for(Transaction tx : tr.getTxsList())
+      {
+        SubmitReply submit = client.getStub().submitTransaction(tx);
+        System.out.println(submit);
 
-      Assert.assertTrue(submit.getErrorMessage(), submit.getSuccess());
+        Assert.assertTrue(submit.getErrorMessage(), submit.getSuccess());
+      }
 
-      tx_list.add(tr.getTx());
+      tx_list.addAll(tr.getTxsList());
 
       waitForMoreBlocks(node, 1);
 
@@ -146,14 +149,15 @@ public class SpoonTestFbo extends SpoonTest
 
       TransactionFactoryResult tr = TransactionFactory.createTransaction(config.build(), client_lock.getPurse().getDB(), client_lock);
 
-      SubmitReply submit = client_lock.getStub().submitTransaction(tr.getTx());
-      System.out.println(submit);
+      for(Transaction tx : tr.getTxsList())
+      {
+        SubmitReply submit = client_lock.getStub().submitTransaction(tx);
+        System.out.println(submit);
 
-      Assert.assertTrue(submit.getErrorMessage(), submit.getSuccess());
+        Assert.assertTrue(submit.getErrorMessage(), submit.getSuccess());
+      }
 
       waitForMoreBlocks(node, 1);
-
-
 
     }
     

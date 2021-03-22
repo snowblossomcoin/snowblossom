@@ -74,10 +74,14 @@ public class TransactionFactoryTest
     tx_config.setFeeFlat(100L);
     tx_config.addOutputs(TransactionOutput.newBuilder().setRecipientSpecHash( address_hash.getBytes() ).setValue(150000L-100L).build());
 
-    TransactionFactoryResult res = TransactionFactory.createTransaction(tx_config.build(), big_wallet, null);
-    Assert.assertEquals(0, res.getSignaturesAdded());
-    Assert.assertFalse(res.getAllSigned());
-    Assert.assertEquals(100L, res.getFee());
+    TransactionFactoryResult f_res = TransactionFactory.createTransaction(tx_config.build(), big_wallet, null);
+    Assert.assertEquals(0, f_res.getSignaturesAdded());
+    Assert.assertFalse(f_res.getAllSigned());
+    Assert.assertEquals(100L, f_res.getFee());
+
+    TransactionSignResult res = TransactionSignResult.newBuilder()
+      .setTx(f_res.getTxs(0))
+      .build();
 
     for(WalletDatabase db : small_db)
     {

@@ -94,54 +94,51 @@ public class LoadTest
 
       TransactionFactoryResult res = TransactionFactory.createTransaction(tx_config.build(), client.getPurse().getDB(), client);
 
-      Transaction tx = res.getTx();
-
-      if (tx == null)
+      for(Transaction tx : res.getTxsList())
       {
-        logger.warning("Unable to make transaction");
-        return;
-      }
-      TransactionInner inner = TransactionUtil.getInner(tx);
 
-      ChainHash tx_hash = new ChainHash(tx.getTxHash());
-      for(int i=0; i<inner.getOutputsCount(); i++)
-      {
-        TransactionBridge b = new TransactionBridge(inner.getOutputs(i), i, tx_hash);
-        spendable.add(b);
-      }
+        TransactionInner inner = TransactionUtil.getInner(tx);
 
-      logger.info("Transaction: " + new ChainHash(tx.getTxHash()) + " - " + tx.toByteString().size());
-      TransactionUtil.prettyDisplayTx(tx, System.out, client.getParams());
-      //logger.info(tx.toString());
-
-      boolean sent=false;
-      while(!sent)
-      {
-        SubmitReply reply = client.getStub().submitTransaction(tx);
-        if (reply.getSuccess())
+        ChainHash tx_hash = new ChainHash(tx.getTxHash());
+        for(int i=0; i<inner.getOutputsCount(); i++)
         {
-          sent=true;
+          TransactionBridge b = new TransactionBridge(inner.getOutputs(i), i, tx_hash);
+          spendable.add(b);
         }
-        else
+
+        logger.info("Transaction: " + new ChainHash(tx.getTxHash()) + " - " + tx.toByteString().size());
+        TransactionUtil.prettyDisplayTx(tx, System.out, client.getParams());
+        //logger.info(tx.toString());
+
+        boolean sent=false;
+        while(!sent)
         {
-          logger.info("Error: " + reply.getErrorMessage());
-          if (reply.getErrorMessage().contains("full"))
+          SubmitReply reply = client.getStub().submitTransaction(tx);
+          if (reply.getSuccess())
           {
-            Thread.sleep(60000);
+            sent=true;
           }
           else
           {
-            return;
+            logger.info("Error: " + reply.getErrorMessage());
+            if (reply.getErrorMessage().contains("full"))
+            {
+              Thread.sleep(60000);
+            }
+            else
+            {
+              return;
+            }
           }
-        }
 
-      }
-      boolean success = client.submitTransaction(tx);
-      System.out.println("Submit: " + success);
-      Thread.sleep(100);
-      if (!success)
-      {
-        return;
+        }
+        boolean success = client.submitTransaction(tx);
+        System.out.println("Submit: " + success);
+        Thread.sleep(100);
+        if (!success)
+        {
+          return;
+        }
       }
     }
   }

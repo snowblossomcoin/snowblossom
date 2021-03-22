@@ -493,16 +493,17 @@ public class SnowBlossomClient
 
     TransactionFactoryResult res = TransactionFactory.createTransaction(tx_config.build(), purse.getDB(), this);
 
-    Transaction tx = res.getTx();
+    for(Transaction tx :  res.getTxsList())
+    {
 
+      logger.info("Transaction: " + new ChainHash(tx.getTxHash()) + " - " + tx.toByteString().size());
 
-    logger.info("Transaction: " + new ChainHash(tx.getTxHash()) + " - " + tx.toByteString().size());
+      TransactionUtil.prettyDisplayTx(tx, System.out, params);
 
-    TransactionUtil.prettyDisplayTx(tx, System.out, params);
+      //logger.info(tx.toString());
 
-    //logger.info(tx.toString());
-
-    System.out.println(stub_holder.getBlockingStub().submitTransaction(tx));
+      System.out.println(stub_holder.getBlockingStub().submitTransaction(tx));
+    }
 
   }
   public void sendLocked(long value, String to, String fbo, int block, String nametype, String name)
@@ -538,15 +539,17 @@ public class SnowBlossomClient
 
     TransactionFactoryResult res = TransactionFactory.createTransaction(tx_config.build(), purse.getDB(), this);
 
-    Transaction tx = res.getTx();
+    for(Transaction tx : res.getTxsList())
+    {
 
-    logger.info("Transaction: " + new ChainHash(tx.getTxHash()) + " - " + tx.toByteString().size());
+      logger.info("Transaction: " + new ChainHash(tx.getTxHash()) + " - " + tx.toByteString().size());
 
-    TransactionUtil.prettyDisplayTx(tx, System.out, params);
+      TransactionUtil.prettyDisplayTx(tx, System.out, params);
 
-    //logger.info(tx.toString());
+      //logger.info(tx.toString());
 
-    System.out.println(stub_holder.getBlockingStub().submitTransaction(tx));
+      System.out.println(stub_holder.getBlockingStub().submitTransaction(tx));
+    }
 
   }
 
