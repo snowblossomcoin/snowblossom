@@ -399,7 +399,14 @@ public class TransactionUtil
       String address =  AddressUtil.getAddressString(params.getAddressPrefix(), new AddressSpecHash( o.getRecipientSpecHash()));
       double value = o.getValue() / Globals.SNOW_VALUE_D;
 
-      out.println(String.format("  Output: %s %s", address, df.format(value)));
+      if (o.getTargetShard() == 0)
+      {
+        out.println(String.format("  Output: %s %s", address, df.format(value)));
+      }
+      else
+      {
+        out.println(String.format("  Output: %s s:%d %s", address, o.getTargetShard(), df.format(value)));
+      }
       if (o.getRequirements().getRequiredBlockHeight() > 0) out.println("    Required block height: " + o.getRequirements().getRequiredBlockHeight());
       if (o.getRequirements().getRequiredTime() > 0) out.println("    Required time: " + o.getRequirements().getRequiredTime());
       if (o.getForBenefitOfSpecHash().size() > 0)

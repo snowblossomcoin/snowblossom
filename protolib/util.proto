@@ -43,6 +43,12 @@ message TransactionFactoryConfig {
   bool allow_split_send = 18; // If needed, form multiple send transactions 
                               // from different shards to complete the outputs
   int32 change_shard_id = 19;
+
+  /*oneof output_shard_mode
+  {
+    bool output_shard_as_set = 20; // use the shard outputs set in the TransactionOutputs
+    bool output_shard_follow_tx = 21; // Put outputs on the same shard as the transaction
+  }*/
 }
 
 message UTXOEntry {

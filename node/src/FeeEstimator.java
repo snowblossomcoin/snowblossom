@@ -30,7 +30,7 @@ public class FeeEstimator
     if (last_calc_time + FEE_RECALC_TIME < System.currentTimeMillis())
     {
       recalcFee();
-      logger.info("New fee estimate: " + last_fee);
+      logger.fine(String.format("New fee estimate shard %d: %f ", shard_id, last_fee));
     }
     return last_fee;
   }

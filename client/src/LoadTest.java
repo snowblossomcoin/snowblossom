@@ -4,6 +4,7 @@ import java.util.Collections;
 import java.util.LinkedList;
 import java.util.SplittableRandom;
 import java.util.logging.Logger;
+import java.util.ArrayList;
 import snowblossom.lib.*;
 import snowblossom.proto.*;
 import snowblossom.util.proto.*;
@@ -42,6 +43,11 @@ public class LoadTest
     long send_delta = max_send - min_send;
     SplittableRandom rnd = new SplittableRandom();
 
+    FeeEstimate fee_estimate = client.getFeeEstimate();
+    ArrayList<Integer> active_shards = new ArrayList();
+    active_shards.addAll( fee_estimate.getShardMap().keySet() );
+
+
     while(true)
     {
       int output_count = 1;
@@ -54,10 +60,12 @@ public class LoadTest
       for(int i=0; i< output_count; i++)
       {
         long value = min_send + rnd.nextLong(send_delta);
+        int dst_shard = active_shards.get( rnd.nextInt(active_shards.size() ) );
 
         out_list.add( TransactionOutput.newBuilder()
           .setRecipientSpecHash(TransactionUtil.getRandomChangeAddress(client.getPurse().getDB()).getBytes() )
           .setValue(value)
+          .setTargetShard(dst_shard)
           .build());
         needed_value+=value;
       }

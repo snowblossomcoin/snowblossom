@@ -75,6 +75,8 @@ public class MemPool
   private Object tickle_trigger = new Object();
   private ImmutableList<MemPoolTickleInterface> mempool_listener = ImmutableList.of();
 
+  private ImmutableSet<Integer> shard_cover_set;
+
 
   public MemPool(HashedTrie utxo_hashed_trie, ChainStateSource chain_state_source)
   {
@@ -86,6 +88,8 @@ public class MemPool
     this.low_fee_max = low_fee_max;
     this.chain_state_source = chain_state_source;
     this.utxo_hashed_trie = utxo_hashed_trie;
+
+    shard_cover_set = ImmutableSet.copyOf( chain_state_source.getShardCoverSet() );
 
     new Tickler().start();
     new TicklerBroadcast().start();
@@ -253,7 +257,6 @@ public class MemPool
         String key = HexUtil.getHexString(in.getSrcTxId()) + ":" + in.getSrcTxOutIdx();
         used_outputs.add(key);
 
-
         if (claimed_outputs.containsKey(key))
         {
           if (!claimed_outputs.get(key).equals(tx_hash))
@@ -286,7 +289,6 @@ public class MemPool
         long t4 = System.nanoTime();
         priority_map.put(ratio, cluster);
         TimeRecord.record(t4, "mempool:primapput");
-
 
       }
       TimeRecord.record(t1, "mempool:p2");
@@ -463,7 +465,19 @@ public class MemPool
           if (known_transactions.containsKey(needed_tx))
           {
             t1 = System.nanoTime();
+            // TODO Check shard IDs
             Transaction found_tx = known_transactions.get(needed_tx).tx;
+            TransactionInner found_tx_inner = TransactionUtil.getInner(found_tx);
+
+            TransactionOutput tx_out = found_tx_inner.getOutputs( in.getSrcTxOutIdx() );
+            if (!shard_cover_set.contains(tx_out.getTargetShard()))
+            {
+              throw new ValidationException(String.format(
+                "Transaction %s depends on %s which seems to be in other shard",
+                new ChainHash(target_tx.getTxHash()),
+                in.toString()));
+
+            }
 
             working_map.put(needed_tx, found_tx);
             addInputRequirements(found_tx, depends_on_map, needed_inputs);
@@ -492,7 +506,6 @@ public class MemPool
       .build();
     // TODO - assign shard correctly
 
-    Set<Integer> shard_cover_set = ShardUtil.getCoverSet(dummy_header.getShardId(), chain_state_source.getParams());
     Map<Integer, UtxoUpdateBuffer> export_utxo_buffer = new TreeMap<>();
 
     for (Transaction t : ordered_list)

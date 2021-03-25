@@ -8,6 +8,7 @@ import duckutil.TimeRecordAuto;
 import java.io.FileOutputStream;
 import java.io.PrintStream;
 import java.util.HashMap;
+import java.util.Set;
 import java.util.LinkedList;
 import java.util.logging.Logger;
 import snowblossom.lib.*;
@@ -399,6 +400,12 @@ public class BlockIngestor implements ChainStateSource
   public NetworkParams getParams()
   {
     return params;
+  }
+
+  @Override
+  public Set<Integer> getShardCoverSet()
+  {
+    return ShardUtil.getCoverSet(shard_id, params);
   }
 
   public boolean reserveBlock(ChainHash hash)

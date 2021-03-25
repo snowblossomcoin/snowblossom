@@ -24,9 +24,11 @@ public class TransactionFactory
 	  TreeMap<Integer, List<UTXOEntry> > usable_inputs = new TreeMap<>();
     TreeMap<Integer, Long> shard_funds = new TreeMap<>();
     Random rnd = new Random();
+    DecimalFormat df = new DecimalFormat("0.000000");
     
     ArrayList<TransactionOutput> outputs = new ArrayList<>();
     long output_sum = 0;
+    long input_sum = 0;
     for(TransactionOutput out : config.getOutputsList())
     {
       outputs.add(out);
@@ -70,6 +72,7 @@ public class TransactionFactory
           }
           usable_inputs.get(br.shard_id).add(e);
           shard_funds.put(br.shard_id, shard_funds.get(br.shard_id) + e.getValue());
+          input_sum += e.getValue();
 
         }
       }
@@ -102,6 +105,11 @@ public class TransactionFactory
         res.setSignaturesAdded( res.getSignaturesAdded() + fr.getSignaturesAdded() );
       }
       return res.build();
+    }
+    if (output_sum > input_sum)
+    {
+      double short_d = (0.0 + output_sum - input_sum)  / Globals.SNOW_VALUE_D;
+      throw new ValidationException(String.format("Insufficent funds.  Short: %s SNOW", df.format(short_d)));
     }
 
     // Ok, now we are in a normal case, there are specified outputs

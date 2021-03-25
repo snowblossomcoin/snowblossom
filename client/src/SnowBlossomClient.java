@@ -308,8 +308,13 @@ public class SnowBlossomClient
       }
       else if (command.equals("loadtest"))
       {
-        client.maintainKeys();
+        //client.maintainKeys();
         new LoadTest(client).runLoadTest();
+      }
+      else if (command.equals("loadtest_shard"))
+      {
+        //client.maintainKeys();
+        new LoadTestShard(client).runLoadTest();
       }
       else if (command.equals("nodestatus"))
       {

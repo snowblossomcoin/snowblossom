@@ -1,10 +1,12 @@
 package node.test;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import duckutil.TimeRecord;
 import java.security.KeyPair;
 import java.util.Random;
 import java.util.TreeMap;
+import java.util.Set;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -423,6 +425,12 @@ public class MemPoolTest
     
     @Override
     public NetworkParams getParams() {return new NetworkParamsRegtest(); }
+
+    @Override
+    public Set<Integer> getShardCoverSet()
+    {
+      return ImmutableSet.of(0);
+    }
     
   }
 

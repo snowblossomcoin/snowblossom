@@ -485,9 +485,16 @@ public class SnowUserService extends UserServiceGrpc.UserServiceImplBase impleme
   @Override
   public void getFeeEstimate(NullRequest null_request, StreamObserver<FeeEstimate> observer)
   {
-    // TODO - get shard id from request
     int shard_id = 0;
-    observer.onNext( FeeEstimate.newBuilder().setFeePerByte( getFeeEstimator(shard_id).getFeeEstimate()).build());
+    FeeEstimate.Builder fe = FeeEstimate.newBuilder();
+    fe.setFeePerByte( getFeeEstimator(shard_id).getFeeEstimate());
+
+    for(int s : node.getCurrentBuildingShards())
+    {
+      fe.putShardMap(s, getFeeEstimator(s).getFeeEstimate());
+    }
+
+    observer.onNext( fe.build());
     observer.onCompleted();
   }
 

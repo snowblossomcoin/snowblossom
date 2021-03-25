@@ -21,6 +21,7 @@ java_library(
     "@duckutil//:lobstack_lib",
     "@duckutil//:duckutil_jsonrpc_lib",
     "@build_stack_rules_proto//java:grpc_netty",
+    "@maven//:org_slf4j_slf4j_nop",
     ],
 )
 

@@ -310,10 +310,12 @@ message AddressUpdate {
 message SubmitReply {
   bool success = 1;
   string error_message = 2;
+  int32 shard_accepted = 3;
 }
 
 message FeeEstimate {
   double fee_per_byte = 1; //flakes per byte of tx
+  map<int32, double> shard_map = 2; // map of shard id to fee in flakes per byte of tx
 }
 
 message SubscribeBlockTemplateRequest {
