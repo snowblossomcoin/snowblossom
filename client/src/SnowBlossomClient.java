@@ -477,9 +477,27 @@ public class SnowBlossomClient
   public UserServiceBlockingStub getStub(){ return stub_holder.getBlockingStub(); }
   public UserServiceStub getAsyncStub(){ return stub_holder.getAsyncStub(); }
 
+  private FeeEstimate cached_fee_estimate;
+  private long cached_fee_estimate_time = 0;
+  public static final long FEE_ESTIMATE_CACHE_TIME = 30000L;
+  private Object fee_estimate_cache_lock = new Object();
+
   public FeeEstimate getFeeEstimate()
   {
-    return getStub().getFeeEstimate(NullRequest.newBuilder().build());
+    synchronized(fee_estimate_cache_lock)
+    {
+      if ((cached_fee_estimate != null) && (System.currentTimeMillis() < cached_fee_estimate_time + FEE_ESTIMATE_CACHE_TIME))
+      {
+        return cached_fee_estimate;
+      }
+      else
+      {
+        cached_fee_estimate = getStub().getFeeEstimate(NullRequest.newBuilder().build());
+        cached_fee_estimate_time = System.currentTimeMillis();
+        return cached_fee_estimate;
+      }
+
+    }
   }
   
   public void send(long value, String to, boolean send_all)
