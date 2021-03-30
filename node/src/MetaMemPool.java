@@ -1,6 +1,8 @@
 package snowblossom.node;
 
 import java.util.HashSet;
+import java.util.TreeMap;
+import java.util.Map;
 import java.util.List;
 import java.util.Set;
 import snowblossom.lib.AddressSpecHash;
@@ -58,6 +60,19 @@ public class MetaMemPool
     }
     return sum;
   }
+
+  public Map<Integer, Set<ChainHash> > getTransactionsForAddressByShard(AddressSpecHash spec_hash)
+  {
+    TreeMap<Integer, Set<ChainHash> > m = new TreeMap<>();
+
+    for(int s : node.getCurrentBuildingShards())
+    {
+      if (!m.containsKey(s)) m.put(s, new HashSet<ChainHash>());
+      m.get(s).addAll(node.getMemPool(s).getTransactionsForAddress(spec_hash));
+    }
+    return m;
+  }
+
 
   public Set<ChainHash> getTransactionsForAddress(AddressSpecHash spec_hash)
   {

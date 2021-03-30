@@ -4,11 +4,13 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.protobuf.ByteString;
 import duckutil.LRUCache;
+import duckutil.TimeRecord;
+import duckutil.TimeRecordAuto;
 import java.util.HashMap;
-import java.util.TreeMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import snowblossom.lib.*;
@@ -25,7 +27,7 @@ public class GetUTXOUtil
 
   // Saves cache of address,utxo_root to list of bridges, which will
   // never change for that given input pair
-  private LRUCache<String, List<TransactionBridge> > spendable_cache = new LRUCache<>(1000);
+  private LRUCache<String, List<TransactionBridge> > spendable_cache = new LRUCache<>(10000);
 
   private StubHolder stub_holder;
 
@@ -45,27 +47,31 @@ public class GetUTXOUtil
   {
     if (utxo_shard_time + UTXO_ROOT_EXPIRE < System.currentTimeMillis())
     {
-      NodeStatus ns = getStub().getNodeStatus( NullRequest.newBuilder().build() );
-      if (ns.getNetwork().length() > 0)
+      try(TimeRecordAuto tra = TimeRecord.openAuto("GetUTXOUtil.UtxoHashesUpdate"))
       {
-        if (!ns.getNetwork().equals(params.getNetworkName()))
+        NodeStatus ns = getStub().getNodeStatus( NullRequest.newBuilder().build() );
+        if (ns.getNetwork().length() > 0)
         {
-          throw new RuntimeException(String.format("Network name mismatch.  Expected %s, got %s",
-            params.getNetworkName(),
-            ns.getNetwork()));
+          if (!ns.getNetwork().equals(params.getNetworkName()))
+          {
+            throw new RuntimeException(String.format("Network name mismatch.  Expected %s, got %s",
+              params.getNetworkName(),
+              ns.getNetwork()));
+          }
         }
+
+        TreeMap<Integer, ChainHash> utxo_map = new TreeMap<>();
+        for(Map.Entry<Integer, ByteString> me : ns.getShardUtxoMap().entrySet())
+        {
+          utxo_map.put(me.getKey(), new ChainHash(me.getValue()));
+        }
+
+        utxo_shard_map = ImmutableMap.copyOf(utxo_map);
+        utxo_shard_time = System.currentTimeMillis();
+
+        logger.log(Level.FINE, "UTXO shard map: " + utxo_shard_map);
       }
-
-      TreeMap<Integer, ChainHash> utxo_map = new TreeMap<>();
-      for(Map.Entry<Integer, ByteString> me : ns.getShardUtxoMap().entrySet())
-      {
-        utxo_map.put(me.getKey(), new ChainHash(me.getValue()));
-      }
-
-      utxo_shard_map = ImmutableMap.copyOf(utxo_map);
-      utxo_shard_time = System.currentTimeMillis();
-
-      logger.log(Level.FINE, "UTXO shard map: " + utxo_shard_map);
+      
     }
     return utxo_shard_map;
   }
@@ -90,46 +96,64 @@ public class GetUTXOUtil
         bridge_map.put(b.getKeyString(), b);
     }
 
-    for(ByteString tx_hash : getStub().getMempoolTransactionList(
-      RequestAddress.newBuilder().setAddressSpecHash(addr.getBytes()).build()).getTxHashesList())
-    { 
-      Transaction tx = getStub().getTransaction(RequestTransaction.newBuilder().setTxHash(tx_hash).build());
+    
+    try(TimeRecordAuto tra = TimeRecord.openAuto("GetUTXOUtil.getSpendableWithMempool_mempool"))
+    {
+      Map<Integer, TransactionHashList> tx_shard_map = getStub().getMempoolTransactionMap( 
+        RequestAddress.newBuilder().setAddressSpecHash(addr.getBytes()).build()).getShardMap();
 
-      TransactionInner inner = TransactionUtil.getInner(tx);
+      for(Map.Entry<Integer, TransactionHashList> me : tx_shard_map.entrySet())
+      {
+        int shard_id = me.getKey();
 
-      for(TransactionInput in : inner.getInputsList())
-      { 
-        if (addr.equals(in.getSpecHash()))
+        for(ByteString tx_hash : me.getValue().getTxHashesList())
         { 
-          TransactionBridge b_in = new TransactionBridge(in);
-          String key = b_in.getKeyString();
-          if (bridge_map.containsKey(key))
-          { 
-            bridge_map.get(key).spent=true;
-          }
-          else
-          {
-            bridge_map.put(key, b_in);
-          }
-        }
-      }
-      for(int o=0; o<inner.getOutputsCount(); o++)
-      { 
-        TransactionOutput out = inner.getOutputs(o);
-        if (addr.equals(out.getRecipientSpecHash()))
-        {
-          TransactionBridge b_out = new TransactionBridge(out, o, new ChainHash(tx_hash));
-          String key = b_out.getKeyString();
-          b_out.unconfirmed=true;
+          Transaction tx = getStub().getTransaction(RequestTransaction.newBuilder().setTxHash(tx_hash).build());
 
-          if (bridge_map.containsKey(key))
+          TransactionInner inner = TransactionUtil.getInner(tx);
+
+          for(TransactionInput in : inner.getInputsList())
           { 
-            if (bridge_map.get(key).spent)
-            {
-              b_out.spent=true;
+            if (addr.equals(in.getSpecHash()))
+            { 
+              TransactionBridge b_in = new TransactionBridge(in, shard_id);
+              String key = b_in.getKeyString();
+              if (bridge_map.containsKey(key))
+              { 
+                bridge_map.get(key).spent=true;
+              }
+              else
+              {
+                bridge_map.put(key, b_in);
+              }
             }
           }
-          bridge_map.put(key, b_out);
+          for(int o=0; o<inner.getOutputsCount(); o++)
+          { 
+            TransactionOutput out = inner.getOutputs(o);
+            if (addr.equals(out.getRecipientSpecHash()))
+            {
+              // This transaction is in the mempool, so it isn't on a shard yet
+              // but what shards it ends up on is not as simple as one could be hoped
+              // So if this tx is confirmed, only the outputs on it that go in this 
+              // shard (shard_id) will be immediately spendable
+              if (ShardUtil.getCoverSet( shard_id, params).contains(out.getTargetShard()))
+              {
+                TransactionBridge b_out = new TransactionBridge(out, o, new ChainHash(tx_hash), shard_id);
+                String key = b_out.getKeyString();
+                b_out.unconfirmed=true;
+
+                if (bridge_map.containsKey(key))
+                { 
+                  if (bridge_map.get(key).spent)
+                  {
+                    b_out.spent=true;
+                  }
+                }
+                bridge_map.put(key, b_out);
+              }
+            }
+          }
         }
       }
     }
@@ -260,26 +284,29 @@ public class GetUTXOUtil
   private static List<TrieNode> getNodesByPrefix(ByteString prefix, UserServiceBlockingStub stub, boolean proof, ByteString utxo_root)
     throws ValidationException
   {
-    LinkedList<TrieNode> lst = new LinkedList<>();
-    GetUTXONodeReply reply = stub.getUTXONode( GetUTXONodeRequest.newBuilder()
-      .setPrefix(prefix)
-      .setIncludeProof(proof)
-      .setUtxoRootHash(utxo_root)
-      .setMaxResults(10000)
-      .build());
-    for(TrieNode node : reply.getAnswerList())
+    try(TimeRecordAuto tra = TimeRecord.openAuto("GetUTXOUtil.getNodesByPrefix"))
     {
-      if (!HashUtils.validateNodeHash(node)) throw new ValidationException("Validation failure in node: " + HexUtil.getHexString(node.getPrefix()));
-      lst.add(node);
-    }
-    for(TrieNode node : reply.getProofList())
-    {
-      if (!HashUtils.validateNodeHash(node)) throw new ValidationException("Validation failure in node: " + HexUtil.getHexString(node.getPrefix()));
-      lst.add(node);
-    }
+      LinkedList<TrieNode> lst = new LinkedList<>();
+      GetUTXONodeReply reply = stub.getUTXONode( GetUTXONodeRequest.newBuilder()
+        .setPrefix(prefix)
+        .setIncludeProof(proof)
+        .setUtxoRootHash(utxo_root)
+        .setMaxResults(10000)
+        .build());
+      for(TrieNode node : reply.getAnswerList())
+      {
+        if (!HashUtils.validateNodeHash(node)) throw new ValidationException("Validation failure in node: " + HexUtil.getHexString(node.getPrefix()));
+        lst.add(node);
+      }
+      for(TrieNode node : reply.getProofList())
+      {
+        if (!HashUtils.validateNodeHash(node)) throw new ValidationException("Validation failure in node: " + HexUtil.getHexString(node.getPrefix()));
+        lst.add(node);
+      }
 
 
-    return lst;
+      return lst;
+    }
   }
 
 

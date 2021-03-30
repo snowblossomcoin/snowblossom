@@ -9,6 +9,8 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.Map;
+import java.util.Set;
 import snowblossom.lib.*;
 import snowblossom.proto.*;
 import snowblossom.trie.proto.TrieNode;
@@ -481,6 +483,29 @@ public class SnowUserService extends UserServiceGrpc.UserServiceImplBase impleme
     observer.onNext( list.build());
     observer.onCompleted();
   }
+
+  @Override
+  public void getMempoolTransactionMap(RequestAddress req, StreamObserver<TransactionShardMap> observer)
+  {
+    AddressSpecHash spec_hash = new AddressSpecHash(req.getAddressSpecHash());
+
+    Map<Integer, Set<ChainHash> > m = node.getMemPool().getTransactionsForAddressByShard(spec_hash);
+
+    TransactionShardMap.Builder shard_map = TransactionShardMap.newBuilder();
+
+    for(Map.Entry<Integer, Set<ChainHash> > me : m.entrySet())
+    {
+      TransactionHashList.Builder lst = TransactionHashList.newBuilder();
+      for(ChainHash h : me.getValue())
+      {
+        lst.addTxHashes(h.getBytes());
+      }
+      shard_map.putShardMap(me.getKey(), lst.build());
+    }
+    observer.onNext( shard_map.build() );
+    observer.onCompleted();
+  }
+
 
   @Override
   public void getFeeEstimate(NullRequest null_request, StreamObserver<FeeEstimate> observer)

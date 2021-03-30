@@ -70,6 +70,11 @@ public class TransactionBridge implements Comparable<TransactionBridge>
 
   public TransactionBridge(TransactionOutput out, int out_idx, ChainHash txid)
   {
+    this(out, out_idx, txid, 0);
+  }
+  public TransactionBridge(TransactionOutput out, int out_idx, ChainHash txid, int shard_id)
+  {
+    this.shard_id = shard_id;
     this.out = out;
     value = out.getValue();
       in = TransactionInput.newBuilder()
@@ -81,6 +86,11 @@ public class TransactionBridge implements Comparable<TransactionBridge>
 
   public TransactionBridge(TransactionInput in)
   {
+    this(in, 0);
+  }
+  public TransactionBridge(TransactionInput in, int shard_id)
+  {
+    this.shard_id = shard_id;
     spent=true;
     this.in = in;
 

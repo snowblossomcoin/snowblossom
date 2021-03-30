@@ -216,6 +216,7 @@ service UserService {
   rpc GetUTXONode( GetUTXONodeRequest ) returns ( GetUTXONodeReply ) {}
   rpc GetUTXONodeMulti( GetUTXONodeRequest ) returns ( GetUTXOReplyList ) {}
   rpc GetMempoolTransactionList ( RequestAddress ) returns ( TransactionHashList ) {}
+  rpc GetMempoolTransactionMap ( RequestAddress ) returns ( TransactionShardMap ) {}
   rpc GetAddressHistory ( RequestAddress ) returns ( HistoryList ) {} 
 
   rpc GetNodeStatus ( NullRequest ) returns ( NodeStatus ) {}
@@ -365,6 +366,11 @@ message GetUTXOReplyList {
 message RequestAddress {
   bytes address_spec_hash = 1;
 }
+
+message TransactionShardMap {
+  map<int32, TransactionHashList> shard_map = 1;
+}
+
 message TransactionHashList {
   repeated bytes tx_hashes = 1;
 }
