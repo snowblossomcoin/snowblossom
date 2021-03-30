@@ -171,19 +171,20 @@ public class GetUTXOUtil
     {
       int shard_id = me.getKey(); 
       ChainHash utxo_root = me.getValue();
-      String key = addr.toString() + "/" + utxo_root;
+      String key = addr.toString() + "/" + shard_id + "/" + utxo_root;
+      List<TransactionBridge> lst = null;
       synchronized(spendable_cache)
       {
-        List<TransactionBridge> lst = spendable_cache.get(key);
-        if (lst != null) return lst;
+        lst = spendable_cache.get(key);
       }
-
-      List<TransactionBridge> lst = getSpendableValidatedStatic(addr, getStub(), utxo_root.getBytes(), shard_id);
-      
-      lst = ImmutableList.copyOf(lst);
-      synchronized(spendable_cache)
+      if (lst == null)
       {
-        spendable_cache.put(key, lst);
+        lst = getSpendableValidatedStatic(addr, getStub(), utxo_root.getBytes(), shard_id);
+        lst = ImmutableList.copyOf(lst);
+        synchronized(spendable_cache)
+        {
+          spendable_cache.put(key, lst);
+        }
       }
       big_lst.addAll(lst);
 

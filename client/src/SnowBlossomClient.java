@@ -813,7 +813,7 @@ public class SnowBlossomClient
     throws ValidationException
   {
 
-    Map<String, TransactionBridge> bridge_map= get_utxo_util.getSpendableWithMempool(addr);
+    Map<String, TransactionBridge> bridge_map = get_utxo_util.getSpendableWithMempool(addr);
 
     LinkedList<TransactionBridge> lst = new LinkedList<>();
     lst.addAll(bridge_map.values());
