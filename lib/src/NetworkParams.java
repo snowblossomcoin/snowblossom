@@ -159,6 +159,11 @@ public abstract class NetworkParams
         logger.info("Using network regshard");
         return new NetworkParamsRegShard();
       }
+      else if (network.equals("testshard"))
+      {
+        logger.info("Using network test shard");
+        return new NetworkParamsTestShard();
+      }
       else
       {
         logger.log(Level.SEVERE, String.format("Unknown network: %s", network));
