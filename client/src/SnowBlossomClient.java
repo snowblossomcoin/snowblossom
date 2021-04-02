@@ -174,11 +174,9 @@ public class SnowBlossomClient
         MonitorTool mu = new MonitorTool(client.getParams(), client.getStubHolder(), new MonitorInterfaceSystemOut());
         for(AddressSpec claim : client.getPurse().getDB().getAddressesList())
         {
-          
           AddressSpecHash hash = AddressUtil.getHashForSpec(claim);
           mu.addAddress(hash);
         }
-
 
         while(true)
         {

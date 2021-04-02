@@ -106,22 +106,26 @@ public class LoadTestShard
           boolean sent=false;
           while(!sent)
           {
-            SubmitReply reply = client.getStub().submitTransaction(tx);
-            if (reply.getSuccess())
+            try(TimeRecordAuto tra_submit = TimeRecord.openAuto("LoadTestShard.submit"))
             {
-              logger.info("Submit: " + reply);
-              sent=true;
-            }
-            else
-            {
-              logger.info("Error: " + reply.getErrorMessage());
-              if (reply.getErrorMessage().contains("full"))
+              SubmitReply reply = client.getStub().submitTransaction(tx);
+              
+              if (reply.getSuccess())
               {
-                Thread.sleep(60000);
+                logger.info("Submit: " + reply);
+                sent=true;
               }
               else
               {
-                return;
+                logger.info("Error: " + reply.getErrorMessage());
+                if (reply.getErrorMessage().contains("full"))
+                {
+                  Thread.sleep(60000);
+                }
+                else
+                {
+                  return;
+                }
               }
             }
 

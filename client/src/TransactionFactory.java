@@ -155,9 +155,11 @@ public class TransactionFactory
       throw new ValidationException("Split spend required and not set");
     }
 
+    throw new ValidationException("Split outputs required but not implemented");
+
     // Now we have to split outputs
 
-		return null;
+		//return null;
 
   }
 
