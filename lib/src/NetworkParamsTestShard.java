@@ -61,7 +61,7 @@ public class NetworkParamsTestShard extends NetworkParams
   @Override
   public List<String> getSeedNodes()
   {
-    return ImmutableList.of("seed-test-shard.snowblossom.org");
+    return ImmutableList.of("seed-test-shard.snowblossom.org", "kube.1209k.com");
   }
   @Override
   public int getDefaultPort() { return 2361; }
@@ -89,6 +89,9 @@ public class NetworkParamsTestShard extends NetworkParams
   
   @Override
   public int getMaxShardSkewHeight() {return 6; } 
+    
+  @Override
+  public int getShardForkThreshold() { return getMaxBlockSize() / 64; }
 
 
 }
