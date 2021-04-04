@@ -2,6 +2,8 @@ package snowblossom.node;
 
 import java.util.HashSet;
 import java.util.TreeMap;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.Map;
 import java.util.List;
 import java.util.Set;
@@ -14,6 +16,7 @@ import snowblossom.proto.Transaction;
 public class MetaMemPool
 {
   private SnowBlossomNode node;
+  private static final Logger logger = Logger.getLogger("snowblossom.mempool");
 
   public MetaMemPool(SnowBlossomNode node)
   {
@@ -36,6 +39,7 @@ public class MetaMemPool
       }
       catch(ValidationException e)
       { // to be expected
+        logger.log(Level.INFO, "pool rejected",e);
   
       }
     }

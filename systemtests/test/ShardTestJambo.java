@@ -48,7 +48,7 @@ public class ShardTestJambo extends SpoonTest
     AddressSpecHash to_addr = AddressUtil.getHashForSpec(claim);
 
     SnowBlossomMiner miner1 = startMiner(port+0, to_addr, snow_path, "regshard");
-    SnowBlossomMiner miner2 = startMiner(port-1, to_addr, snow_path, "regshard");
+    SnowBlossomMiner miner2 = startMiner(port+1, to_addr, snow_path, "regshard");
     SnowBlossomMiner miner3 = startMiner(port+2, to_addr, snow_path, "regshard");
     SnowBlossomMiner miner4 = startMiner(port+3, to_addr, snow_path, "regshard");
 
