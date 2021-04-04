@@ -140,10 +140,9 @@ public class LoadTest
           }
 
         }
-        boolean success = client.submitTransaction(tx);
-        System.out.println("Submit: " + success);
+        System.out.println("Submit: " + sent);
         Thread.sleep(100);
-        if (!success)
+        if (!sent)
         {
           return;
         }
