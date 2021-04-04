@@ -36,6 +36,10 @@ public class MetaMemPool
       {
         MemPool mp = node.getMemPool(s);
         if (mp.addTransaction(tx)) return true;
+        else 
+        {
+          logger.log(Level.INFO, "Pool " + s + " returned false");
+        }
       }
       catch(ValidationException e)
       { // to be expected
