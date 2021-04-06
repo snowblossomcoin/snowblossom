@@ -1227,7 +1227,7 @@ public class ShardBlockForge
         saveGoldSet(last_gold_set);
       }
 
-      if (last_gold_set == null)
+      //if (last_gold_set == null)
       {
       
         int depth=0;
