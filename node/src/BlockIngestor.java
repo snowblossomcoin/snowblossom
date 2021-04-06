@@ -38,13 +38,14 @@ public class BlockIngestor implements ChainStateSource
   private LRUCache<ChainHash, Long> block_pull_map = new LRUCache<>(2000);
   private LRUCache<ChainHash, Long> tx_cluster_pull_map = new LRUCache<>(2000);
 
-  private final PrintStream block_log;
-  private TimeRecord time_record;
+  private static PrintStream block_log;
+  private static TimeRecord time_record;
 
   private final boolean tx_index;
   private final boolean addr_index;
   private final int shard_id;
   private final ByteString HEAD;
+
 
   public BlockIngestor(SnowBlossomNode node, int shard_id)
     throws Exception
@@ -65,15 +66,17 @@ public class BlockIngestor implements ChainStateSource
     tx_index = node.getConfig().getBoolean("tx_index");
     addr_index = node.getConfig().getBoolean("addr_index");
 
+    {
     if (node.getConfig().isSet("block_log"))
     {
+      if (block_log == null)
+      {
+      // TODO - there are multiple shards running BlockIngestor - this is all jacked
       block_log = new PrintStream(new FileOutputStream(node.getConfig().get("block_log"), true));
       time_record = new TimeRecord();
       TimeRecord.setSharedRecord(time_record);
+      }
     }
-    else
-    {
-      block_log = null;
     }
 
     chainhead = db.getBlockSummaryMap().get(HEAD);

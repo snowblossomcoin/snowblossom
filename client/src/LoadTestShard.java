@@ -26,6 +26,8 @@ public class LoadTestShard
 
   private final boolean use_pending=true;
 
+  private int preferred_shard = -1;
+
   public LoadTestShard(SnowBlossomClient client)
   {
     this.client = client;
@@ -34,6 +36,11 @@ public class LoadTestShard
     active_shards.addAll( fee_estimate.getShardMap().keySet() );
     time_record = new TimeRecord();
     TimeRecord.setSharedRecord(time_record);
+
+    if (client.getConfig().isSet("preferred_shard"))
+    {
+      preferred_shard = client.getConfig().getInt("preferred_shard");
+    }
 
   }
 
@@ -57,105 +64,111 @@ public class LoadTestShard
   private boolean trySend(TreeMap<Integer, LinkedList<TransactionBridge>> spendable_map, SplittableRandom rnd )
     throws Exception
   {
-      try(TimeRecordAuto tra_sendone = TimeRecord.openAuto("LoadTestShard.send_one"))
+    try(TimeRecordAuto tra_sendone = TimeRecord.openAuto("LoadTestShard.send_one"))
+    {
+      long min_send =  50000L;
+      long max_send = 500000L;
+      long send_delta = max_send - min_send;
+      int output_count = 1;
+      long fee = 12500;
+      while (rnd.nextDouble() < 0.5) output_count++;
+
+      LinkedList<TransactionOutput> out_list = new LinkedList<>();
+      long total_out = fee;
+      for(int i=0; i< output_count; i++)
       {
-        long min_send =  50000L;
-        long max_send = 500000L;
-        long send_delta = max_send - min_send;
-        int output_count = 1;
-        long fee = 12500;
-        while (rnd.nextDouble() < 0.5) output_count++;
+        long value = min_send + rnd.nextLong(send_delta);
 
-        LinkedList<TransactionOutput> out_list = new LinkedList<>();
-        long total_out = fee;
-        for(int i=0; i< output_count; i++)
+        int dst_shard = active_shards.get( rnd.nextInt(active_shards.size() ) );
+        if (preferred_shard >= 0)
         {
-          long value = min_send + rnd.nextLong(send_delta);
-          int dst_shard = active_shards.get( rnd.nextInt(active_shards.size() ) );
-
-          out_list.add( TransactionOutput.newBuilder()
-            .setRecipientSpecHash(TransactionUtil.getRandomChangeAddress(client.getPurse().getDB()).getBytes() )
-            .setValue(value)
-            .setTargetShard(dst_shard)
-            .build());
-          total_out += value;
+          if (rnd.nextDouble() < 0.75) dst_shard=preferred_shard;
         }
 
-        ArrayList<Integer> source_shards = new ArrayList<>();
-        source_shards.addAll(spendable_map.keySet());
-        Collections.shuffle(source_shards);
-        int source_shard = source_shards.get(0);
+        out_list.add( TransactionOutput.newBuilder()
+          .setRecipientSpecHash(TransactionUtil.getRandomChangeAddress(client.getPurse().getDB()).getBytes() )
+          .setValue(value)
+          .setTargetShard(dst_shard)
+          .build());
+        total_out += value;
+      }
 
-        long needed_funds = total_out;        
-        TransactionFactoryConfig.Builder tx_config = TransactionFactoryConfig.newBuilder();
-        LinkedList<TransactionBridge> source_list = spendable_map.get(source_shard);
+      ArrayList<Integer> source_shards = new ArrayList<>();
+      source_shards.addAll(spendable_map.keySet());
+      Collections.shuffle(source_shards);
+      int source_shard = source_shards.get(0);
 
-        while(needed_funds > 0L)
-        {
-          if (source_list.size() ==0)
-          {  // Ran out on this shard input
-            spendable_map.remove(source_shard);
-            return false;
-          }
-          TransactionBridge br = source_list.pop();
+      long needed_funds = total_out;        
+      TransactionFactoryConfig.Builder tx_config = TransactionFactoryConfig.newBuilder();
+      LinkedList<TransactionBridge> source_list = spendable_map.get(source_shard);
 
-          tx_config.addInputs(br.toUTXOEntry());
-          needed_funds -= br.value;
+      while(needed_funds > 0L)
+      {
+        if (source_list.size() ==0)
+        {  // Ran out on this shard input
+          spendable_map.remove(source_shard);
+          return false;
         }
-        
+        TransactionBridge br = source_list.pop();
+
+        tx_config.addInputs(br.toUTXOEntry());
+        needed_funds -= br.value;
+      }
+      
 
 
-        tx_config.setSign(true);
+      tx_config.setSign(true);
 
-        tx_config.addAllOutputs(out_list);
-        tx_config.setInputSpecificList(true);
-        tx_config.setChangeRandomFromWallet(true);
-        tx_config.setFeeUseEstimate(true);
-        tx_config.setSplitChangeOver(2500000L);
-        tx_config.setChangeShardId( active_shards.get( rnd.nextInt(active_shards.size()) ) );
+      tx_config.addAllOutputs(out_list);
+      tx_config.setInputSpecificList(true);
+      tx_config.setChangeRandomFromWallet(true);
+      tx_config.setFeeUseEstimate(true);
+      tx_config.setSplitChangeOver(2500000L);
+      tx_config.setChangeShardId( active_shards.get( rnd.nextInt(active_shards.size()) ) );
 
-        TransactionFactoryResult res = TransactionFactory.createTransaction(tx_config.build(), client.getPurse().getDB(), client);
+      TransactionFactoryResult res = TransactionFactory.createTransaction(tx_config.build(), client.getPurse().getDB(), client);
 
-        for(Transaction tx : res.getTxsList())
+      for(Transaction tx : res.getTxsList())
+      {
+        TransactionInner inner = TransactionUtil.getInner(tx);
+
+        ChainHash tx_hash = new ChainHash(tx.getTxHash());
+
+        logger.info("Transaction: " + new ChainHash(tx.getTxHash()) + " - " + tx.toByteString().size());
+        TransactionUtil.prettyDisplayTx(tx, System.out, client.getParams());
+
+        boolean sent=false;
+        while(!sent)
         {
-          TransactionInner inner = TransactionUtil.getInner(tx);
-
-          ChainHash tx_hash = new ChainHash(tx.getTxHash());
-
-          logger.info("Transaction: " + new ChainHash(tx.getTxHash()) + " - " + tx.toByteString().size());
-          TransactionUtil.prettyDisplayTx(tx, System.out, client.getParams());
-
-          boolean sent=false;
-          while(!sent)
+          try(TimeRecordAuto tra_submit = TimeRecord.openAuto("LoadTestShard.submit"))
           {
-            try(TimeRecordAuto tra_submit = TimeRecord.openAuto("LoadTestShard.submit"))
+            SubmitReply reply = client.getStub().submitTransaction(tx);
+            
+            if (reply.getSuccess())
             {
-              SubmitReply reply = client.getStub().submitTransaction(tx);
-              
-              if (reply.getSuccess())
+              logger.info("Submit: " + reply);
+              sent=true;
+
+            }
+            else
+            {
+              logger.info("Error: " + reply.getErrorMessage());
+              if (reply.getErrorMessage().contains("full"))
               {
-                logger.info("Submit: " + reply);
-                sent=true;
+                Thread.sleep(60000);
               }
               else
               {
-                logger.info("Error: " + reply.getErrorMessage());
-                if (reply.getErrorMessage().contains("full"))
-                {
-                  Thread.sleep(60000);
-                }
-                else
-                {
-                  return true;
-                }
+                return false;
               }
             }
-
           }
-          //Thread.sleep(100);
+
         }
+        //Thread.sleep(100);
       }
-      return true;
+    }
+    return true;
   }
 
   private void runLoadTestInner()
@@ -184,7 +197,7 @@ public class LoadTestShard
       for(LinkedList<TransactionBridge> lst : spendable_map.values()) Collections.shuffle(lst);
 
 
-      int sent =0;
+      int sent = 0;
       while(spendable_map.size() > 0)
       {
         if (trySend(spendable_map, rnd)) sent++;
