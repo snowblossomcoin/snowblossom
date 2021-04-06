@@ -346,6 +346,8 @@ public class ShardBlockForge
       System.out.println("Finding golden set - depth " + depth);
       Map<Integer,Set<ChainHash> > head_shards = new TreeMap<Integer, Set<ChainHash> >();
 
+      System.out.println("Active shards: " + node.getActiveShards());
+
       int max_height = 0;
       for(int s : node.getActiveShards())
       {
