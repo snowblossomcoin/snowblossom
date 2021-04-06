@@ -1248,7 +1248,7 @@ public class ShardBlockForge
           else
           {
             depth++;
-            if (depth > 20)
+            if (depth > 50)
             {
               logger.warning("No gold set found at max depth");
               break;
