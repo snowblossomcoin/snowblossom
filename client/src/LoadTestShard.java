@@ -23,6 +23,9 @@ public class LoadTestShard
   private ArrayList<Integer> active_shards;
 
   private TimeRecord time_record;
+
+  private final boolean use_pending=true;
+
   public LoadTestShard(SnowBlossomClient client)
   {
     this.client = client;
@@ -51,7 +54,7 @@ public class LoadTestShard
     }
   }
 
-  private void trySend(TreeMap<Integer, LinkedList<TransactionBridge>> spendable_map, SplittableRandom rnd )
+  private boolean trySend(TreeMap<Integer, LinkedList<TransactionBridge>> spendable_map, SplittableRandom rnd )
     throws Exception
   {
       try(TimeRecordAuto tra_sendone = TimeRecord.openAuto("LoadTestShard.send_one"))
@@ -92,7 +95,7 @@ public class LoadTestShard
           if (source_list.size() ==0)
           {  // Ran out on this shard input
             spendable_map.remove(source_shard);
-            return;
+            return false;
           }
           TransactionBridge br = source_list.pop();
 
@@ -143,7 +146,7 @@ public class LoadTestShard
                 }
                 else
                 {
-                  return;
+                  return true;
                 }
               }
             }
@@ -152,6 +155,7 @@ public class LoadTestShard
           //Thread.sleep(100);
         }
       }
+      return true;
   }
 
   private void runLoadTestInner()
@@ -166,6 +170,7 @@ public class LoadTestShard
       for(TransactionBridge br : client.getAllSpendable())
       {
         if (!br.spent)
+        if ((use_pending) || (br.isConfirmed()))
         {
           if (!spendable_map.containsKey(br.shard_id))
           {
@@ -179,9 +184,15 @@ public class LoadTestShard
       for(LinkedList<TransactionBridge> lst : spendable_map.values()) Collections.shuffle(lst);
 
 
+      int sent =0;
       while(spendable_map.size() > 0)
       {
-        trySend(spendable_map, rnd);
+        if (trySend(spendable_map, rnd)) sent++;
+      }
+      if (sent==0)
+      {
+        System.out.println("Unable to send any, sleeping");
+        Thread.sleep(5000);
       }
 
     }

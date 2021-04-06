@@ -396,6 +396,13 @@ public class BlockIngestor implements ChainStateSource
     if (summ == null) return 0;
     return summ.getHeader().getBlockHeight();
   }
+
+  @Override
+  public int getShardId()
+  {
+    return shard_id;
+  }
+
   @Override
   public NetworkParams getParams()
   {

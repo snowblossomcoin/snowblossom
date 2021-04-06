@@ -118,6 +118,11 @@ public class TransactionBridge implements Comparable<TransactionBridge>
     return lst;
   }
 
+  public boolean isConfirmed()
+  {
+    return !unconfirmed;
+  }
+
   /**
    * create fake bridge for testing
    */

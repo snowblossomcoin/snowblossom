@@ -148,6 +148,8 @@ public class MemPool
       mlog.setModule("mem_pool");
       mlog.set("max_size", max_size);
 
+      mlog.set("shard_id", chain_state_source.getShardId());
+
       List<Transaction> block_list = new ArrayList<Transaction>();
       Set<ChainHash> included_txs = new HashSet<>();
 
@@ -184,7 +186,6 @@ public class MemPool
           {
             if ((!low_fee) || (low_fee_size < low_fee_max))
             {
-
               for (Transaction tx : cluster.tx_list)
               {
                 ChainHash tx_hash = new ChainHash(tx.getTxHash());

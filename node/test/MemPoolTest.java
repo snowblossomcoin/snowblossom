@@ -422,6 +422,9 @@ public class MemPoolTest
 
     @Override
     public int getHeight() {return height; }
+
+    @Override
+    public int getShardId() {return 0;}
     
     @Override
     public NetworkParams getParams() {return new NetworkParamsRegtest(); }
