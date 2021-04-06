@@ -111,7 +111,7 @@ public class LoadTestShard
         tx_config.setInputSpecificList(true);
         tx_config.setChangeRandomFromWallet(true);
         tx_config.setFeeUseEstimate(true);
-        tx_config.setSplitChangeOver(25000000L);
+        tx_config.setSplitChangeOver(2500000L);
         tx_config.setChangeShardId( active_shards.get( rnd.nextInt(active_shards.size()) ) );
 
         TransactionFactoryResult res = TransactionFactory.createTransaction(tx_config.build(), client.getPurse().getDB(), client);
