@@ -154,7 +154,12 @@ public class MemPool
 
       if (!last_utxo.equals(utxo_for_pri_map))
       {
+        mlog.set("priority_map_rebuild", 1);
         rebuildPriorityMap(last_utxo);
+      }
+      else
+      {
+        mlog.set("priority_map_rebuild", 0);
       }
 
       int size = 0;
@@ -286,6 +291,8 @@ public class MemPool
       {
         long t2 = System.nanoTime();
         TXCluster cluster = buildTXCluster(tx);
+        mlog.set("cluster_tx_count", cluster.tx_list.size()); 
+        mlog.set("cluster_tx_size", cluster.total_size);
         TimeRecord.record(t2, "mempool:build_cluster");
         if (cluster == null)
         {
