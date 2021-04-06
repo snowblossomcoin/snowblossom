@@ -35,6 +35,7 @@ public class LoadTest
     LinkedList<TransactionBridge> spendable = new LinkedList<>();
     for(TransactionBridge br : client.getAllSpendable())
     {
+      if (!br.unconfirmed)
       if (!br.spent) spendable.add(br);
     }
     Collections.shuffle(spendable);

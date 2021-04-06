@@ -65,7 +65,7 @@ public class MemPool
   private HashedTrie utxo_hashed_trie;
   private ChainStateSource chain_state_source;
 
-  public static int MEM_POOL_MAX = 20000;
+  public static int MEM_POOL_MAX = 80000;
 
   /** if the mempool has this many transactions already, reject any new low fee transactions */
   public static int MEM_POOL_MAX_LOW = 5000;
@@ -142,59 +142,68 @@ public class MemPool
 
   public synchronized List<Transaction> getTransactionsForBlock(ChainHash last_utxo, int max_size)
   {
-    List<Transaction> block_list = new ArrayList<Transaction>();
-    Set<ChainHash> included_txs = new HashSet<>();
-
-
-    if (!last_utxo.equals(utxo_for_pri_map))
+    try(MetricLog mlog = new MetricLog())
     {
-      rebuildPriorityMap(last_utxo);
-    }
+      mlog.setOperation("get_transactions_for_block");
+      mlog.setModule("mem_pool");
+      mlog.set("max_size", max_size);
 
-    int size = 0;
-    int low_fee_size = 0;
+      List<Transaction> block_list = new ArrayList<Transaction>();
+      Set<ChainHash> included_txs = new HashSet<>();
 
 
-    TreeMultimap<Double, TXCluster> priority_map_copy = TreeMultimap.<Double, TXCluster>create();
-    priority_map_copy.putAll(priority_map);
-
-    while (priority_map_copy.size() > 0)
-    {
-      Map.Entry<Double, Collection<TXCluster> > last_entry = priority_map_copy.asMap().pollLastEntry();
-
-      double ratio = last_entry.getKey();
-      boolean low_fee = false;
-      if (ratio < Globals.LOW_FEE) low_fee=true;
-
-      Collection<TXCluster> list = last_entry.getValue();
-      for (TXCluster cluster : list)
+      if (!last_utxo.equals(utxo_for_pri_map))
       {
-        if (size + cluster.total_size <= max_size)
-        {
-          if ((!low_fee) || (low_fee_size < low_fee_max))
-          {
+        rebuildPriorityMap(last_utxo);
+      }
 
-            for (Transaction tx : cluster.tx_list)
+      int size = 0;
+      int low_fee_size = 0;
+
+
+      TreeMultimap<Double, TXCluster> priority_map_copy = TreeMultimap.<Double, TXCluster>create();
+      priority_map_copy.putAll(priority_map);
+
+      while (priority_map_copy.size() > 0)
+      {
+        Map.Entry<Double, Collection<TXCluster> > last_entry = priority_map_copy.asMap().pollLastEntry();
+
+        double ratio = last_entry.getKey();
+        boolean low_fee = false;
+        if (ratio < Globals.LOW_FEE) low_fee=true;
+
+        Collection<TXCluster> list = last_entry.getValue();
+        for (TXCluster cluster : list)
+        {
+          if (size + cluster.total_size <= max_size)
+          {
+            if ((!low_fee) || (low_fee_size < low_fee_max))
             {
-              ChainHash tx_hash = new ChainHash(tx.getTxHash());
-              if (!included_txs.contains(tx_hash))
+
+              for (Transaction tx : cluster.tx_list)
               {
-                block_list.add(tx);
-                included_txs.add(tx_hash);
-                int sz = tx.toByteString().size();
-                size += sz;
-                if (low_fee)
+                ChainHash tx_hash = new ChainHash(tx.getTxHash());
+                if (!included_txs.contains(tx_hash))
                 {
-                  low_fee_size += sz;
+                  block_list.add(tx);
+                  included_txs.add(tx_hash);
+                  int sz = tx.toByteString().size();
+                  size += sz;
+                  if (low_fee)
+                  {
+                    low_fee_size += sz;
+                  }
                 }
               }
             }
-          }
 
+          }
         }
       }
+      mlog.set("size", size);
+      mlog.set("tx_count", block_list.size());
+      return block_list;
     }
-    return block_list;
 
   }
 
