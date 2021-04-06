@@ -169,6 +169,11 @@ public class BlockIngestor implements ChainStateSource
       }
 
       blockhash = new ChainHash(blk.getHeader().getSnowHash());
+      mlog.set("hash", blockhash.toString());
+      mlog.set("height", blk.getHeader().getBlockHeight());
+      mlog.set("shard", blk.getHeader().getShardId());
+      mlog.set("size", blk.toByteString().size());
+      mlog.set("tx_count", blk.getTransactionsCount());
 
       if (db.getBlockSummaryMap().containsKey(blockhash.getBytes() ))
       {
@@ -249,12 +254,14 @@ public class BlockIngestor implements ChainStateSource
         // a valid and correct block that goes all the way back to block 0.
         // It might not be in the main chain, but it can be counted on to be valid chain
         db.getBlockSummaryMap().put( blockhash.getBytes(), summary);
+        mlog.set("saved",1);
       }
 
       if (ShardUtil.shardSplit(summary, params))
       {
         for(int child : ShardUtil.getShardChildIds(summary.getHeader().getShardId()))
         {
+          mlog.set("shard_split", 1);
           try
           {
             node.openShard(child);
@@ -280,6 +287,7 @@ public class BlockIngestor implements ChainStateSource
 
       if (BlockchainUtil.isBetter( chainhead, summary ))
       {
+        mlog.set("head_update",1);
         chainhead = summary;
         db.getBlockSummaryMap().put(HEAD, summary);
         //System.out.println("UTXO at new root: " + HexUtil.getHexString(summary.getHeader().getUtxoRootHash()));
