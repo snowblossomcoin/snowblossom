@@ -732,8 +732,15 @@ public class ShardBlockForge
         }
       }
 
+      
+      // Copy in just for size estimate - we will do it again later
+      block_builder.setHeader(header_builder.build());
+
+      int max_tx_fill_size = node.getParams().getMaxBlockSize() - block_builder.build().toByteString().size() - 8192;
+
+
       List<Transaction> regular_transactions = node.getMemPool(header_builder.getShardId())
-        .getTransactionsForBlock(prev_utxo_root, node.getParams().getMaxBlockSize());
+        .getTransactionsForBlock(prev_utxo_root, max_tx_fill_size);
      
       long fee_sum = 0L;
 
