@@ -1147,6 +1147,8 @@ public class ShardBlockForge
 
   public class ConceptUpdateThread extends PeriodicThread
   {
+    private Random rnd = new Random();
+
     public ConceptUpdateThread()
     {
       super(15000);
@@ -1227,7 +1229,9 @@ public class ShardBlockForge
         saveGoldSet(last_gold_set);
       }
 
-      //if (last_gold_set == null)
+      if (rnd.nextDouble() < 0.20) last_gold_set = null;
+
+      if (last_gold_set == null)
       {
       
         int depth=0;
