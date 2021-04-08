@@ -366,7 +366,7 @@ public class ShardBlockForge
         {
           BlockHeader h = node.getBlockIngestor(s).getHead().getHeader();
 
-          if (h.getBlockHeight() + params.getMaxShardSkewHeight() >= max_height)
+          if (h.getBlockHeight() + params.getMaxShardSkewHeight()*2 >= max_height)
           { // anything super short is probably irrelvant noise - an old shard that is no longer extended
             
 
