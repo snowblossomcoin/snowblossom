@@ -528,7 +528,7 @@ public class ShardBlockForge
             Map<Integer, BlockSummary> sub_solution = getGoldenSetRecursive( rem_shards_tree, block_known_map, short_cut, sub_selections);
             if (sub_solution != null)
             {
-              //System.out.println("Checking shard " + shard_id + " hash " + hash + " found sol");
+              System.out.println("Checking shard " + shard_id + " hash " + hash + " found sol");
               sub_solution.put(shard_id, bs);
               BigInteger val_sum = BigInteger.ZERO;
               for(BlockSummary bs_sub : sub_solution.values())
