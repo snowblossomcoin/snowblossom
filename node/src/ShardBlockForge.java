@@ -365,15 +365,14 @@ public class ShardBlockForge
         if (node.getBlockIngestor(s).getHead()!=null)
         {
           BlockHeader h = node.getBlockIngestor(s).getHead().getHeader();
+          //System.out.println("Header " + s + " " + h);
 
           if (h.getBlockHeight() + params.getMaxShardSkewHeight()*2 >= max_height)
           { // anything super short is probably irrelvant noise - an old shard that is no longer extended
-            
-
             Set<ChainHash> hs = getBlocksAround( new ChainHash(h.getSnowHash()), depth, s);
             total_sources += hs.size();
             head_shards.put(s, hs);
-            System.out.println("Gold search group: shard " + s + " " + hs.size());
+            //System.out.println("Gold search group: shard " + s + " " + hs.size());
 
             height_map.put(s, h.getBlockHeight());
           }
@@ -528,7 +527,7 @@ public class ShardBlockForge
             Map<Integer, BlockSummary> sub_solution = getGoldenSetRecursive( rem_shards_tree, block_known_map, short_cut, sub_selections);
             if (sub_solution != null)
             {
-              System.out.println("Checking shard " + shard_id + " hash " + hash + " found sol");
+              //System.out.println("Checking shard " + shard_id + " hash " + hash + " found sol");
               sub_solution.put(shard_id, bs);
               BigInteger val_sum = BigInteger.ZERO;
               for(BlockSummary bs_sub : sub_solution.values())
@@ -1155,7 +1154,9 @@ public class ShardBlockForge
     {
       super(15000);
       setName("ShardBlockForge.ConceptUpdateThread");
-      last_gold_set = loadGoldSet();
+
+      // TODO - restore load
+      //last_gold_set = loadGoldSet();
 
       String new_gold = getGoldSummary(last_gold_set);
       logger.info(String.format("Gold set loaded from db: %s", new_gold));
@@ -1250,7 +1251,7 @@ public class ShardBlockForge
           else
           {
             depth++;
-            if (depth > 50)
+            if (depth > 10)
             {
               logger.warning("No gold set found at max depth");
               break;

@@ -200,6 +200,8 @@ public class PeerLink implements StreamObserver<PeerMessage>
         Block blk = msg.getBlock();
         try
         {
+          // will only open if we are actually interested in this shard
+          node.openShard(blk.getHeader().getShardId());
           if (node.getBlockIngestor(blk.getHeader().getShardId()).ingestBlock(blk))
           { // we could eat it, think about getting more blocks
             int next = blk.getHeader().getBlockHeight()+1;
@@ -237,6 +239,12 @@ public class PeerLink implements StreamObserver<PeerMessage>
         mlog.set("height", height);
         mlog.set("shard", shard);
         ChainHash hash = node.getDB().getBlockHashAtHeight(shard, height);
+        while ((hash == null) && (shard > 0))
+        {
+          shard = ShardUtil.getShardParentId(shard);
+          // Try the parent, maybe requestor is a little lost
+          hash = node.getDB().getBlockHashAtHeight( shard, height);
+        }
         if (hash != null)
         {
           mlog.set("hash", hash.toString());
