@@ -373,7 +373,7 @@ public class ShardBlockForge
             Set<ChainHash> hs = getBlocksAround( new ChainHash(h.getSnowHash()), depth, s);
             total_sources += hs.size();
             head_shards.put(s, hs);
-            System.out.println("Gold search group: shard " + s + " " + hs);
+            System.out.println("Gold search group: shard " + s + " " + hs.size());
 
             height_map.put(s, h.getBlockHeight());
           }
