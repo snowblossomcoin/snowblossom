@@ -1155,8 +1155,7 @@ public class ShardBlockForge
       super(15000);
       setName("ShardBlockForge.ConceptUpdateThread");
 
-      // TODO - restore load
-      //last_gold_set = loadGoldSet();
+      last_gold_set = loadGoldSet();
 
       String new_gold = getGoldSummary(last_gold_set);
       logger.info(String.format("Gold set loaded from db: %s", new_gold));
@@ -1232,7 +1231,7 @@ public class ShardBlockForge
         saveGoldSet(last_gold_set);
       }
 
-      if (rnd.nextDouble() < 0.20) last_gold_set = null;
+      if (rnd.nextDouble() < 0.05) last_gold_set = null;
 
       if (last_gold_set == null)
       {
@@ -1251,7 +1250,7 @@ public class ShardBlockForge
           else
           {
             depth++;
-            if (depth > 10)
+            if (depth > 6)
             {
               logger.warning("No gold set found at max depth");
               break;
