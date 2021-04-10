@@ -517,9 +517,15 @@ public class MemPool
 
     t1 = System.nanoTime();
     UtxoUpdateBuffer test_buffer = new UtxoUpdateBuffer(utxo_hashed_trie, utxo_for_pri_map);
+    int header_version = 1;
+    if (chain_state_source.getParams().getActivationHeightShards() >= chain_state_source.getHeight() + 1)
+    {
+      header_version = 2;
+    }
     BlockHeader dummy_header = BlockHeader.newBuilder()
       .setBlockHeight( chain_state_source.getHeight() + 1)
       .setTimestamp(System.currentTimeMillis())
+      .setVersion(header_version)
       .build();
     // TODO - assign shard correctly
 
