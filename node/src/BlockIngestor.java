@@ -87,10 +87,10 @@ public class BlockIngestor implements ChainStateSource
         chainhead.getHeader().getBlockHeight(), 
         new ChainHash(chainhead.getHeader().getSnowHash())));
       checkResummary();
+      
+      // Remove this after we run this once
+      updateHeights(chainhead, true);
     }
-
-    // Remove this after we run this once
-    if (chainhead != null) updateHeights(chainhead, true);
 
 
   }
@@ -398,7 +398,6 @@ public class BlockIngestor implements ChainStateSource
       if ((found == null) || (!found.equals(hash)))
       {
         db.setBlockHashAtHeight(shard_id, height, hash);
-        if (height == 0) return;
       }
       else
       {
@@ -407,6 +406,7 @@ public class BlockIngestor implements ChainStateSource
           return;
         }
       }
+      if (height == 0) return;
       summary = db.getBlockSummaryMap().get(summary.getHeader().getPrevBlockHash());
     }
   }
