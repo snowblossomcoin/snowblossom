@@ -171,7 +171,7 @@ public class PeerLink implements StreamObserver<PeerMessage>
         if (header.getSnowHash().size() > 0)
         {
           Validation.checkBlockHeaderBasics(node.getParams(), header, false);
-          considerBlockHeader(header);
+          considerBlockHeader(header, header.getShardId());
           node.getPeerage().setHighestHeader(header);
         }
         for(PeerInfo pi : tip.getPeersList())
@@ -238,18 +238,15 @@ public class PeerLink implements StreamObserver<PeerMessage>
         int shard = msg.getReqHeader().getShardId();
         mlog.set("height", height);
         mlog.set("shard", shard);
+
+        // Note: this could be returning headers in parent shards
+        // since we are recording them all in the height map
         ChainHash hash = node.getDB().getBlockHashAtHeight(shard, height);
-        while ((hash == null) && (shard > 0))
-        {
-          shard = ShardUtil.getShardParentId(shard);
-          // Try the parent, maybe requestor is a little lost
-          hash = node.getDB().getBlockHashAtHeight( shard, height);
-        }
         if (hash != null)
         {
           mlog.set("hash", hash.toString());
           BlockSummary summary = node.getDB().getBlockSummaryMap().get(hash.getBytes());
-          writeMessage( PeerMessage.newBuilder().setHeader(summary.getHeader()).build() );
+          writeMessage( PeerMessage.newBuilder().setHeader(summary.getHeader()).setReqHeaderShardId(shard).build() );
         }
       }
       else if (msg.hasHeader())
@@ -258,7 +255,7 @@ public class PeerLink implements StreamObserver<PeerMessage>
         // We got a header, probably one we asked for
         BlockHeader header = msg.getHeader();
         Validation.checkBlockHeaderBasics(node.getParams(), header, false);
-        considerBlockHeader(header);
+        considerBlockHeader(header, msg.getReqHeaderShardId());
       }
       else if (msg.hasReqCluster())
       {
@@ -297,13 +294,14 @@ public class PeerLink implements StreamObserver<PeerMessage>
    * The basic plan is, keep asking about previous blocks
    * until we get to one we have heard of.  Then we start requesting the blocks.
    */
-  private void considerBlockHeader(BlockHeader header)
+  private void considerBlockHeader(BlockHeader header, int context_shard_id)
   {
     int shard_id = header.getShardId();
     try
     {
       node.openShard(shard_id);
-    }catch(Exception e)
+    }
+    catch(Exception e)
     {
       throw new RuntimeException(e);
     }
@@ -311,7 +309,7 @@ public class PeerLink implements StreamObserver<PeerMessage>
 
     synchronized(peer_block_map)
     {
-      // TODO - is this important for sharding?
+      peer_block_map.put(new ShardBlock(context_shard_id, header.getBlockHeight()), new ChainHash(header.getSnowHash()));
       peer_block_map.put(new ShardBlock(header), new ChainHash(header.getSnowHash()));
     }
 
@@ -330,13 +328,30 @@ public class PeerLink implements StreamObserver<PeerMessage>
         }
       }
       else
-      { //get more headers, still in the woods
+      { 
+
+        // get more headers, still in the woods
+
+        // Special case for shard startup
+        if ((context_shard_id != 0) && (node.getBlockIngestor(context_shard_id).getHeight() == 0))
+        {
+          // So we are into a new shard that we don't have any blocks for
+          // and who knows what we have of the parent and if the main chain of the parent
+          // is actually the chain and leads here
+        }
+
         int next = header.getBlockHeight();
+
+        // if we are a long way off, just jump to what we have plus chunk download size
+        // but only if we are on shard zero, or we already have a block in this shard
+        if ((context_shard_id != 0) || (node.getBlockIngestor(shard_id).getHeight() > 0))
         if (node.getBlockIngestor(shard_id).getHeight() + Globals.BLOCK_CHUNK_HEADER_DOWNLOAD_SIZE < next)
         {
           next = node.getBlockIngestor(shard_id).getHeight() + Globals.BLOCK_CHUNK_HEADER_DOWNLOAD_SIZE;
         }
-        while(peer_block_map.containsKey(new ShardBlock(shard_id, next)))
+
+        // Creep backwards until we get to a header we don't know about
+        while(peer_block_map.containsKey(new ShardBlock(context_shard_id, next)))
         {
           next--;
         }
@@ -346,15 +361,15 @@ public class PeerLink implements StreamObserver<PeerMessage>
           ChainHash prev = new ChainHash(header.getPrevBlockHash());
           synchronized(peer_block_map)
           {
-            if (peer_block_map.containsKey(new ShardBlock(shard_id,next)))
+            if (peer_block_map.containsKey(new ShardBlock(context_shard_id,next)))
             {
-              if (peer_block_map.get(new ShardBlock(shard_id,next)).equals(prev)) return;
+              if (peer_block_map.get(new ShardBlock(context_shard_id,next)).equals(prev)) return;
             }
           }
 
           writeMessage( PeerMessage.newBuilder()
             .setReqHeader(
-              RequestBlockHeader.newBuilder().setBlockHeight(next).setShardId(shard_id).build())
+              RequestBlockHeader.newBuilder().setBlockHeight(next).setShardId(context_shard_id).build())
             .build());
         }
       }

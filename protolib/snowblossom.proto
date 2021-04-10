@@ -245,6 +245,8 @@ message PeerMessage {
 
     RequestTransaction req_cluster = 7;
   }
+
+  int32 req_header_shard_id = 50;
 }
 
 message PeerChainTip {
@@ -297,9 +299,9 @@ message RequestTransaction {
 message RequestBlockHeader {
   oneof z {
     int32 block_height = 1;
-    bytes block_hash = 2; //I suspect this doesn't work - only works by height
+    bytes block_hash = 2; // only works by height in PeerMessage
   }
-  int32 shard_id = 3; //only does anything with block_height
+  int32 shard_id = 3; // only does anything with block_height
 }
 
 message AddressUpdate {

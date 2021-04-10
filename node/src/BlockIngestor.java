@@ -89,6 +89,10 @@ public class BlockIngestor implements ChainStateSource
       checkResummary();
     }
 
+    // Remove this after we run this once
+    if (chainhead != null) updateHeights(chainhead, true);
+
+
   }
 
   private void checkResummary()
@@ -375,23 +379,35 @@ public class BlockIngestor implements ChainStateSource
 
   private void updateHeights(BlockSummary summary)
   {
+    updateHeights(summary, false);
+  }
+
+  /**
+   * This intentionally rewrites the heights of the blocks from the parent shards into this one
+   * this way we allow for the positiblity of the parent shard blocks not being in the head chain of that
+   * shard
+   */
+  private void updateHeights(BlockSummary summary, boolean force_recheck)
+  {
     while(true)
     {
       int height = summary.getHeader().getBlockHeight();
-      int shard = summary.getHeader().getShardId();
 
-      ChainHash found = db.getBlockHashAtHeight(shard, height);
+      ChainHash found = db.getBlockHashAtHeight(shard_id, height);
       ChainHash hash = new ChainHash(summary.getHeader().getSnowHash());
       if ((found == null) || (!found.equals(hash)))
       {
-        db.setBlockHashAtHeight(shard, height, hash);
+        db.setBlockHashAtHeight(shard_id, height, hash);
         if (height == 0) return;
-        summary = db.getBlockSummaryMap().get(summary.getHeader().getPrevBlockHash());
       }
       else
       {
-        return;
+        if (!force_recheck)
+        {
+          return;
+        }
       }
+      summary = db.getBlockSummaryMap().get(summary.getHeader().getPrevBlockHash());
     }
   }
 
