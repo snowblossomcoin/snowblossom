@@ -377,7 +377,7 @@ public class SnowUserService extends UserServiceGrpc.UserServiceImplBase impleme
     }
     for(int s : node.getCurrentBuildingShards())
     {
-      ns.putShardUtxoMap(s, node.getBlockIngestor(s).getHead().getHeader().getUtxoRootHash());
+      ns.putShardSummaryMap(s, node.getBlockIngestor(s).getHead());
     }
 
     responseObserver.onNext(ns.build());

@@ -61,9 +61,10 @@ public class GetUTXOUtil
         }
 
         TreeMap<Integer, ChainHash> utxo_map = new TreeMap<>();
-        for(Map.Entry<Integer, ByteString> me : ns.getShardUtxoMap().entrySet())
+        for(Map.Entry<Integer, BlockSummary> me : ns.getShardSummaryMap().entrySet())
         {
-          utxo_map.put(me.getKey(), new ChainHash(me.getValue()));
+
+          utxo_map.put(me.getKey(), new ChainHash(me.getValue().getHeader().getUtxoRootHash()));
         }
 
         utxo_shard_map = ImmutableMap.copyOf(utxo_map);
