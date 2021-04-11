@@ -1266,7 +1266,8 @@ public class ShardBlockForge
         possible_set.addAll(exploreBlocks(last_gold_set.values(), false, gold_known_map));
       }
 
-    
+      if (possible_set.size() == 0) last_gold_set=null;
+
       System.out.println("ZZZ Possible blocks: " + possible_set.size());
       int printed = 0;
       ArrayList<BlockConcept> good_concepts = new ArrayList<>();

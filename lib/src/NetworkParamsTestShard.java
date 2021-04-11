@@ -85,7 +85,7 @@ public class NetworkParamsTestShard extends NetworkParams
   public int getMinShardLength() { return 10; }
 
   @Override
-  public int getMaxShardId() {return 62; } //allows 32 shards
+  public int getMaxShardId() {return 6; } //allows 4 shards
   
   @Override
   public int getMaxShardSkewHeight() {return 6; } 
