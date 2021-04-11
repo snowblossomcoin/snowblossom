@@ -25,7 +25,7 @@ public class WebServer implements WebHandler
   private static final Logger logger = Logger.getLogger("snowblossom.shackleton");
   private Shackleton shackleton;
 
-  private LRUCache<ChainHash, String> block_summary_lines = new LRUCache<>(500);
+  private LRUCache<ChainHash, String> block_summary_lines = new LRUCache<>(1000);
 
   public WebServer(Config config, Shackleton shackleton)
     throws Exception
@@ -237,6 +237,8 @@ public class WebServer implements WebHandler
 
     BlockSummary summary = node_status.getHeadSummary();
     BlockHeader header = summary.getHeader();
+    out.println("<h2>Braid Status</h2>");
+
     out.println("<h2>Chain Status</h2>");
     out.println("<pre>");
 
@@ -297,7 +299,7 @@ public class WebServer implements WebHandler
     int min = Math.max(0, header.getBlockHeight()-75);
 
     out.println("<table class='table table-hover' id='blocktable'>");
-    out.println("<thead><tr><th>Height</th><th>Hash</th><th>Tx</th><th>Size</th><th>Miner</th><th>Remark</th><th>Timestamp</th></tr></thead>");
+    out.println("<thead><tr><th>Shard</th><th>Height</th><th>Hash</th><th>Tx</th><th>Size</th><th>Miner</th><th>Remark</th><th>Timestamp</th></tr></thead>");
 
     for(int h=header.getBlockHeight(); h>=min; h--)
     {
@@ -356,7 +358,8 @@ public class WebServer implements WebHandler
 
     Date resultdate = new Date(blk.getHeader().getTimestamp());
 
-    String s = String.format("<tr><td>%d</td><td>%s</td><td>%d</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>",
+    String s = String.format("<tr><td>%d</td><td>%d</td><td>%s</td><td>%d</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>",
+        blk.getHeader().getShardId(),
         blk.getHeader().getBlockHeight(),
         link,
         tx_count, ((int)(size / 1024)) + "kB", "<a href='/?search=" + miner + "'>" + miner + "</a>", remark, sdf.format(resultdate) + " UTC");

@@ -421,7 +421,6 @@ message NodeStatus {
   string node_version = 5;
   map<string, int32> version_map = 6;
   string network = 7;
-  map<int32, bytes> shard_utxo_map_deprecated = 8;
   map<int32, BlockSummary> shard_summary_map = 9;
 }
 
