@@ -84,6 +84,48 @@ public class GetUTXOUtil
     return stub_holder.getBlockingStub();
   }
 
+  private static LRUCache<ChainHash, Transaction> tx_cache = new LRUCache<>(100000);
+  private Transaction getTransaction(ChainHash tx_hash)
+  {
+    try(TimeRecordAuto tra = TimeRecord.openAuto("GetUTXOUtil.getTransaction"))
+    {
+      synchronized(tx_cache)
+      {
+        Transaction tx = tx_cache.get(tx_hash);
+        if (tx != null) return tx;
+      }
+    
+      Transaction tx;
+      try(TimeRecordAuto tra_actual = TimeRecord.openAuto("GetUTXOUtil.getTransaction_actual"))
+      {
+        tx = getStub().getTransaction(RequestTransaction.newBuilder().setTxHash(tx_hash.getBytes()).build());
+      }
+
+      if (tx != null)
+      {
+        synchronized(tx_cache)
+        {
+          tx_cache.put(tx_hash, tx);
+        }
+      }
+
+      return tx;
+    }
+  }
+
+  /**
+   * Add a transaction to cache we are likely to care about in the future.
+   * really only useful to avoid getTransaction calls in high call rate operations
+   * like load tests
+   */
+  public void cacheTransaction(Transaction tx)
+  {
+    synchronized(tx_cache)
+    {
+      tx_cache.put( new ChainHash( tx.getTxHash() ), tx);
+    }
+  }
+
   public Map<String, TransactionBridge> getSpendableWithMempool(AddressSpecHash addr)
     throws ValidationException
   {
@@ -97,18 +139,22 @@ public class GetUTXOUtil
     }
 
     
+    Map<Integer, TransactionHashList> tx_shard_map;
     try(TimeRecordAuto tra = TimeRecord.openAuto("GetUTXOUtil.getSpendableWithMempool_mempool"))
     {
-      Map<Integer, TransactionHashList> tx_shard_map = getStub().getMempoolTransactionMap( 
+      tx_shard_map = getStub().getMempoolTransactionMap( 
         RequestAddress.newBuilder().setAddressSpecHash(addr.getBytes()).build()).getShardMap();
+    }
 
+    try(TimeRecordAuto tra = TimeRecord.openAuto("GetUTXOUtil.getSpendableWithMempool_slice"))
+    {
       for(Map.Entry<Integer, TransactionHashList> me : tx_shard_map.entrySet())
       {
         int shard_id = me.getKey();
 
         for(ByteString tx_hash : me.getValue().getTxHashesList())
         { 
-          Transaction tx = getStub().getTransaction(RequestTransaction.newBuilder().setTxHash(tx_hash).build());
+          Transaction tx = getTransaction(new ChainHash(tx_hash));
 
           TransactionInner inner = TransactionUtil.getInner(tx);
 

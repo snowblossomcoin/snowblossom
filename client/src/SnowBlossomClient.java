@@ -806,6 +806,10 @@ public class SnowBlossomClient
   {
     return stub_holder.getBlockingStub().getNodeStatus( NullRequest.newBuilder().build() );
   }
+  public GetUTXOUtil getUTXOUtil()
+  {
+    return get_utxo_util;
+  }
 
   public List<TransactionBridge> getSpendable(AddressSpecHash addr)
     throws ValidationException

@@ -125,6 +125,14 @@ public class LoadTestShard
       tx_config.setFeeUseEstimate(true);
       tx_config.setSplitChangeOver(2500000L);
       tx_config.setChangeShardId( active_shards.get( rnd.nextInt(active_shards.size()) ) );
+      if (preferred_shard >= 0)
+      {
+        tx_config.setChangeShardId( preferred_shard );
+      }
+      else
+      {
+        tx_config.setChangeShardId( active_shards.get( rnd.nextInt(active_shards.size()) ) );
+      }
 
       TransactionFactoryResult res = TransactionFactory.createTransaction(tx_config.build(), client.getPurse().getDB(), client);
 
@@ -137,6 +145,8 @@ public class LoadTestShard
         logger.info("Transaction: " + new ChainHash(tx.getTxHash()) + " - " + tx.toByteString().size());
         TransactionUtil.prettyDisplayTx(tx, System.out, client.getParams());
 
+        client.getUTXOUtil().cacheTransaction(tx);
+
         boolean sent=false;
         while(!sent)
         {
@@ -146,6 +156,7 @@ public class LoadTestShard
             
             if (reply.getSuccess())
             {
+              
               logger.info("Submit: " + reply);
               sent=true;
 
