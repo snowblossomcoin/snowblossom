@@ -479,12 +479,10 @@ public class WebServer implements WebHandler
     out.println("<thead><tr><th>Shard</th><th>Height</th><th>Hash</th><th>Tx</th><th>Size</th><th>Miner</th><th>Remark</th><th>Timestamp</th></tr></thead>");
 
 
-    out.println("Current shards:");
     for(BlockSummary bs_shard_head : ns.getShardSummaryMap().values())
     {
 
       BlockSummary bs = bs_shard_head;
-      out.println("Shard " + bs.getHeader().getShardId() + " - Height " + bs.getHeader().getBlockHeight());
       while(
         (bs != null) && 
         (bs.getHeader().getTimestamp() >= start_time) &&
