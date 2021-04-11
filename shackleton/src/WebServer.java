@@ -475,6 +475,7 @@ public class WebServer implements WebHandler
     long start_time = System.currentTimeMillis() - look_back_time;
 
     HashSet<ChainHash> included_blocks = new HashSet<>();
+    out.println("<pre>");
 
     out.println("Current shards:");
     for(BlockSummary bs_shard_head : ns.getShardSummaryMap().values())
@@ -506,6 +507,7 @@ public class WebServer implements WebHandler
     DecimalFormat df = new DecimalFormat("0.0");
     out.println("Transaction per second: " + df.format(rate));
 
+    out.println("</pre>");
 
   }
 

@@ -33,7 +33,7 @@ public class BlockIngestor implements ChainStateSource
   
   private volatile BlockSummary chainhead;
 
-  public static final int SUMMARY_VERSION = 4;
+  public static final int SUMMARY_VERSION = 5;
 
   private LRUCache<ChainHash, Long> block_pull_map = new LRUCache<>(2000);
   private LRUCache<ChainHash, Long> tx_cluster_pull_map = new LRUCache<>(2000);
@@ -135,6 +135,16 @@ public class BlockIngestor implements ChainStateSource
         {
           prevsummary = db.getBlockSummaryMap().get( prevblock.getBytes() );
         }
+      
+        long tx_body_size = 0;
+        for(Transaction tx : blk.getTransactionsList())
+        {
+          tx_body_size += tx.getInnerData().size();
+          tx_body_size += tx.getTxHash().size();
+        }
+
+        summary = BlockchainUtil.getNewSummary(blk.getHeader(), prevsummary, node.getParams(), blk.getTransactionsCount(), tx_body_size, blk.getImportedBlocksList() );
+
 
         summary = saveOtherChainIndexBits(summary, prevsummary, blk);
 
