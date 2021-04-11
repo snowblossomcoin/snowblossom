@@ -123,7 +123,7 @@ public class BlockIngestor implements ChainStateSource
       {
         BlockSummary summary = db.getBlockSummaryMap().get( hash.getBytes() );
         Block blk = db.getBlockMap().get(hash.getBytes());
-        node.setStatus("Reindexing: " + summary.getHeader().getBlockHeight() +" - " + hash + " - " + blk.getTransactionsCount());
+        node.setStatus("Reindexing: " + summary.getHeader().getBlockHeight() + " - " + hash + " - " + blk.getTransactionsCount());
 
         ChainHash prevblock = new ChainHash(summary.getHeader().getPrevBlockHash());
         BlockSummary prevsummary = null;
@@ -151,6 +151,12 @@ public class BlockIngestor implements ChainStateSource
         db.getBlockSummaryMap().put( hash.getBytes(), summary);
 
       }
+      
+
+      // Resave head
+      chainhead = db.getBlockSummaryMap().get( chainhead.getHeader().getSnowHash());
+      db.getBlockSummaryMap().put(HEAD, chainhead);
+
 
     }
 
