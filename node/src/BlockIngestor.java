@@ -324,11 +324,21 @@ public class BlockIngestor implements ChainStateSource
     if (block_log != null)
     {
       block_log.println("-------------------------------------------------------------");
-      block_log.println("Block: " +  blk.getHeader().getBlockHeight() + " " + blockhash );
-      for(Transaction tx : blk.getTransactionsList())
+      block_log.println(String.format("Block{shard:%d height:%d - %s tx_count:%d size:%d }",
+        blk.getHeader().getShardId(),
+        blk.getHeader().getBlockHeight(),
+        blockhash.toString(),
+        blk.getTransactionsCount(),
+        blk.toByteString().size()
+      ));
+
+      if (node.getConfig().getBoolean("block_log_full"))
       {
-        TransactionUtil.prettyDisplayTx(tx, block_log, params);
-        block_log.println();
+        for(Transaction tx : blk.getTransactionsList())
+        {
+          TransactionUtil.prettyDisplayTx(tx, block_log, params);
+          block_log.println();
+        }
       }
       time_record.printReport(block_log);
       time_record.reset();

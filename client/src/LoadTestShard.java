@@ -66,8 +66,8 @@ public class LoadTestShard
   {
     try(TimeRecordAuto tra_sendone = TimeRecord.openAuto("LoadTestShard.send_one"))
     {
-      long min_send =  50000L;
-      long max_send = 500000L;
+      long min_send =  5000L;
+      long max_send = 50000L;
       long send_delta = max_send - min_send;
       int output_count = 1;
       long fee = 12500;
