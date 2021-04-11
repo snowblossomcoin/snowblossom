@@ -475,7 +475,9 @@ public class WebServer implements WebHandler
     long start_time = System.currentTimeMillis() - look_back_time;
 
     HashSet<ChainHash> included_blocks = new HashSet<>();
-    out.println("<pre>");
+    out.println("<table class='table table-hover' id='blocktable'>");
+    out.println("<thead><tr><th>Shard</th><th>Height</th><th>Hash</th><th>Tx</th><th>Size</th><th>Miner</th><th>Remark</th><th>Timestamp</th></tr></thead>");
+
 
     out.println("Current shards:");
     for(BlockSummary bs_shard_head : ns.getShardSummaryMap().values())
@@ -489,8 +491,11 @@ public class WebServer implements WebHandler
         (!included_blocks.contains(new ChainHash(bs.getHeader().getSnowHash())))
         )
       {
-        included_blocks.add(new ChainHash(bs.getHeader().getSnowHash()));
+        ChainHash hash = new ChainHash(bs.getHeader().getSnowHash());
+        included_blocks.add(hash);
         tx_count += bs.getBlockTxCount();
+        out.println(getBlockSummaryLine(hash));
+
 
         if (bs.getHeader().getBlockHeight() == 0) bs = null;
         else
@@ -501,7 +506,9 @@ public class WebServer implements WebHandler
       }
 
     }
+    out.println("</table>");
 
+    out.println("<pre>");
     out.println("Transactions in last hour: " + tx_count);
     double rate = (tx_count + 0.0) / (look_back_time / 1000.0);
     DecimalFormat df = new DecimalFormat("0.0");
