@@ -16,6 +16,7 @@ import java.util.HashSet;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.Map;
+import java.util.TreeSet;
 import java.util.TimeZone;
 import java.util.logging.Logger;
 import snowblossom.lib.*;
@@ -479,8 +480,11 @@ public class WebServer implements WebHandler
     out.println("<thead><tr><th>Shard</th><th>Height</th><th>Hash</th><th>Tx</th><th>Size</th><th>Miner</th><th>Remark</th><th>Timestamp</th></tr></thead>");
 
 
-    for(BlockSummary bs_shard_head : ns.getShardSummaryMap().values())
+    TreeSet<Integer> shards = new TreeSet<>();
+    shards.addAll(ns.getShardSummaryMap().keySet());
+    for(int shard : shards)
     {
+      BlockSummary bs_shard_head = ns.getShardSummaryMap().get(shard);
 
       BlockSummary bs = bs_shard_head;
       while(
