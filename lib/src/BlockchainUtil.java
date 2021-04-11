@@ -99,6 +99,7 @@ public class BlockchainUtil
       BigInteger target = BlockchainUtil.targetBytesToBigInteger(header.getTarget());
 
       bs.setTotalTransactions( prev_summary.getTotalTransactions() + tx_count );
+      bs.setBlockTxCount( tx_count );
 
       // true if this is the first block of a fresh split
       boolean fresh_block_split=false;

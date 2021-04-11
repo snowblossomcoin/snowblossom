@@ -12,6 +12,7 @@ import java.math.RoundingMode;
 import java.net.URLDecoder;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
+import java.util.HashSet;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.Map;
@@ -26,6 +27,8 @@ public class WebServer implements WebHandler
   private Shackleton shackleton;
 
   private LRUCache<ChainHash, String> block_summary_lines = new LRUCache<>(1000);
+
+  private LRUCache<ChainHash, BlockSummary> block_summary_cache = new LRUCache<>(256 * 20);
 
   public WebServer(Config config, Shackleton shackleton)
     throws Exception
@@ -238,6 +241,8 @@ public class WebServer implements WebHandler
     BlockSummary summary = node_status.getHeadSummary();
     BlockHeader header = summary.getHeader();
     out.println("<h2>Braid Status</h2>");
+
+    printBraidStatus(out, node_status);
 
     out.println("<h2>Chain Status</h2>");
     out.println("<pre>");
@@ -462,6 +467,69 @@ public class WebServer implements WebHandler
             out.println();
       }
   }
+
+  private void printBraidStatus(PrintStream out, NodeStatus ns)
+  {
+    long tx_count = 0;
+    long look_back_time = 3600L * 1000L;
+    long start_time = System.currentTimeMillis() - look_back_time;
+
+    HashSet<ChainHash> included_blocks = new HashSet<>();
+
+    out.println("Current shards:");
+    for(BlockSummary bs_shard_head : ns.getShardSummaryMap().values())
+    {
+      out.println("Shard " + bs.getHeader().getShardId() + " - Height " + bs.getHeader().getBlockHeight());
+
+      BlockSummary bs = bs_shard_head;
+      while(
+        (bs != null) && 
+        (bs.getHeader().getTimestamp() >= start_time) &&
+        (!included_blocks.contains(new ChainHash(bs.getHeader().getSnowHash())))
+        )
+      {
+        included_blocks.add(new ChainHash(bs.getHeader().getSnowHash()));
+        tx_count += bs.getBlockTxCount();
+
+        if (bs.getHeader().getBlockHeight() == 0) bs = null;
+        else
+        {
+          bs = getBlockSummary( new ChainHash(bs.getHeader().getPrevBlockHash()));
+        }
+
+      }
+
+    }
+
+    out.println("Transactions in last hour: " + tx_count);
+    double rate = (tx_count + 0.0) / (look_back_time / 1000.0);
+    DecimalFormat df = new DecimalFormat("0.0");
+    out.println("Transaction per second: " + df.format(rate));
+
+
+  }
+
+  public BlockSummary getBlockSummary(ChainHash hash)
+  {
+    synchronized(block_summary_cache)
+    {
+      if (block_summary_cache.containsKey(hash)) return block_summary_cache.get(hash);
+    }
+
+    BlockSummary bs = shackleton.getStub().getBlockSummary( 
+      RequestBlockSummary.newBuilder().setBlockHash(hash.getBytes()).build());
+
+    if (bs != null)
+    {
+      synchronized(block_summary_cache)
+      {
+        block_summary_cache.put(hash, bs);
+      }
+    }
+    return bs;
+
+  }
+
 
   private void displayTransaction(PrintStream out, Transaction tx)
     throws ValidationException

@@ -411,6 +411,19 @@ public class SnowUserService extends UserServiceGrpc.UserServiceImplBase impleme
   }
 
   @Override
+  public void getBlockSummary(RequestBlockSummary req, StreamObserver<BlockSummary> responseObserver)
+  {
+    ChainHash block_hash = new ChainHash(req.getBlockHash());
+
+    BlockSummary sum = node.getDB().getBlockSummaryMap().get(block_hash.getBytes());
+
+    responseObserver.onNext(sum);
+    responseObserver.onCompleted();
+
+
+  }
+
+  @Override
   public void getBlockHeader(RequestBlockHeader req, StreamObserver<BlockHeader> responseObserver)
   {
     ChainHash block_hash = null;

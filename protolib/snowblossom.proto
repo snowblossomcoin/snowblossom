@@ -221,6 +221,7 @@ service UserService {
 
   rpc GetNodeStatus ( NullRequest ) returns ( NodeStatus ) {}
   rpc GetBlock ( RequestBlock ) returns ( Block ) {}
+  rpc getBlockSummary ( RequestBlockSummary ) returns ( BlockSummary ) {}
   rpc GetTransaction ( RequestTransaction ) returns ( Transaction ) {}
   rpc GetTransactionStatus ( RequestTransaction ) returns ( TransactionStatus ) {}
   rpc GetBlockHeader ( RequestBlockHeader ) returns ( BlockHeader ) {}
@@ -293,6 +294,11 @@ message RequestBlock {
   }
   int32 shard_id = 4; // only does anything with block_height
 }
+
+message RequestBlockSummary {
+  bytes block_hash = 1;
+}
+
 message RequestTransaction {
   bytes tx_hash = 1;
 }
@@ -447,6 +453,8 @@ message BlockSummary {
   // Maps shard id to shard history
   // longer history, but just has heights and hashes, not full headers
   map<int32, BlockImportList> shard_history_map = 12;
+
+  int64 block_tx_count = 13;
 }
 
 message GoldSet {
