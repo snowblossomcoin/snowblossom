@@ -479,9 +479,9 @@ public class WebServer implements WebHandler
     out.println("Current shards:");
     for(BlockSummary bs_shard_head : ns.getShardSummaryMap().values())
     {
-      out.println("Shard " + bs.getHeader().getShardId() + " - Height " + bs.getHeader().getBlockHeight());
 
       BlockSummary bs = bs_shard_head;
+      out.println("Shard " + bs.getHeader().getShardId() + " - Height " + bs.getHeader().getBlockHeight());
       while(
         (bs != null) && 
         (bs.getHeader().getTimestamp() >= start_time) &&
