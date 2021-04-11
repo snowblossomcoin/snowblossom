@@ -471,7 +471,7 @@ public class WebServer implements WebHandler
   private void printBraidStatus(PrintStream out, NodeStatus ns)
   {
     long tx_count = 0;
-    long look_back_time = 3600L * 1000L;
+    long look_back_time = 4L * 3600L * 1000L;
     long start_time = System.currentTimeMillis() - look_back_time;
 
     HashSet<ChainHash> included_blocks = new HashSet<>();
@@ -507,7 +507,7 @@ public class WebServer implements WebHandler
     out.println("</table>");
 
     out.println("<pre>");
-    out.println("Transactions in last hour: " + tx_count);
+    out.println("Transactions in last 4 hours: " + tx_count);
     double rate = (tx_count + 0.0) / (look_back_time / 1000.0);
     DecimalFormat df = new DecimalFormat("0.0");
     out.println("Transaction per second: " + df.format(rate));
