@@ -1236,7 +1236,7 @@ public class ShardBlockForge
       if (last_gold_set == null)
       {
       
-        int depth=0;
+        int depth=5;
         while (last_gold_set == null)
         {
           Map<Integer, BlockSummary> gold = getGoldenSet(depth);
@@ -1250,7 +1250,7 @@ public class ShardBlockForge
           else
           {
             depth++;
-            if (depth > 6)
+            if (depth > 10)
             {
               logger.warning("No gold set found at max depth");
               break;

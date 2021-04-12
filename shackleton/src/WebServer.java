@@ -475,13 +475,15 @@ public class WebServer implements WebHandler
     long look_back_time = 4L * 3600L * 1000L;
     long start_time = System.currentTimeMillis() - look_back_time;
 
+    TreeSet<Integer> shards = new TreeSet<>();
+    shards.addAll(ns.getShardSummaryMap().keySet());
+    System.out.println("Shard list: " + shards);
+
     HashSet<ChainHash> included_blocks = new HashSet<>();
     out.println("<table class='table table-hover' id='blocktable'>");
     out.println("<thead><tr><th>Shard</th><th>Height</th><th>Hash</th><th>Tx</th><th>Size</th><th>Miner</th><th>Remark</th><th>Timestamp</th></tr></thead>");
 
 
-    TreeSet<Integer> shards = new TreeSet<>();
-    shards.addAll(ns.getShardSummaryMap().keySet());
     for(int shard : shards)
     {
       BlockSummary bs_shard_head = ns.getShardSummaryMap().get(shard);
