@@ -66,6 +66,7 @@ public class SnowBlossomNode
   private ShardBlockForge shard_blockforge;
   private ShardUtxoImport shard_utxo_import;
   private MetaMemPool meta_mem_pool;
+  private WalletDatabase trustnet_wallet_db;
 
   private ImmutableList<Integer> service_ports;
   private ImmutableList<Integer> tls_service_ports;
@@ -103,6 +104,8 @@ public class SnowBlossomNode
     loadDB();
     loadWidgets();
     openShards();
+
+    
 
     startServices();
 
@@ -162,6 +165,7 @@ public class SnowBlossomNode
   private void loadWidgets()
     throws Exception
   {
+    trustnet_wallet_db = loadWalletFromConfig("trustnet_key_path");
 
     peerage = new Peerage(this);
     shard_utxo_import = new ShardUtxoImport(this);
@@ -253,20 +257,8 @@ public class SnowBlossomNode
     if (config.isSet("tls_service_port"))
     {
       config.require("tls_key_path");
-      TreeMap<String, String> wallet_config_map = new TreeMap<>();
-      wallet_config_map.put("wallet_path", config.get("tls_key_path"));
-      wallet_config_map.put("key_count", "1");
-      wallet_config_map.put("key_mode", WalletUtil.MODE_STANDARD);
-      ConfigMem config_wallet = new ConfigMem(wallet_config_map);
-      File wallet_path = new File(config_wallet.get("wallet_path"));
+      WalletDatabase wallet_db = loadWalletFromConfig("tls_key_path");
 
-      WalletDatabase wallet_db = WalletUtil.loadWallet(wallet_path, true, params);
-      if (wallet_db == null)
-      {
-        logger.log(Level.WARNING, String.format("Directory %s does not contain tls keys, creating new keys", wallet_path.getPath()));
-        wallet_db = WalletUtil.makeNewDatabase(config_wallet, params);
-        WalletUtil.saveWallet(wallet_db, wallet_path);
-      }
       node_tls_address = AddressUtil.getHashForSpec(wallet_db.getAddresses(0));
       logger.info("My TLS address: " + AddressUtil.getAddressString(Globals.NODE_ADDRESS_STRING, node_tls_address));
 
@@ -291,6 +283,37 @@ public class SnowBlossomNode
     logger.info("Ports: " + service_ports + " " + tls_service_ports);
 
     user_service.start();
+  }
+
+
+  /**
+   * Loads or creates a single key wallet based on the config param name pointing
+   * to a path.
+   */
+  private WalletDatabase loadWalletFromConfig(String param_name)
+    throws Exception
+  {
+    if (!config.isSet(param_name)) return null;
+
+    config.require(param_name);
+
+    TreeMap<String, String> wallet_config_map = new TreeMap<>();
+    wallet_config_map.put("wallet_path", config.get(param_name));
+    wallet_config_map.put("key_count", "1");
+    wallet_config_map.put("key_mode", WalletUtil.MODE_STANDARD);
+    ConfigMem config_wallet = new ConfigMem(wallet_config_map);
+    File wallet_path = new File(config_wallet.get("wallet_path"));
+
+    WalletDatabase wallet_db = WalletUtil.loadWallet(wallet_path, true, params);
+    if (wallet_db == null)
+    {
+      logger.log(Level.WARNING, String.format("Directory %s does not contain keys, creating new keys", wallet_path.getPath()));
+      wallet_db = WalletUtil.makeNewDatabase(config_wallet, params);
+      WalletUtil.saveWallet(wallet_db, wallet_path);
+    }
+
+    return wallet_db;
+
   }
 
 
@@ -403,7 +426,7 @@ public class SnowBlossomNode
     ShardComponents sc = shard_comps.get(shard_id);
     if (sc == null) return null;
 
-    return sc.ingestor; 
+    return sc.ingestor;
   }
 
   public BlockForge getBlockForge(int shard_id)
@@ -423,6 +446,15 @@ public class SnowBlossomNode
   public ImmutableList<Integer> getServicePorts() {return service_ports;}
   public ImmutableList<Integer> getTlsServicePorts() {return tls_service_ports;}
   public AddressSpecHash getTlsAddress(){return node_tls_address;}
+  public WalletDatabase getTrustnetWalletDb(){ return trustnet_wallet_db; }
+  public AddressSpecHash getTrustnetAddress()
+  {
+    if (trustnet_wallet_db != null)
+    {
+      return AddressUtil.getHashForSpec(trustnet_wallet_db.getAddresses(0));
+    }
+    return null;
+  }
 
 
   public class ShardComponents

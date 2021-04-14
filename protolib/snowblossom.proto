@@ -245,6 +245,9 @@ message PeerMessage {
     BlockHeader header = 6;
 
     RequestTransaction req_cluster = 7;
+
+    RequestImportedBlock req_import_block = 8;
+    ImportedBlock import_block = 9;
   }
 
   int32 req_header_shard_id = 50;
@@ -255,6 +258,8 @@ message PeerChainTip {
   BlockHeader header = 2;
   repeated PeerInfo peers = 3;
   string version = 4;
+  SignedMessage signed_head = 5;
+
 }
 
 
@@ -275,6 +280,7 @@ message PeerInfo {
   }
   ConnectionType connection_type = 10;
   repeated int32 shard_id_set = 11; // The set of shards I am configured for
+  bytes trustnet_address = 12;
 }
 
 message TransactionStatus {
@@ -296,6 +302,9 @@ message RequestBlock {
 }
 
 message RequestBlockSummary {
+  bytes block_hash = 1;
+}
+message RequestImportedBlock {
   bytes block_hash = 1;
 }
 
@@ -527,8 +536,8 @@ message SignedMessage {
 message SignedMessagePayload {
   AddressSpec claim = 1;
   int64 timestamp = 2;
-  bytes snow_block_hash = 3;
   oneof z {
     bytes tls_public_key = 5;
+    bytes blockhash = 6;
   }
 }

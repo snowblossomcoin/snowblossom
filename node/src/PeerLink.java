@@ -264,6 +264,18 @@ public class PeerLink implements StreamObserver<PeerMessage>
         ChainHash tx_id = new ChainHash(msg.getReqCluster().getTxHash());
         sendCluster(tx_id);
       }
+      else if (msg.hasReqImportBlock())
+      {
+        mlog.set("type", "req_import_block");
+        ChainHash hash = new ChainHash(msg.getReqImportBlock().getBlockHash());
+
+        ImportedBlock b = node.getShardUtxoImport().getImportBlock(hash);
+        if (b != null)
+        {
+          writeMessage( PeerMessage.newBuilder().setImportBlock(b).build() );
+        }
+
+      }
     }
     catch(ValidationException e)
     {

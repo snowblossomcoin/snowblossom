@@ -387,11 +387,20 @@ public class MrPlow
 
     public void onNext(Block b)
     {
-      logger.info("Got block template: height:" + b.getHeader().getBlockHeight() + " transactions:" + b.getTransactionsCount());
+      if (b.getHeader().getTarget().size() == 0)
+      {
+        last_block_template = null;
+        logger.info("Got null template");
 
-      last_block_template = b;
-      last_block_template_time = System.currentTimeMillis();
-      agent.updateBlockTemplate(b);
+      }
+      else
+      {
+        logger.info("Got block template: height:" + b.getHeader().getBlockHeight() + " transactions:" + b.getTransactionsCount());
+
+        last_block_template = b;
+        last_block_template_time = System.currentTimeMillis();
+        agent.updateBlockTemplate(b);
+      }
     }
   }
 }

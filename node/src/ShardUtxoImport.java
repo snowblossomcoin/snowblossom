@@ -66,7 +66,7 @@ public class ShardUtxoImport
    * Gets the ImportedBlock as if *all* the exported shards were to be imported.
    * That way this can be filtered for what is needed but cached as a whole thing.
    */
-  private ImportedBlock getImportBlock(ChainHash hash)
+  public ImportedBlock getImportBlock(ChainHash hash)
   {
     synchronized(cache)
     {

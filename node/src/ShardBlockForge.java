@@ -1202,6 +1202,11 @@ public class ShardBlockForge
 
     public void runPass()
     {
+      
+      if (forge_log != null)
+      {
+        time_record.reset();
+      }
       // If no template requests for 5 minutes, don't bother
       if (last_template_request + 300000L < System.currentTimeMillis())
       {

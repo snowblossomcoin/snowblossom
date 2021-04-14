@@ -12,6 +12,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import snowblossom.lib.*;
 import snowblossom.proto.*;
+import snowblossom.lib.tls.MsgSigUtil;
 
 /**
  * Joe: Should I class that handles communicating with a bunch of peers be called the Peerage?
@@ -31,9 +32,7 @@ public class Peerage
   private SnowBlossomNode node;
 
   private Map<String, PeerLink> links;
-
   private Map<String, PeerInfo> peer_rumor_list;
-
   private ImmutableSet<String> self_peer_names;
   private ImmutableList<PeerInfo> self_peer_info;
 
@@ -119,7 +118,26 @@ public class Peerage
     if (summary != null)
     {
       tip.setHeader(summary.getHeader());
+      if (node.getTrustnetAddress() != null)
+      {
+        try
+        {
+          SignedMessagePayload payload = SignedMessagePayload.newBuilder()
+            .setBlockhash( summary.getHeader().getSnowHash() )
+            .build();
+
+          WalletKeyPair wkp = node.getTrustnetWalletDb().getKeys(0);
+          AddressSpec claim = node.getTrustnetWalletDb().getAddresses(0);
+          tip.setSignedHead( MsgSigUtil.signMessage(claim, wkp, payload));
+        }
+        catch(ValidationException e)
+        {
+          logger.log(Level.WARNING, "getTip", e);
+        }
+
+      }
     }
+
 
     LinkedList<PeerInfo> shuffled_peer_list = new LinkedList<>();
 
@@ -594,7 +612,7 @@ public class Peerage
 
         for(String host : advertise_hosts)
         {
-          PeerInfo pi = PeerInfo.newBuilder()
+          PeerInfo.Builder pi = PeerInfo.newBuilder()
             .setHost(host)
             .setPort(port)
             .setLearned(System.currentTimeMillis())
@@ -602,12 +620,14 @@ public class Peerage
             .setNodeId(node_id)
             .setConnectionType(PeerInfo.ConnectionType.GRPC_TLS)
             .setNodeSnowAddress(node.getTlsAddress().getBytes())
-            .addAllShardIdSet( node.getActiveShards() )
-            .build();
+            .addAllShardIdSet( node.getActiveShards() );
 
-          self_peers.add(pi);
-
-          self_names.add(PeerUtil.getString(pi));
+          if (node.getTrustnetAddress() != null)
+          {
+            pi.setTrustnetAddress(node.getTrustnetAddress().getBytes());
+          }
+          self_peers.add(pi.build());
+          self_names.add(PeerUtil.getString(pi.build()));
         }
       }
     }
