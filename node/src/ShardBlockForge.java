@@ -1236,7 +1236,8 @@ public class ShardBlockForge
         saveGoldSet(last_gold_set);
       }
 
-      if (rnd.nextDouble() < 0.50) last_gold_set = null;
+
+      if (rnd.nextDouble() < 0.01) last_gold_set = null;
 
       if (last_gold_set == null)
       {

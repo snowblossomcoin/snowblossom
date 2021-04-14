@@ -160,6 +160,8 @@ public class MemPool
 
         try(MetricLog sub_log = new MetricLog(mlog,"rebuild"))
         {
+          sub_log.setOperation("priority_map_rebuild");
+          sub_log.setModule("mem_pool");
           rebuildPriorityMap(last_utxo);
         }
       }
