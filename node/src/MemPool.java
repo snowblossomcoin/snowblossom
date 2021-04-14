@@ -142,7 +142,7 @@ public class MemPool
 
   public synchronized List<Transaction> getTransactionsForBlock(ChainHash last_utxo, int max_size)
   {
-    try(MetricLog mlog = new MetricLog())
+    try(MetricLog mlog = new MetricLog(); )
     {
       mlog.setOperation("get_transactions_for_block");
       mlog.setModule("mem_pool");
@@ -157,7 +157,11 @@ public class MemPool
       if (!last_utxo.equals(utxo_for_pri_map))
       {
         mlog.set("priority_map_rebuild", 1);
-        rebuildPriorityMap(last_utxo);
+
+        try(MetricLog sub_log = new MetricLog(mlog,"rebuild"))
+        {
+          rebuildPriorityMap(last_utxo);
+        }
       }
       else
       {
