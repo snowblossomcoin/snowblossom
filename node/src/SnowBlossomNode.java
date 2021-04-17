@@ -166,6 +166,11 @@ public class SnowBlossomNode
     throws Exception
   {
     trustnet_wallet_db = loadWalletFromConfig("trustnet_key_path");
+    if (trustnet_wallet_db != null)
+    {
+      AddressSpecHash trust_addr = getTrustnetAddress(); 
+      logger.info("Trustnet signing key: " + AddressUtil.getAddressString("node", trust_addr) );
+    }
 
     peerage = new Peerage(this);
     shard_utxo_import = new ShardUtxoImport(this);

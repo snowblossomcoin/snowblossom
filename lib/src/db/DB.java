@@ -17,6 +17,7 @@ import snowblossom.proto.Block;
 import snowblossom.proto.BlockSummary;
 import snowblossom.proto.GoldSet;
 import snowblossom.proto.Transaction;
+import snowblossom.proto.ImportedBlock;
 import java.math.BigInteger;
 
 public class DB implements DBFace
@@ -33,6 +34,7 @@ public class DB implements DBFace
   protected DBMap best_block_map;
   protected ProtoDBMap<Transaction> tx_map;
   protected ProtoDBMap<GoldSet> gold_set_map;
+  protected ProtoDBMap<ImportedBlock> imported_block_map;
   protected DBMapMutationSet special_map_set;
   protected DBMapMutationSet child_block_map_set;
 
@@ -66,6 +68,7 @@ public class DB implements DBFace
     tx_map = new ProtoDBMap(Transaction.newBuilder().build().getParserForType(), prov.openMap("tx"));
     block_summary_map = new ProtoDBMap(BlockSummary.newBuilder().build().getParserForType(), prov.openMap("blocksummary"));
     gold_set_map = new ProtoDBMap(GoldSet.newBuilder().build().getParserForType(), prov.openMap("gold"));
+    imported_block_map = new ProtoDBMap(ImportedBlock.newBuilder().build().getParserForType(), prov.openMap("ib"));
 
     utxo_node_map = prov.openMap("u");
     block_height_map = prov.openMap("height");
@@ -107,6 +110,9 @@ public class DB implements DBFace
 
   @Override
   public ProtoDBMap<GoldSet> getGoldSetMap(){return gold_set_map; }
+
+  @Override
+  public ProtoDBMap<ImportedBlock> getImportedBlockMap(){return imported_block_map; }
 
   @Override
   public DBMap getSpecialMap() { return special_map; }

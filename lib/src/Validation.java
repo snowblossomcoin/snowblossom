@@ -475,7 +475,7 @@ public class Validation
     // Check block basics of imported blocks
     for(ImportedBlock ib : blk.getImportedBlocksList())
     {
-      checkBlockHeaderBasics(params,ib.getHeader(), false);
+      checkBlockHeaderBasics(params, ib.getHeader(), false);
     }
     
     // Check block import order
@@ -1098,6 +1098,44 @@ public class Validation
       }
     }
 
+  }
+
+
+  /**
+   * Validates an ImportedBlock on its own.  Validates that:
+   * - the utxo of the imported outputs matches the ones in the shard_export_root_hash
+   *    of the header. 
+   * - all the export shards are in the import_outputs list
+   * - the basics of the header itself make sense
+   *
+   * However: this does *not* check the transactions in the block (we don't have them)
+   *  so without some outside cooboration, something completely made up could pass this check.
+   */
+  public static void validateImportedBlock(NetworkParams params, ImportedBlock import_blk)
+    throws ValidationException
+  {
+    checkBlockHeaderBasics(params, import_blk.getHeader(), false);
+    TreeSet<Integer> header_set = new TreeSet<>();
+    TreeSet<Integer> import_set = new TreeSet<>();
+
+    header_set.addAll( import_blk.getHeader().getShardExportRootHashMap().keySet() );
+    import_set.addAll( import_blk.getImportOutputsMap().keySet() );
+
+    if (!header_set.equals(import_set))
+    {
+      throw new ValidationException("Set mismatch between header shard export list and import outputs map");
+    }
+
+    for(int s : import_blk.getImportOutputsMap().keySet())
+    {
+      ChainHash found_utxo = getUtxoHashOfImportedOutputList( import_blk.getImportOutputsMap().get(s), s);
+      ChainHash header_utxo = new ChainHash(import_blk.getHeader().getShardExportRootHashMap().get(s));
+
+      if (!header_utxo.equals(found_utxo))
+      {
+        throw new ValidationException("Import list utxo mismatch");
+      }
+    }
   }
 
   /**

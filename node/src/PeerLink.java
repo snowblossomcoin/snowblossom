@@ -279,7 +279,12 @@ public class PeerLink implements StreamObserver<PeerMessage>
         {
           writeMessage( PeerMessage.newBuilder().setImportBlock(b).build() );
         }
-
+      }
+      else if (msg.hasImportBlock())
+      {
+        mlog.set("type", "import_block");
+        Validation.validateImportedBlock( node.getParams(), msg.getImportBlock() );
+        // TODO
       }
     }
     catch(ValidationException e)
