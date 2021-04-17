@@ -34,4 +34,7 @@ public interface DBFace
   public HashedTrie getChainIndexTrie();
   public HashedTrie getUtxoHashedTrie();
 
+  public boolean getBlockTrust(ChainHash hash);
+  public void setBlockTrust(ChainHash hash);
+
 }

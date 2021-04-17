@@ -35,6 +35,7 @@ public class DB implements DBFace
   protected ProtoDBMap<Transaction> tx_map;
   protected ProtoDBMap<GoldSet> gold_set_map;
   protected ProtoDBMap<ImportedBlock> imported_block_map;
+  protected DBMap trust_map;
   protected DBMapMutationSet special_map_set;
   protected DBMapMutationSet child_block_map_set;
 
@@ -75,6 +76,7 @@ public class DB implements DBFace
     special_map = prov.openMap("special");
     chain_index_map = prov.openMap("cit");
     best_block_map = prov.openMap("bbm");
+    trust_map = prov.openMap("trust");
 
     chain_index_trie = new HashedTrie(new TrieDBMap(chain_index_map), true, true);
     utxo_hashed_trie = new HashedTrie(new TrieDBMap(utxo_node_map), true, false);
@@ -212,6 +214,20 @@ public class DB implements DBFace
     }
 
   }
+
+  @Override
+  public boolean getBlockTrust(ChainHash hash)
+  {
+    return trust_map.containsKey(hash.toString());
+  }
+
+  @Override
+  public void setBlockTrust(ChainHash hash)
+  {
+    trust_map.put(hash.toString(), ByteString.EMPTY);
+
+  }
+                                                    
 
   protected void dbShutdownHandler()
   {

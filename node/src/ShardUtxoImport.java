@@ -76,64 +76,72 @@ public class ShardUtxoImport
 
     try(TimeRecordAuto tra = TimeRecord.openAuto("ShardUtxoImport.getImportBlock"))
     {
-      ImportedBlock.Builder ibb = ImportedBlock.newBuilder();
 
-      Block blk = node.getDB().getBlockMap().get(hash.getBytes());
+      ImportedBlock ib = null;
 
-      ibb.setHeader(blk.getHeader());
+      ib = node.getDB().getImportedBlockMap().get(hash.getBytes());
 
-      Set<Integer> cover_set = ShardUtil.getCoverSet(blk.getHeader().getShardId(), node.getParams());
-
-      Map<Integer, ImportedOutputList.Builder> output_list_map = new TreeMap<>();
-
-
-      for(Transaction tx : blk.getTransactionsList())
+      if (ib == null)
       {
-        TransactionInner tx_inner = TransactionUtil.getInner(tx);
+        ImportedBlock.Builder ibb = ImportedBlock.newBuilder();
 
-        ArrayList<ByteString> tx_out_wire_lst;
-        try
-        {
-          tx_out_wire_lst = TransactionUtil.extractWireFormatTxOut(tx);
-        }
-        catch(ValidationException e)
-        {
-          throw new RuntimeException(e);
-        } 
+        Block blk = node.getDB().getBlockMap().get(hash.getBytes());
 
-        int out_idx = 0;
-        for(TransactionOutput tx_out : tx_inner.getOutputsList())
+        ibb.setHeader(blk.getHeader());
+
+        Set<Integer> cover_set = ShardUtil.getCoverSet(blk.getHeader().getShardId(), node.getParams());
+
+        Map<Integer, ImportedOutputList.Builder> output_list_map = new TreeMap<>();
+
+
+        for(Transaction tx : blk.getTransactionsList())
         {
-          if (!cover_set.contains(tx_out.getTargetShard()))
+          TransactionInner tx_inner = TransactionUtil.getInner(tx);
+
+          ArrayList<ByteString> tx_out_wire_lst;
+          try
           {
-            int ts = tx_out.getTargetShard();
-            if (!output_list_map.containsKey(ts))
-            {
-              output_list_map.put(ts, ImportedOutputList.newBuilder());
-            }
-
-            ImportedOutput io = ImportedOutput.newBuilder()
-              .setRawOutput(tx_out_wire_lst.get(out_idx))
-              .setTxId(tx.getTxHash())
-              .setOutIdx(out_idx)
-              .build();
-
-            output_list_map.get(ts).addTxOuts(io);
+            tx_out_wire_lst = TransactionUtil.extractWireFormatTxOut(tx);
           }
-          
+          catch(ValidationException e)
+          {
+            throw new RuntimeException(e);
+          } 
 
-          out_idx++;
+          int out_idx = 0;
+          for(TransactionOutput tx_out : tx_inner.getOutputsList())
+          {
+            if (!cover_set.contains(tx_out.getTargetShard()))
+            {
+              int ts = tx_out.getTargetShard();
+              if (!output_list_map.containsKey(ts))
+              {
+                output_list_map.put(ts, ImportedOutputList.newBuilder());
+              }
+
+              ImportedOutput io = ImportedOutput.newBuilder()
+                .setRawOutput(tx_out_wire_lst.get(out_idx))
+                .setTxId(tx.getTxHash())
+                .setOutIdx(out_idx)
+                .build();
+
+              output_list_map.get(ts).addTxOuts(io);
+            }
+            
+
+            out_idx++;
+          }
+
         }
 
+        for(Map.Entry<Integer, ImportedOutputList.Builder> me : output_list_map.entrySet())
+        {
+          ibb.putImportOutputs( me.getKey(), me.getValue().build() );
+        }
+
+
+        ib = ibb.build();
       }
-
-      for(Map.Entry<Integer, ImportedOutputList.Builder> me : output_list_map.entrySet())
-      {
-        ibb.putImportOutputs( me.getKey(), me.getValue().build() );
-      }
-
-
-      ImportedBlock ib = ibb.build();
 
       synchronized(cache)
       {
