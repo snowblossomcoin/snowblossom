@@ -187,6 +187,7 @@ public class PeerLink implements StreamObserver<PeerMessage>
         mlog.set("type","req_block");
         // Other side is asking for a block
         ChainHash hash = new ChainHash(msg.getReqBlock().getBlockHash());
+        logger.fine("Got block request: " + hash);
         Block blk = node.getDB().getBlockMap().get(hash.getBytes());
         if (blk != null)
         {
@@ -200,6 +201,10 @@ public class PeerLink implements StreamObserver<PeerMessage>
         Block blk = msg.getBlock();
         try
         {
+          logger.fine(String.format("Got block shard:%d height:%d %s ",
+            blk.getHeader().getShardId(),
+            blk.getHeader().getBlockHeight(),
+            new ChainHash(blk.getHeader().getSnowHash()).toString() ));
           // will only open if we are actually interested in this shard
           node.openShard(blk.getHeader().getShardId());
           if (node.getBlockIngestor(blk.getHeader().getShardId()).ingestBlock(blk))
@@ -308,6 +313,10 @@ public class PeerLink implements StreamObserver<PeerMessage>
    */
   private void considerBlockHeader(BlockHeader header, int context_shard_id)
   {
+    logger.fine(String.format("Considering header context:%d shard:%d height:%d hash:%s", 
+      context_shard_id, header.getShardId(), header.getBlockHeight(),
+      new ChainHash(header.getSnowHash()).toString()));
+      
     int shard_id = header.getShardId();
     try
     {
