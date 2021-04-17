@@ -317,9 +317,6 @@ public class PeerLink implements StreamObserver<PeerMessage>
    */
   private void considerBlockHeader(BlockHeader header, int context_shard_id)
   {
-    logger.fine(String.format("Considering header context:%d shard:%d height:%d hash:%s", 
-      context_shard_id, header.getShardId(), header.getBlockHeight(),
-      new ChainHash(header.getSnowHash()).toString()));
       
     int shard_id = header.getShardId();
     try
@@ -341,6 +338,10 @@ public class PeerLink implements StreamObserver<PeerMessage>
     // if we don't have this block
     if (node.getDB().getBlockSummaryMap().get(header.getSnowHash())==null)
     {
+      logger.fine(String.format("Considering header context:%d shard:%d height:%d hash:%s", 
+        context_shard_id, header.getShardId(), header.getBlockHeight(),
+        new ChainHash(header.getSnowHash()).toString()));
+
       int height = header.getBlockHeight();
       if ((height == 0) || (node.getDB().getBlockSummaryMap().get(header.getPrevBlockHash())!=null))
       { // but we have the prev block - get this block 
