@@ -35,7 +35,6 @@ public class ShardUtxoImport
   public ShardUtxoImport(SnowBlossomNode node)
   {
     this.node = node;
-
   }
 
   public ImportedBlock getImportBlockForTarget(ChainHash hash, int target_shard)
@@ -54,9 +53,7 @@ public class ShardUtxoImport
         {
           ibb.putImportOutputs(s, src.getImportOutputsMap().get(s));
         }
-
       }
-
       return ibb.build();
     }
 
@@ -93,7 +90,6 @@ public class ShardUtxoImport
 
         Map<Integer, ImportedOutputList.Builder> output_list_map = new TreeMap<>();
 
-
         for(Transaction tx : blk.getTransactionsList())
         {
           TransactionInner tx_inner = TransactionUtil.getInner(tx);
@@ -127,7 +123,6 @@ public class ShardUtxoImport
 
               output_list_map.get(ts).addTxOuts(io);
             }
-            
 
             out_idx++;
           }
@@ -138,7 +133,6 @@ public class ShardUtxoImport
         {
           ibb.putImportOutputs( me.getKey(), me.getValue().build() );
         }
-
 
         ib = ibb.build();
       }
@@ -152,6 +146,5 @@ public class ShardUtxoImport
     }
 
   }
-
 
 }
