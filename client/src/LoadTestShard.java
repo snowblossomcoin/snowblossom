@@ -13,6 +13,8 @@ import snowblossom.util.proto.*;
 import duckutil.TimeRecord;
 import duckutil.TimeRecordAuto;
 
+import duckutil.RateLimit;
+
 
 public class LoadTestShard
 {
@@ -27,6 +29,7 @@ public class LoadTestShard
   private final boolean use_pending=true;
 
   private int preferred_shard = -1;
+  private RateLimit rate_limit = new RateLimit(1.0, 0.0);
 
   public LoadTestShard(SnowBlossomClient client)
   {
@@ -64,6 +67,11 @@ public class LoadTestShard
   private boolean trySend(TreeMap<Integer, LinkedList<TransactionBridge>> spendable_map, SplittableRandom rnd )
     throws Exception
   {
+    try(TimeRecordAuto tra_rate = TimeRecord.openAuto("LoadTestShard.rate_limit"))
+    {
+      rate_limit.waitForRate(1.0);
+    }
+
     try(TimeRecordAuto tra_sendone = TimeRecord.openAuto("LoadTestShard.send_one"))
     {
       long min_send =  5000L;
