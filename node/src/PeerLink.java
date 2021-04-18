@@ -155,6 +155,20 @@ public class PeerLink implements StreamObserver<PeerMessage>
         }
         node.getPeerage().reportTip();
 
+    
+        List<ChainHash> req_import_blocks = node.getShardUtxoImport().checkTipTrust(msg.getTip());
+        if (req_import_blocks != null)
+        {
+          for(ChainHash h : req_import_blocks)
+          {
+            logger.log(Level.FINE, "Requesting Import Block: " + h);
+            writeMessage( PeerMessage.newBuilder().setReqImportBlock(
+              RequestImportedBlock.newBuilder().setBlockHash(h.getBytes()).build())
+              .build());
+          }
+
+        }
+
         // When we first get a tip from a node we connected to
         // update the peer info showing the success in getting a tip
         if ((!got_first_tip) && (peer_info != null))
@@ -282,8 +296,7 @@ public class PeerLink implements StreamObserver<PeerMessage>
       else if (msg.hasImportBlock())
       {
         mlog.set("type", "import_block");
-        Validation.validateImportedBlock( node.getParams(), msg.getImportBlock() );
-        // TODO
+        node.getShardUtxoImport().addImportedBlock(msg.getImportBlock());
       }
     }
     catch(ValidationException e)
