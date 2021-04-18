@@ -243,6 +243,7 @@ public class WebServer implements WebHandler
     BlockHeader header = summary.getHeader();
     out.println("<h2>Braid Status</h2>");
 
+    printBraidHeads(out, node_status);
     printBraidStatus(out, node_status);
 
     out.println("<h2>Chain Status</h2>");
@@ -468,6 +469,43 @@ public class WebServer implements WebHandler
             out.println();
       }
   }
+
+  private void printBraidHeads(PrintStream out, NodeStatus ns)
+  {
+
+    TreeSet<Integer> shards = new TreeSet<>();
+    shards.addAll(ns.getShardSummaryMap().keySet());
+    System.out.println("Shard heads: " + shards);
+
+    HashSet<ChainHash> included_blocks = new HashSet<>();
+    out.println("<table class='table table-hover' id='blocktable'>");
+    out.println("<thead><tr><th>Shard</th><th>Height</th><th>Hash</th><th>Tx</th><th>Size</th><th>Miner</th><th>Remark</th><th>Timestamp</th></tr></thead>");
+
+
+    for(int shard : shards)
+    {
+      BlockSummary bs_shard_head = ns.getShardSummaryMap().get(shard);
+
+      BlockSummary bs = bs_shard_head;
+      if (bs != null)
+      {
+        ChainHash hash = new ChainHash(bs.getHeader().getSnowHash());
+        included_blocks.add(hash);
+        out.println(getBlockSummaryLine(hash));
+
+        if (bs.getHeader().getBlockHeight() == 0) bs = null;
+        else
+        {
+          bs = getBlockSummary( new ChainHash(bs.getHeader().getPrevBlockHash()));
+        }
+
+      }
+
+    }
+    out.println("</table>");
+
+  }
+
 
   private void printBraidStatus(PrintStream out, NodeStatus ns)
   {
