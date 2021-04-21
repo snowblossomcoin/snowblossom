@@ -99,7 +99,8 @@ public class PeerLink implements StreamObserver<PeerMessage>
   {
 
     last_received_message_time = System.currentTimeMillis();
-    try(MetricLog mlog = new MetricLog())
+    MetricLog mlog = new MetricLog();
+    try
     {
       mlog.setOperation("peer_message");
       mlog.setModule("peer_link");
@@ -307,17 +308,29 @@ public class PeerLink implements StreamObserver<PeerMessage>
       else if (msg.hasImportBlock())
       {
         mlog.set("type", "import_block");
+
+        BlockHeader header = msg.getImportBlock().getHeader();
+        mlog.set("hash", new ChainHash(header.getSnowHash()).toString());
+        mlog.set("shard_id", header.getShardId());
+        mlog.set("height", header.getBlockHeight());
+        
         node.getShardUtxoImport().addImportedBlock(msg.getImportBlock());
       }
     }
     catch(ValidationException e)
     {
+      mlog.set("exception", e.toString());
       logger.log(Level.INFO, "Some validation error from " + getLinkId(), e);
     }
     catch(Throwable e)
     {
+      mlog.set("exception", e.toString());
       logger.log(Level.INFO, "Some bs from " + getLinkId(), e);
       close();
+    }
+    finally
+    {
+      mlog.close();
     }
   }
 
