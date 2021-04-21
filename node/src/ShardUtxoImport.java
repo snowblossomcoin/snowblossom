@@ -46,7 +46,6 @@ public class ShardUtxoImport
 
   private ExpiringLRUCache<ChainHash, Boolean> block_pull_cache = new ExpiringLRUCache<>(1000, 60000L);
 
-
   public static final int TRUST_MAX_DEPTH = 6;
 
   public ShardUtxoImport(SnowBlossomNode node)
@@ -257,6 +256,11 @@ public class ShardUtxoImport
     throws ValidationException
   {
     Validation.validateImportedBlock(node.getParams(), ib);
+
+    logger.info(String.format("Added ImportedBlock (s:%d h:%d %s)", 
+      ib.getHeader().getShardId(),
+      ib.getHeader().getBlockHeight(),
+      new ChainHash(ib.getHeader().getSnowHash()).toString()));
 
     node.getDB().getChildBlockMapSet().add(ib.getHeader().getPrevBlockHash(), ib.getHeader().getSnowHash());
     node.getDB().getImportedBlockMap().put(ib.getHeader().getSnowHash(), ib);

@@ -154,7 +154,6 @@ public class PeerLink implements StreamObserver<PeerMessage>
           return;
         }
         node.getPeerage().reportTip();
-
     
         List<ChainHash> req_import_blocks = node.getShardUtxoImport().checkTipTrust(msg.getTip());
         if (req_import_blocks != null)
@@ -166,6 +165,7 @@ public class PeerLink implements StreamObserver<PeerMessage>
               RequestImportedBlock.newBuilder().setBlockHash(h.getBytes()).build())
               .build());
           }
+          mlog.set("req_imp_block_count", req_import_blocks.size());
 
         }
 
@@ -184,6 +184,9 @@ public class PeerLink implements StreamObserver<PeerMessage>
         if (header.getSnowHash().size() > 0)
         {
           Validation.checkBlockHeaderBasics(node.getParams(), header, false);
+          mlog.set("head_hash", new ChainHash(header.getSnowHash()).toString());
+          mlog.set("head_shard", header.getShardId());
+          mlog.set("head_height", header.getBlockHeight());
           considerBlockHeader(header, header.getShardId());
           node.getPeerage().setHighestHeader(header);
         }
@@ -200,6 +203,7 @@ public class PeerLink implements StreamObserver<PeerMessage>
         mlog.set("type","req_block");
         // Other side is asking for a block
         ChainHash hash = new ChainHash(msg.getReqBlock().getBlockHash());
+        mlog.set("hash", hash.toString());
         logger.fine("Got block request: " + hash);
         Block blk = node.getDB().getBlockMap().get(hash.getBytes());
         if (blk != null)
@@ -212,6 +216,7 @@ public class PeerLink implements StreamObserver<PeerMessage>
         mlog.set("type","block");
         // Getting a block, we probably asked for it.  See if we can eat it.
         Block blk = msg.getBlock();
+        mlog.set("hash", new ChainHash(blk.getHeader().getSnowHash()).toString());
         try
         {
           logger.fine(String.format("Got block shard:%d height:%d %s ",
@@ -272,6 +277,7 @@ public class PeerLink implements StreamObserver<PeerMessage>
         mlog.set("type","header");
         // We got a header, probably one we asked for
         BlockHeader header = msg.getHeader();
+        mlog.set("hash", new ChainHash(header.getSnowHash()).toString());
         Validation.checkBlockHeaderBasics(node.getParams(), header, false);
         considerBlockHeader(header, msg.getReqHeaderShardId());
       }
@@ -280,12 +286,14 @@ public class PeerLink implements StreamObserver<PeerMessage>
         mlog.set("type","req_cluster");
 
         ChainHash tx_id = new ChainHash(msg.getReqCluster().getTxHash());
+        mlog.set("hash", tx_id.toString());
         sendCluster(tx_id);
       }
       else if (msg.hasReqImportBlock())
       {
         mlog.set("type", "req_import_block");
         ChainHash hash = new ChainHash(msg.getReqImportBlock().getBlockHash());
+        mlog.set("hash", hash.toString());
 
         ImportedBlock b = node.getShardUtxoImport().getImportBlock(hash);
         if (b != null)
