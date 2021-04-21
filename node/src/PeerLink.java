@@ -155,18 +155,21 @@ public class PeerLink implements StreamObserver<PeerMessage>
         }
         node.getPeerage().reportTip();
     
-        List<ChainHash> req_import_blocks = node.getShardUtxoImport().checkTipTrust(msg.getTip());
-        if (req_import_blocks != null)
+        try(MetricLog mlog_sub = new MetricLog(mlog, "tip_trust"))
         {
-          for(ChainHash h : req_import_blocks)
+          List<ChainHash> req_import_blocks = node.getShardUtxoImport().checkTipTrust(mlog_sub, msg.getTip());
+          if (req_import_blocks != null)
           {
-            logger.log(Level.FINE, "Requesting Import Block: " + h);
-            writeMessage( PeerMessage.newBuilder().setReqImportBlock(
-              RequestImportedBlock.newBuilder().setBlockHash(h.getBytes()).build())
-              .build());
-          }
-          mlog.set("req_imp_block_count", req_import_blocks.size());
+            for(ChainHash h : req_import_blocks)
+            {
+              logger.log(Level.FINE, "Requesting Import Block: " + h);
+              writeMessage( PeerMessage.newBuilder().setReqImportBlock(
+                RequestImportedBlock.newBuilder().setBlockHash(h.getBytes()).build())
+                .build());
+            }
+            mlog.set("req_imp_block_count", req_import_blocks.size());
 
+          }
         }
 
         // When we first get a tip from a node we connected to

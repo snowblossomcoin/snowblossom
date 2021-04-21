@@ -4,6 +4,7 @@ import com.google.protobuf.ByteString;
 import duckutil.LRUCache;
 import duckutil.TimeRecord;
 import duckutil.TimeRecordAuto;
+import duckutil.MetricLog;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -180,7 +181,7 @@ public class ShardUtxoImport
    *
    * Returns a list of hashes to request ImportedBlock for
    */
-  public List<ChainHash> checkTipTrust(PeerChainTip tip)
+  public List<ChainHash> checkTipTrust(MetricLog mlog, PeerChainTip tip)
     throws ValidationException
   {
     // If there is no block
@@ -191,6 +192,8 @@ public class ShardUtxoImport
     // If this is a shard we actually track
     if (node.getInterestShards().contains(shard_id)) return null;
 
+    mlog.set("trusted_signers", trusted_signers.size());
+
     // We trust no one
     if (trusted_signers.size() == 0) return null;
     
@@ -199,9 +202,12 @@ public class ShardUtxoImport
 
     SignedMessagePayload payload = MsgSigUtil.validateSignedMessage(tip.getSignedHead(), node.getParams());
 
+    mlog.set("valid_payload", 1);
+
     AddressSpecHash signer = AddressUtil.getHashForSpec( payload.getClaim() );
 
     if (!trusted_signers.contains(signer)) return null;
+    mlog.set("trusted_sig",1);
     
     ChainHash hash = new ChainHash( payload.getBlockhash() );
     
