@@ -110,6 +110,7 @@ public class ShardUtxoImport
         ImportedBlock.Builder ibb = ImportedBlock.newBuilder();
 
         Block blk = node.getDB().getBlockMap().get(hash.getBytes());
+        if (blk == null) return null;
 
         ibb.setHeader(blk.getHeader());
 
