@@ -1155,7 +1155,7 @@ public class ShardBlockForge
       super(15000);
       setName("ShardBlockForge.ConceptUpdateThread");
 
-      last_gold_set = loadGoldSet();
+      //last_gold_set = loadGoldSet();
 
       String new_gold = getGoldSummary(last_gold_set);
       logger.info(String.format("Gold set loaded from db: %s", new_gold));
@@ -1242,7 +1242,7 @@ public class ShardBlockForge
       if (last_gold_set == null)
       {
       
-        int depth=5;
+        int depth=8;
         while (last_gold_set == null)
         {
           Map<Integer, BlockSummary> gold = getGoldenSet(depth);
