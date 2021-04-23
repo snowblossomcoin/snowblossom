@@ -1,11 +1,14 @@
 package snowblossom.node;
 
+import com.google.common.collect.ImmutableList;
 import com.google.protobuf.ByteString;
+import duckutil.ExpiringLRUCache;
 import duckutil.LRUCache;
+import duckutil.MetricLog;
 import duckutil.TimeRecord;
 import duckutil.TimeRecordAuto;
-import duckutil.MetricLog;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -21,8 +24,6 @@ import snowblossom.lib.Validation;
 import snowblossom.lib.ValidationException;
 import snowblossom.lib.tls.MsgSigUtil;
 import snowblossom.proto.*;
-import duckutil.ExpiringLRUCache;
-import com.google.common.collect.ImmutableList;
 
 /**
  * Handles caching of ripping blocks apart to extract UTXO exports
@@ -46,6 +47,8 @@ public class ShardUtxoImport
   private HashSet<AddressSpecHash> trusted_signers = new HashSet<>();
 
   private ExpiringLRUCache<ChainHash, Boolean> block_pull_cache = new ExpiringLRUCache<>(1000, 60000L);
+
+  private HashMap<Integer, ImportedBlock> highest_known_map = new HashMap<>();
 
   public static final int TRUST_MAX_DEPTH = 6;
 
@@ -271,6 +274,7 @@ public class ShardUtxoImport
 
     node.getDB().getChildBlockMapSet().add(ib.getHeader().getPrevBlockHash(), ib.getHeader().getSnowHash());
     node.getDB().getImportedBlockMap().put(ib.getHeader().getSnowHash(), ib);
+    saveHighestForKnownShard( ib );
   }
 
   private boolean reserveBlock(ChainHash hash)
@@ -283,5 +287,48 @@ public class ShardUtxoImport
       return true;
     }
   }
+
+  public ImportedBlock getHighestKnownForShard(int shard)
+  {
+    synchronized(highest_known_map)
+    {
+      if (highest_known_map.containsKey(shard)) return highest_known_map.get(shard);
+    }
+
+    ByteString key = ByteString.copyFrom(new String("external-head-" + shard).getBytes());
+    ImportedBlock ib = node.getDB().getImportedBlockMap().get(key);
+
+    if (ib != null)
+    {
+      synchronized(highest_known_map)
+      {
+        highest_known_map.put(shard, ib);
+      }
+    }
+    return ib;
+
+  }
+
+  private void saveHighestForKnownShard(ImportedBlock ib)
+  {
+    int shard_id = ib.getHeader().getShardId();
+    ImportedBlock old_ib = getHighestKnownForShard(shard_id);
+
+    boolean save = false;
+
+    if ((old_ib == null) || 
+        (ib.getHeader().getBlockHeight() > old_ib.getHeader().getBlockHeight()))
+    {
+      ByteString key = ByteString.copyFrom(new String("external-head-" + shard_id).getBytes());
+      node.getDB().getImportedBlockMap().put(key, ib);
+      synchronized(highest_known_map)
+      {
+        highest_known_map.put(shard_id, ib);
+      }
+    }
+
+  }
+
+  
 
 }
