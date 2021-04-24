@@ -154,17 +154,13 @@ public class ShardUtxoImport
 
               output_list_map.get(ts).addTxOuts(io);
             }
-
             out_idx++;
           }
-
         }
-
         for(Map.Entry<Integer, ImportedOutputList.Builder> me : output_list_map.entrySet())
         {
           ibb.putImportOutputs( me.getKey(), me.getValue().build() );
         }
-
         ib = ibb.build();
       }
 
@@ -172,7 +168,6 @@ public class ShardUtxoImport
       {
         cache.put(hash, ib);
       }
-
       return ib;
     }
 

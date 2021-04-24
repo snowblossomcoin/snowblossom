@@ -1309,35 +1309,14 @@ public class ShardBlockForge
   }
 
 
-  private LRUCache<ByteString, BlockSummary> block_summary_cache = new LRUCache<>(5000);
   public BlockSummary getDBSummary(ByteString bytes)
   {
-    
-    try(TimeRecordAuto tra_blk = TimeRecord.openAuto("ShardBlockForge.getDBSummary"))
-    {
-      synchronized(block_summary_cache)
-      {
-        BlockSummary bs = block_summary_cache.get(bytes);
-        if (bs != null) return bs;
-
-      }
-      BlockSummary bs = node.getDB().getBlockSummaryMap().get(bytes);
-      if (bs != null)
-      {
-        synchronized(block_summary_cache)
-        {
-          block_summary_cache.put(bytes, bs);
-        }
-
-      }
-
-      return bs;
-    }
+    return node.getForgeInfo().getDBSummary(bytes);
   }
 
   public BlockSummary getDBSummary(ChainHash hash)
   {
-    return getDBSummary(hash.getBytes());
+    return node.getForgeInfo().getDBSummary(hash);
   }
  
   public void tickle(BlockSummary bs)

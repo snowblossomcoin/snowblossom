@@ -64,6 +64,7 @@ public class SnowBlossomNode
   private NetworkParams params;
   private Peerage peerage;
   private ShardBlockForge shard_blockforge;
+  private ForgeInfo forge_info;
   private ShardUtxoImport shard_utxo_import;
   private MetaMemPool meta_mem_pool;
   private WalletDatabase trustnet_wallet_db;
@@ -173,6 +174,7 @@ public class SnowBlossomNode
     }
 
     peerage = new Peerage(this);
+    forge_info = new ForgeInfo(this);
     shard_utxo_import = new ShardUtxoImport(this);
     shard_blockforge = new ShardBlockForge(this);
     meta_mem_pool = new MetaMemPool(this);
@@ -391,6 +393,7 @@ public class SnowBlossomNode
   public DB getDB(){return db;}
   public NetworkParams getParams(){return params;}
 
+  public ForgeInfo getForgeInfo(){return forge_info;}
   public BlockIngestor getBlockIngestor(){return getBlockIngestor(0);}
   public ShardBlockForge getBlockForge(){return shard_blockforge;}
   public MetaMemPool getMemPool(){return meta_mem_pool;}
