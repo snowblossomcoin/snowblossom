@@ -144,6 +144,7 @@ public class ForgeInfo
   public Map<Integer, BlockHeader> getNetworkActiveShards()
   {
     TreeMap<Integer, BlockHeader> network_active = new TreeMap<>();
+    int max_height = 0;
 
     for(int i=0; i<= node.getParams().getMaxShardId(); i++)
     {
@@ -153,6 +154,7 @@ public class ForgeInfo
         if (h != null)
         {
           network_active.put(i, h);
+          max_height = Math.max( max_height, h.getBlockHeight() );
         }
       }
     }
@@ -174,7 +176,7 @@ public class ForgeInfo
         }
       }
       if (child_count == 2) to_remove.add(shard_id);
-
+      if (h + node.getParams().getMaxShardSkewHeight() + 2 < max_height) to_remove.add(shard_id);
     }
     for(int x : to_remove)
     {
