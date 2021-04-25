@@ -147,16 +147,13 @@ public class ForgeInfo
 
     for(int i=0; i<= node.getParams().getMaxShardId(); i++)
     {
-      int parent = ShardUtil.getShardParentId(i);
-
-      if ((i==0) || (network_active.containsKey(parent)))
+			// We might not have info on intermediate shards that we are not tracking
       {
         BlockHeader h = getShardHead(i);
         if (h != null)
         {
           network_active.put(i, h);
         }
-
       }
     }
 
