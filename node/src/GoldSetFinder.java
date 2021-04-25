@@ -74,7 +74,7 @@ public class GoldSetFinder
 
       System.out.println("Gold search block count: " + total_sources);
 
-      Map<Integer, BlockHeader> gold = getGoldenSetRecursive(head_shards, ImmutableMap.of(), true, ImmutableMap.of());
+      Map<Integer, BlockHeader> gold = getGoldenSetRecursive(head_shards, ImmutableMap.of(), false, ImmutableMap.of());
 
       if (gold == null)
       {
