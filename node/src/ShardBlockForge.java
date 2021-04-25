@@ -304,20 +304,6 @@ public class ShardBlockForge
 
   }
 
-  /**
-   * Go down by depth and then return all blocks that are decendend from that one
-   * and are on the same shard id.
-   */
-  public Set<ChainHash> getBlocksAround(ChainHash start, int depth, int shard_id)
-  {
-
-    try(TimeRecordAuto tra_blk = TimeRecord.openAuto("ShardBlockForge.getBlocksAround"))
-    {
-      ChainHash tree_root = descend(start, depth);
-
-      return climb(tree_root, shard_id);
-    }
-  }
 
 
   public Map<String, ChainHash> getKnownMap(Collection<BlockSummary> lst)
@@ -369,7 +355,7 @@ public class ShardBlockForge
 
           if (h.getBlockHeight() + params.getMaxShardSkewHeight()*2 >= max_height)
           { // anything super short is probably irrelvant noise - an old shard that is no longer extended
-            Set<ChainHash> hs = getBlocksAround( new ChainHash(h.getSnowHash()), depth, s);
+            Set<ChainHash> hs = node.getForgeInfo().getBlocksAround( new ChainHash(h.getSnowHash()), depth, s);
             total_sources += hs.size();
             head_shards.put(s, hs);
             //System.out.println("Gold search group: shard " + s + " " + hs.size());
@@ -459,7 +445,7 @@ public class ShardBlockForge
       // Existing shards
       for(int s : gold_in.keySet())
       {
-        head_shards.put(s, climb( new ChainHash(gold_in.get(s).getHeader().getSnowHash()), s));
+        head_shards.put(s, node.getForgeInfo().climb( new ChainHash(gold_in.get(s).getHeader().getSnowHash()), s));
       }
 
       // Maybe merge in new children shards
@@ -472,7 +458,7 @@ public class ShardBlockForge
           if (node.getBlockIngestor(c).getHead() != null)
           {
             BlockHeader h = node.getBlockIngestor(c).getHead().getHeader();
-            Set<ChainHash> hs = getBlocksAround( new ChainHash(h.getSnowHash()),1, c);
+            Set<ChainHash> hs = node.getForgeInfo().getBlocksAround( new ChainHash(h.getSnowHash()),1, c);
             head_shards.put(c, hs);
           }
         }
@@ -582,13 +568,11 @@ public class ShardBlockForge
 
       }
 
-
-
       return best_solution;
     }
   }
 
-  // TODO - we can also squeeze some more performance by stacking the maps rather than copying into these immutable maps all the time
+  
   private Map<String, ChainHash> checkCollisions(Map<String, ChainHash> known_map_in, BlockSummary bs)
   {
 
@@ -611,37 +595,6 @@ public class ShardBlockForge
 
   }
 
-  public Set<ChainHash> climb(ChainHash start, int shard_id)
-  {
-    HashSet<ChainHash> set = new HashSet<>();
-    BlockSummary bs = getDBSummary(start);
-  
-    if (bs != null)
-    if (bs.getHeader().getShardId() == shard_id)
-    {
-      set.add(new ChainHash(bs.getHeader().getSnowHash()));
-    }
-
-
-    for(ByteString next : node.getDB().getChildBlockMapSet().getSet(start.getBytes(), 2000))
-    {
-      set.addAll(climb(new ChainHash(next), shard_id));
-    }
-
-    return set;
-    
-  }
-
-  public ChainHash descend(ChainHash start, int depth)
-  {
-    if (depth==0) return start;
-
-    BlockSummary bs = getDBSummary(start);
-    if (bs == null) return null;
-    if (bs.getHeader().getBlockHeight()==0) return start;
-    return descend(new ChainHash(bs.getHeader().getPrevBlockHash()), depth-1);
-
-  }
 
 
   /**
@@ -1239,6 +1192,8 @@ public class ShardBlockForge
 
       if (rnd.nextDouble() < 0.01) last_gold_set = null;
 
+      node.getGoldSetFinder().getGoldenSet(8);
+
       if (last_gold_set == null)
       {
       
@@ -1311,12 +1266,12 @@ public class ShardBlockForge
 
   public BlockSummary getDBSummary(ByteString bytes)
   {
-    return node.getForgeInfo().getDBSummary(bytes);
+    return node.getForgeInfo().getSummary(bytes);
   }
 
   public BlockSummary getDBSummary(ChainHash hash)
   {
-    return node.getForgeInfo().getDBSummary(hash);
+    return node.getForgeInfo().getSummary(hash);
   }
  
   public void tickle(BlockSummary bs)

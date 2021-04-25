@@ -64,6 +64,7 @@ public class SnowBlossomNode
   private NetworkParams params;
   private Peerage peerage;
   private ShardBlockForge shard_blockforge;
+  private GoldSetFinder gold_set_finder;
   private ForgeInfo forge_info;
   private ShardUtxoImport shard_utxo_import;
   private MetaMemPool meta_mem_pool;
@@ -177,6 +178,7 @@ public class SnowBlossomNode
     forge_info = new ForgeInfo(this);
     shard_utxo_import = new ShardUtxoImport(this);
     shard_blockforge = new ShardBlockForge(this);
+    gold_set_finder = new GoldSetFinder(this);
     meta_mem_pool = new MetaMemPool(this);
 
   }
@@ -397,6 +399,7 @@ public class SnowBlossomNode
   public BlockIngestor getBlockIngestor(){return getBlockIngestor(0);}
   public ShardBlockForge getBlockForge(){return shard_blockforge;}
   public MetaMemPool getMemPool(){return meta_mem_pool;}
+  public GoldSetFinder getGoldSetFinder(){return gold_set_finder;}
 
   public ShardUtxoImport getShardUtxoImport(){return shard_utxo_import;}
 

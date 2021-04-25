@@ -26,11 +26,11 @@ import java.util.Scanner;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
-import java.util.logging.Logger;                                                                                        import org.junit.Assert;
+import java.util.logging.Logger;
+import org.junit.Assert;
 import snowblossom.lib.*;
 import snowblossom.lib.trie.HashUtils;
 import snowblossom.proto.*;
-
 
 
 /**
@@ -44,6 +44,7 @@ public class ForgeInfo
 
   private LRUCache<ByteString, BlockSummary> block_summary_cache = new LRUCache<>(CACHE_SIZE);
 	private LRUCache<ChainHash, BlockHeader> block_header_cache = new LRUCache<>(CACHE_SIZE);
+  private LRUCache<ChainHash, Map<String, ChainHash> > block_inclusion_cache = new LRUCache<>(CACHE_SIZE);
 
   private SnowBlossomNode node;
 
@@ -53,16 +54,18 @@ public class ForgeInfo
 
   }
 
-  public BlockSummary getDBSummary(ByteString bytes)                                                                      {
+  public BlockSummary getSummary(ByteString bytes)
+  {
 
-    try(TimeRecordAuto tra_blk = TimeRecord.openAuto("ShardBlockForge.getDBSummary"))
+    try(TimeRecordAuto tra_blk = TimeRecord.openAuto("ShardBlockForge.getSummary"))
     {
       synchronized(block_summary_cache)
       {
         BlockSummary bs = block_summary_cache.get(bytes);
         if (bs != null) return bs;
       }
-      BlockSummary bs = node.getDB().getBlockSummaryMap().get(bytes);                                                         if (bs != null)
+      BlockSummary bs = node.getDB().getBlockSummaryMap().get(bytes);
+      if (bs != null)
       {
         synchronized(block_summary_cache)
         {
@@ -74,9 +77,9 @@ public class ForgeInfo
     }
   }
 
-  public BlockSummary getDBSummary(ChainHash hash)
+  public BlockSummary getSummary(ChainHash hash)
   {
-    return getDBSummary(hash.getBytes());
+    return getSummary(hash.getBytes());
   }
 
   public BlockHeader getHeader(ChainHash hash)
@@ -88,7 +91,7 @@ public class ForgeInfo
     }
 
     BlockHeader h = null;
-    BlockSummary summary = getDBSummary(hash);
+    BlockSummary summary = getSummary(hash);
     if (summary != null)
     {
       h = summary.getHeader();
@@ -142,7 +145,7 @@ public class ForgeInfo
   {
     TreeMap<Integer, BlockHeader> network_active = new TreeMap<>();
 
-    for(int i=0; i< node.getParams().getMaxShardId(); i++)
+    for(int i=0; i<= node.getParams().getMaxShardId(); i++)
     {
       int parent = ShardUtil.getShardParentId(i);
 
@@ -156,7 +159,6 @@ public class ForgeInfo
 
       }
     }
-
 
     // Remove shards where there are both children
     // that have enough height to not worry about
@@ -185,6 +187,98 @@ public class ForgeInfo
     return network_active;
 
   }
+
+
+  public Map<String, ChainHash> getInclusionMap(ChainHash hash)
+  {
+    synchronized(block_inclusion_cache)
+    {
+      if (block_inclusion_cache.containsKey(hash))
+        return block_inclusion_cache.get(hash);
+    }
+    Map<String, ChainHash> map = getInclusionMapInternal(hash, node.getParams().getMaxShardSkewHeight()+2);
+
+    if (map != null)
+    {
+      map = ImmutableMap.copyOf(map);
+      synchronized(block_inclusion_cache)
+      {
+        block_inclusion_cache.put(hash, map);
+      }
+    }
+    return map;
+  }
+ 
+  private Map<String, ChainHash> getInclusionMapInternal(ChainHash hash, int depth)
+  {
+    HashMap<String, ChainHash> map = new HashMap<>(16,0.5f);
+
+    BlockHeader h = getHeader(hash); 
+    Validation.checkCollisionsNT(map, h.getShardId(), h.getBlockHeight(), hash);
+    Validation.checkCollisionsNT(map, h.getShardImportMap());
+    
+    BlockSummary bs = getSummary(hash);
+    if(bs != null)
+    {
+      Validation.checkCollisionsNT(map, bs.getShardHistoryMap());
+      return map;
+    }
+    if (depth > 0)
+    {
+      map.putAll(getInclusionMapInternal( new ChainHash(h.getPrevBlockHash()), depth-1));
+    }
+
+    return map;
+
+  }
+
+
+  /**
+   * Go down by depth and then return all blocks that are decendend from that one
+   * and are on the same shard id.
+   */
+  public Set<ChainHash> getBlocksAround(ChainHash start, int depth, int shard_id)
+  {
+    try(TimeRecordAuto tra_blk = TimeRecord.openAuto("ForgeInfo.getBlocksAround"))
+    {
+      ChainHash tree_root = descend(start, depth);
+
+      return climb(tree_root, shard_id);
+    }
+  }
+
+  public Set<ChainHash> climb(ChainHash start, int shard_id)
+  {
+    HashSet<ChainHash> set = new HashSet<>();
+    BlockHeader h = getHeader(start);
+
+    if (h != null)
+    if (h.getShardId() == shard_id)
+    {
+      set.add(new ChainHash(h.getSnowHash()));
+    }
+
+
+    for(ByteString next : node.getDB().getChildBlockMapSet().getSet(start.getBytes(), 2000))
+    {
+      set.addAll(climb(new ChainHash(next), shard_id));
+    }
+
+    return set;
+
+  }
+
+  public ChainHash descend(ChainHash start, int depth)
+  {
+    if (depth==0) return start;
+
+		BlockHeader h = getHeader(start);
+    if (h == null) return null;
+    if (h.getBlockHeight()==0) return start;
+    return descend(new ChainHash(h.getPrevBlockHash()), depth-1);
+
+  }
+
 
 
 }
