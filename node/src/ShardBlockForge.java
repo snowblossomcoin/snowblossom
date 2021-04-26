@@ -1,12 +1,15 @@
 package snowblossom.node;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.protobuf.ByteString;
 import duckutil.LRUCache;
 import duckutil.Pair;
 import duckutil.PeriodicThread;
 import duckutil.TimeRecord;
 import duckutil.TimeRecordAuto;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.PrintStream;
 import java.math.BigInteger;
@@ -19,10 +22,12 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.Scanner;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.logging.Logger;
+import org.junit.Assert;
 import snowblossom.lib.*;
 import snowblossom.lib.trie.HashUtils;
 import snowblossom.proto.*;
@@ -586,18 +591,18 @@ public class ShardBlockForge
 
       for(ByteString next_hash : node.getDB().getChildBlockMapSet().getSet( start_point.getBytes(), 2000) )
       {
-        BlockSummary bs = getDBSummary(next_hash);
-        if (bs != null)
-        if (bs.getHeader().getShardId() == external_shard_id)
+        BlockHeader h = node.getForgeInfo().getHeader(next_hash);
+        if (h != null)
+        if (h.getShardId() == external_shard_id)
         if (checkCollisions( restrict_known_map, bs) != null)
         {
-          BigInteger work = BlockchainUtil.readInteger(bs.getWorkSum());
+          BigInteger work = BigInteger.valueOf(h.getBlockHeight());
           BlockImportList.Builder bil = BlockImportList.newBuilder();
-          bil.putHeightMap( bs.getHeader().getBlockHeight(), bs.getHeader().getSnowHash() );
+          bil.putHeightMap( h.getBlockHeight(), h.getSnowHash() );
 
           options.put(work, bil.build());
 
-          TreeMap<BigInteger,BlockImportList> down = getPath(new ChainHash(bs.getHeader().getSnowHash()),
+          TreeMap<BigInteger,BlockImportList> down = getPath(h.getSnowHash(),
             external_shard_id, restrict_known_map);
 
           for(Map.Entry<BigInteger, BlockImportList> me : down.entrySet())
