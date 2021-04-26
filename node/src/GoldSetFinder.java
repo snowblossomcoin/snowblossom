@@ -1,13 +1,15 @@
 package snowblossom.node;
 
-import com.google.protobuf.ByteString;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
+import com.google.protobuf.ByteString;
 import duckutil.TimeRecord;
 import duckutil.TimeRecordAuto;
 import java.math.BigInteger;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import java.util.HashSet;
 import java.util.TreeMap;
 import java.util.logging.Logger;
 import org.junit.Assert;
@@ -173,7 +175,7 @@ public class GoldSetFinder
               BigInteger val_sum = BigInteger.ZERO;
               for(BlockHeader sub_h : sub_solution.values())
               {
-								val_sum = val_sum.add( BigInteger.valueOf(sub_h.getBlockHeight()) );
+                val_sum = val_sum.add( BigInteger.valueOf(sub_h.getBlockHeight()) );
                 //val_sum = val_sum.add( BlockchainUtil.readInteger( bs_sub.getWorkSum() ));
               }
           
@@ -208,8 +210,8 @@ public class GoldSetFinder
           BigInteger val_sum = BigInteger.ZERO;
           for(BlockHeader sub_h : sub_solution.values())
           {
-						val_sum = val_sum.add( BigInteger.valueOf(sub_h.getBlockHeight()) );
-					}
+            val_sum = val_sum.add( BigInteger.valueOf(sub_h.getBlockHeight()) );
+          }
             
           if (val_sum.compareTo(best_solution_val) > 0)
           {
@@ -234,8 +236,8 @@ public class GoldSetFinder
     try(TimeRecordAuto tra_blk = TimeRecord.openAuto("GoldSetFinder.checkCollisions(m,hash)"))
     {
       OverlayMap<String, ChainHash> known_map = new OverlayMap<>(known_map_in, true);
-			
-			for(Map.Entry<String, ChainHash> me : node.getForgeInfo().getInclusionMap(hash).entrySet())
+      
+      for(Map.Entry<String, ChainHash> me : node.getForgeInfo().getInclusionMap(hash).entrySet())
       {
         String key = me.getKey();
         ChainHash h = me.getValue();
@@ -253,6 +255,70 @@ public class GoldSetFinder
 
   }
 
+  /**
+   * Take a given gold set, remove any parents where both children are represented in the set
+   */                                                                                                                     private Map<Integer, BlockHeader> goldPrune( Map<Integer, BlockHeader> gold_in)
+  {
+    Map<Integer, BlockHeader> out_map = new TreeMap<>();
+
+    for(int s : ImmutableSet.copyOf(gold_in.keySet()))
+    {
+      int count = 0;
+      for(int c : ShardUtil.getShardChildIds(s))
+      {
+        if (gold_in.containsKey(c)) count++;
+      }
+      if (count < 2)
+      {
+        out_map.put(s, gold_in.get(s));
+      }
+    }
+    return out_map;
+
+  }
+
+  private Map<Integer, BlockHeader> goldUpgrade( Map<Integer, BlockHeader> gold_in)
+  {
+    try(TimeRecordAuto tra_blk = TimeRecord.openAuto("GoldSetFinder.goldUpgrade"))
+    {
+      Map<Integer,Set<ChainHash> > head_shards = new TreeMap<Integer, Set<ChainHash> >();
+      // Existing shards
+      for(int s : gold_in.keySet())
+      {
+        head_shards.put(s, node.getForgeInfo().climb( new ChainHash(gold_in.get(s).getSnowHash()), s));
+      }
+
+      // Maybe merge in new children shards
+      for(int s : gold_in.keySet())
+      {
+        for(int c : ShardUtil.getShardChildIds(s))
+        {
+          if (!head_shards.containsKey(c))
+          if (node.getForgeInfo().getShardHead(c)!=null)
+          {
+            BlockHeader h = node.getForgeInfo().getShardHead(c);
+            Set<ChainHash> hs = node.getForgeInfo().getBlocksAround( new ChainHash(h.getSnowHash()),1, c);
+            head_shards.put(c, hs);
+          }
+        }
+      }
+      return getGoldenSetRecursive(head_shards, ImmutableMap.of(), false, ImmutableMap.of());
+    }
+  }
+
+  public Map<String, ChainHash> getKnownMap(Map<Integer, BlockHeader> set)
+  {
+    HashMap<String, ChainHash> map = new HashMap<>(256,0.5f);
+
+    for(BlockHeader bh : set.values())
+    {
+      ChainHash hash = new ChainHash(bh.getSnowHash());
+    
+      map.putAll(node.getForgeInfo().getInclusionMap(hash));
+    }
+
+    return map;
+  }
 
 
 }

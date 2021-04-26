@@ -1,15 +1,12 @@
 package snowblossom.node;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 import com.google.protobuf.ByteString;
 import duckutil.LRUCache;
 import duckutil.Pair;
 import duckutil.PeriodicThread;
 import duckutil.TimeRecord;
 import duckutil.TimeRecordAuto;
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.PrintStream;
 import java.math.BigInteger;
@@ -22,12 +19,10 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
-import java.util.Scanner;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.logging.Logger;
-import org.junit.Assert;
 import snowblossom.lib.*;
 import snowblossom.lib.trie.HashUtils;
 import snowblossom.proto.*;
@@ -68,68 +63,6 @@ public class ShardBlockForge
 
     concept_update_thread = new ConceptUpdateThread();
     concept_update_thread.start();
-
-    if (node.getConfig().isSet("forge_col_check"))
-    {
-      testingCollisionCheck();
-    }
-
-  }
-
-  public void testingCollisionCheck()
-    throws Exception
-  {
-    Scanner scan = new Scanner(new FileInputStream(node.getConfig().get("forge_col_check")));
-
-    Map<String, ChainHash> known_map = new HashMap<>();
-
-    TreeMap<Integer, Set<ChainHash> > head_shards = new TreeMap<>();
-
-
-    while(scan.hasNext())
-    {
-      String h = scan.next().replace(",","").trim();
-      ChainHash hash = new ChainHash(h);
-      BlockSummary bs = getDBSummary(hash);
-
-      known_map = checkCollisions(known_map, bs);
-      if (!Validation.checkCollisionsNT(known_map, bs.getHeader().getShardId(), bs.getHeader().getBlockHeight()+1, ChainHash.ZERO_HASH))
-      {
-        known_map = null;
-      }
-      if (known_map==null)
-      {
-        System.out.println(String.format("Check for %s failed", hash.toString()));
-        //return;
-      }
-      else
-      {
-        System.out.println(String.format("Check for %s ok.  Entries: %d", hash.toString(), known_map.size()));
-      }
-
-      head_shards.put(bs.getHeader().getShardId(), ImmutableSet.of(hash));
-    }
-
-    Map<Integer, BlockSummary> gold = getGoldenSetRecursive(head_shards, ImmutableMap.of(), false, ImmutableMap.of());
-    if (gold != null)
-    {
-      System.out.println("It is a gold set");
-    }
-    else
-    {
-      System.out.println("It is not a gold set");
-    }
-
-    for(int s : node.getInterestShards())
-    {
-      node.openShard(s);
-    }
-
-    getGoldenSet(0);
-
-
-    System.exit(-1);
-
 
   }
 
@@ -320,259 +253,7 @@ public class ShardBlockForge
 
   }
 
-  /**
-   * Returns the highest value set of blocks that all work together that we can find
-   */
-  public Map<Integer, BlockSummary> getGoldenSet(int depth)
-  {
-    try(TimeRecordAuto tra_blk = TimeRecord.openAuto("ShardBlockForge.getGoldenSet(" + depth + ")"))
-    {
-      // TODO find a better way to get the set of shards we need
-     
-      System.out.println("Finding golden set - depth " + depth);
-      Map<Integer,Set<ChainHash> > head_shards = new TreeMap<Integer, Set<ChainHash> >();
 
-      System.out.println("Active shards: " + node.getActiveShards());
-
-      int max_height = 0;
-      for(int s : node.getActiveShards())
-      {
-        if (node.getBlockIngestor(s).getHead()!=null)
-        {
-          max_height = Math.max( max_height, node.getBlockIngestor(s).getHead().getHeader().getBlockHeight() );
-        }
-      }
-
-      Map<Integer, Integer> height_map = new TreeMap<>();
-
-      int total_sources = 0;
-      for(int s : node.getActiveShards())
-      {
-        if (node.getBlockIngestor(s).getHead()!=null)
-        {
-          BlockHeader h = node.getBlockIngestor(s).getHead().getHeader();
-          //System.out.println("Header " + s + " " + h);
-
-          if (h.getBlockHeight() + params.getMaxShardSkewHeight()*2 >= max_height)
-          { // anything super short is probably irrelvant noise - an old shard that is no longer extended
-            Set<ChainHash> hs = node.getForgeInfo().getBlocksAround( new ChainHash(h.getSnowHash()), depth, s);
-            total_sources += hs.size();
-            head_shards.put(s, hs);
-            //System.out.println("Gold search group: shard " + s + " " + hs.size());
-
-            height_map.put(s, h.getBlockHeight());
-          }
-        }
-      }
-      System.out.println("Gold search block count: " + total_sources);
-      System.out.println("Current shards: " + height_map);
-      System.out.println("Number of shards: " + height_map.size());
-
-      //System.out.println("Shard heads: " + head_shards);
-      Map<Integer, BlockSummary> gold = getGoldenSetRecursive(head_shards, ImmutableMap.of(), true, ImmutableMap.of());
-
-      if (gold == null)
-      {
-        System.out.println("No gold set - depth " + depth);
-        return null;
-      }
-
-      gold = goldPrune(goldUpgrade(gold));
-
-      HashSet<ChainHash> gold_set = new HashSet<ChainHash>();
-
-      for(BlockSummary bs : gold.values())
-      {
-        gold_set.add(new ChainHash(bs.getHeader().getSnowHash()));
-      }
-
-      System.out.println("Gold set found: " + gold_set);
-
-      return gold;
-    }
-  }
-
-  private String getGoldSummary(Map<Integer, BlockSummary> gold_in)
-  {
-    if (gold_in == null) return "null";
-
-    int min_height=1000000000;
-    int max_height=0;
-    int sum_height=0;
-    BigInteger sum_work = BigInteger.ZERO;
-
-    for(BlockSummary bs : gold_in.values())
-    {
-      min_height = Math.min(min_height, bs.getHeader().getBlockHeight());
-      max_height = Math.max(max_height, bs.getHeader().getBlockHeight());
-      sum_height += bs.getHeader().getBlockHeight();
-
-      sum_work = sum_work.add( BlockchainUtil.readInteger(bs.getWorkSum()));
-
-    }
-    return String.format("min:%d,max:%d,h_sum:%d w_sum=%s", min_height, max_height, sum_height, sum_work.toString());
-
-  }
-
-  /**
-   * Take a given gold set, remove any parents where both children are represented in the set
-   */
-  private Map<Integer, BlockSummary> goldPrune( Map<Integer, BlockSummary> gold_in)
-  {
-    Map<Integer, BlockSummary> out_map = new TreeMap<>();
-
-    for(int s : ImmutableSet.copyOf(gold_in.keySet()))
-    {
-      int count = 0;
-      for(int c : ShardUtil.getShardChildIds(s))
-      {
-        if (gold_in.containsKey(c)) count++;
-      }
-      if (count < 2)
-      {
-        out_map.put(s, gold_in.get(s));
-      }
-    }
-    return out_map;
-
-  }
-
-  private Map<Integer, BlockSummary> goldUpgrade( Map<Integer, BlockSummary> gold_in)
-  {
-    try(TimeRecordAuto tra_blk = TimeRecord.openAuto("ShardBlockForge.goldUpgrade"))
-    {
-      Map<Integer,Set<ChainHash> > head_shards = new TreeMap<Integer, Set<ChainHash> >();
-      // Existing shards
-      for(int s : gold_in.keySet())
-      {
-        head_shards.put(s, node.getForgeInfo().climb( new ChainHash(gold_in.get(s).getHeader().getSnowHash()), s));
-      }
-
-      // Maybe merge in new children shards
-      for(int s : gold_in.keySet())
-      {
-        for(int c : ShardUtil.getShardChildIds(s))
-        {
-          if (!head_shards.containsKey(c))
-          if (node.getActiveShards().contains(c))
-          if (node.getBlockIngestor(c).getHead() != null)
-          {
-            BlockHeader h = node.getBlockIngestor(c).getHead().getHeader();
-            Set<ChainHash> hs = node.getForgeInfo().getBlocksAround( new ChainHash(h.getSnowHash()),1, c);
-            head_shards.put(c, hs);
-          }
-        }
-      }
-      return getGoldenSetRecursive(head_shards, ImmutableMap.of(), false, ImmutableMap.of());
-    }
-  }
-
-  /**
-   * Find blocks for the remaining_shards that don't conflict with anything in known_map.
-   * @returns the map of shards to headers that is the best
-   */
-  private Map<Integer, BlockSummary> getGoldenSetRecursive(Map<Integer, Set<ChainHash> > remaining_shards, 
-    Map<String, ChainHash> known_map, boolean short_cut, Map<Integer, BlockSummary> current_selections)
-  {
-    // TODO need to handle the case where there are new children shards that should be ignored
-
-    try(TimeRecordAuto tra_blk = TimeRecord.openAuto("ShardBlockForge.getGoldenSetRecursive"))
-    {
-      if (remaining_shards.size() == 0) return new TreeMap<Integer, BlockSummary>();
-
-      TreeMap<Integer, Set<ChainHash> > rem_shards_tree = new TreeMap<>();
-      rem_shards_tree.putAll(remaining_shards);
-
-      int shard_id = rem_shards_tree.firstEntry().getKey();
-      Set<ChainHash> shard_blocks = rem_shards_tree.pollFirstEntry().getValue();
-
-      BigInteger best_solution_val = BigInteger.valueOf(-1L);
-      Map<Integer, BlockSummary> best_solution = null;
-
-      for(ChainHash hash : shard_blocks)
-      {
-        //System.out.println("Checking shard " + shard_id + " hash " + hash);
-        BlockSummary bs = getDBSummary(hash);
-        Assert.assertEquals(shard_id, bs.getHeader().getShardId());
-        Map<String, ChainHash> block_known_map = checkCollisions( known_map, bs);
-
-        // If this block doesn't collide
-        if (block_known_map != null)
-        {
-          // Add in blocker for self on next block to make sure no one has ideas for it
-          // TODO - not always correct, this shard could be just about for split
-          // But if we did track it correctly, then this would fail because then we are trying to not
-          // include a block in the gold set that has children also in the gold set
-          // so we might want to not include this shard, but if it is here the shard forking is recent
-          // and we might need to reorg away from the forking so can't quite do that.
-          // So we leave it as basically double bug cancel out but working
-          if (Validation.checkCollisionsNT( block_known_map, shard_id, bs.getHeader().getBlockHeight()+1, ChainHash.ZERO_HASH))
-          {
-            Map<Integer, BlockSummary> sub_selections = new OverlayMap<>(current_selections, false);
-            sub_selections.put(shard_id, bs);
-            Map<Integer, BlockSummary> sub_solution = getGoldenSetRecursive( rem_shards_tree, block_known_map, short_cut, sub_selections);
-            if (sub_solution != null)
-            {
-              //System.out.println("Checking shard " + shard_id + " hash " + hash + " found sol");
-              sub_solution.put(shard_id, bs);
-              BigInteger val_sum = BigInteger.ZERO;
-              for(BlockSummary bs_sub : sub_solution.values())
-              {
-                val_sum  = val_sum.add( BlockchainUtil.readInteger( bs_sub.getWorkSum() ));
-              }
-          
-              if (val_sum.compareTo(best_solution_val) > 0)
-              {
-                best_solution = sub_solution;
-                best_solution_val = val_sum;
-                if (short_cut)
-                {
-                  return best_solution; // short circuit
-                }
-              }
-            }
-            else
-            {
-
-              //System.out.println("Checking shard " + shard_id + " hash " + hash + " no sol");
-            }
-          }
-        }
-      }
-
-      // if my parent is present, try with and without me
-      if (best_solution == null)
-      if (shard_id > 0) 
-      if (current_selections.containsKey( ShardUtil.getShardParentId(shard_id)))
-      {
-        Map<Integer, BlockSummary> sub_solution = getGoldenSetRecursive(rem_shards_tree, known_map, short_cut, current_selections);
-
-        if (sub_solution != null)
-        {
-          BigInteger val_sum = BigInteger.ZERO;
-          for(BlockSummary bs_sub : sub_solution.values())
-          {
-            val_sum  = val_sum.add( BlockchainUtil.readInteger( bs_sub.getWorkSum() ));
-          }
-            
-          if (val_sum.compareTo(best_solution_val) > 0)
-          {
-            best_solution = sub_solution;
-            best_solution_val = val_sum;
-            if (short_cut)
-            {
-              return best_solution; // short circuit
-            }
-          }
-        }
-
-      }
-
-      return best_solution;
-    }
-  }
-
-  
   private Map<String, ChainHash> checkCollisions(Map<String, ChainHash> known_map_in, BlockSummary bs)
   {
 
@@ -771,7 +452,7 @@ public class ShardBlockForge
       for(int i=0; i<IMPORT_PASSES; i++)
       {
         TreeSet<Integer> shards_to_add = new TreeSet<>();
-        for(int s : node.getActiveShards())
+        for(int s : node.getForgeInfo().getNetworkActiveShards().keySet())
         {
           if (!exclude_set.contains(s))
           {
@@ -836,7 +517,6 @@ public class ShardBlockForge
         Collections.shuffle(path_lists);
       }
 
-
       // Use random
       BlockImportList bil = path_lists.get(0);
 
@@ -850,15 +530,14 @@ public class ShardBlockForge
       TreeMap<Integer, ByteString> height_map = new TreeMap<>();
       try(TimeRecordAuto tra_path = TimeRecord.openAuto("ShardBlockForge.attemptImportShard_heightmap"))
       {
-
         height_map.putAll(bil.getHeightMap());
       }
       ByteString hash = height_map.firstEntry().getValue();
 
-      BlockSummary imp_sum = getDBSummary( hash );
-      if (imp_sum == null) return null;
+      BlockHeader imp_head = node.getForgeInfo().getHeader(new ChainHash(hash));
+      if (imp_head == null) return null;
 
-      BlockConcept c_add = working_c.importShard( imp_sum.getHeader() );
+      BlockConcept c_add = working_c.importShard( imp_head );
       if (checkCollisions(c_add))
       {
         return c_add;
@@ -1108,50 +787,7 @@ public class ShardBlockForge
       super(15000);
       setName("ShardBlockForge.ConceptUpdateThread");
 
-      //last_gold_set = loadGoldSet();
-
-      String new_gold = getGoldSummary(last_gold_set);
-      logger.info(String.format("Gold set loaded from db: %s", new_gold));
     }
-
-    private Map<Integer, BlockSummary> loadGoldSet()
-    {
-      GoldSet gs = node.getDB().getGoldSetMap().get(GOLD_MAP_KEY);
-      if (gs == null) return null;
-
-      Map<Integer, BlockSummary> gold = new TreeMap<>();
-
-      for(Map.Entry<Integer,ByteString> me : gs.getShardToHashMap().entrySet())
-      {
-        int shard = me.getKey();
-        ChainHash hash = new ChainHash(me.getValue());
-        BlockSummary bs = getDBSummary(hash);
-        if (bs == null)
-        {
-          logger.warning(String.format("Unable to load gold set, summary not found: %d %s", shard, hash.toString()));
-          return null;
-        }
-        gold.put(shard, bs);
-      }
-      return gold;
-
-    }
-
-    private void saveGoldSet(Map<Integer, BlockSummary> gold)
-    {
-      GoldSet.Builder gs = GoldSet.newBuilder();
-
-      for(Map.Entry<Integer, BlockSummary> me : gold.entrySet())
-      {
-        int shard = me.getKey();
-        ByteString hash = me.getValue().getHeader().getSnowHash();
-        gs.putShardToHash(shard, hash);
-      }
-
-      node.getDB().getGoldSetMap().put(GOLD_MAP_KEY, gs.build());
-    }
-
-    Map<Integer, BlockSummary> last_gold_set;
 
     public void runPass()
     {
@@ -1180,54 +816,21 @@ public class ShardBlockForge
         return;
       }
 
-      if (last_gold_set != null)
+      Map<Integer, BlockHeader> gold_set = node.getGoldSetFinder().getGoldenSet(8);
+
+      if (gold_set != null)
       {
-        String old_gold = getGoldSummary(last_gold_set);
-        last_gold_set = goldPrune(goldUpgrade(last_gold_set));
-        String new_gold = getGoldSummary(last_gold_set);
-        logger.info(String.format("Gold set upgrade: %s to %s", old_gold, new_gold));
-        saveGoldSet(last_gold_set);
-      }
-
-
-      if (rnd.nextDouble() < 0.01) last_gold_set = null;
-
-      node.getGoldSetFinder().getGoldenSet(8);
-
-      if (last_gold_set == null)
-      {
-      
-        int depth=8;
-        while (last_gold_set == null)
-        {
-          Map<Integer, BlockSummary> gold = getGoldenSet(depth);
-          if (gold != null)
-          {
-            last_gold_set = gold;
-            String new_gold = getGoldSummary(last_gold_set);
-            logger.info(String.format("Gold set found: %s", new_gold));
-            saveGoldSet(last_gold_set);
-          }
-          else
-          {
-            depth++;
-            if (depth > 10)
-            {
-              logger.warning("No gold set found at max depth");
-              break;
-            }
-          }
-        }
-      }
-
-      if (last_gold_set != null)
-      {
-        Map<String, ChainHash> gold_known_map = getKnownMap(last_gold_set.values());
+        Map<String, ChainHash> gold_known_map = node.getGoldSetFinder().getKnownMap(gold_set);
         System.out.println("Gold restrict size: " + gold_known_map.size());
-        possible_set.addAll(exploreBlocks(last_gold_set.values(), false, gold_known_map));
-      }
+        List<BlockSummary> source_blocks = new LinkedList<>();
+        for(BlockHeader h : gold_set.values())
+        {
+          BlockSummary bs = node.getForgeInfo().getSummary(h.getSnowHash());
+          if (bs != null) source_blocks.add(bs);
+        }
 
-      if (possible_set.size() == 0) last_gold_set=null;
+        possible_set.addAll(exploreBlocks(source_blocks, false, gold_known_map));
+      }
 
       System.out.println("ZZZ Possible blocks: " + possible_set.size());
       int printed = 0;
