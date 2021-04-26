@@ -221,6 +221,14 @@ public class ShardUtxoImport
 
     node.getDB().getChildBlockMapSet().add(tip.getHeader().getPrevBlockHash(), hash.getBytes());
 
+    if (node.getForgeInfo().getShardHead(shard_id) != null)
+    {
+      if (node.getForgeInfo().getShardHead(shard_id).getBlockHeight() > tip.getHeader().getBlockHeight() + 10)
+      { // old tip, who cares?
+        return null;
+      }
+    }
+
     return addBlockTrust(hash, 0);
 
 
