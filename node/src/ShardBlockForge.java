@@ -591,10 +591,10 @@ public class ShardBlockForge
 
       for(ByteString next_hash : node.getDB().getChildBlockMapSet().getSet( start_point.getBytes(), 2000) )
       {
-        BlockHeader h = node.getForgeInfo().getHeader(next_hash);
+        BlockHeader h = node.getForgeInfo().getHeader(new ChainHash(next_hash));
         if (h != null)
         if (h.getShardId() == external_shard_id)
-        if (checkCollisions( restrict_known_map, bs) != null)
+        if (node.getGoldSetFinder().checkCollisions( restrict_known_map, new ChainHash(next_hash) ) != null)
         {
           BigInteger work = BigInteger.valueOf(h.getBlockHeight());
           BlockImportList.Builder bil = BlockImportList.newBuilder();
@@ -602,7 +602,7 @@ public class ShardBlockForge
 
           options.put(work, bil.build());
 
-          TreeMap<BigInteger,BlockImportList> down = getPath(h.getSnowHash(),
+          TreeMap<BigInteger,BlockImportList> down = getPath(new ChainHash(h.getSnowHash()),
             external_shard_id, restrict_known_map);
 
           for(Map.Entry<BigInteger, BlockImportList> me : down.entrySet())
