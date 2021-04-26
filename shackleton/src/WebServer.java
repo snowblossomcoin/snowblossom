@@ -326,6 +326,7 @@ public class WebServer implements WebHandler
     for(int h=endblock; h > min; h--)
     {
       BlockHeader blk_head = shackleton.getStub().getBlockHeader(RequestBlockHeader.newBuilder().setBlockHeight(h).build());
+      if (blk_head == null) break;
       ChainHash hash = new ChainHash(blk_head.getSnowHash());
       out.println(getBlockSummaryLine(hash));
     }
