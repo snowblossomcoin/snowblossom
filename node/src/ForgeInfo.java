@@ -242,6 +242,7 @@ public class ForgeInfo
     {
       ChainHash tree_root = descend(start, depth);
 
+
       return climb(tree_root, shard_id);
     }
   }
@@ -272,7 +273,7 @@ public class ForgeInfo
     if (depth==0) return start;
 
 		BlockHeader h = getHeader(start);
-    if (h == null) return null;
+    if (h == null) return start; // can't descend any more, just use this
     if (h.getBlockHeight()==0) return start;
     return descend(new ChainHash(h.getPrevBlockHash()), depth-1);
 
