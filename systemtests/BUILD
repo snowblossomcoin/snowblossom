@@ -144,4 +144,22 @@ java_test(
     size = "medium",
 )
 
+java_test(
+    name = "systemtests.test.ShardTestFullJambo",
+    test_class = "systemtests.test.ShardTestFullJambo",
+    srcs = ["test/SpoonTest.java", "test/ShardTestFullJambo.java"],
+    deps = [
+        "//lib:lib",
+        "//lib:rocksdb",
+        "//protolib:protogrpc",
+        "//miner:miner",
+        "//node",
+        "//client:client",
+        "//shackleton:shackleton",
+        "@duckutil//:duckutil_lib",
+        "@build_stack_rules_proto//java:grpc_netty",
+    ],
+    size = "medium",
+)
+
 
