@@ -195,6 +195,7 @@ public class ForgeInfo
       if (block_inclusion_cache.containsKey(hash))
         return block_inclusion_cache.get(hash);
     }
+    
     Map<String, ChainHash> map = getInclusionMapInternal(hash, node.getParams().getMaxShardSkewHeight()+2);
 
     if (map != null)
@@ -213,6 +214,7 @@ public class ForgeInfo
     HashMap<String, ChainHash> map = new HashMap<>(16,0.5f);
 
     BlockHeader h = getHeader(hash); 
+    if (h == null) return null;
     Validation.checkCollisionsNT(map, h.getShardId(), h.getBlockHeight(), hash);
     Validation.checkCollisionsNT(map, h.getShardImportMap());
     

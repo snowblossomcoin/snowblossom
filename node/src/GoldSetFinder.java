@@ -236,8 +236,11 @@ public class GoldSetFinder
     try(TimeRecordAuto tra_blk = TimeRecord.openAuto("GoldSetFinder.checkCollisions(m,hash)"))
     {
       OverlayMap<String, ChainHash> known_map = new OverlayMap<>(known_map_in, true);
+
+      Map<String, ChainHash> block_map = node.getForgeInfo().getInclusionMap(hash);
+      if (block_map == null) return null;
 			
-			for(Map.Entry<String, ChainHash> me : node.getForgeInfo().getInclusionMap(hash).entrySet())
+			for(Map.Entry<String, ChainHash> me : block_map.entrySet())
       {
         String key = me.getKey();
         ChainHash h = me.getValue();
