@@ -226,7 +226,10 @@ public class ForgeInfo
     }
     if (depth > 0)
     {
-      map.putAll(getInclusionMapInternal( new ChainHash(h.getPrevBlockHash()), depth-1));
+      Map<String, ChainHash> sub = getInclusionMapInternal( new ChainHash(h.getPrevBlockHash()), depth-1);
+
+      if (sub != null)
+      map.putAll(sub);
     }
 
     return map;
