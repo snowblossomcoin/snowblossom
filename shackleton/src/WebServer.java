@@ -244,6 +244,7 @@ public class WebServer implements WebHandler
     out.println("<h2>Braid Status</h2>");
 
     printBraidHeads(out, node_status);
+    printBraidSummary(out, node_status);
     printBraidStatus(out, node_status);
 
     out.println("<h2>Chain Status</h2>");
@@ -328,6 +329,39 @@ public class WebServer implements WebHandler
       ChainHash hash = new ChainHash(blk_head.getSnowHash());
       out.println(getBlockSummaryLine(hash));
     }
+  }
+
+  private void printChainSummary(BlockSummary summary, PrintStream out)
+  {
+    NetworkParams params = shackleton.getParams();
+
+    BlockHeader header = summary.getHeader();
+    out.println(String.format("<h3>Shard: %d</h3>", header.getShardId()));
+    out.println("<pre>");
+
+    SnowFieldInfo sf = params.getSnowFieldInfo(summary.getActivatedField());
+    SnowFieldInfo next_sf = params.getSnowFieldInfo(summary.getActivatedField() + 1);
+    double previous_diff = PowUtil.getDiffForTarget(sf.getActivationTarget());
+    double avg_diff = PowUtil.getDiffForTarget(BlockchainUtil.readInteger(summary.getTargetAverage()));
+    double next_diff = PowUtil.getDiffForTarget(next_sf.getActivationTarget());
+    int percent_to_next_field = (int)Math.max(0, Math.round(100 * (avg_diff-previous_diff) / (next_diff-previous_diff)));
+
+    out.println("work_sum: " + summary.getWorkSum());
+    out.println("blocktime_average_ms: " + summary.getBlocktimeAverageMs());
+    out.println("activated_field: " + summary.getActivatedField() + " " + sf.getName() + " (" + percent_to_next_field + "% to " + Math.round(next_diff) + ")");
+    out.println("total_transactions: " + summary.getTotalTransactions());
+
+
+    double target_diff = PowUtil.getDiffForTarget(BlockchainUtil.targetBytesToBigInteger(header.getTarget()));
+    double block_time_sec = summary.getBlocktimeAverageMs() / 1000.0 ;
+    double estimated_hash = Math.pow(2.0, target_diff) / block_time_sec / 1e6;
+    DecimalFormat df =new DecimalFormat("0.000");
+    df.setRoundingMode(RoundingMode.FLOOR);
+
+    out.println(String.format("difficulty (avg): %s (%s)", df.format(target_diff), df.format(avg_diff)));
+    out.println(String.format("estimated network hash rate: %s Mh/s", df.format(estimated_hash)));
+ 
+    out.println("</pre>");
   }
 
   private String getBlockSummaryLine(ChainHash hash)
@@ -468,6 +502,20 @@ public class WebServer implements WebHandler
             TransactionUtil.prettyDisplayTxHTML(tx, out, shackleton.getParams(), inValues);
             out.println();
       }
+  }
+
+
+  private void printBraidSummary(PrintStream out, NodeStatus ns)
+  {
+    TreeSet<Integer> shards = new TreeSet<>();
+    shards.addAll(ns.getShardSummaryMap().keySet());
+    for(int shard : shards)
+    {
+      BlockSummary bs_shard_head = ns.getShardSummaryMap().get(shard);
+      printChainSummary(bs_shard_head, out);
+
+    }
+
   }
 
   private void printBraidHeads(PrintStream out, NodeStatus ns)
