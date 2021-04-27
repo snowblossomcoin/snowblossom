@@ -29,7 +29,7 @@ public class LoadTestShard
   private final boolean use_pending=true;
 
   private int preferred_shard = -1;
-  private RateLimit rate_limit = new RateLimit(8.0, 15.0);
+  private RateLimit rate_limit = new RateLimit(16.0, 15.0);
 
   public LoadTestShard(SnowBlossomClient client)
   {
