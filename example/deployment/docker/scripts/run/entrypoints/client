@@ -6,6 +6,7 @@ set -eu
 cd /data
 
 cat <<EOF > /tmp/client.conf
+env_override_prefix=snow_client__
 log_config_file=${SNOWBLOSSOM_LOG_CONF:-log.conf}
 network=${SNOWBLOSSOM_NETWORK:-mainnet}
 node_host=${SNOWBLOSSOM_NODE_HOST:-localhost}

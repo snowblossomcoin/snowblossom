@@ -12,6 +12,8 @@ import io.grpc.ServerBuilder;
 import io.grpc.netty.NettyServerBuilder;
 import io.netty.handler.ssl.SslContext;
 import java.io.File;
+import java.io.PrintStream;
+import java.io.FileOutputStream;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
@@ -319,6 +321,15 @@ public class SnowBlossomNode
       logger.log(Level.WARNING, String.format("Directory %s does not contain keys, creating new keys", wallet_path.getPath()));
       wallet_db = WalletUtil.makeNewDatabase(config_wallet, params);
       WalletUtil.saveWallet(wallet_db, wallet_path);
+
+      AddressSpecHash spec = AddressUtil.getHashForSpec(wallet_db.getAddresses(0));
+      String addr = AddressUtil.getAddressString("node", spec);
+
+      File dir = new File(config.get(param_name));
+      PrintStream out = new PrintStream(new FileOutputStream( new File(dir, "address.txt"), false));
+      out.println(addr);
+      out.close();
+
     }
 
     return wallet_db;
