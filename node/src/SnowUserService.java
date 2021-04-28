@@ -226,7 +226,8 @@ public class SnowUserService extends UserServiceGrpc.UserServiceImplBase impleme
       tx = Transaction.parseFrom(tx.toByteString());
       if (node.getMemPool().addTransaction(tx))
       {
-        node.getPeerage().broadcastTransaction(tx);
+        // TOTO - zomgbbqwtf put this back in
+        //node.getPeerage().broadcastTransaction(tx);
       }
       else
       {
