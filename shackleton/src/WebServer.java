@@ -465,45 +465,29 @@ public class WebServer implements WebHandler
   private void displayBlock(PrintStream out, Block blk)
     throws ValidationException
   {
-      BlockHeader header = blk.getHeader();
-      out.println("<pre>");
-      out.println("hash: " + new ChainHash(header.getSnowHash()));
-      out.println("height: " + header.getBlockHeight());
-      out.println("prev_block_hash: " + new ChainHash(header.getPrevBlockHash()));
-      out.println("utxo_root_hash: " + new ChainHash(header.getUtxoRootHash()));
+    BlockHeader header = blk.getHeader();
+    out.println("<pre>");
+    out.println("shard: "+ header.getShardId());
+    out.println("hash: " + new ChainHash(header.getSnowHash()));
+    out.println("height: " + header.getBlockHeight());
+    out.println("prev_block_hash: " + new ChainHash(header.getPrevBlockHash()));
+    out.println("utxo_root_hash: " + new ChainHash(header.getUtxoRootHash()));
 
-      SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm");
-      sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
-      Date resultdate = new Date(header.getTimestamp());
-      out.println("timestamp: " + header.getTimestamp() + " :: " + sdf.format(resultdate) + " UTC");
-      out.println("snow_field: " + header.getSnowField());
-      out.println("size: " + blk.toByteString().size());
-      out.println();
+    SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm");
+    sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
+    Date resultdate = new Date(header.getTimestamp());
+    out.println("timestamp: " + header.getTimestamp() + " :: " + sdf.format(resultdate) + " UTC");
+    out.println("snow_field: " + header.getSnowField());
+    out.println("size: " + blk.toByteString().size());
+    out.println();
 
-      out.flush();
+    out.flush();
 
-      for(Transaction tx : blk.getTransactionsList()) 
-      {
-            LinkedList<Double> inValues = new LinkedList<Double>();
-            try 
-      {
-                for(TransactionInput in : TransactionUtil.getInner(tx).getInputsList()) 
+    for(Transaction tx : blk.getTransactionsList()) 
     {
-                  int idx = in.getSrcTxOutIdx();
-                  Transaction txo = shackleton.getStub().getTransaction( RequestTransaction.newBuilder().setTxHash(in.getSrcTxId()).build());
-                  TransactionInner innero = TransactionUtil.getInner(txo);
-                  TransactionOutput outo = innero.getOutputs(idx);
-                  double value = outo.getValue() / Globals.SNOW_VALUE_D;
-                  inValues.addLast(value);
-                }
-            } catch(Exception e) 
-      {
-                out.println(e);
-            }
-
-            TransactionUtil.prettyDisplayTxHTML(tx, out, shackleton.getParams(), inValues);
-            out.println();
-      }
+      TransactionUtil.prettyDisplayTxHTML(tx, out, shackleton.getParams());
+      out.println();
+    }
   }
 
 
@@ -637,21 +621,8 @@ public class WebServer implements WebHandler
   {
   out.println("<pre>");
   out.println("Found transaction");
-  LinkedList<Double> inValues = new LinkedList<Double>();
-  try {
-    for(TransactionInput in : TransactionUtil.getInner(tx).getInputsList()) {
-      int idx = in.getSrcTxOutIdx();
-      Transaction txo = shackleton.getStub().getTransaction( RequestTransaction.newBuilder().setTxHash(in.getSrcTxId()).build());
-      TransactionInner innero = TransactionUtil.getInner(txo);
-      TransactionOutput outo = innero.getOutputs(idx);
-      double value = outo.getValue() / Globals.SNOW_VALUE_D;
-      inValues.addLast(value);
-    }
-  } catch(Exception e) {
-    out.println(e);
-  }
 
-  TransactionUtil.prettyDisplayTxHTML(tx, out, shackleton.getParams(), inValues);
+  TransactionUtil.prettyDisplayTxHTML(tx, out, shackleton.getParams());
   out.println("");
   out.println("Transaction status:");
 
