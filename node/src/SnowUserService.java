@@ -230,7 +230,7 @@ public class SnowUserService extends UserServiceGrpc.UserServiceImplBase impleme
       }
       else
       {
-        logger.info("Rejecting transaction: no mempool accepted");
+        logger.fine("Rejecting transaction: no mempool accepted");
 
         responseObserver.onNext(SubmitReply.newBuilder()
           .setSuccess(false)
