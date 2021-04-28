@@ -115,7 +115,8 @@ public class PeerLink implements StreamObserver<PeerMessage>
         {
           if (node.getMemPool().addTransaction(tx))
           {
-            node.getPeerage().broadcastTransaction(tx);
+            // TODO - put this back in oh god ZOMGWTFBBQ
+            //node.getPeerage().broadcastTransaction(tx);
           }
           else
           {
