@@ -36,7 +36,12 @@ public class LoadTestShard
     this.client = client;
     FeeEstimate fee_estimate = client.getFeeEstimate();
     active_shards = new ArrayList();
-    active_shards.addAll( fee_estimate.getShardMap().keySet() );
+    active_shards.add(3);
+    active_shards.add(4);
+    active_shards.add(5);
+    active_shards.add(6);
+    // get list of active shards in a better way
+    //active_shards.addAll( fee_estimate.getShardMap().keySet() );
     time_record = new TimeRecord();
     TimeRecord.setSharedRecord(time_record);
 
