@@ -155,8 +155,8 @@ public class LoadTestShard
 
         ChainHash tx_hash = new ChainHash(tx.getTxHash());
 
-        logger.info("Transaction: " + new ChainHash(tx.getTxHash()) + " - " + tx.toByteString().size());
-        TransactionUtil.prettyDisplayTx(tx, System.out, client.getParams());
+        //logger.info("Transaction: " + new ChainHash(tx.getTxHash()) + " - " + tx.toByteString().size());
+        //TransactionUtil.prettyDisplayTx(tx, System.out, client.getParams());
 
         client.getUTXOUtil().cacheTransaction(tx);
 
@@ -170,13 +170,13 @@ public class LoadTestShard
             if (reply.getSuccess())
             {
               
-              logger.info("Submit: " + reply);
+              //logger.info("Submit: " + reply);
               sent=true;
 
             }
             else
             {
-              logger.info("Error: " + reply.getErrorMessage());
+              //logger.info("Error: " + reply.getErrorMessage());
               if (reply.getErrorMessage().contains("full"))
               {
                 Thread.sleep(60000);
