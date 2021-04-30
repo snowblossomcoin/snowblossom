@@ -763,10 +763,10 @@ public class ShardBlockForge
       }
 
         // larger is better
-        return o.getSortWork().compareTo(getSortWork());
+        //return o.getSortWork().compareTo(getSortWork());
       
 
-      //return getRandomVal().compareTo(o.getRandomVal());
+      return getRandomVal().compareTo(o.getRandomVal());
 
 
     }
