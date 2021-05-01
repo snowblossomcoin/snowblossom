@@ -50,6 +50,8 @@ public class ShardBlockForge
 
   private ByteString GOLD_MAP_KEY = ByteString.copyFrom("forge".getBytes());
 
+  private Dancer dancer;
+
   public ShardBlockForge(SnowBlossomNode node)
     throws Exception
   {
@@ -65,6 +67,8 @@ public class ShardBlockForge
     {
       forge_log = null;
     }
+
+    this.dancer = new Dancer(node);
 
     concept_update_thread = new ConceptUpdateThread();
     concept_update_thread.start();
@@ -122,6 +126,114 @@ public class ShardBlockForge
     }
   }
 
+
+  private Set<BlockConcept> exploreCoordinator(int coord_shard)
+  {
+    TreeSet<BlockConcept> concepts = new TreeSet<>();
+    // We are just assuming the current head is following the dance.
+    // Things will get real weird real quick if not.
+
+    BlockHeader prev_header = node.getForgeInfo().getShardHead(coord_shard);
+    if (prev_header == null) return concepts;
+
+    BlockSummary prev = node.getForgeInfo().getSummary( prev_header.getSnowHash() );
+
+    List<BlockConcept> concept_list = initiateBlockConcepts(prev);
+
+    for(BlockConcept bc : concept_list)
+    {
+      
+      for(BlockHeader h : node.getForgeInfo().getNetworkActiveShards().values())
+      {
+        if (h.getShardId() != coord_shard)
+        {
+          // TODO replace using the head of shard with longest path from current location
+          // in that shard (maybe)
+          List<BlockHeader> imp_seq = node.getForgeInfo().getImportPath(bc.getShardHeads(), h);
+          if (imp_seq == null) break;
+
+          BlockConcept bc_up = bc;
+
+          for(BlockHeader bh : imp_seq)
+          {
+            if (dancer.isCompliant(bh))
+            {
+              bc_up = bc_up.importShard(bh);
+            }
+            else
+            {
+              bc_up=null;
+              break;
+            }
+          }
+          if (bc_up != null) bc=bc_up;
+        }
+      }
+
+      concepts.add(bc);
+
+    }
+
+    return concepts;
+
+  }
+
+  private Set<BlockConcept> exploreNonCoordinator(int src_shard, int coord_shard)
+  {
+    TreeSet<BlockConcept> concepts = new TreeSet<>();
+
+    BlockHeader prev_header = node.getForgeInfo().getShardHead(src_shard);
+
+    BlockSummary prev = node.getForgeInfo().getSummary( prev_header.getSnowHash() );
+    BlockHeader coord_head = node.getForgeInfo().getShardHead(coord_shard);
+    List<BlockHeader> coord_imp_lst = node.getForgeInfo().getImportPath(prev, coord_head);
+    if (coord_imp_lst == null) return concepts;
+
+    List<BlockConcept> concept_list = initiateBlockConcepts(prev);
+
+    for(BlockConcept bc : concept_list)
+    {
+
+      // Add ass many as are in compliance
+      for(BlockHeader h : coord_imp_lst)
+      {
+        if (dancer.isCompliant(h))
+        {
+          bc = bc.importShard(h);
+
+          // For each block imported by this coordinator header, try to import it
+          for(BlockImportList bil : h.getShardImportMap().values())
+          {
+            for(ByteString hash : bil.getHeightMap().values())
+            {
+              BlockHeader imp_h = node.getForgeInfo().getHeader(new ChainHash(hash));
+              List<BlockHeader> path = node.getForgeInfo().getImportPath(bc.getShardHeads(), imp_h);
+              if (path != null)
+              {
+                for(BlockHeader h_imp : path)
+                {
+                  bc = bc.importShard(h_imp);
+
+                }
+
+              }
+
+            }
+
+          }
+
+        }
+        else
+        {
+          break;
+        }
+      }
+      concepts.add(bc);
+
+    }
+
+    return concepts;
+  }
   /**
    * Return a set of block concepts
    * @param possible_source_blocks - blocks to use as parents of new blocks
@@ -629,6 +741,12 @@ public class ShardBlockForge
 
   }
 
+  public boolean isCoordinator(int shard)
+  {
+    return dancer.isCoordinator(shard);
+  }
+  
+
   /**
    * Represents a block we could flesh out and mine, if it makes sense to do so
    */
@@ -821,20 +939,25 @@ public class ShardBlockForge
         return;
       }
 
-      Map<Integer, BlockHeader> gold_set = node.getGoldSetFinder().getGoldenSet(8);
-
-      if (gold_set != null)
+      for(int src_shard : node.getActiveShards())
       {
-        Map<String, ChainHash> gold_known_map = node.getGoldSetFinder().getKnownMap(gold_set);
-        System.out.println("Gold restrict size: " + gold_known_map.size());
-        List<BlockSummary> source_blocks = new LinkedList<>();
-        for(BlockHeader h : gold_set.values())
-        {
-          BlockSummary bs = node.getForgeInfo().getSummary(h.getSnowHash());
-          if (bs != null) source_blocks.add(bs);
+        if (isCoordinator(src_shard))
+        { // Coordinator dance
+          possible_set.addAll( exploreCoordinator(src_shard) );
+        }
+        else
+        { // Non-coordinator dance
+          // Figure out possible coordinator shards, use their view of this shard
+          // to extend this shard
+          for(int coord : node.getForgeInfo().getNetworkActiveShards().keySet())
+          {
+            if (isCoordinator(coord))
+            {
+              possible_set.addAll( exploreNonCoordinator(src_shard, coord) );
+            }
+          }
         }
 
-        possible_set.addAll(exploreBlocks(source_blocks, false, gold_known_map));
       }
 
       System.out.println("ZZZ Possible blocks: " + possible_set.size());
@@ -884,7 +1007,6 @@ public class ShardBlockForge
  
   public void tickle(BlockSummary bs)
   {
-    // TODO - prune concepts
     ArrayList<BlockConcept> cur_top = current_top_concepts;
     if (cur_top!=null)
     {

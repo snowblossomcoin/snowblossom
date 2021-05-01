@@ -284,6 +284,75 @@ public class ForgeInfo
 
   }
 
+  public List<BlockHeader> getImportPath(BlockSummary start, BlockHeader target)
+  {
+    return getImportPath(start.getImportedShardsMap(), target);
+  }
 
+  /**
+   * Return the ordered list of blocks that need to be added to get from what
+   * is imported in start to get to the target block.
+   *
+   * If such  a path is possible returns null. This could be because we lack
+   * information about intermediate blocks, or the BlockSummary is already down some other path.
+   *
+   * If the target is already in the block summary, return an empty list.
+   */
+  public List<BlockHeader> getImportPath(Map<Integer,BlockHeader> start, BlockHeader target)
+  {
+    if (target == null) return null;
+
+    int shard_id = target.getShardId();
+    if (start.containsKey(shard_id))
+    { // We have something for this shard
+      BlockHeader included = start.get(shard_id);
+
+      if (target.getBlockHeight() < included.getBlockHeight())
+      { // We already have a block that is past this one, impossible
+        return null;
+      }
+      if (target.getBlockHeight() == included.getBlockHeight())
+      {
+        if (target.getSnowHash().equals(included.getSnowHash()))
+        {
+          // We are home
+          return new LinkedList<BlockHeader>();
+        }
+        else
+        {
+          // Wrong block is included at this height - impossible
+          return null;
+
+        }
+      }
+      if(target.getBlockHeight() > included.getBlockHeight())
+      {
+          BlockHeader prev = getHeader(new ChainHash(target.getPrevBlockHash()));
+
+          List<BlockHeader> sub_list = getImportPath(start, prev);
+          if (sub_list == null) return null;
+
+          // If we reached it, then add ourselves on and done
+          sub_list.add(target);
+          return sub_list;
+      }
+
+      throw new RuntimeException("unreachable");
+
+    }
+    else
+    { // The summary does not have the shard in question, just keep going down
+      BlockHeader prev = getHeader(new ChainHash(target.getPrevBlockHash()));
+
+      List<BlockHeader> sub_list = getImportPath(start, prev);
+      if (sub_list == null) return null;
+
+      // If we reached it, then add ourselves on and done
+      sub_list.add(target);
+      return sub_list;
+    }
+
+
+  }
 
 }

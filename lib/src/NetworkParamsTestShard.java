@@ -91,7 +91,7 @@ public class NetworkParamsTestShard extends NetworkParams
   public int getMaxShardSkewHeight() {return 6; } 
     
   @Override
-  public int getShardForkThreshold() { return getMaxBlockSize() / 64; }
+  public int getShardForkThreshold() { return getMaxBlockSize() / 256; }
 
 
 }
