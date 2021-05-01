@@ -134,15 +134,24 @@ public class ShardBlockForge
 
     for(BlockConcept bc : concept_list)
     {
-      
       for(BlockHeader h : node.getForgeInfo().getNetworkActiveShards().values())
       {
         if (h.getShardId() != coord_shard)
         {
-          // TODO replace using the head of shard with longest path from current location
-          // in that shard (maybe)
-          //List<BlockHeader> imp_seq = node.getForgeInfo().getLongestUnder(
+          // Get a path to the highest known block in that shard
           List<BlockHeader> imp_seq = node.getForgeInfo().getImportPath(bc.getShardHeads(), h);
+
+          // But if we have a block in the shard already,
+          // try to take the highest from that instead
+          if (bc.getShardHeads().containsKey(h.getShardId()))
+          {
+            List<BlockHeader> imp_seq_high = node.getForgeInfo().getLongestUnder( bc.getShardHeads().get(h.getShardId()));
+            if (imp_seq_high != null)
+            {
+              imp_seq = imp_seq_high;
+            }
+          }
+
           if (imp_seq == null) break;
 
           BlockConcept bc_up = bc;
@@ -175,6 +184,9 @@ public class ShardBlockForge
   {
     TreeSet<BlockConcept> concepts = new TreeSet<>();
 
+    // TODO - rather than grabbing the head here we should go from the top
+    // known coordinator block and see what is imported for this shart and go 
+    // out from there
     BlockHeader prev_header = node.getForgeInfo().getShardHead(src_shard);
     if (prev_header == null) return concepts;
 
