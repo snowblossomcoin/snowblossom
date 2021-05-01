@@ -203,11 +203,11 @@ public class SnowUserService extends UserServiceGrpc.UserServiceImplBase impleme
     }
     catch(ValidationException e)
     {
-      logger.info("Rejecting block - no mempool accepted");
+      logger.info("Rejecting block: " + e);
 
       responseObserver.onNext(SubmitReply.newBuilder()
           .setSuccess(false)
-          .setErrorMessage("no mempool accepted")
+          .setErrorMessage("Rejecting block: " + e)
         .build());
       responseObserver.onCompleted();
       return;
@@ -227,7 +227,7 @@ public class SnowUserService extends UserServiceGrpc.UserServiceImplBase impleme
       if (node.getMemPool().addTransaction(tx))
       {
         // TOTO - zomgbbqwtf put this back in
-        //node.getPeerage().broadcastTransaction(tx);
+        node.getPeerage().broadcastTransaction(tx);
       }
       else
       {

@@ -136,7 +136,7 @@ public class ShardBlockForge
     {
       for(BlockHeader h : node.getForgeInfo().getNetworkActiveShards().values())
       {
-        if (h.getShardId() != coord_shard)
+        if (!ShardUtil.getCoverSet(coord_shard, node.getParams()).contains(h.getShardId()))
         {
           // Get a path to the highest known block in that shard
           List<BlockHeader> imp_seq = node.getForgeInfo().getImportPath(bc.getShardHeads(), h);
@@ -201,7 +201,7 @@ public class ShardBlockForge
     for(BlockConcept bc : concept_list)
     {
 
-      // Add ass many as are in compliance
+      // Add as many as are in compliance
       for(BlockHeader h : coord_imp_lst)
       {
         if (dancer.isCompliant(h))
@@ -214,15 +214,18 @@ public class ShardBlockForge
             for(ByteString hash : bil.getHeightMap().values())
             {
               BlockHeader imp_h = node.getForgeInfo().getHeader(new ChainHash(hash));
-              List<BlockHeader> path = node.getForgeInfo().getImportPath(bc.getShardHeads(), imp_h);
-              if (path != null)
+              if (!ShardUtil.getCoverSet(src_shard, node.getParams()).contains(imp_h.getShardId()))
               {
-                for(BlockHeader h_imp : path)
+                List<BlockHeader> path = node.getForgeInfo().getImportPath(bc.getShardHeads(), imp_h);
+                if (path != null)
                 {
-                  bc = bc.importShard(h_imp);
+                  for(BlockHeader h_imp : path)
+                  {
+                    bc = bc.importShard(h_imp);
+
+                  }
 
                 }
-
               }
 
             }
