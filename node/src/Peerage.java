@@ -11,8 +11,8 @@ import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import snowblossom.lib.*;
-import snowblossom.proto.*;
 import snowblossom.lib.tls.MsgSigUtil;
+import snowblossom.proto.*;
 
 /**
  * Joe: Should I class that handles communicating with a bunch of peers be called the Peerage?

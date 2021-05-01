@@ -1,15 +1,12 @@
 package snowblossom.node;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 import com.google.protobuf.ByteString;
 import duckutil.LRUCache;
 import duckutil.Pair;
 import duckutil.PeriodicThread;
 import duckutil.TimeRecord;
 import duckutil.TimeRecordAuto;
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.PrintStream;
 import java.math.BigInteger;
@@ -22,12 +19,10 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
-import java.util.Scanner;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.logging.Logger;
-import org.junit.Assert;
 import snowblossom.lib.*;
 import snowblossom.lib.trie.HashUtils;
 import snowblossom.proto.*;
@@ -183,8 +178,10 @@ public class ShardBlockForge
     TreeSet<BlockConcept> concepts = new TreeSet<>();
 
     BlockHeader prev_header = node.getForgeInfo().getShardHead(src_shard);
+    if (prev_header == null) return concepts;
 
     BlockSummary prev = node.getForgeInfo().getSummary( prev_header.getSnowHash() );
+
     BlockHeader coord_head = node.getForgeInfo().getShardHead(coord_shard);
     List<BlockHeader> coord_imp_lst = node.getForgeInfo().getImportPath(prev, coord_head);
     if (coord_imp_lst == null) return concepts;

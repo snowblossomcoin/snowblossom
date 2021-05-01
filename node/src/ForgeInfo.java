@@ -1,37 +1,20 @@
 package snowblossom.node;
 
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 import com.google.protobuf.ByteString;
 import duckutil.LRUCache;
-import duckutil.Pair;
-import duckutil.PeriodicThread;
 import duckutil.TimeRecord;
 import duckutil.TimeRecordAuto;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.PrintStream;
-import java.math.BigInteger;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Random;
-import java.util.Scanner;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
-import java.util.logging.Logger;
-import org.junit.Assert;
 import snowblossom.lib.*;
-import snowblossom.lib.trie.HashUtils;
 import snowblossom.proto.*;
-
 
 /**
  * Class for accessing various information needed to build new blocks in a sharded setup.
@@ -40,10 +23,10 @@ import snowblossom.proto.*;
  */
 public class ForgeInfo
 {
-	public static final int CACHE_SIZE=5000;
+  public static final int CACHE_SIZE=5000;
 
   private LRUCache<ByteString, BlockSummary> block_summary_cache = new LRUCache<>(CACHE_SIZE);
-	private LRUCache<ChainHash, BlockHeader> block_header_cache = new LRUCache<>(CACHE_SIZE);
+  private LRUCache<ChainHash, BlockHeader> block_header_cache = new LRUCache<>(CACHE_SIZE);
   private LRUCache<ChainHash, Map<String, ChainHash> > block_inclusion_cache = new LRUCache<>(CACHE_SIZE);
 
   private SnowBlossomNode node;
@@ -148,7 +131,7 @@ public class ForgeInfo
 
     for(int i=0; i<= node.getParams().getMaxShardId(); i++)
     {
-			// We might not have info on intermediate shards that we are not tracking
+      // We might not have info on intermediate shards that we are not tracking
       {
         BlockHeader h = getShardHead(i);
         if (h != null)
@@ -277,7 +260,7 @@ public class ForgeInfo
   {
     if (depth==0) return start;
 
-		BlockHeader h = getHeader(start);
+    BlockHeader h = getHeader(start);
     if (h == null) return start; // can't descend any more, just use this
     if (h.getBlockHeight()==0) return start;
     return descend(new ChainHash(h.getPrevBlockHash()), depth-1);

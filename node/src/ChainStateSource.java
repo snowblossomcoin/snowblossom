@@ -1,7 +1,6 @@
 package snowblossom.node;
 
 import java.util.Set;
-
 import snowblossom.lib.NetworkParams;
 
 public interface ChainStateSource

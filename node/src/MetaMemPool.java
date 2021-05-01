@@ -1,12 +1,12 @@
 package snowblossom.node;
 
 import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.TreeMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.Map;
-import java.util.List;
-import java.util.Set;
 import snowblossom.lib.AddressSpecHash;
 import snowblossom.lib.ChainHash;
 import snowblossom.lib.Validation;

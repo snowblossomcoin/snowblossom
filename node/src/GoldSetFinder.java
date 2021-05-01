@@ -1,15 +1,15 @@
 package snowblossom.node;
 
-import com.google.protobuf.ByteString;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.protobuf.ByteString;
 import duckutil.TimeRecord;
 import duckutil.TimeRecordAuto;
 import java.math.BigInteger;
-import java.util.Map;
 import java.util.HashMap;
-import java.util.Set;
 import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 import java.util.TreeMap;
 import java.util.logging.Logger;
 import org.junit.Assert;
@@ -175,7 +175,7 @@ public class GoldSetFinder
               BigInteger val_sum = BigInteger.ZERO;
               for(BlockHeader sub_h : sub_solution.values())
               {
-								val_sum = val_sum.add( BigInteger.valueOf(sub_h.getBlockHeight()) );
+                val_sum = val_sum.add( BigInteger.valueOf(sub_h.getBlockHeight()) );
                 //val_sum = val_sum.add( BlockchainUtil.readInteger( bs_sub.getWorkSum() ));
               }
           
@@ -210,8 +210,8 @@ public class GoldSetFinder
           BigInteger val_sum = BigInteger.ZERO;
           for(BlockHeader sub_h : sub_solution.values())
           {
-						val_sum = val_sum.add( BigInteger.valueOf(sub_h.getBlockHeight()) );
-					}
+            val_sum = val_sum.add( BigInteger.valueOf(sub_h.getBlockHeight()) );
+          }
             
           if (val_sum.compareTo(best_solution_val) > 0)
           {
@@ -239,8 +239,8 @@ public class GoldSetFinder
 
       Map<String, ChainHash> block_map = node.getForgeInfo().getInclusionMap(hash);
       if (block_map == null) return null;
-			
-			for(Map.Entry<String, ChainHash> me : block_map.entrySet())
+      
+      for(Map.Entry<String, ChainHash> me : block_map.entrySet())
       {
         String key = me.getKey();
         ChainHash h = me.getValue();
@@ -297,9 +297,9 @@ public class GoldSetFinder
         for(int c : ShardUtil.getShardChildIds(s))
         {
           if (!head_shards.containsKey(c))
-					if (node.getForgeInfo().getShardHead(c)!=null)
+          if (node.getForgeInfo().getShardHead(c)!=null)
           {
-						BlockHeader h = node.getForgeInfo().getShardHead(c);
+            BlockHeader h = node.getForgeInfo().getShardHead(c);
             Set<ChainHash> hs = node.getForgeInfo().getBlocksAround( new ChainHash(h.getSnowHash()),1, c);
             head_shards.put(c, hs);
           }

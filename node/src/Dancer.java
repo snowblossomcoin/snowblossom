@@ -9,13 +9,13 @@ import snowblossom.proto.*;
  */
 public class Dancer
 {
-	private final SnowBlossomNode node;
+  private final SnowBlossomNode node;
 
-	public Dancer(SnowBlossomNode node)
-	{
-		this.node = node;
-	}
-	
+  public Dancer(SnowBlossomNode node)
+  {
+    this.node = node;
+  }
+  
   public boolean isCoordinator(int shard)
   {
     return (ShardUtil.getCoverSet(shard, node.getParams()).contains(0));
@@ -26,7 +26,7 @@ public class Dancer
    * namely, if it is a coordinator, it includes only compliant other blocks.
    * if it is not a coordinator, it includes only blocks the coordinator has included.
    */
-	public boolean isCompliant(BlockHeader header)
+  public boolean isCompliant(BlockHeader header)
   {
     int shard_id = header.getShardId();
     if (isCoordinator(shard_id))
