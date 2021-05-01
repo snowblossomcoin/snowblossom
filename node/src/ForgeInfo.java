@@ -338,4 +338,58 @@ public class ForgeInfo
 
   }
 
+  /**
+   * Return the longest list of headers starting from start
+   */
+  public LinkedList<BlockHeader> getLongestUnder(BlockHeader start)
+  {
+    if (start == null) return null;
+
+    LinkedList<BlockHeader> best_list = new LinkedList<>();
+    long best_work = 0;
+
+    for(ByteString next_hash : node.getDB().getChildBlockMapSet().getSet( start.getSnowHash(), 2000) )
+    {
+      ChainHash next = new ChainHash(next_hash);
+      BlockHeader next_head = getHeader(next);
+      if (next_head != null)
+      {
+        LinkedList<BlockHeader> lst = getLongestUnder(next_head);
+        if (lst != null)
+        {
+          lst.addFirst(next_head);
+          long work = 0;
+          for(BlockHeader bh : lst)
+          {
+            work+=getWorkEstimate(bh);
+          }
+          if (work > best_work)
+          {
+            best_work=work;
+            best_list = lst;
+          }
+
+        }
+
+      }
+    }
+
+    return best_list;
+
+
+  }
+
+  // We aren't using the same work estimating as BlockSummary.  Sort of hand waving.
+  public long getWorkEstimate(BlockHeader head)
+  {
+    long v = 1000000L;
+    
+    for(BlockImportList bil : head.getShardImportMap().values())
+    {
+      v += bil.getHeightMap().size();
+    }
+
+    return v;
+  }
+
 }
