@@ -144,6 +144,7 @@ public class ShardBlockForge
             // Get a path to the highest known block in that shard
             List<BlockHeader> imp_seq = node.getForgeInfo().getImportPath(bc.getShardHeads(), h);
 
+
             // But if we have a block in the shard already,
             // try to take the highest from that instead
             if (bc.getShardHeads().containsKey(h.getShardId()))
@@ -155,23 +156,9 @@ public class ShardBlockForge
               {
                 imp_seq = imp_seq_high;
                 ChainHash hz = new ChainHash(bc.getShardHeads().get(h.getShardId()).getSnowHash());
-                //System.out.println("Using getLongestUnder path from: " + hz);
               }
             }
             if (imp_seq == null) break;
-            /*System.out.println("Exploring coordinator: ");
-            System.out.println("Existing shards: ");
-            for(BlockHeader bh : bc.getShardHeads().values())
-            {
-              System.out.println("  " + getHeaderSummary(bh));
-            }
-            System.out.println("Imp Path: ");
-            for(BlockHeader bh : imp_seq)
-            {
-              System.out.println("  " + getHeaderSummary(bh));
-            }*/
-
-
 
             BlockConcept bc_up = bc;
 
@@ -179,7 +166,11 @@ public class ShardBlockForge
             {
               if (dancer.isCompliant(bh))
               {
-                bc_up = bc_up.importShard(bh);
+                BlockHeader join_point = node.getForgeInfo().getLatestShard(bh, coord_shard);
+                if (node.getForgeInfo().isInChain(prev_header, join_point))
+                {
+                  bc_up = bc_up.importShard(bh);
+                }
               }
               else
               {
@@ -208,15 +199,26 @@ public class ShardBlockForge
   {
     TreeSet<BlockConcept> concepts = new TreeSet<>();
 
-    // TODO - rather than grabbing the head here we should go from the top
-    // known coordinator block and see what is imported for this shart and go 
-    // out from there
-    BlockHeader prev_header = node.getForgeInfo().getShardHead(src_shard);
+    BlockHeader coord_head = node.getForgeInfo().getShardHead(coord_shard);
+
+    BlockHeader highest = node.getForgeInfo().getLatestShard(coord_head, src_shard);
+
+    {
+      LinkedList<BlockHeader> lst = node.getForgeInfo().getLongestUnder(highest);
+      if (lst != null)
+      if (lst.size() > 0)
+      {
+        highest = lst.getLast();
+      }
+
+    }
+
+    BlockHeader prev_header = highest;
+    //node.getForgeInfo().getShardHead(src_shard);
     if (prev_header == null) return concepts;
 
     BlockSummary prev = node.getForgeInfo().getSummary( prev_header.getSnowHash() );
 
-    BlockHeader coord_head = node.getForgeInfo().getShardHead(coord_shard);
     List<BlockHeader> coord_imp_lst = node.getForgeInfo().getImportPath(prev, coord_head);
     if (coord_imp_lst == null) return concepts;
 
@@ -331,12 +333,6 @@ public class ShardBlockForge
 
   }
 
-  public String getHeaderSummary(BlockHeader h)
-  {
-    String hash = "blank";
-    if (h.getSnowHash().size() > 0) hash = new ChainHash(h.getSnowHash()).toString();
-    return String.format("{s:%d h:%d %s}", h.getShardId(), h.getBlockHeight(), hash);
-  }
 
   public Block fleshOut(BlockConcept concept, SubscribeBlockTemplateRequest mine_to)
     throws ValidationException

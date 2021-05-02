@@ -197,6 +197,8 @@ public class SnowUserService extends UserServiceGrpc.UserServiceImplBase impleme
   {
     try
     {
+      logger.info("Submit block: " + node.getForgeInfo().getHeaderString(block.getHeader()));
+
       int shard_id = block.getHeader().getShardId();
       //TODO check to see if we are tracking that shard
       node.getBlockIngestor(shard_id).ingestBlock(block);

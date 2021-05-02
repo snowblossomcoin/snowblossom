@@ -392,4 +392,65 @@ public class ForgeInfo
     return v;
   }
 
+  public String getHeaderString(BlockHeader h)
+  {
+    int import_count =0;
+    for( BlockImportList bil : h.getShardImportMap().values())
+    {
+      import_count+=bil.getHeightMap().size();
+    }
+
+    String hash = "blank";
+    if (h.getSnowHash().size() > 0) hash = new ChainHash(h.getSnowHash()).toString();
+    return String.format("{s:%d h:%d imp:%d %s}", h.getShardId(), h.getBlockHeight(), import_count, hash);
+  }
+
+  /**
+   * Return the highest block of shard that has been included in the given header
+   * or null if no such information can be found.
+   */
+  public BlockHeader getLatestShard(BlockHeader h, int shard_id)
+  {
+    if (h==null) return null;
+    Set<Integer> parents = ShardUtil.getAllParents(shard_id);
+    parents.add(shard_id);
+
+    if (parents.contains(h.getShardId())) return h;
+
+    for(int s : parents)
+    {
+      if (h.getShardImportMap().containsKey(s))
+      {
+        BlockImportList bil = h.getShardImportMap().get(s);
+        TreeSet<Integer> heights = new TreeSet<>();
+        heights.addAll(bil.getHeightMap().keySet());
+
+        ChainHash hash = new ChainHash(bil.getHeightMap().get(heights.last()));
+
+        return getHeader(hash);
+      }
+    }
+
+    return getLatestShard(getHeader(new ChainHash(h.getPrevBlockHash())), shard_id);
+
+
+  }
+
+  /**
+   * Return true iff check is part of the chain ending with h
+   */
+  public boolean isInChain(BlockHeader h, BlockHeader check)
+  {
+    if (check == null) return false;
+    if (h == null) return false;
+    if (h.getBlockHeight() < check.getBlockHeight()) return false;
+    if (h.getBlockHeight() == check.getBlockHeight())
+    {
+      return h.getSnowHash().equals(check.getSnowHash());
+    }
+
+    return isInChain( getHeader(new ChainHash(h.getPrevBlockHash())), check);
+
+
+  }
 }
