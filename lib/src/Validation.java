@@ -284,6 +284,7 @@ public class Validation
   {
     try(TimeRecordAuto tra_blk = TimeRecord.openAuto("Validation.deepBlockValidation"))
     {
+
       //Check expected target
       BigInteger expected_target = PowUtil.calcNextTarget(prev_summary, params, blk.getHeader().getTimestamp());
       ByteString expected_target_bytes = BlockchainUtil.targetBigIntegerToBytes(expected_target);
@@ -452,6 +453,10 @@ public class Validation
     // shard id is same as prev block unless it was a split
     boolean shard_split=false;
 
+    if ((prev_summary == null) || (prev_summary.getHeader().getSnowHash().size() == 0))
+    {
+      throw new ValidationException("No prev summary for block");
+    }
     if (ShardUtil.shardSplit(prev_summary, params))
     {
       if (header.getShardId() == prev_summary.getHeader().getShardId())

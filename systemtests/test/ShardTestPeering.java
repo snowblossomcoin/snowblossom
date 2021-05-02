@@ -34,13 +34,14 @@ public class ShardTestPeering extends SpoonTest
 
     SnowBlossomMiner miner = startMiner(port, to_addr, snow_path, "regshard");
 
-    waitForHeight(node1, 0, 19);
-    waitForHeight(node1, 1, 28);
-    waitForHeight(node1, 2, 28);
+    waitForHeight(node1, 0, 19, 25);
+    waitForHeight(node1, 1, 28, 25);
+    waitForHeight(node1, 2, 28, 5);
 
-    waitForHeight(node2, 0, 19);
-    waitForHeight(node2, 1, 28);
-    waitForHeight(node2, 2, 28);
+
+    waitForHeight(node2, 0, 19, 30);
+    waitForHeight(node2, 1, 28, 25);
+    waitForHeight(node2, 2, 28, 5);
 
     miner.stop();
     Thread.sleep(500);

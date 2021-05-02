@@ -120,6 +120,7 @@ public class ShardBlockForge
 
 
   private Set<BlockConcept> exploreCoordinator(int coord_shard)
+    throws ValidationException
   {
     TreeSet<BlockConcept> concepts = new TreeSet<>();
     // We are just assuming the current head is following the dance.
@@ -134,45 +135,67 @@ public class ShardBlockForge
 
     for(BlockConcept bc : concept_list)
     {
-      for(BlockHeader h : node.getForgeInfo().getNetworkActiveShards().values())
+      if (node.getInterestShards().contains(bc.getHeader().getShardId()))
       {
-        if (!ShardUtil.getCoverSet(coord_shard, node.getParams()).contains(h.getShardId()))
+        for(BlockHeader h : node.getForgeInfo().getNetworkActiveShards().values())
         {
-          // Get a path to the highest known block in that shard
-          List<BlockHeader> imp_seq = node.getForgeInfo().getImportPath(bc.getShardHeads(), h);
-
-          // But if we have a block in the shard already,
-          // try to take the highest from that instead
-          if (bc.getShardHeads().containsKey(h.getShardId()))
+          if (!ShardUtil.getCoverSet(coord_shard, node.getParams()).contains(h.getShardId()))
           {
-            List<BlockHeader> imp_seq_high = node.getForgeInfo().getLongestUnder( bc.getShardHeads().get(h.getShardId()));
-            if (imp_seq_high != null)
+            // Get a path to the highest known block in that shard
+            List<BlockHeader> imp_seq = node.getForgeInfo().getImportPath(bc.getShardHeads(), h);
+
+            // But if we have a block in the shard already,
+            // try to take the highest from that instead
+            if (bc.getShardHeads().containsKey(h.getShardId()))
             {
-              imp_seq = imp_seq_high;
+              LinkedList<BlockHeader> imp_seq_high = node.getForgeInfo().getLongestUnder( bc.getShardHeads().get(h.getShardId()));
+              if (imp_seq_high != null)
+              if (imp_seq_high.size() > 0)
+              if (imp_seq_high.getLast().getShardId() == h.getShardId()) // make sure we have wandered onto some other shard
+              {
+                imp_seq = imp_seq_high;
+                ChainHash hz = new ChainHash(bc.getShardHeads().get(h.getShardId()).getSnowHash());
+                //System.out.println("Using getLongestUnder path from: " + hz);
+              }
             }
+            if (imp_seq == null) break;
+            /*System.out.println("Exploring coordinator: ");
+            System.out.println("Existing shards: ");
+            for(BlockHeader bh : bc.getShardHeads().values())
+            {
+              System.out.println("  " + getHeaderSummary(bh));
+            }
+            System.out.println("Imp Path: ");
+            for(BlockHeader bh : imp_seq)
+            {
+              System.out.println("  " + getHeaderSummary(bh));
+            }*/
+
+
+
+            BlockConcept bc_up = bc;
+
+            for(BlockHeader bh : imp_seq)
+            {
+              if (dancer.isCompliant(bh))
+              {
+                bc_up = bc_up.importShard(bh);
+              }
+              else
+              {
+                bc_up=null;
+                break;
+              }
+            }
+            if (bc_up != null) bc=bc_up;
           }
+        }
 
-          if (imp_seq == null) break;
-
-          BlockConcept bc_up = bc;
-
-          for(BlockHeader bh : imp_seq)
-          {
-            if (dancer.isCompliant(bh))
-            {
-              bc_up = bc_up.importShard(bh);
-            }
-            else
-            {
-              bc_up=null;
-              break;
-            }
-          }
-          if (bc_up != null) bc=bc_up;
+        if (bc.isComplete())
+        {
+          concepts.add(bc);
         }
       }
-
-      concepts.add(bc);
 
     }
 
@@ -181,6 +204,7 @@ public class ShardBlockForge
   }
 
   private Set<BlockConcept> exploreNonCoordinator(int src_shard, int coord_shard)
+    throws ValidationException
   {
     TreeSet<BlockConcept> concepts = new TreeSet<>();
 
@@ -200,45 +224,51 @@ public class ShardBlockForge
 
     for(BlockConcept bc : concept_list)
     {
-
-      // Add as many as are in compliance
-      for(BlockHeader h : coord_imp_lst)
+      if (node.getInterestShards().contains(bc.getHeader().getShardId()))
       {
-        if (dancer.isCompliant(h))
+        // Add as many as are in compliance
+        for(BlockHeader h : coord_imp_lst)
         {
-          bc = bc.importShard(h);
-
-          // For each block imported by this coordinator header, try to import it
-          for(BlockImportList bil : h.getShardImportMap().values())
+          if (dancer.isCompliant(h))
           {
-            for(ByteString hash : bil.getHeightMap().values())
+            bc = bc.importShard(h);
+
+            // For each block imported by this coordinator header, try to import it
+            for(BlockImportList bil : h.getShardImportMap().values())
             {
-              BlockHeader imp_h = node.getForgeInfo().getHeader(new ChainHash(hash));
-              if (!ShardUtil.getCoverSet(src_shard, node.getParams()).contains(imp_h.getShardId()))
+              for(ByteString hash : bil.getHeightMap().values())
               {
-                List<BlockHeader> path = node.getForgeInfo().getImportPath(bc.getShardHeads(), imp_h);
-                if (path != null)
+                BlockHeader imp_h = node.getForgeInfo().getHeader(new ChainHash(hash));
+                if (imp_h != null)
+                if (!ShardUtil.getCoverSet(src_shard, node.getParams()).contains(imp_h.getShardId()))
                 {
-                  for(BlockHeader h_imp : path)
+                  List<BlockHeader> path = node.getForgeInfo().getImportPath(bc.getShardHeads(), imp_h);
+                  if (path != null)
                   {
-                    bc = bc.importShard(h_imp);
+                    for(BlockHeader h_imp : path)
+                    {
+                      bc = bc.importShard(h_imp);
+
+                    }
 
                   }
-
                 }
+
               }
 
             }
 
           }
-
+          else
+          {
+            break;
+          }
         }
-        else
+        if (bc.isComplete())
         {
-          break;
+          concepts.add(bc);
         }
       }
-      concepts.add(bc);
 
     }
 
@@ -299,6 +329,13 @@ public class ShardBlockForge
       return lst;
     }
 
+  }
+
+  public String getHeaderSummary(BlockHeader h)
+  {
+    String hash = "blank";
+    if (h.getSnowHash().size() > 0) hash = new ChainHash(h.getSnowHash()).toString();
+    return String.format("{s:%d h:%d %s}", h.getShardId(), h.getBlockHeight(), hash);
   }
 
   public Block fleshOut(BlockConcept concept, SubscribeBlockTemplateRequest mine_to)
@@ -492,9 +529,34 @@ public class ShardBlockForge
      * Build the same concept, but with this shard imported
      */
     public BlockConcept importShard(BlockHeader import_header)
+      throws ValidationException
     {
       try(TimeRecordAuto tra_gbt = TimeRecord.openAuto("ShardBlockForge.bc.importShard"))
       {
+
+        { // check validity of action
+          int shard_id=import_header.getShardId();
+          int height = import_header.getBlockHeight();
+          if (getShardHeads().containsKey(shard_id))
+          {
+            BlockHeader prev = getShardHeads().get(shard_id);
+            if (prev.getBlockHeight() +1 != height)
+            {
+              throw new ValidationException("Illegal import, wrong heights");
+            }
+            if (!prev.getSnowHash().equals(import_header.getPrevBlockHash()))
+            {
+              throw new ValidationException("Illegal import, wrong parent");
+            }
+          }
+          if (import_header.getSnowHash().size() != 32)
+          {
+            throw new ValidationException("No hash");
+          }
+
+
+        }
+
         BlockHeader.Builder new_header = BlockHeader.newBuilder();
         new_header.mergeFrom(header);
 
@@ -516,6 +578,11 @@ public class ShardBlockForge
         return new BlockConcept(prev_summary, new_header.build(), sortImportedBlocks(lst) );
       }
 
+    }
+
+    public boolean isComplete()
+    {
+      return Validation.checkBraidCompleteness(getHeight(), node.getParams(), getShardHeads(), 0);
     }
 
     public BigInteger getWorkSum(){return work_sum; }
@@ -578,6 +645,7 @@ public class ShardBlockForge
     }
 
     public void runPass()
+      throws Exception
     {
       
       if (forge_log != null)
@@ -592,8 +660,6 @@ public class ShardBlockForge
         return;
       }
     
-      // Source blocks to mangle
-      HashSet<ChainHash> possible_source_blocks = new HashSet<>();
 
       // Possible blocks to mine
       TreeSet<BlockConcept> possible_set = new TreeSet<>();
