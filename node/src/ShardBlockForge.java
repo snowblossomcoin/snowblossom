@@ -199,8 +199,10 @@ public class ShardBlockForge
   {
     TreeSet<BlockConcept> concepts = new TreeSet<>();
 
+    // Highest known coordinator block
     BlockHeader coord_head = node.getForgeInfo().getShardHead(coord_shard);
 
+    // Highest in our shard that has been referenced by the coordinator shard
     BlockHeader highest = node.getForgeInfo().getLatestShard(coord_head, src_shard);
 
     {
@@ -218,6 +220,7 @@ public class ShardBlockForge
     if (prev_header == null) return concepts;
 
     BlockSummary prev = node.getForgeInfo().getSummary( prev_header.getSnowHash() );
+    if (prev == null) return concepts;
 
     List<BlockHeader> coord_imp_lst = node.getForgeInfo().getImportPath(prev, coord_head);
     if (coord_imp_lst == null) return concepts;
