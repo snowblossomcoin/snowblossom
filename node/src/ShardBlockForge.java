@@ -135,7 +135,7 @@ public class ShardBlockForge
 
     for(BlockConcept bc : concept_list)
     {
-      System.out.println("exploreCoordinator:" + bc.toString());
+      System.out.println("exploreCoordinator"+coord_shard+": " + bc.toString());
       // If it is a shard we actually work on
       if (node.getInterestShards().contains(bc.getHeader().getShardId()))
       {
@@ -190,9 +190,124 @@ public class ShardBlockForge
         {
           concepts.add(bc);
         }
+        else
+        {
+          System.out.println("Rejecting incomplete: " + bc);
+        }
       }
 
     }
+
+    return concepts;
+
+  }
+  
+
+  private Set<BlockConcept> exploreFromCoordinatorHead(int coord_shard)
+    throws ValidationException
+  {
+    TreeSet<BlockConcept> concepts = new TreeSet<>();
+    // Start with the highest block for the coordinator shard
+    // Then take the set of import blocks <integer,blockhead> and descend from all of those
+    // Those are our potential block parents
+    // Build concepts from them all.
+    // Or just the leafs?
+
+    // Since we start with what we have included, any of these blocks are potentially valid
+    // to be included in future coordinators as long as they don't include other coordinator 
+    // forks
+
+    BlockHeader coord_head = node.getForgeInfo().getShardHead(coord_shard);
+
+    // Starting from the more recent coordinator head
+    // Find all the imported shard heads
+    Map<Integer, BlockHeader> import_heads = node.getForgeInfo().getImportedShardHeads( coord_head, node.getParams().getMaxShardSkewHeight());
+
+    HashSet<ChainHash> possible_prevs = new HashSet<>();
+
+    // For each imported shard head, get all the new blocks under each
+    for(int src_shard : import_heads.keySet())
+    {
+      if (node.getInterestShards().contains(src_shard))
+      {
+        ChainHash h = new ChainHash( import_heads.get(src_shard).getSnowHash() );
+
+        possible_prevs.addAll( node.getForgeInfo().climb(h, src_shard) );
+
+      }
+
+    }
+
+    for(ChainHash prev_hash : possible_prevs)
+    {
+      BlockSummary prev = node.getForgeInfo().getSummary( prev_hash );
+      if (prev == null) continue;
+
+      List<BlockHeader> coord_imp_lst = node.getForgeInfo().getImportPath(prev, coord_head);
+      if (coord_imp_lst == null) continue;
+
+      List<BlockConcept> concept_list = initiateBlockConcepts(prev);
+
+      for(BlockConcept bc : concept_list)
+      {
+        int bc_shard = bc.getHeader().getShardId();
+
+        if (!node.getInterestShards().contains(bc_shard)) continue;
+
+        // Already have a block of this shard at this height
+        if ((import_heads.containsKey(bc_shard)) && (import_heads.get(bc_shard).getBlockHeight() >= bc.getHeader().getBlockHeight())) continue;
+
+        // Add as many as are in compliance
+        for(BlockHeader h : coord_imp_lst)
+        {
+          if (dancer.isCompliant(h))
+          {
+    
+            Map<Integer, BlockHeader> cur_imp_heads = node.getForgeInfo().getImportedShardHeads( h, node.getParams().getMaxShardSkewHeight());
+
+
+            for(BlockHeader imp_h : cur_imp_heads.values())
+            {
+              if (!ShardUtil.getCoverSet(bc.getHeader().getShardId(), node.getParams())
+                .contains(imp_h.getShardId()))
+              {
+                List<BlockHeader> path = node.getForgeInfo().getImportPath(bc.getShardHeads(), imp_h);
+
+                if (path != null)
+                {
+                  for(BlockHeader h_imp : path)
+                  {
+                    bc = bc.importShard(h_imp);
+                  }
+                }
+              }
+
+            }
+
+          }
+          else
+          {
+            break;
+          }
+        }
+        if (bc.isComplete())
+        {
+          concepts.add(bc);
+        }
+        else
+        {
+          System.out.println("Rejecting incomplete: " + bc);
+        }
+
+
+      }
+
+
+
+    }
+
+
+
 
     return concepts;
 
@@ -201,6 +316,7 @@ public class ShardBlockForge
   private Set<BlockConcept> exploreNonCoordinator(int src_shard, int coord_shard)
     throws ValidationException
   {
+    System.out.println("exploreNonCoordinator(" + src_shard + "," + coord_shard+")");
     TreeSet<BlockConcept> concepts = new TreeSet<>();
 
     // Highest known coordinator block
@@ -213,6 +329,7 @@ public class ShardBlockForge
       LinkedList<BlockHeader> lst = node.getForgeInfo().getLongestUnder(highest);
       if (lst != null)
       if (lst.size() > 0)
+      if (lst.getLast().getShardId() == src_shard)
       {
         highest = lst.getLast();
       }
@@ -233,6 +350,7 @@ public class ShardBlockForge
 
     for(BlockConcept bc : concept_list)
     {
+      System.out.println("exploreNonCoordinator(" + src_shard + "," + coord_shard+") - " + bc);
       if (node.getInterestShards().contains(bc.getHeader().getShardId()))
       {
         // Add as many as are in compliance
@@ -249,7 +367,7 @@ public class ShardBlockForge
               {
                 BlockHeader imp_h = node.getForgeInfo().getHeader(new ChainHash(hash));
                 if (imp_h != null)
-                if (!ShardUtil.getCoverSet(src_shard, node.getParams()).contains(imp_h.getShardId()))
+                if (!ShardUtil.getCoverSet(bc.getHeader().getShardId(), node.getParams()).contains(imp_h.getShardId()))
                 {
                   List<BlockHeader> path = node.getForgeInfo().getImportPath(bc.getShardHeads(), imp_h);
                   if (path != null)
@@ -679,20 +797,35 @@ public class ShardBlockForge
         { // Coordinator dance
           possible_set.addAll( exploreCoordinator(src_shard) );
         }
-        else
+        /*else
         { // Non-coordinator dance
           // Figure out possible coordinator shards, use their view of this shard
           // to extend this shard
+          int highest_coord = 0;
           for(int coord : node.getForgeInfo().getNetworkActiveShards().keySet())
           {
             if (isCoordinator(coord))
             {
-              possible_set.addAll( exploreNonCoordinator(src_shard, coord) );
+              highest_coord = Math.max(highest_coord, coord);
+
             }
           }
-        }
+
+          possible_set.addAll( exploreNonCoordinator(src_shard, highest_coord) );
+        }*/
 
       }
+      int highest_coord = 0;
+      for(int coord : node.getForgeInfo().getNetworkActiveShards().keySet())
+      {
+        if (isCoordinator(coord))
+        {
+          highest_coord = Math.max(highest_coord, coord);
+        }
+      }
+      possible_set.addAll(exploreFromCoordinatorHead(highest_coord));
+
+
 
       System.out.println("ZZZ Possible blocks: " + possible_set.size());
       int printed = 0;

@@ -375,8 +375,6 @@ public class ForgeInfo
     }
 
     return best_list;
-
-
   }
 
   // We aren't using the same work estimating as BlockSummary.  Sort of hand waving.
@@ -450,7 +448,46 @@ public class ForgeInfo
     }
 
     return isInChain( getHeader(new ChainHash(h.getPrevBlockHash())), check);
+  }
 
+
+
+  /**
+   * Looking back at most 'depth' blocks, return the highest blocks imported in each shard
+   */
+  public Map<Integer, BlockHeader> getImportedShardHeads(BlockHeader start, int depth)
+  {
+    TreeMap<Integer, BlockHeader> map = new TreeMap<>();
+
+    if (depth == 0) return map;
+    if (start == null) return map;
+    
+    // Take the things from lower first
+    map.putAll(getImportedShardHeads( getHeader(new ChainHash(start.getPrevBlockHash())),depth-1));
+
+    // Then add self, which is always newer
+    map.put(start.getShardId(), start);
+
+    // Then add my import blocks, which must be newer than those in prev blocks
+    for(Map.Entry<Integer, BlockImportList> me : start.getShardImportMap().entrySet())
+    {
+      int shard_imp = me.getKey();
+
+      for(Map.Entry<Integer, ByteString> bil : me.getValue().getHeightMap().entrySet())
+      {
+        int height = bil.getKey();
+        ChainHash hash = new ChainHash(bil.getValue());
+        BlockHeader h = getHeader(hash);
+        if (h != null)
+        {
+          map.put(shard_imp, getHeader(hash));
+        }
+
+      }
+
+    }
+
+    return map;
 
   }
 }
