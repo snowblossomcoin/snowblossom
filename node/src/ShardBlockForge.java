@@ -242,6 +242,18 @@ public class ShardBlockForge
     {
       BlockSummary prev = node.getForgeInfo().getSummary( prev_hash );
       if (prev == null) continue;
+      int prev_shard = prev.getHeader().getShardId();
+      int prev_height = prev.getHeader().getBlockHeight();
+      if (import_heads.containsKey(prev_shard))
+      {
+        // If this block is not in the chain from whatever the import_head has,
+        // don't bother with it
+        // We get into this state from a climb from a parent shard into a shard that we
+        // already have some locked information for
+        if (!node.getForgeInfo().isInChain(prev.getHeader(), import_heads.get(prev_shard))) continue;
+        
+      }
+      
 
       List<BlockHeader> coord_imp_lst = node.getForgeInfo().getImportPath(prev, coord_head);
       if (coord_imp_lst == null) continue;
