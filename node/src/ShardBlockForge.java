@@ -135,10 +135,13 @@ public class ShardBlockForge
 
     for(BlockConcept bc : concept_list)
     {
+      System.out.println("exploreCoordinator:" + bc.toString());
+      // If it is a shard we actually work on
       if (node.getInterestShards().contains(bc.getHeader().getShardId()))
       {
         for(BlockHeader h : node.getForgeInfo().getNetworkActiveShards().values())
         {
+          // Not in our cover set
           if (!ShardUtil.getCoverSet(coord_shard, node.getParams()).contains(h.getShardId()))
           {
             // Get a path to the highest known block in that shard
@@ -151,11 +154,12 @@ public class ShardBlockForge
             {
               LinkedList<BlockHeader> imp_seq_high = node.getForgeInfo().getLongestUnder( bc.getShardHeads().get(h.getShardId()));
               if (imp_seq_high != null)
-              if (imp_seq_high.size() > 0)
-              if (imp_seq_high.getLast().getShardId() == h.getShardId()) // make sure we have wandered onto some other shard
+
+              if ((imp_seq_high.size() == 0) || (imp_seq_high.getLast().getShardId() == h.getShardId())) 
+              // make sure we haven't wandered onto some other shard
               {
                 imp_seq = imp_seq_high;
-                ChainHash hz = new ChainHash(bc.getShardHeads().get(h.getShardId()).getSnowHash());
+                //ChainHash hz = new ChainHash(bc.getShardHeads().get(h.getShardId()).getSnowHash());
               }
             }
             if (imp_seq == null) break;
@@ -669,7 +673,7 @@ public class ShardBlockForge
         return;
       }
 
-      for(int src_shard : node.getActiveShards())
+      for(int src_shard : node.getCurrentBuildingShards())
       {
         if (isCoordinator(src_shard))
         { // Coordinator dance
