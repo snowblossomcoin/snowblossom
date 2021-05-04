@@ -19,10 +19,12 @@ import snowblossom.util.proto.*;
 public class RpcServerHandler
 {
   private SnowBlossomClient client;
+  private NetworkParams net_params;
 
   public RpcServerHandler(SnowBlossomClient client)
   {
     this.client = client;
+    this.net_params = client.getParams();
   }
 
   public void registerHandlers(JsonRpcServer json_server)
@@ -365,11 +367,11 @@ public class RpcServerHandler
 
       TransactionStatus status = client.getStub().getTransactionStatus(RequestTransaction.newBuilder().setTxHash(tx_hash.getBytes()).build());
 
-      reply.put("status", RpcUtil.protoToJson(status));
+      reply.put("status", RpcUtil.protoToJson(status, net_params));
       if (as_json)
       {
-        reply.put("tx_json", RpcUtil.protoToJson(tx));
-        reply.put("tx_inner_json", RpcUtil.protoToJson(inner));
+        reply.put("tx_json", RpcUtil.protoToJson(tx, net_params));
+        reply.put("tx_inner_json", RpcUtil.protoToJson(inner, net_params));
 
       }
 
@@ -427,13 +429,13 @@ public class RpcServerHandler
       {
         if (as_json)
         {
-          reply.put("block", RpcUtil.protoToJson(blk));
+          reply.put("block", RpcUtil.protoToJson(blk, net_params));
         }
         else
         {
           reply.put("block_data", HexUtil.getHexString( blk.toByteString() ));
         }
-        reply.put("block_header", RpcUtil.protoToJson(blk.getHeader()));
+        reply.put("block_header", RpcUtil.protoToJson(blk.getHeader(), net_params));
       }
 
       return reply;
@@ -512,7 +514,7 @@ public class RpcServerHandler
       JSONObject reply = new JSONObject();
 
       NodeStatus node_status = client.getStub().getNodeStatus( NullRequest.newBuilder().build() );
-      reply.put("node_status", RpcUtil.protoToJson(node_status));
+      reply.put("node_status", RpcUtil.protoToJson(node_status, net_params));
 
       BalanceInfo balance_info = client.getBalance();
       
@@ -772,7 +774,7 @@ public class RpcServerHandler
       TxOutList lst = client.getStub().getFBOList(
         RequestAddress.newBuilder().setAddressSpecHash(fbo_hash.getBytes()).build());
 
-      reply.put("tx_out_list",  RpcUtil.protoToJson(lst) ); 
+      reply.put("tx_out_list",  RpcUtil.protoToJson(lst, net_params) ); 
 
       return reply;
     }
@@ -811,7 +813,7 @@ public class RpcServerHandler
       
       TxOutList lst = client.getStub().getIDList( nid.build() );
 
-      reply.put("tx_out_list",  RpcUtil.protoToJson(lst) ); 
+      reply.put("tx_out_list",  RpcUtil.protoToJson(lst, net_params) ); 
 
       return reply;
     }
