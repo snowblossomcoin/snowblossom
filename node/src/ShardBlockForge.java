@@ -44,6 +44,8 @@ public class ShardBlockForge
 
   private Dancer dancer;
 
+  private LRUCache<ChainHash, Boolean> signature_cache = new LRUCache<>(2000);
+
   public ShardBlockForge(SnowBlossomNode node)
     throws Exception
   {
@@ -118,6 +120,28 @@ public class ShardBlockForge
     }
   }
 
+  private void considerAdd(Set<BlockConcept> concepts, BlockConcept bc)
+  {
+    if (!bc.isComplete())
+    {
+      System.out.println("Rejecting incomplete: " + bc);
+      System.out.println(bc.toStringFull());
+      return;
+    }
+
+    ChainHash sig = bc.getSig();
+
+    synchronized(signature_cache)
+    {
+      if (signature_cache.containsKey( sig ))
+      {
+        System.out.println("Duplicate: " + bc);
+        return;
+      }
+    }
+    concepts.add(bc);
+
+  }
 
   private Set<BlockConcept> exploreCoordinator(int coord_shard)
     throws ValidationException
@@ -131,6 +155,11 @@ public class ShardBlockForge
 
     BlockSummary prev = node.getForgeInfo().getSummary( prev_header.getSnowHash() );
 
+    synchronized(signature_cache)
+    {
+      signature_cache.put( getSignature(prev), true);
+    }
+
     List<BlockConcept> concept_list = initiateBlockConcepts(prev);
 
     for(BlockConcept bc : concept_list)
@@ -139,6 +168,7 @@ public class ShardBlockForge
       // If it is a shard we actually work on
       if (node.getInterestShards().contains(bc.getHeader().getShardId()))
       {
+        // Find things to import
         for(BlockHeader h : node.getForgeInfo().getNetworkActiveShards().values())
         {
           // Not in our cover set
@@ -147,6 +177,9 @@ public class ShardBlockForge
             // Get a path to the highest known block in that shard
             List<BlockHeader> imp_seq = node.getForgeInfo().getImportPath(bc.getShardHeads(), h);
 
+            // But wait, this is stupid.  There could be a bunch of blocks
+            // in the shard.  the longest from what we have might be wrong to include.
+            // TODO - get crazy
 
             // But if we have a block in the shard already,
             // try to take the highest from that instead
@@ -186,14 +219,8 @@ public class ShardBlockForge
           }
         }
 
-        if (bc.isComplete())
-        {
-          concepts.add(bc);
-        }
-        else
-        {
-          System.out.println("Rejecting incomplete: " + bc);
-        }
+        considerAdd(concepts, bc);
+
       }
 
     }
@@ -206,6 +233,7 @@ public class ShardBlockForge
   private Set<BlockConcept> exploreFromCoordinatorHead(int coord_shard)
     throws ValidationException
   {
+    System.out.println("exploreFromCoordinatorHead(" + coord_shard +")");
     TreeSet<BlockConcept> concepts = new TreeSet<>();
     // Start with the highest block for the coordinator shard
     // Then take the set of import blocks <integer,blockhead> and descend from all of those
@@ -221,7 +249,7 @@ public class ShardBlockForge
 
     // Starting from the more recent coordinator head
     // Find all the imported shard heads
-    Map<Integer, BlockHeader> import_heads = node.getForgeInfo().getImportedShardHeads( coord_head, node.getParams().getMaxShardSkewHeight());
+    Map<Integer, BlockHeader> import_heads = node.getForgeInfo().getImportedShardHeads( coord_head, node.getParams().getMaxShardSkewHeight()*2);
 
     HashSet<ChainHash> possible_prevs = new HashSet<>();
 
@@ -231,17 +259,22 @@ public class ShardBlockForge
       if (node.getInterestShards().contains(src_shard))
       {
         ChainHash h = new ChainHash( import_heads.get(src_shard).getSnowHash() );
-
         possible_prevs.addAll( node.getForgeInfo().climb(h, src_shard) );
-
       }
-
     }
+    System.out.println("Possible_prevs: " + possible_prevs.size());
+
+    int exclude_inchain=0;
+    int exclude_imppath=0;
 
     for(ChainHash prev_hash : possible_prevs)
     {
       BlockSummary prev = node.getForgeInfo().getSummary( prev_hash );
       if (prev == null) continue;
+      synchronized(signature_cache)
+      {
+        signature_cache.put( getSignature(prev), true);
+      }
       int prev_shard = prev.getHeader().getShardId();
       int prev_height = prev.getHeader().getBlockHeight();
       if (import_heads.containsKey(prev_shard))
@@ -250,18 +283,17 @@ public class ShardBlockForge
         // don't bother with it
         // We get into this state from a climb from a parent shard into a shard that we
         // already have some locked information for
-        if (!node.getForgeInfo().isInChain(prev.getHeader(), import_heads.get(prev_shard))) continue;
+        if (!node.getForgeInfo().isInChain(prev.getHeader(), import_heads.get(prev_shard))) {exclude_inchain++; continue; }
         
       }
-      
-
       List<BlockHeader> coord_imp_lst = node.getForgeInfo().getImportPath(prev, coord_head);
-      if (coord_imp_lst == null) continue;
+      if (coord_imp_lst == null) {exclude_imppath++; continue;}
 
       List<BlockConcept> concept_list = initiateBlockConcepts(prev);
 
       for(BlockConcept bc : concept_list)
       {
+        System.out.println("Considering: " + bc);
         int bc_shard = bc.getHeader().getShardId();
 
         if (!node.getInterestShards().contains(bc_shard)) continue;
@@ -274,9 +306,7 @@ public class ShardBlockForge
         {
           if (dancer.isCompliant(h))
           {
-    
             Map<Integer, BlockHeader> cur_imp_heads = node.getForgeInfo().getImportedShardHeads( h, node.getParams().getMaxShardSkewHeight());
-
 
             for(BlockHeader imp_h : cur_imp_heads.values())
             {
@@ -302,30 +332,20 @@ public class ShardBlockForge
             break;
           }
         }
-        if (bc.isComplete())
-        {
-          concepts.add(bc);
-        }
-        else
-        {
-          System.out.println("Rejecting incomplete: " + bc);
-        }
-
+        considerAdd(concepts, bc);
 
       }
 
-
-
     }
-
-
-
+    
+    System.out.println("exclude_inchain: " + exclude_inchain);
+    System.out.println("exclude_imppath: " +  exclude_imppath);
 
     return concepts;
 
   }
 
-  private Set<BlockConcept> exploreNonCoordinator(int src_shard, int coord_shard)
+  /*private Set<BlockConcept> exploreNonCoordinator(int src_shard, int coord_shard)
     throws ValidationException
   {
     System.out.println("exploreNonCoordinator(" + src_shard + "," + coord_shard+")");
@@ -345,7 +365,6 @@ public class ShardBlockForge
       {
         highest = lst.getLast();
       }
-
     }
 
     BlockHeader prev_header = highest;
@@ -371,7 +390,7 @@ public class ShardBlockForge
           if (dancer.isCompliant(h))
           {
             bc = bc.importShard(h);
-
+            
             // For each block imported by this coordinator header, try to import it
             for(BlockImportList bil : h.getShardImportMap().values())
             {
@@ -387,16 +406,11 @@ public class ShardBlockForge
                     for(BlockHeader h_imp : path)
                     {
                       bc = bc.importShard(h_imp);
-
                     }
-
                   }
                 }
-
               }
-
             }
-
           }
           else
           {
@@ -408,11 +422,10 @@ public class ShardBlockForge
           concepts.add(bc);
         }
       }
-
     }
 
     return concepts;
-  }
+  }*/
 
 
   /**
@@ -728,8 +741,6 @@ public class ShardBlockForge
     private BigInteger getSortWork(){return sort_work; }
     private BigInteger getRandomVal(){return rnd_val;}
 
-
-
     /** sorting such that best block is first */
     @Override
     public int compareTo(ShardBlockForge.BlockConcept o)
@@ -764,7 +775,61 @@ public class ShardBlockForge
         getImportedBlocks().size());
     }
 
+    public String toStringFull()
+    {
+      StringBuilder sb = new StringBuilder();
+      sb.append(toString());
+      sb.append('\n');
+
+      for(Map.Entry<Integer, BlockHeader> me : getShardHeads().entrySet())
+      {
+        sb.append("  " + me.getKey());
+        sb.append(" - ");
+        BlockHeader h = me.getValue();
+        String hash = "blank";
+        if (h.getSnowHash().size() >0) hash = new ChainHash(h.getSnowHash()).toString();
+
+        sb.append(String.format("h:%d s:%d %s", h.getBlockHeight(), h.getShardId(), hash));
+        sb.append("\n");
+      }
+      return sb.toString();
+
+    }
+
+    // Return some bytes that will be duplicated if we already tried basically the same block
+    // before.
+    public ChainHash getSig()
+    {
+      return getSignature(getHeader(), getShardHeads());
+    }
+
   }
+
+  // Return some bytes that will be duplicated if we already tried basically the same block
+  // before.
+  public ChainHash getSignature(BlockHeader h, Map<Integer, BlockHeader> import_map)
+  {
+    StringBuilder sb = new StringBuilder();
+    sb.append(" parent:" + new ChainHash(h.getPrevBlockHash()));
+    sb.append(" shard:" + h.getShardId());
+    for(Map.Entry<Integer, BlockHeader> me : import_map.entrySet())
+    {
+      if (me.getKey() != h.getShardId())
+      {
+        sb.append(" " + new ChainHash(me.getValue().getSnowHash()));
+      }
+    }
+
+    ByteString bytes = ByteString.copyFrom(sb.toString().getBytes());
+    return new ChainHash( DigestUtil.hash(bytes) );
+
+  }
+
+  public ChainHash getSignature(BlockSummary summary)
+  {
+    return getSignature(summary.getHeader(), summary.getImportedShardsMap());
+  }
+
 
   public class ConceptUpdateThread extends PeriodicThread
   {
@@ -910,16 +975,5 @@ public class ShardBlockForge
   }
 
 
-  /**
-   * Holder for various cache context data
-   * Expected to be single threaded access only
-   */
-  public class ContextCache
-  {
-   
-    LRUCache<String, TreeMap<BigInteger,BlockImportList>> get_path_cache = new LRUCache<>(5000);
-    
-
-  }
 
 }

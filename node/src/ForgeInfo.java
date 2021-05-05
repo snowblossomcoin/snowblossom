@@ -276,7 +276,7 @@ public class ForgeInfo
    * Return the ordered list of blocks that need to be added to get from what
    * is imported in start to get to the target block.
    *
-   * If such  a path is possible returns null. This could be because we lack
+   * If such a path is impossible returns null. This could be because we lack
    * information about intermediate blocks, or the BlockSummary is already down some other path.
    *
    * If the target is already in the block summary, return an empty list.
