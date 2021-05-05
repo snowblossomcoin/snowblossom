@@ -249,6 +249,9 @@ public class ShardBlockForge
 
     // Starting from the more recent coordinator head
     // Find all the imported shard heads
+
+    // Note: the 2x is there because we might be at height X and some other shard is at X-skew-2 or something
+    // We can still build a block by bringing in more recent blocks on that shard to bring it to within skew
     Map<Integer, BlockHeader> import_heads = node.getForgeInfo().getImportedShardHeads( coord_head, node.getParams().getMaxShardSkewHeight()*2);
 
     HashSet<ChainHash> possible_prevs = new HashSet<>();
