@@ -235,17 +235,19 @@ public class ForgeInfo
     }
   }
 
+  /**
+   * @param shard_id stay in this shard id, or if -1 then all blocks
+   */
   public Set<ChainHash> climb(ChainHash start, int shard_id)
   {
     HashSet<ChainHash> set = new HashSet<>();
     BlockHeader h = getHeader(start);
 
     if (h != null)
-    if (h.getShardId() == shard_id)
+    if ((shard_id < 0) || (h.getShardId() == shard_id))
     {
       set.add(new ChainHash(h.getSnowHash()));
     }
-
 
     for(ByteString next : node.getDB().getChildBlockMapSet().getSet(start.getBytes(), 2000))
     {

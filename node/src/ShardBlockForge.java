@@ -1,6 +1,8 @@
 package snowblossom.node;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ListMultimap;
+import com.google.common.collect.MultimapBuilder;
 import com.google.protobuf.ByteString;
 import duckutil.LRUCache;
 import duckutil.Pair;
@@ -168,55 +170,97 @@ public class ShardBlockForge
       // If it is a shard we actually work on
       if (node.getInterestShards().contains(bc.getHeader().getShardId()))
       {
-        // Find things to import
-        for(BlockHeader h : node.getForgeInfo().getNetworkActiveShards().values())
+        // If we are splitting into a non-coordinator shard, don't add any other imports
+        if (isCoordinator(bc.getHeader().getShardId()))
         {
-          // Not in our cover set
-          if (!ShardUtil.getCoverSet(coord_shard, node.getParams()).contains(h.getShardId()))
+
+          // Make a list sorted by block height of things we could possible include
+          ListMultimap<Integer, BlockHeader> possible_import_blocks =
+                 MultimapBuilder.treeKeys().arrayListValues().build();
+          for(BlockHeader current_import_head : prev.getImportedShardsMap().values())
           {
-            // Get a path to the highest known block in that shard
-            List<BlockHeader> imp_seq = node.getForgeInfo().getImportPath(bc.getShardHeads(), h);
-
-            // But wait, this is stupid.  There could be a bunch of blocks
-            // in the shard.  the longest from what we have might be wrong to include.
-            // TODO - get crazy
-
-            // But if we have a block in the shard already,
-            // try to take the highest from that instead
-            if (bc.getShardHeads().containsKey(h.getShardId()))
+            Set<ChainHash> possible_hashes = 
+              node.getForgeInfo().climb( new ChainHash(current_import_head.getSnowHash()), -1);
+            for(ChainHash ch : possible_hashes)
             {
-              LinkedList<BlockHeader> imp_seq_high = node.getForgeInfo().getLongestUnder( bc.getShardHeads().get(h.getShardId()));
-              if (imp_seq_high != null)
-
-              if ((imp_seq_high.size() == 0) || (imp_seq_high.getLast().getShardId() == h.getShardId())) 
-              // make sure we haven't wandered onto some other shard
+              BlockHeader blk_h = node.getForgeInfo().getHeader(ch);
+              if (blk_h != null)
               {
-                imp_seq = imp_seq_high;
-                //ChainHash hz = new ChainHash(bc.getShardHeads().get(h.getShardId()).getSnowHash());
+                possible_import_blocks.put( blk_h.getBlockHeight(), blk_h );
               }
             }
-            if (imp_seq == null) break;
+          }
 
-            BlockConcept bc_up = bc;
-
-            for(BlockHeader bh : imp_seq)
+          for(BlockHeader imp_blk : possible_import_blocks.values())
+          {
+            // Not in our cover set
+            if (!ShardUtil.getCoverSet(coord_shard, node.getParams()).contains(imp_blk.getShardId()))
             {
-              if (dancer.isCompliant(bh))
+              List<BlockHeader> imp_seq = node.getForgeInfo().getImportPath(bc.getShardHeads(), imp_blk);
+              if (dancer.isCompliant(imp_blk))
+              if (imp_seq != null)
+              if (imp_seq.size() == 1)
               {
-                BlockHeader join_point = node.getForgeInfo().getLatestShard(bh, coord_shard);
+                BlockHeader join_point = node.getForgeInfo().getLatestShard(imp_blk, coord_shard);
                 if (node.getForgeInfo().isInChain(prev_header, join_point))
                 {
-                  bc_up = bc_up.importShard(bh);
+                  bc = bc.importShard(imp_blk);
                 }
               }
-              else
-              {
-                bc_up=null;
-                break;
-              }
             }
-            if (bc_up != null) bc=bc_up;
           }
+
+          // Find things to import
+          /*
+          for(BlockHeader h : node.getForgeInfo().getNetworkActiveShards().values())
+          {
+            // Not in our cover set
+            if (!ShardUtil.getCoverSet(coord_shard, node.getParams()).contains(h.getShardId()))
+            {
+              // Get a path to the highest known block in that shard
+              List<BlockHeader> imp_seq = node.getForgeInfo().getImportPath(bc.getShardHeads(), h);
+
+              // But wait, this is stupid.  There could be a bunch of blocks
+              // in the shard.  the longest from what we have might be wrong to include.
+              // TODO - get crazy
+
+              // But if we have a block in the shard already,
+              // try to take the highest from that instead
+              if (bc.getShardHeads().containsKey(h.getShardId()))
+              {
+                LinkedList<BlockHeader> imp_seq_high = node.getForgeInfo().getLongestUnder( bc.getShardHeads().get(h.getShardId()));
+                if (imp_seq_high != null)
+
+                if ((imp_seq_high.size() == 0) || (imp_seq_high.getLast().getShardId() == h.getShardId())) 
+                // make sure we haven't wandered onto some other shard
+                {
+                  imp_seq = imp_seq_high;
+                  //ChainHash hz = new ChainHash(bc.getShardHeads().get(h.getShardId()).getSnowHash());
+                }
+              }
+              if (imp_seq == null) break;
+
+              BlockConcept bc_up = bc;
+
+              for(BlockHeader bh : imp_seq)
+              {
+                if (dancer.isCompliant(bh))
+                {
+                  BlockHeader join_point = node.getForgeInfo().getLatestShard(bh, coord_shard);
+                  if (node.getForgeInfo().isInChain(prev_header, join_point))
+                  {
+                    bc_up = bc_up.importShard(bh);
+                  }
+                }
+                else
+                {
+                  bc_up=null;
+                  break;
+                }
+              }
+              if (bc_up != null) bc=bc_up;
+            }
+          }*/
         }
 
         considerAdd(concepts, bc);
