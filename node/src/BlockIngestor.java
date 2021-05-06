@@ -88,10 +88,7 @@ public class BlockIngestor implements ChainStateSource
         new ChainHash(chainhead.getHeader().getSnowHash())));
       checkResummary();
       
-      // Remove this after we run this once
-      updateHeights(chainhead, true);
     }
-
 
   }
 
