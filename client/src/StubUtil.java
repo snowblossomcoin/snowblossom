@@ -117,7 +117,8 @@ public class StubUtil
       return ManagedChannelBuilder
         .forAddress(host, port)
         .usePlaintext()
-        .maxInboundMessageSize(params.getGrpcMaxMessageSize())
+        //.maxInboundMessageSize(params.getGrpcMaxMessageSize())
+        .maxInboundMessageSize(1024*1024*128) // TODO: be sensible
         .build();
     }
     else if (scheme.equals("grpc+tls"))
@@ -149,7 +150,8 @@ public class StubUtil
         .forAddress(host, port)
         .useTransportSecurity()
         .sslContext(ssl_ctx)
-        .maxInboundMessageSize(params.getGrpcMaxMessageSize())
+        //.maxInboundMessageSize(params.getGrpcMaxMessageSize())
+        .maxInboundMessageSize(1024*1024*128) // TODO: be sensible
         .build();
     }
     else

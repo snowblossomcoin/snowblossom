@@ -857,10 +857,13 @@ public class ShardBlockForge
       ArrayList<BlockConcept> good_concepts = new ArrayList<>();
       for(BlockConcept c : possible_set)
       {
-        System.out.println("ZZZ " + c.toString());
+        if (printed < 10)
+        {
+          System.out.println("ZZZ " + c.toString());
+        }
         printed++;
         good_concepts.add(c);
-        if (printed > 10) break;
+        if (printed > 80) break;
       }
       current_top_concepts = good_concepts;
 

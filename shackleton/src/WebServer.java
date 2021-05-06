@@ -16,6 +16,7 @@ import java.util.HashSet;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.Map;
+import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.TimeZone;
 import java.util.logging.Logger;
@@ -30,6 +31,7 @@ public class WebServer implements WebHandler
   private LRUCache<ChainHash, String> block_summary_lines = new LRUCache<>(1000);
 
   private LRUCache<ChainHash, BlockSummary> block_summary_cache = new LRUCache<>(256 * 20);
+
 
   public WebServer(Config config, Shackleton shackleton)
     throws Exception
@@ -494,21 +496,38 @@ public class WebServer implements WebHandler
   private void printBraidSummary(PrintStream out, NodeStatus ns)
   {
     TreeSet<Integer> shards = new TreeSet<>();
-    shards.addAll(ns.getShardSummaryMap().keySet());
+    Map<Integer, BlockSummary> bs_map = getShardSummaryMap(ns);
+    shards.addAll(ns.getShardHeadMap().keySet());
     for(int shard : shards)
     {
-      BlockSummary bs_shard_head = ns.getShardSummaryMap().get(shard);
+      BlockSummary bs_shard_head = bs_map.get(shard);
       printChainSummary(bs_shard_head, out);
 
     }
 
   }
 
+  private Map<Integer, BlockSummary> getShardSummaryMap(NodeStatus ns)
+  {
+    TreeMap<Integer, BlockSummary> out = new TreeMap<>();
+    for(Map.Entry<Integer, ByteString> me : ns.getShardHeadMap().entrySet())
+    {
+      int shard = me.getKey();
+      ChainHash hash = new ChainHash(me.getValue());
+      BlockSummary bs = getBlockSummary(hash);
+      out.put(shard,bs);
+
+    }
+    return out;
+
+  }
+
   private void printBraidHeads(PrintStream out, NodeStatus ns)
   {
 
+    Map<Integer, BlockSummary> bs_map = getShardSummaryMap(ns);
     TreeSet<Integer> shards = new TreeSet<>();
-    shards.addAll(ns.getShardSummaryMap().keySet());
+    shards.addAll(bs_map.keySet());
     System.out.println("Shard heads: " + shards);
 
     HashSet<ChainHash> included_blocks = new HashSet<>();
@@ -518,7 +537,7 @@ public class WebServer implements WebHandler
 
     for(int shard : shards)
     {
-      BlockSummary bs_shard_head = ns.getShardSummaryMap().get(shard);
+      BlockSummary bs_shard_head = bs_map.get(shard);
 
       BlockSummary bs = bs_shard_head;
       if (bs != null)
@@ -547,8 +566,9 @@ public class WebServer implements WebHandler
     long look_back_time = 4L * 3600L * 1000L;
     long start_time = System.currentTimeMillis() - look_back_time;
 
+    Map<Integer, BlockSummary> bs_map = getShardSummaryMap(ns);
     TreeSet<Integer> shards = new TreeSet<>();
-    shards.addAll(ns.getShardSummaryMap().keySet());
+    shards.addAll(bs_map.keySet());
     System.out.println("Shard list: " + shards);
 
     HashSet<ChainHash> included_blocks = new HashSet<>();
@@ -558,7 +578,7 @@ public class WebServer implements WebHandler
 
     for(int shard : shards)
     {
-      BlockSummary bs_shard_head = ns.getShardSummaryMap().get(shard);
+      BlockSummary bs_shard_head = bs_map.get(shard);
 
       BlockSummary bs = bs_shard_head;
       while(

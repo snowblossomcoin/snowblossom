@@ -33,6 +33,7 @@ public class GetUTXOUtil
 
   private long utxo_shard_time = 0;
   private ImmutableMap<Integer, ChainHash> utxo_shard_map = null;
+  private LRUCache<ChainHash, BlockHeader> header_cache = new LRUCache<>(1000);
 
   private NetworkParams params;
 
@@ -61,10 +62,11 @@ public class GetUTXOUtil
         }
 
         TreeMap<Integer, ChainHash> utxo_map = new TreeMap<>();
-        for(Map.Entry<Integer, BlockSummary> me : ns.getShardSummaryMap().entrySet())
+        for(Map.Entry<Integer, ByteString> me : ns.getShardHeadMap().entrySet())
         {
+          ChainHash block_hash = new ChainHash(me.getValue());
 
-          utxo_map.put(me.getKey(), new ChainHash(me.getValue().getHeader().getUtxoRootHash()));
+          utxo_map.put(me.getKey(), new ChainHash(getHeader(block_hash).getUtxoRootHash()));
         }
 
         utxo_shard_map = ImmutableMap.copyOf(utxo_map);
@@ -75,6 +77,20 @@ public class GetUTXOUtil
       
     }
     return utxo_shard_map;
+  }
+
+  private synchronized BlockHeader getHeader(ChainHash hash)
+  {
+    BlockHeader bh = header_cache.get(hash);
+    if (bh != null) return bh;
+
+    bh = getStub().getBlockHeader(RequestBlockHeader.newBuilder().setBlockHash(hash.getBytes()).build());
+
+    header_cache.put(hash, bh);
+
+    return bh;
+
+
   }
 
 

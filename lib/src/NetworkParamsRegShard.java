@@ -56,7 +56,7 @@ public class NetworkParamsRegShard extends NetworkParams
   public long getBlockTimeTarget() { return 1000L; } //1 second
 
   @Override
-  public int getMaxBlockSize(){ return 3800000; }
+  public int getMaxBlockSize(){ return 8*1024*1024; }
 
   @Override
   public List<String> getSeedNodes()
@@ -89,9 +89,9 @@ public class NetworkParamsRegShard extends NetworkParams
 
   @Override
   //public int getMaxShardId() {return 14; } //allows 16 shards
-  public int getMaxShardId() {return 62; } //allows 32 shards
+  //public int getMaxShardId() {return 62; } //allows 32 shards
   //public int getMaxShardId() {return 126; } //allows 64 shards
-  //public int getMaxShardId() {return 1022; } //allows 512 shards
+  public int getMaxShardId() {return 1022; } //allows 512 shards
   
   @Override
   public int getMaxShardSkewHeight() {return 6; } 

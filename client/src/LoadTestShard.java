@@ -42,6 +42,7 @@ public class LoadTestShard
     active_shards.add(6);
     // get list of active shards in a better way
     //active_shards.addAll( fee_estimate.getShardMap().keySet() );
+          
     time_record = new TimeRecord();
     TimeRecord.setSharedRecord(time_record);
 
