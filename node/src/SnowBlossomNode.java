@@ -427,7 +427,12 @@ public class SnowBlossomNode
         int child = 0;
         for(int c : ShardUtil.getShardChildIds(s))
         {
-          if (getForgeInfo().getNetworkActiveShards().containsKey(c))
+          int active = 0;
+          if (getForgeInfo().getNetworkActiveShards().containsKey(c)) active=1;
+
+          if (getForgeInfo().getShardHead(c) != null) active=1;
+
+          if (active>0)
           {     
             child++;
           }
