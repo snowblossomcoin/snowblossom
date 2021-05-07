@@ -46,7 +46,6 @@ public class MemPool
   // Mapping of addresses to transactions that involve them
   private HashMultimap<AddressSpecHash, ChainHash> address_tx_map = HashMultimap.<AddressSpecHash, ChainHash>create();
 
-
   // In normal operation, the priority map is updated as transactions come in
   // However, when a new block is learned we need to toss it all and start
   // fresh.  Since we don't want to require a transaction index for the entire chain
@@ -72,6 +71,9 @@ public class MemPool
 
   private final int low_fee_max;
 
+  // Indicates if this mempool should ever accept p2p transactions
+  private final boolean accepts_p2p_tx;
+
   private Object tickle_trigger = new Object();
   private ImmutableList<MemPoolTickleInterface> mempool_listener = ImmutableList.of();
 
@@ -85,9 +87,14 @@ public class MemPool
 
   public MemPool(HashedTrie utxo_hashed_trie, ChainStateSource chain_state_source, int low_fee_max)
   {
+    this(utxo_hashed_trie, chain_state_source, low_fee_max, true);
+  }
+  public MemPool(HashedTrie utxo_hashed_trie, ChainStateSource chain_state_source, int low_fee_max, boolean accepts_p2p_tx)
+  {
     this.low_fee_max = low_fee_max;
     this.chain_state_source = chain_state_source;
     this.utxo_hashed_trie = utxo_hashed_trie;
+    this.accepts_p2p_tx = accepts_p2p_tx;
 
     shard_cover_set = ImmutableSet.copyOf( chain_state_source.getShardCoverSet() );
 
@@ -222,13 +229,19 @@ public class MemPool
   /**
    * @return true iff this seems to be a new and valid tx
    */
-  public synchronized boolean addTransaction(Transaction tx) throws ValidationException
+  public synchronized boolean addTransaction(Transaction tx, boolean p2p_source) throws ValidationException
   {
     try(MetricLog mlog = new MetricLog())
     {
       mlog.setOperation("add_transaction");
       mlog.setModule("mem_pool");
       mlog.set("added", 0);
+    
+      if ((p2p_source) && (!accepts_p2p_tx))
+      {
+        mlog.set("reject_p2p", 1);
+        return false;
+      }
 
       long t1 = System.nanoTime();
       Validation.checkTransactionBasics(tx, false);

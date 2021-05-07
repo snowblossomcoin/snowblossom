@@ -70,6 +70,7 @@ public class SnowBlossomNode
   private ShardUtxoImport shard_utxo_import;
   private MetaMemPool meta_mem_pool;
   private WalletDatabase trustnet_wallet_db;
+  private TxBroadcaster tx_broadcaster;
 
   private ImmutableList<Integer> service_ports;
   private ImmutableList<Integer> tls_service_ports;
@@ -176,6 +177,7 @@ public class SnowBlossomNode
     }
 
     peerage = new Peerage(this);
+    tx_broadcaster = new TxBroadcaster(peerage);
     forge_info = new ForgeInfo(this);
     shard_utxo_import = new ShardUtxoImport(this);
     shard_blockforge = new ShardBlockForge(this);
@@ -237,6 +239,7 @@ public class SnowBlossomNode
     logger.fine("Widget start");
     peerage.start();
     new TimeWatcher().start();
+    tx_broadcaster.start();
   }
 
   private void startServices()
@@ -408,6 +411,7 @@ public class SnowBlossomNode
   public BlockIngestor getBlockIngestor(){return getBlockIngestor(0);}
   public ShardBlockForge getBlockForge(){return shard_blockforge;}
   public MetaMemPool getMemPool(){return meta_mem_pool;}
+  public TxBroadcaster getTxBroadcaster(){return tx_broadcaster;}
 
   public ShardUtxoImport getShardUtxoImport(){return shard_utxo_import;}
 
@@ -491,7 +495,9 @@ public class SnowBlossomNode
     {
       ingestor = new BlockIngestor(node, shard_id);
       forge = new BlockForge(node, shard_id);
-      mem_pool = new MemPool(db.getUtxoHashedTrie(), ingestor);
+      boolean accept_p2p = !config.getBoolean("mempool_reject_p2p_tx");
+
+      mem_pool = new MemPool(db.getUtxoHashedTrie(), ingestor, Globals.LOW_FEE_SIZE_IN_BLOCK, accept_p2p);
       mem_pool.setPeerage(peerage);
     }
 

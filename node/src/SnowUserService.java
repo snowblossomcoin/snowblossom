@@ -226,10 +226,9 @@ public class SnowUserService extends UserServiceGrpc.UserServiceImplBase impleme
     try
     {
       tx = Transaction.parseFrom(tx.toByteString());
-      if (node.getMemPool().addTransaction(tx))
+      if (node.getMemPool().addTransaction(tx, false))
       {
-        // TOTO - zomgbbqwtf put this back in
-        //node.getPeerage().broadcastTransaction(tx);
+        node.getTxBroadcaster().send(tx);
       }
       else
       {

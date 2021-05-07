@@ -25,9 +25,9 @@ public class MetaMemPool
 
 
   /**
-   * Try to fee the transaction to each shard.  If any take it, return true.
+   * Try to feed the transaction to each shard.  If any take it, return true.
    */
-  public boolean addTransaction(Transaction tx) throws ValidationException
+  public boolean addTransaction(Transaction tx, boolean p2p_source) throws ValidationException
   {
     Validation.checkTransactionBasics(tx, false);
     for(int s : node.getCurrentBuildingShards())
@@ -35,7 +35,7 @@ public class MetaMemPool
       try
       {
         MemPool mp = node.getMemPool(s);
-        if (mp.addTransaction(tx)) return true;
+        if (mp.addTransaction(tx, p2p_source)) return true;
       }
       catch(ValidationException e)
       { // to be expected
