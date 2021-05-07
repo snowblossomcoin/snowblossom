@@ -29,7 +29,7 @@ public class LoadTestShard
   private final boolean use_pending=true;
 
   private int preferred_shard = -1;
-  private RateLimit rate_limit = new RateLimit(1.0, 15.0);
+  private RateLimit rate_limit = new RateLimit(10.0, 15.0);
 
   public LoadTestShard(SnowBlossomClient client)
   {
@@ -96,7 +96,7 @@ public class LoadTestShard
         int dst_shard = active_shards.get( rnd.nextInt(active_shards.size() ) );
         if (preferred_shard >= 0)
         {
-          if (rnd.nextDouble() < 0.75) dst_shard=preferred_shard;
+          if (rnd.nextDouble() < 0.95) dst_shard=preferred_shard;
         }
 
         out_list.add( TransactionOutput.newBuilder()
