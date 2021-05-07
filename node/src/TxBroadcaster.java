@@ -50,6 +50,7 @@ public class TxBroadcaster extends Thread
         Transaction tx = queue.poll(2, TimeUnit.DAYS);
         if (tx != null)
         {
+          rate_limit.waitForRate(1.0);
           peerage.broadcastTransaction(tx);  
 
         }
