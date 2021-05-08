@@ -639,7 +639,7 @@ public class MemPool
 
   public class TicklerBroadcast extends PeriodicThread
   {
-    private ExpiringLRUCache<ChainHash, Boolean> send_cache = new ExpiringLRUCache<>(1000, 300000); 
+    private ExpiringLRUCache<ChainHash, Boolean> send_cache = new ExpiringLRUCache<>(10000, 300000); 
 
     public TicklerBroadcast()
     {

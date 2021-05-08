@@ -23,7 +23,7 @@ import snowblossom.proto.*;
  */
 public class ForgeInfo
 {
-  public static final int CACHE_SIZE=5000;
+  public static final int CACHE_SIZE=16*6*3;
 
   private LRUCache<ByteString, BlockSummary> block_summary_cache = new LRUCache<>(CACHE_SIZE);
   private LRUCache<ChainHash, BlockHeader> block_header_cache = new LRUCache<>(CACHE_SIZE);
