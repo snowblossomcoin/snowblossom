@@ -29,7 +29,6 @@ public class MetaMemPool
    */
   public boolean addTransaction(Transaction tx, boolean p2p_source) throws ValidationException
   {
-    Validation.checkTransactionBasics(tx, false);
     for(int s : node.getCurrentBuildingShards())
     {
       try
