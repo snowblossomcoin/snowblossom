@@ -3,6 +3,7 @@ package snowblossom.node;
 import com.google.common.collect.ImmutableMap;
 import com.google.protobuf.ByteString;
 import duckutil.LRUCache;
+import duckutil.SoftLRUCache;
 import duckutil.TimeRecord;
 import duckutil.TimeRecordAuto;
 import java.util.HashMap;
@@ -25,9 +26,9 @@ public class ForgeInfo
 {
   public static final int CACHE_SIZE=16*6*3;
 
-  private LRUCache<ByteString, BlockSummary> block_summary_cache = new LRUCache<>(CACHE_SIZE);
-  private LRUCache<ChainHash, BlockHeader> block_header_cache = new LRUCache<>(CACHE_SIZE);
-  private LRUCache<ChainHash, Map<String, ChainHash> > block_inclusion_cache = new LRUCache<>(CACHE_SIZE);
+  private SoftLRUCache<ByteString, BlockSummary> block_summary_cache = new SoftLRUCache<>(CACHE_SIZE);
+  private SoftLRUCache<ChainHash, BlockHeader> block_header_cache = new SoftLRUCache<>(CACHE_SIZE);
+  private SoftLRUCache<ChainHash, Map<String, ChainHash> > block_inclusion_cache = new SoftLRUCache<>(CACHE_SIZE);
 
   private SnowBlossomNode node;
 

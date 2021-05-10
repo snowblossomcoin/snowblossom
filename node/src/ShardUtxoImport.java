@@ -3,7 +3,7 @@ package snowblossom.node;
 import com.google.common.collect.ImmutableList;
 import com.google.protobuf.ByteString;
 import duckutil.ExpiringLRUCache;
-import duckutil.LRUCache;
+import duckutil.SoftLRUCache;
 import duckutil.MetricLog;
 import duckutil.TimeRecord;
 import duckutil.TimeRecordAuto;
@@ -42,7 +42,7 @@ public class ShardUtxoImport
    TOTO These objects might get big and we want to cache relative to number of
    active threads on the network.  Might want to get smarter here.
    */
-  private LRUCache<ChainHash, ImportedBlock> cache = new LRUCache<>(16*16);
+  private SoftLRUCache<ChainHash, ImportedBlock> cache = new SoftLRUCache<>(16*16);
 
   private HashSet<AddressSpecHash> trusted_signers = new HashSet<>();
 
