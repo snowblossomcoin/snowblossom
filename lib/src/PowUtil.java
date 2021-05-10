@@ -50,10 +50,11 @@ public class PowUtil
       if (header.getVersion() == 2)
       {
         {
-          byte[] shard_id = new byte[8];
+          byte[] shard_id = new byte[12];
           ByteBuffer bb_s = ByteBuffer.wrap(shard_id);
           bb_s.putInt(header.getShardId());
           bb_s.putInt(header.getTxDataSizeSum());
+          bb_s.putInt(header.getTxCount());
 
           md.update(shard_id);
         }

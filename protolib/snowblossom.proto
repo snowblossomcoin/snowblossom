@@ -80,6 +80,8 @@ message BlockHeader {
   // to have light validation of shard splits
   int32 tx_data_size_sum = 15;
 
+  int32 tx_count = 16;
+
 }
 
 message BlockImportList

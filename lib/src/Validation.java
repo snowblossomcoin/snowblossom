@@ -170,6 +170,7 @@ public class Validation
         }
 
         validatePositiveValue(header.getTxDataSizeSum(), "tx_data_size_sum");
+        validatePositiveValue(header.getTxCount(), "tx_count");
       }
 
       if (!ignore_target)
@@ -385,6 +386,7 @@ public class Validation
 
       long fee_sum = 0L;
       long tx_size_sum = 0L;
+      int tx_count = 0;
 
       Set<Integer> cover_set = ShardUtil.getCoverSet( blk.getHeader().getShardId(), params );
       Map<Integer, UtxoUpdateBuffer> export_utxo_buffer = new TreeMap<>();
@@ -393,6 +395,7 @@ public class Validation
       {
         fee_sum += deepTransactionCheck(tx, utxo_buffer, blk.getHeader(), params, cover_set, export_utxo_buffer);
         tx_size_sum += tx.getInnerData().size() + tx.getTxHash().size();
+        tx_count++;
       }
 
       // Check export set
@@ -416,6 +419,11 @@ public class Validation
         if (blk.getHeader().getTxDataSizeSum() != tx_size_sum)
         {
           throw new ValidationException("tx_data_size_sum mismatch");
+        }
+        if (blk.getHeader().getTxCount() != tx_count)
+        {
+          throw new ValidationException("tx_count mismatch");
+
         }
       }
 

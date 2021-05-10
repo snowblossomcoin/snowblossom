@@ -154,13 +154,14 @@ public class BlockForge
       LinkedList<ChainHash> tx_list = new LinkedList<ChainHash>();
       for(Transaction tx : block_builder.getTransactionsList())
       {
-        tx_list.add( new ChainHash(tx.getTxHash()));
+        tx_list.add( new ChainHash(tx.getTxHash()) );
         tx_size_total += tx.getInnerData().size() + tx.getTxHash().size();
       }
 
       if (header_builder.getVersion() == 2)
       {
         header_builder.setTxDataSizeSum(tx_size_total);
+        header_builder.setTxCount(tx_list.size());
       }
 
       header_builder.setMerkleRootHash( DigestUtil.getMerkleRootForTxList(tx_list).getBytes());
