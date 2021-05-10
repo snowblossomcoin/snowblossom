@@ -31,6 +31,7 @@ import snowblossom.lib.db.rocksdb.JRocksDB;
 import snowblossom.lib.tls.CertGen;
 import snowblossom.lib.trie.HashedTrie;
 import snowblossom.proto.WalletDatabase;
+import snowblossom.proto.BlockHeader;
 
 public class SnowBlossomNode
 {
@@ -428,13 +429,25 @@ public class SnowBlossomNode
     {
       if (getBlockIngestor(s).getHead() != null)
       {
+        BlockHeader s_head = getBlockIngestor(s).getHead().getHeader();
         int child = 0;
         for(int c : ShardUtil.getShardChildIds(s))
         {
           int active = 0;
           if (getForgeInfo().getNetworkActiveShards().containsKey(c)) active=1;
+          if (getForgeInfo().getShardHead(c) != null)
+          { 
+            active=1;
 
-          if (getForgeInfo().getShardHead(c) != null) active=1;
+            // The case of if we split off the child shards but that 
+            // split got reorged out
+            BlockHeader c_head = getForgeInfo().getShardHead(c);
+            if (c_head.getBlockHeight() <= s_head.getBlockHeight())
+            {
+              active=0;
+            }
+          }
+
 
           if (active>0)
           {     
