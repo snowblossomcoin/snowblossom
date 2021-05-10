@@ -16,7 +16,7 @@ public class TxBroadcaster extends Thread
   private static final Logger logger = Logger.getLogger("snowblossom.peering");
 
   public static final int MAX_QUEUE_SIZE=2500;
-  public static final double TPS=5.0;
+  public static final double TPS=2.0;
   public static final double BURST_SEC=5.0;
 
   private final Peerage peerage;
@@ -52,7 +52,6 @@ public class TxBroadcaster extends Thread
         {
           rate_limit.waitForRate(1.0);
           peerage.broadcastTransaction(tx);  
-
         }
 
       }
