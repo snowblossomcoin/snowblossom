@@ -229,128 +229,132 @@ public class MemPool
   /**
    * @return true iff this seems to be a new and valid tx
    */
-  public synchronized boolean addTransaction(Transaction tx, boolean p2p_source) throws ValidationException
+  public boolean addTransaction(Transaction tx, boolean p2p_source) throws ValidationException
   {
     try(MetricLog mlog = new MetricLog())
     {
-      mlog.setOperation("add_transaction");
-      mlog.setModule("mem_pool");
-      mlog.set("added", 0);
-    
-      if ((p2p_source) && (!accepts_p2p_tx))
-      {
-        mlog.set("reject_p2p", 1);
-        return false;
-      }
 
       long t1 = System.nanoTime();
       Validation.checkTransactionBasics(tx, false);
       mlog.set("basic_validation", 1);
       TimeRecord.record(t1, "tx_validation");
-      ChainHash tx_hash = new ChainHash(tx.getTxHash());
-      mlog.set("tx_id", tx_hash.toString());
-      if (known_transactions.containsKey(tx_hash)) 
+      synchronized(this)
       {
-        mlog.set("already_known", 1);
-        return false;
-      }
-
-      if (known_transactions.size() >= MEM_POOL_MAX)
-      {
-        throw new ValidationException("mempool is full");
-      }
-
-      TransactionMempoolInfo info = new TransactionMempoolInfo(tx);
-
-      TransactionInner inner = info.inner;
-      double tx_ratio = (double) inner.getFee() / (double)tx.toByteString().size();
-
-      mlog.set("fee", inner.getFee());
-      mlog.set("fee_ratio", tx_ratio);
-
-      if (tx_ratio < Globals.LOW_FEE)
-      {
-        mlog.set("low_fee", 1);
-        
-        if (known_transactions.size() >= MEM_POOL_MAX_LOW)
+        mlog.setOperation("add_transaction");
+        mlog.setModule("mem_pool");
+        mlog.set("added", 0);
+      
+        if ((p2p_source) && (!accepts_p2p_tx))
         {
-          throw new ValidationException("mempool is too full for low fee transactions");
+          mlog.set("reject_p2p", 1);
+          return false;
         }
-      }
 
-
-      TreeSet<String> used_outputs = new TreeSet<>();
-      TimeRecord.record(t1, "mempool:p1");
-
-      long t3 = System.nanoTime();
-      mlog.set("input_count", inner.getInputsCount());
-      mlog.set("output_count", inner.getOutputsCount());
-
-      for (TransactionInput in : inner.getInputsList())
-      {
-        String key = HexUtil.getHexString(in.getSrcTxId()) + ":" + in.getSrcTxOutIdx();
-        used_outputs.add(key);
-
-        if (claimed_outputs.containsKey(key))
+        ChainHash tx_hash = new ChainHash(tx.getTxHash());
+        mlog.set("tx_id", tx_hash.toString());
+        if (known_transactions.containsKey(tx_hash)) 
         {
-          if (!claimed_outputs.get(key).equals(tx_hash))
+          mlog.set("already_known", 1);
+          return false;
+        }
+
+        if (known_transactions.size() >= MEM_POOL_MAX)
+        {
+          throw new ValidationException("mempool is full");
+        }
+
+        TransactionMempoolInfo info = new TransactionMempoolInfo(tx);
+
+        TransactionInner inner = info.inner;
+        double tx_ratio = (double) inner.getFee() / (double)tx.toByteString().size();
+
+        mlog.set("fee", inner.getFee());
+        mlog.set("fee_ratio", tx_ratio);
+
+        if (tx_ratio < Globals.LOW_FEE)
+        {
+          mlog.set("low_fee", 1);
+          
+          if (known_transactions.size() >= MEM_POOL_MAX_LOW)
           {
-            throw new ValidationException("Discarding as double-spend");
+            throw new ValidationException("mempool is too full for low fee transactions");
           }
         }
-      }
-      TimeRecord.record(t3, "mempool:input_proc");
-      long output_total = inner.getFee();
-      for(TransactionOutput out : inner.getOutputsList())
-      {
-        output_total += out.getValue();
-      }
-      mlog.set("total_output", output_total);
 
-      if (utxo_for_pri_map != null)
-      {
-        long t2 = System.nanoTime();
-        TXCluster cluster = buildTXCluster(tx);
-        mlog.set("cluster_tx_count", cluster.tx_list.size()); 
-        mlog.set("cluster_tx_size", cluster.total_size);
-        TimeRecord.record(t2, "mempool:build_cluster");
-        if (cluster == null)
+
+        TreeSet<String> used_outputs = new TreeSet<>();
+        TimeRecord.record(t1, "mempool:p1");
+
+        long t3 = System.nanoTime();
+        mlog.set("input_count", inner.getInputsCount());
+        mlog.set("output_count", inner.getOutputsCount());
+
+        for (TransactionInput in : inner.getInputsList())
         {
-          throw new ValidationException("Unable to find a tx cluster that makes this work");
+          String key = HexUtil.getHexString(in.getSrcTxId()) + ":" + in.getSrcTxOutIdx();
+          used_outputs.add(key);
+
+          if (claimed_outputs.containsKey(key))
+          {
+            if (!claimed_outputs.get(key).equals(tx_hash))
+            {
+              throw new ValidationException("Discarding as double-spend");
+            }
+          }
         }
-        double ratio = (double) cluster.total_fee / (double) cluster.total_size;
+        TimeRecord.record(t3, "mempool:input_proc");
+        long output_total = inner.getFee();
+        for(TransactionOutput out : inner.getOutputsList())
+        {
+          output_total += out.getValue();
+        }
+        mlog.set("total_output", output_total);
 
-        //Random rnd = new Random();
-        //ratio = ratio * 1e9 + rnd.nextDouble();
-        long t4 = System.nanoTime();
-        priority_map.put(ratio, cluster);
-        TimeRecord.record(t4, "mempool:primapput");
+        if (utxo_for_pri_map != null)
+        {
+          long t2 = System.nanoTime();
+          TXCluster cluster = buildTXCluster(tx);
+          mlog.set("cluster_tx_count", cluster.tx_list.size()); 
+          mlog.set("cluster_tx_size", cluster.total_size);
+          TimeRecord.record(t2, "mempool:build_cluster");
+          if (cluster == null)
+          {
+            throw new ValidationException("Unable to find a tx cluster that makes this work");
+          }
+          double ratio = (double) cluster.total_fee / (double) cluster.total_size;
 
+          //Random rnd = new Random();
+          //ratio = ratio * 1e9 + rnd.nextDouble();
+          long t4 = System.nanoTime();
+          priority_map.put(ratio, cluster);
+          TimeRecord.record(t4, "mempool:primapput");
+
+        }
+        TimeRecord.record(t1, "mempool:p2");
+
+        known_transactions.put(tx_hash, info);
+
+        for (AddressSpecHash spec_hash : info.involved_addresses)
+        {
+          address_tx_map.put(spec_hash, tx_hash);
+        }
+
+        // Claim outputs used by inputs
+        for (String key : used_outputs)
+        {
+          claimed_outputs.put(key, tx_hash);
+        }
+        TimeRecord.record(t1, "mempool:tx_add");
+        TimeRecord.record(t1, "mempool:p3");
+
+        for(MemPoolTickleInterface listener : mempool_listener)
+        {
+          listener.tickleMemPool(tx, info.involved_addresses);
+        }
+
+        mlog.set("added", 1);
+        return true;
       }
-      TimeRecord.record(t1, "mempool:p2");
-
-      known_transactions.put(tx_hash, info);
-
-      for (AddressSpecHash spec_hash : info.involved_addresses)
-      {
-        address_tx_map.put(spec_hash, tx_hash);
-      }
-
-      // Claim outputs used by inputs
-      for (String key : used_outputs)
-      {
-        claimed_outputs.put(key, tx_hash);
-      }
-      TimeRecord.record(t1, "mempool:tx_add");
-      TimeRecord.record(t1, "mempool:p3");
-
-      for(MemPoolTickleInterface listener : mempool_listener)
-      {
-        listener.tickleMemPool(tx, info.involved_addresses);
-      }
-
-      mlog.set("added", 1);
-      return true;
     }
   }
 

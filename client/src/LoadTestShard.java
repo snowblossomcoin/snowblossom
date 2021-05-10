@@ -9,14 +9,17 @@ import java.util.TreeMap;
 import snowblossom.lib.*;
 import snowblossom.proto.*;
 import snowblossom.util.proto.*;
+import io.grpc.stub.StreamObserver;
 
 import duckutil.TimeRecord;
 import duckutil.TimeRecordAuto;
 
 import duckutil.RateLimit;
+import duckutil.RateReporter;
+import java.text.DecimalFormat;
 
 
-public class LoadTestShard
+public class LoadTestShard implements StreamObserver<SubmitReply>
 {
   private static final Logger logger = Logger.getLogger("snowblossom.client");
 
@@ -31,15 +34,25 @@ public class LoadTestShard
   private int preferred_shard = -1;
   private RateLimit rate_limit = new RateLimit(10.0, 15.0);
 
+	private RateReporter rate_sent = new RateReporter();
+	private RateReporter rate_accepted = new RateReporter();
+	private RateReporter rate_rejected = new RateReporter();
+
   public LoadTestShard(SnowBlossomClient client)
   {
     this.client = client;
     FeeEstimate fee_estimate = client.getFeeEstimate();
     active_shards = new ArrayList();
-    active_shards.add(3);
-    active_shards.add(4);
-    active_shards.add(5);
-    active_shards.add(6);
+    //active_shards.add(3);
+    //active_shards.add(4);
+    //active_shards.add(5);
+    //active_shards.add(6);
+
+    NodeStatus ns = client.getNodeStatus();
+    active_shards.addAll(ns.getNetworkActiveShardsList());
+
+    System.out.println("Active Shards: " + active_shards);
+
     // get list of active shards in a better way
     //active_shards.addAll( fee_estimate.getShardMap().keySet() );
           
@@ -161,36 +174,11 @@ public class LoadTestShard
 
         client.getUTXOUtil().cacheTransaction(tx);
 
-        boolean sent=false;
-        while(!sent)
+        try(TimeRecordAuto tra_submit = TimeRecord.openAuto("LoadTestShard.submitAsync"))
         {
-          try(TimeRecordAuto tra_submit = TimeRecord.openAuto("LoadTestShard.submit"))
-          {
-            SubmitReply reply = client.getStub().submitTransaction(tx);
-            
-            if (reply.getSuccess())
-            {
-              
-              //logger.info("Submit: " + reply);
-              sent=true;
-
-            }
-            else
-            {
-              //logger.info("Error: " + reply.getErrorMessage());
-              if (reply.getErrorMessage().contains("full"))
-              {
-                Thread.sleep(60000);
-              }
-              else
-              {
-                return false;
-              }
-            }
-          }
-
+          client.getAsyncStub().submitTransaction(tx, this);
+					rate_sent.record(1L);
         }
-        //Thread.sleep(100);
       }
     }
     return true;
@@ -236,10 +224,43 @@ public class LoadTestShard
     }
     finally
     {
+      System.out.println("-----------------------------------------------");
       time_record.printReport(System.out);
       time_record.reset();
+      DecimalFormat df = new DecimalFormat("0.0");
+
+      System.out.println("Sent: " + rate_sent.getReportShort(df));
+      System.out.println("Accepted: " + rate_accepted.getReportShort(df));
+      System.out.println("Rejected: " + rate_rejected.getReportShort(df));
     }
     
+  }
+
+	@Override
+  public void onNext(SubmitReply rep)
+  {
+		if (rep.getSuccess())
+		{
+			rate_accepted.record(1L);
+		}
+		else
+		{
+			rate_rejected.record(1L);
+		}
+		
+  }
+
+	@Override
+  public void onCompleted()
+  {
+
+  }
+
+	@Override
+  public void onError(Throwable t)
+  {
+		rate_rejected.record(1L);
+    t.printStackTrace();
   }
 
 }
