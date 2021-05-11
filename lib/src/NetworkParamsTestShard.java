@@ -12,7 +12,7 @@ public class NetworkParamsTestShard extends NetworkParams
   @Override
   public BigInteger getMaxTarget()
   {
-    return BlockchainUtil.getTargetForDiff(22);
+    return BlockchainUtil.getTargetForDiff(19);
   }
 
   @Override
