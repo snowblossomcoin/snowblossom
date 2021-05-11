@@ -32,7 +32,7 @@ public class LoadTestShard implements StreamObserver<SubmitReply>
   private final boolean use_pending=true;
 
   private int preferred_shard = -1;
-  private RateLimit rate_limit = new RateLimit(10.0, 15.0);
+  private RateLimit rate_limit = new RateLimit(15.0, 15.0);
 
 	private RateReporter rate_sent = new RateReporter();
 	private RateReporter rate_accepted = new RateReporter();
@@ -43,13 +43,16 @@ public class LoadTestShard implements StreamObserver<SubmitReply>
     this.client = client;
     FeeEstimate fee_estimate = client.getFeeEstimate();
     active_shards = new ArrayList();
-    //active_shards.add(3);
-    //active_shards.add(4);
-    //active_shards.add(5);
-    //active_shards.add(6);
 
     NodeStatus ns = client.getNodeStatus();
     active_shards.addAll(ns.getNetworkActiveShardsList());
+
+    double rate = client.getConfig().getDoubleWithDefault("loadtest_send_rate", 10.0);
+
+    DecimalFormat df = new DecimalFormat("0.00");
+    System.out.println("Running with send rate (tps): " + df.format(rate));
+
+    rate_limit = new RateLimit(rate, 15.0);
 
     System.out.println("Active Shards: " + active_shards);
 
@@ -187,8 +190,14 @@ public class LoadTestShard implements StreamObserver<SubmitReply>
   private void runLoadTestInner()
     throws Exception
   {
-    try(TimeRecordAuto tra_sendone = TimeRecord.openAuto("LoadTestShard.runLoadTestInner"))
+    try(TimeRecordAuto tra = TimeRecord.openAuto("LoadTestShard.runLoadTestInner"))
     {
+      try(TimeRecordAuto tra_ns = TimeRecord.openAuto("LoadTestShard.nodeStatus"))
+      {
+        NodeStatus ns = client.getNodeStatus();
+        active_shards.clear();
+        active_shards.addAll(ns.getNetworkActiveShardsList());
+      }
       SplittableRandom rnd = new SplittableRandom();
 
       TreeMap<Integer, LinkedList<TransactionBridge>> spendable_map = new TreeMap<>();
@@ -214,6 +223,7 @@ public class LoadTestShard implements StreamObserver<SubmitReply>
       while(spendable_map.size() > 0)
       {
         if (trySend(spendable_map, rnd)) sent++;
+        if (sent >= 5000) break;
       }
       if (sent==0)
       {

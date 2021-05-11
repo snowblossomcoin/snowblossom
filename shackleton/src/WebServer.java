@@ -562,9 +562,12 @@ public class WebServer implements WebHandler
 
   private void printBraidStatus(PrintStream out, NodeStatus ns)
   {
-    long tx_count = 0;
-    long look_back_time = 4L * 3600L * 1000L;
-    long start_time = System.currentTimeMillis() - look_back_time;
+    long tx_count_4h = 0;
+    long tx_count_1h = 0;
+    long look_back_time_4h = 4L * 3600L * 1000L;
+    long look_back_time_1h = 1L * 3600L * 1000L;
+    long start_time = System.currentTimeMillis() - look_back_time_4h;
+    long start_time_1h = System.currentTimeMillis() - look_back_time_1h;
 
     Map<Integer, BlockSummary> bs_map = getShardSummaryMap(ns);
     TreeSet<Integer> shards = new TreeSet<>();
@@ -589,7 +592,12 @@ public class WebServer implements WebHandler
       {
         ChainHash hash = new ChainHash(bs.getHeader().getSnowHash());
         included_blocks.add(hash);
-        tx_count += bs.getBlockTxCount();
+        tx_count_4h += bs.getBlockTxCount();
+        if (bs.getHeader().getTimestamp() >= start_time_1h)
+        {
+          tx_count_1h += bs.getBlockTxCount();
+
+        }
         out.println(getBlockSummaryLine(hash));
 
 
@@ -604,11 +612,16 @@ public class WebServer implements WebHandler
     }
     out.println("</table>");
 
+    DecimalFormat df = new DecimalFormat("0.00");
     out.println("<pre>");
-    out.println("Transactions in last 4 hours: " + tx_count);
-    double rate = (tx_count + 0.0) / (look_back_time / 1000.0);
-    DecimalFormat df = new DecimalFormat("0.0");
-    out.println("Transaction per second: " + df.format(rate));
+    out.println("Transactions in last 4 hours: " + tx_count_4h);
+    double rate = (tx_count_4h + 0.0) / (look_back_time_4h / 1000.0);
+    out.println("Transaction per second last 4 hours: " + df.format(rate));
+
+    out.println("Transactions in last hour: " + tx_count_1h);
+    rate = (tx_count_1h + 0.0) / (look_back_time_1h / 1000.0);
+    out.println("Transaction per second last hour: " + df.format(rate));
+
 
     out.println("</pre>");
 
