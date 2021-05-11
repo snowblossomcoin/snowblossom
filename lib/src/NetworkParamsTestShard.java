@@ -53,10 +53,10 @@ public class NetworkParamsTestShard extends NetworkParams
   public int getBIP44CoinNumber() { return 2340; }
 
   @Override
-  public long getBlockTimeTarget() { return 600000L; } //10 min
+  public long getBlockTimeTarget() { return 120000L; } //2 min
 
   @Override
-  public int getMaxBlockSize(){ return 64000000; } //64mb
+  public int getMaxBlockSize(){ return 32000000; } //32mb
 
   @Override
   public List<String> getSeedNodes()
