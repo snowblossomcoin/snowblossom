@@ -225,7 +225,8 @@ public class SnowBlossomMiner
 
       double block_time_sec = Math.pow(2.0, diff) / rate;
       double hours = block_time_sec / 3600.0;
-      block_time_report = String.format("- at this rate %s hours per block", df.format(hours));
+      double min = hours * 60.0;
+      block_time_report = String.format("- at this rate %s hours or %s minutes per block", df.format(hours), df.format(min));
     }
 
 
