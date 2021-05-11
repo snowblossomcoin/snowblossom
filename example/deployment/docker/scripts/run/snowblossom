@@ -2,4 +2,4 @@
 
 set -eu
 
-exec /usr/bin/java -XX:OnOutOfMemoryError="kill -9 %p" ${SNOWBLOSSOM_JAVA_OPTIONS:-} -cp /snowblossom/Everything_deploy.jar ${@}"
+exec /usr/bin/java -XX:OnOutOfMemoryError="kill -9 %p" ${SNOWBLOSSOM_JAVA_OPTIONS:-} -cp /snowblossom/Everything_deploy.jar ${@}
