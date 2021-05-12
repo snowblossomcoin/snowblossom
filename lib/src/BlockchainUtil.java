@@ -320,6 +320,8 @@ public class BlockchainUtil
    */
   public static boolean isBetter(BlockSummary a, BlockSummary b)
   {
+    if (a == null) return true;
+
     if ((!isCoordinator(a.getHeader().getShardId())) && (a.getHeader().getShardId() == b.getHeader().getShardId()))
     {
       // If we are not the coordinator and we both have the same shard id
@@ -331,7 +333,6 @@ public class BlockchainUtil
 
     }
 
-    if (a == null) return true;
 
     BigInteger a_work_sum = BlockchainUtil.readInteger(a.getWorkSum());
     BigInteger b_work_sum = BlockchainUtil.readInteger(b.getWorkSum());
