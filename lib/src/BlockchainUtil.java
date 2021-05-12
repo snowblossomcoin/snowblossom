@@ -292,11 +292,45 @@ public class BlockchainUtil
 
   }
 
+  public static boolean isCoordinator(int shard)
+  {
+    if (shard == 0) return true;
+
+    return (ShardUtil.getInheritSet(shard).contains(0));
+
+  }
+
+  public static int getHighestCoordinator(BlockSummary bs)
+  {
+    int highest = 0;
+    for(BlockHeader bh : bs.getImportedShardsMap().values())
+    {
+      if (isCoordinator(bh.getShardId()))
+      {
+        highest = Math.max(highest, bh.getBlockHeight());
+      }
+    }
+
+    return highest;
+
+  }
+
   /**
    * return true iff b is a better block than a for head purposes
    */
   public static boolean isBetter(BlockSummary a, BlockSummary b)
   {
+    if ((!isCoordinator(a.getHeader().getShardId())) && (a.getHeader().getShardId() == b.getHeader().getShardId()))
+    {
+      // If we are not the coordinator and we both have the same shard id
+      int a_highest_coord = getHighestCoordinator(a);
+      int b_highest_coord = getHighestCoordinator(b);
+
+      if (b_highest_coord > a_highest_coord) return true;
+      if (b_highest_coord < a_highest_coord) return false;
+
+    }
+
     if (a == null) return true;
 
     BigInteger a_work_sum = BlockchainUtil.readInteger(a.getWorkSum());
