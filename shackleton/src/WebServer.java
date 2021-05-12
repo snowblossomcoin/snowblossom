@@ -22,6 +22,8 @@ import java.util.TimeZone;
 import java.util.logging.Logger;
 import snowblossom.lib.*;
 import snowblossom.proto.*;
+import net.minidev.json.JSONObject;
+
 
 public class WebServer implements WebHandler
 {
@@ -58,7 +60,8 @@ public class WebServer implements WebHandler
       t.getExchange().getResponseHeaders().add("Content-Language", "en-US");
       addHeader(t.out());
       t.out().println("<H2>APIs</H2>");
-      t.out().println("<a href='/api/total_coins'>total_coins</a>");
+      t.out().println("<li><a href='/api/total_coins'>total_coins</a></li>");
+      t.out().println("<li><a href='/api/recent_json_graph'>recent_json_graph</a></li>");
       addFooter(t.out());
       t.setHttpCode(200);
       return;
@@ -74,9 +77,58 @@ public class WebServer implements WebHandler
       return;
 
     }
+    if (path.equals("/api/recent_json_graph"))
+    {
+      t.setContentType("application/json");
+      t.setHttpCode(200);
+      t.out().println(getNetworkGraph(10));
+
+      return;
+    }
 
     t.setHttpCode(404);
 
+  }
+
+  public JSONObject getNetworkGraph(int blocks_back)
+  {
+    NodeStatus node_status = shackleton.getStub().getNodeStatus(QueryUtil.nr());
+    Map<Integer, BlockSummary> bs_map = getShardSummaryMap(node_status);
+
+    TreeSet<Integer> shards = new TreeSet<>();
+    shards.addAll(bs_map.keySet());
+
+    HashSet<ChainHash> included_blocks = new HashSet<>();
+    LinkedList<BlockHeader> block_list = new LinkedList<>();
+
+
+    for(int shard : shards)
+    {
+      int count_in_shard = 0;
+      BlockSummary bs = bs_map.get(shard);
+      while(
+        (bs != null) && 
+        (count_in_shard < blocks_back) &&
+        (!included_blocks.contains(new ChainHash(bs.getHeader().getSnowHash())))
+        )
+      {
+        ChainHash hash = new ChainHash(bs.getHeader().getSnowHash());
+        included_blocks.add(hash);
+        block_list.add(bs.getHeader());
+
+        if (bs.getHeader().getBlockHeight() == 0) bs = null;
+        else
+        {
+          bs = getBlockSummary( new ChainHash(bs.getHeader().getPrevBlockHash()));
+        }
+        count_in_shard++;
+
+      }
+
+    }
+
+    return GraphOutput.getGraph(block_list);
+ 
   }
 
     public void innerHandle(WebContext t, PrintStream out)
@@ -681,7 +733,6 @@ public class WebServer implements WebHandler
   {
     if (t.getURI().getPath().startsWith("/api"))
     {
-      // TODO API
       t.setHttpCode(404);
       apiHandle(t);
 
