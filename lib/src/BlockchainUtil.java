@@ -322,7 +322,7 @@ public class BlockchainUtil
   {
     if (a == null) return true;
 
-    if ((!isCoordinator(a.getHeader().getShardId())) && (a.getHeader().getShardId() == b.getHeader().getShardId()))
+    /*if ((!isCoordinator(a.getHeader().getShardId())) && (a.getHeader().getShardId() == b.getHeader().getShardId()))
     {
       // If we are not the coordinator and we both have the same shard id
       int a_highest_coord = getHighestCoordinator(a);
@@ -331,7 +331,7 @@ public class BlockchainUtil
       if (b_highest_coord > a_highest_coord) return true;
       if (b_highest_coord < a_highest_coord) return false;
 
-    }
+    }*/
 
 
     BigInteger a_work_sum = BlockchainUtil.readInteger(a.getWorkSum());
