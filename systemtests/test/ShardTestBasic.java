@@ -20,9 +20,8 @@ public class ShardTestBasic extends SpoonTest
   {
     File snow_path = setupSnow("regshard");
 
-    Random rnd = new Random();
-    int port = 20000 + rnd.nextInt(30000);
-    SnowBlossomNode node = startNode(port, "regshard");
+    SnowBlossomNode node = startNode(0, "regshard");
+    int port = node.getServicePorts().get(0);
     Thread.sleep(100);
 
     KeyPair key_pair = KeyUtil.generateECCompressedKey();
@@ -30,16 +29,22 @@ public class ShardTestBasic extends SpoonTest
     AddressSpecHash to_addr = AddressUtil.getHashForSpec(claim);
 
     SnowBlossomMiner miner = startMiner(port, to_addr, snow_path, "regshard");
+    SnowBlossomMiner miner2 = startMiner(port, to_addr, snow_path, "regshard");
 
 
     waitForHeight(node, 0, 19,75);
-    waitForHeight(node, 1, 28,25);
+    waitForHeight(node, 1, 28,35);
     waitForHeight(node, 2, 28,25);
+    waitForHeight(node, 3, 38,35);
+    waitForHeight(node, 4, 38,25);
+    waitForHeight(node, 5, 38,25);
+    waitForHeight(node, 6, 38,25);
 
     System.out.println(node.getBlockIngestor(0).getHead());
     System.out.println(node.getBlockIngestor(2).getHead());
 
     miner.stop();
+    miner2.stop();
     Thread.sleep(500);
     node.stop();
   }

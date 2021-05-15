@@ -265,6 +265,18 @@ message PeerChainTip {
 }
 
 
+message PeerTipInfo {
+  repeated BlockPreview previews = 1;
+}
+
+message BlockPreview {
+  int32 block_height = 1;
+  bytes prev_block_hash = 2;
+  bytes snow_hash = 3; // block hash
+  int32 shard_id = 4;
+}
+
+
 
 message PeerInfo {
   string host = 1;
@@ -541,6 +553,7 @@ message SignedMessagePayload {
   int64 timestamp = 2;
   oneof z {
     bytes tls_public_key = 5;
-    bytes blockhash = 6;
+    //bytes blockhash = 6;
+    PeerTipInfo peer_tip_info = 7;
   }
 }

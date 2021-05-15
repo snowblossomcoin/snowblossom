@@ -16,9 +16,9 @@ public class Dancer
     this.node = node;
   }
   
-  public boolean isCoordinator(int shard)
+  public static boolean isCoordinator(int shard)
   {
-    return (ShardUtil.getCoverSet(shard, node.getParams()).contains(0));
+    return (ShardUtil.getInheritSet(shard).contains(0));
   }
 
   /**

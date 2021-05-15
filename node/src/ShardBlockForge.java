@@ -722,8 +722,8 @@ public class ShardBlockForge
         if (getHeight() > o.getHeight()) return 1;
       }
 
-        // larger is better
-        //return o.getSortWork().compareTo(getSortWork());
+      // larger is better
+      //return o.getSortWork().compareTo(getSortWork());
       
 
       return getRandomVal().compareTo(o.getRandomVal());

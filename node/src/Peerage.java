@@ -107,6 +107,54 @@ public class Peerage
     link.writeMessage(PeerMessage.newBuilder().setTip(getTip(0)).build());
   }
 
+  // TODO - later we will want to send all shards in one
+  // rather than breaking this out by shard.  But for now...
+  private PeerTipInfo getTipInfo(int shard_id)
+  {
+    PeerTipInfo.Builder tip_info = PeerTipInfo.newBuilder();
+
+    Set<ChainHash> block_set = new HashSet<>();
+
+    for(BlockHeader bh : node.getForgeInfo().getNetworkActiveShards().values())
+    {
+      // Find the coordinators that we know about
+      if (Dancer.isCoordinator( bh.getShardId() ))
+      {
+        Map<Integer, BlockHeader> import_map = 
+          node.getForgeInfo().getImportedShardHeads(bh, node.getParams().getMaxShardSkewHeight()+2);
+
+        // Start from what this coordinator knows about this shard 
+        // and include them here
+        if (import_map.containsKey(shard_id))
+        {
+          BlockHeader start = import_map.get(shard_id);
+          block_set.addAll(node.getForgeInfo().climb(new ChainHash(start.getSnowHash()), shard_id));
+        }
+      }
+    }
+
+    {
+      BlockSummary head = node.getBlockIngestor(shard_id).getHead();
+      ChainHash start = node.getForgeInfo().descend( 
+        new ChainHash(head.getHeader().getSnowHash()), 
+        node.getParams().getMaxShardSkewHeight()+2);
+
+      block_set.addAll(node.getForgeInfo().climb(start, shard_id));
+    }
+
+    for(ChainHash h : block_set)
+    {
+      BlockHeader head = node.getForgeInfo().getHeader(h);
+      if (head != null)
+      {
+        BlockPreview bp = BlockchainUtil.getPreview(head);
+        tip_info.addPreviews(bp);
+      }
+    }
+    
+    return tip_info.build();
+  }
+
   private PeerChainTip getTip(int shard_id)
   {
     PeerChainTip.Builder tip = PeerChainTip.newBuilder();
@@ -123,7 +171,7 @@ public class Peerage
         try
         {
           SignedMessagePayload payload = SignedMessagePayload.newBuilder()
-            .setBlockhash( summary.getHeader().getSnowHash() )
+            .setPeerTipInfo( getTipInfo(shard_id) )
             .build();
 
           WalletKeyPair wkp = node.getTrustnetWalletDb().getKeys(0);
@@ -134,10 +182,8 @@ public class Peerage
         {
           logger.log(Level.WARNING, "getTip", e);
         }
-
       }
     }
-
 
     LinkedList<PeerInfo> shuffled_peer_list = new LinkedList<>();
 

@@ -256,7 +256,6 @@ public class SnowBlossomNode
       for(String port_str : config.getList("service_port"))
       {
         int port = Integer.parseInt(port_str);
-        ports.add(port);
         Server s = ServerBuilder
           .forPort(port)
           .addService(user_service)
@@ -264,6 +263,7 @@ public class SnowBlossomNode
           .maxInboundMessageSize(params.getGrpcMaxMessageSize())
           .build();
         s.start();
+        ports.add(s.getPort());
       }
     }
 
@@ -279,7 +279,6 @@ public class SnowBlossomNode
       for(String port_str : config.getList("tls_service_port"))
       {
         int port = Integer.parseInt(port_str);
-        tls_ports.add(port);
         Server s = NettyServerBuilder
           .forPort(port)
           .addService(user_service)
@@ -288,6 +287,7 @@ public class SnowBlossomNode
           .sslContext(ssl_ctx)
           .build();
         s.start();
+        tls_ports.add(s.getPort());
       }
     }
 
@@ -343,7 +343,7 @@ public class SnowBlossomNode
     throws Exception
   {
     String db_type = config.get("db_type");
-    
+
     if(db_type.equals("rocksdb"))
     {
       if (!SystemUtil.isJvm64Bit())

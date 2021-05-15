@@ -28,44 +28,51 @@ public class ShardTestFullJambo extends SpoonTest
   {
     File snow_path = setupSnow("regshard");
 
-    Random rnd = new Random();
-    int port = 20000 + rnd.nextInt(30000);
-
     String trust_folder_base = test_folder.newFolder().getPath();
 
-    SnowBlossomNode node0 = startNode(port-1, "regshard", ImmutableMap.of("shards","0", "trustnet_key_path", trust_folder_base));
-    Thread.sleep(10000);
+    int ports[]=new int[5];
+
+    SnowBlossomNode node0 = startNode(0, "regshard", ImmutableMap.of("shards","0", "trustnet_key_path", trust_folder_base));
+    ports[0] = node0.getServicePorts().get(0);
+
+
     AddressSpecHash trust_addr = node0.getTrustnetAddress();
     String trust_str = AddressUtil.getAddressString("node", trust_addr);
 
-    SnowBlossomNode node1 = startNode(port+0, "regshard", 
+    SnowBlossomNode node1 = startNode(0, "regshard", 
       ImmutableMap.of("shards","3", "trustnet_key_path", trust_folder_base, "trustnet_signers", trust_str));
-    SnowBlossomNode node2 = startNode(port+1, "regshard",
+    SnowBlossomNode node2 = startNode(0, "regshard",
       ImmutableMap.of("shards","4", "trustnet_key_path", trust_folder_base, "trustnet_signers", trust_str));
-    SnowBlossomNode node3 = startNode(port+2, "regshard",
+    SnowBlossomNode node3 = startNode(0, "regshard",
       ImmutableMap.of("shards","5", "trustnet_key_path", trust_folder_base, "trustnet_signers", trust_str));
-    SnowBlossomNode node4 = startNode(port+3, "regshard",
+    SnowBlossomNode node4 = startNode(0, "regshard",
       ImmutableMap.of("shards","6", "trustnet_key_path", trust_folder_base, "trustnet_signers", trust_str));
+
+    ports[1] = node1.getServicePorts().get(0);
+    ports[2] = node2.getServicePorts().get(0);
+    ports[3] = node3.getServicePorts().get(0);
+    ports[4] = node4.getServicePorts().get(0);
+
     Thread.sleep(100);
-    node1.getPeerage().connectPeer("localhost", port-1);
-    node2.getPeerage().connectPeer("localhost", port-1);
-    node3.getPeerage().connectPeer("localhost", port-1);
-    node4.getPeerage().connectPeer("localhost", port-1);
+    node1.getPeerage().connectPeer("localhost", ports[0]);
+    node2.getPeerage().connectPeer("localhost", ports[0]);
+    node3.getPeerage().connectPeer("localhost", ports[0]);
+    node4.getPeerage().connectPeer("localhost", ports[0]);
     Thread.sleep(1000);
 
     KeyPair key_pair = KeyUtil.generateECCompressedKey();
     AddressSpec claim = AddressUtil.getSimpleSpecForKey(key_pair.getPublic(), SignatureUtil.SIG_TYPE_ECDSA_COMPRESSED);
     AddressSpecHash to_addr = AddressUtil.getHashForSpec(claim);
 
-    SnowBlossomMiner miner1 = startMiner(port+0, to_addr, snow_path, "regshard");
-    SnowBlossomMiner miner2 = startMiner(port+1, to_addr, snow_path, "regshard");
-    SnowBlossomMiner miner3 = startMiner(port+2, to_addr, snow_path, "regshard");
-    SnowBlossomMiner miner4 = startMiner(port+3, to_addr, snow_path, "regshard");
+    SnowBlossomMiner miner1 = startMiner(ports[1], to_addr, snow_path, "regshard");
+    SnowBlossomMiner miner2 = startMiner(ports[2], to_addr, snow_path, "regshard");
+    SnowBlossomMiner miner3 = startMiner(ports[3], to_addr, snow_path, "regshard");
+    SnowBlossomMiner miner4 = startMiner(ports[4], to_addr, snow_path, "regshard");
 
-    waitForHeight(node0, 3, 36, 180);
-    waitForHeight(node0, 4, 36, 180);
-    waitForHeight(node0, 5, 36, 180);
-    waitForHeight(node0, 6, 36, 180);
+    waitForHeight(node0, 3, 36, 220);
+    waitForHeight(node0, 4, 36, 10);
+    waitForHeight(node0, 5, 36, 10);
+    waitForHeight(node0, 6, 36, 10);
     
     miner1.stop();
     miner2.stop();

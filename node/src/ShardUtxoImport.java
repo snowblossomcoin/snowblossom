@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.LinkedList;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
@@ -106,7 +107,10 @@ public class ShardUtxoImport
 
       ImportedBlock ib = null;
 
-      ib = node.getDB().getImportedBlockMap().get(hash.getBytes());
+      if (node.getDB().getBlockTrust(hash))
+      {
+        ib = node.getDB().getImportedBlockMap().get(hash.getBytes());
+      }
 
       if (ib == null)
       {
@@ -207,61 +211,35 @@ public class ShardUtxoImport
 
     if (!trusted_signers.contains(signer)) return null;
     mlog.set("trusted_sig",1);
-    
-    ChainHash hash = new ChainHash( payload.getBlockhash() );
-    
-    if (!hash.equals(tip.getHeader().getSnowHash())) return null;
 
+    
     // Now we have a valid signed head from a trusted signer
-    logger.finer(String.format("Got signed tip from trusted peer (hash:%s signer:%s)", 
-      hash.toString(), 
+    logger.finer(String.format("Got signed tip from trusted peer (signer:%s)", 
       AddressUtil.getAddressString("node", signer)));
     
-    Validation.checkBlockHeaderBasics(node.getParams(), tip.getHeader(), false);
+    PeerTipInfo tip_info = payload.getPeerTipInfo();
 
-    node.getDB().getChildBlockMapSet().add(tip.getHeader().getPrevBlockHash(), hash.getBytes());
+    LinkedList<ChainHash> request_list = new LinkedList<>();
 
-    if (node.getForgeInfo().getShardHead(shard_id) != null)
+    for(BlockPreview bp : tip_info.getPreviewsList())
     {
-      if (node.getForgeInfo().getShardHead(shard_id).getBlockHeight() > tip.getHeader().getBlockHeight() + 10)
-      { // old tip, who cares?
-        return null;
-      }
-    }
+      ChainHash hash = new ChainHash(bp.getSnowHash());
 
-    return addBlockTrust(hash, 0);
+      node.getDB().setBlockTrust(hash);
+      node.getDB().getChildBlockMapSet().add( bp.getPrevBlockHash(), bp.getSnowHash());
 
-
-  }
-
-  /**
-   * We don't need nearly the level of rigor here as BlockIngestor
-   * We don't need back to block zero.
-   * We don't need to make sure all parents exist.
-   * In fact, we should only ever need the most recent handful of blocks
-
-   */
-  private List<ChainHash> addBlockTrust(ChainHash hash, int depth)
-  {
-    if (depth > TRUST_MAX_DEPTH) return null;
-
-    node.getDB().setBlockTrust(hash);
-    
-    ImportedBlock ib = getImportBlock(hash);
-    if (ib == null)
-    {
-      // If we don't have the block, maybe request it
-      if (reserveBlock(hash))
+      ImportedBlock ib = getImportBlock(hash);
+      if (ib == null)
       {
-        return ImmutableList.of(hash);
+        // If we don't have the block, maybe request it
+        if (reserveBlock(hash))
+        {
+          request_list.add(hash);
+        }
       }
-      return null;
     }
-    else
-    {
-      // If we do have the block, descend down
-      return addBlockTrust(new ChainHash( ib.getHeader().getPrevBlockHash() ), depth+1);
-    }
+
+    return request_list;
 
   }
 
