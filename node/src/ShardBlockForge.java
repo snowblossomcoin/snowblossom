@@ -173,7 +173,6 @@ public class ShardBlockForge
         // If we are splitting into a non-coordinator shard, don't add any other imports
         if (isCoordinator(bc.getHeader().getShardId()))
         {
-
           // Make a list sorted by block height of things we could possible include
           ListMultimap<Integer, BlockHeader> possible_import_blocks =
                  MultimapBuilder.treeKeys().arrayListValues().build();
@@ -186,14 +185,33 @@ public class ShardBlockForge
               BlockHeader blk_h = node.getForgeInfo().getHeader(ch);
               if (blk_h != null)
               {
-                possible_import_blocks.put( blk_h.getBlockHeight(), blk_h );
+                // exclude things that import coord blocks that do not match this one
+                boolean invalid_coord_import =false;
+                if (blk_h.getShardImportMap().containsKey(coord_shard))
+                {
+                  for(ByteString hash : blk_h.getShardImportMap().get(coord_shard).getHeightMap().values())
+                  {
+                    BlockHeader check = node.getForgeInfo().getHeader(new ChainHash(hash));
+                    if ((check==null) || (!node.getForgeInfo().isInChain( prev_header, check)))
+                    {
+                      invalid_coord_import = true;
+                    }
+                  }
+
+                }
+
+                if (!invalid_coord_import)
+                {
+                  possible_import_blocks.put( blk_h.getBlockHeight(), blk_h );
+                }
+                
               }
             }
           }
 
           for(BlockHeader imp_blk : possible_import_blocks.values())
           {
-            // Not in our cover set
+            // Not in the cover set from this coordinator
             if (!ShardUtil.getCoverSet(coord_shard, node.getParams()).contains(imp_blk.getShardId()))
             {
               List<BlockHeader> imp_seq = node.getForgeInfo().getImportPath(bc.getShardHeads(), imp_blk);
@@ -593,7 +611,7 @@ public class ShardBlockForge
 
         if (node.getBlockIngestor(header.getShardId()).getHead() == null)
         {
-          advances_shard=1;
+          advances_shard = 1;
         }
         else
         {
@@ -614,6 +632,34 @@ public class ShardBlockForge
           {
             shard_heads.put( ib.getHeader().getShardId(), ib.getHeader() );
           }
+        }
+
+        // Count as advancing if we are the highest under current coordinator
+        // get coordinator import
+        // see what the longest 
+
+        BlockHeader boss_coordinator = node.getForgeInfo().getHighestCoordinator(shard_heads.values());
+
+        if (!Dancer.isCoordinator(header.getShardId()))
+        if (boss_coordinator!=null)
+        {
+          Map<Integer, BlockHeader> coord_imports = node.getForgeInfo().getImportedShardHeads(
+            boss_coordinator, node.getParams().getMaxShardSkewHeight() +2);
+          BlockHeader this_shard_import = coord_imports.get(header.getShardId());
+          if (this_shard_import != null)
+          {
+            int highest = 0;
+            for(ChainHash hash : node.getForgeInfo().climb( new ChainHash(this_shard_import.getSnowHash()), -1))
+            {
+              BlockHeader h = node.getForgeInfo().getHeader(hash);
+              if (h != null)
+              {
+                highest = Math.max(highest, h.getBlockHeight());
+              }
+            }
+            if (header.getBlockHeight() > highest) advances_shard=1;
+          }
+
         }
 
         try(TimeRecordAuto tra_work = TimeRecord.openAuto("ShardBlockForge.bc().workest"))

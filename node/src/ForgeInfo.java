@@ -16,6 +16,7 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 import snowblossom.lib.*;
 import snowblossom.proto.*;
+import java.util.Collection;
 
 /**
  * Class for accessing various information needed to build new blocks in a sharded setup.
@@ -230,8 +231,6 @@ public class ForgeInfo
     try(TimeRecordAuto tra_blk = TimeRecord.openAuto("ForgeInfo.getBlocksAround"))
     {
       ChainHash tree_root = descend(start, depth);
-
-
       return climb(tree_root, shard_id);
     }
   }
@@ -308,7 +307,6 @@ public class ForgeInfo
         {
           // Wrong block is included at this height - impossible
           return null;
-
         }
       }
       if(target.getBlockHeight() > included.getBlockHeight())
@@ -337,60 +335,6 @@ public class ForgeInfo
       sub_list.add(target);
       return sub_list;
     }
-
-
-  }
-
-  /**
-   * Return the longest list of headers starting from start
-   */
-  public LinkedList<BlockHeader> getLongestUnder(BlockHeader start)
-  {
-    if (start == null) return null;
-
-    LinkedList<BlockHeader> best_list = new LinkedList<>();
-    long best_work = 0;
-
-    for(ByteString next_hash : node.getDB().getChildBlockMapSet().getSet( start.getSnowHash(), 2000) )
-    {
-      ChainHash next = new ChainHash(next_hash);
-      BlockHeader next_head = getHeader(next);
-      if (next_head != null)
-      {
-        LinkedList<BlockHeader> lst = getLongestUnder(next_head);
-        if (lst != null)
-        {
-          lst.addFirst(next_head);
-          long work = 0;
-          for(BlockHeader bh : lst)
-          {
-            work+=getWorkEstimate(bh);
-          }
-          if (work > best_work)
-          {
-            best_work=work;
-            best_list = lst;
-          }
-
-        }
-
-      }
-    }
-
-    return best_list;
-  }
-
-  // We aren't using the same work estimating as BlockSummary.  Sort of hand waving.
-  public long getWorkEstimate(BlockHeader head)
-  {
-    long v = 1000000L;
-    
-    for(BlockImportList bil : head.getShardImportMap().values())
-    {
-      v += bil.getHeightMap().size();
-    }
-
-    return v;
   }
 
   public String getHeaderString(BlockHeader h)
@@ -431,10 +375,7 @@ public class ForgeInfo
         return getHeader(hash);
       }
     }
-
     return getLatestShard(getHeader(new ChainHash(h.getPrevBlockHash())), shard_id);
-
-
   }
 
   /**
@@ -452,8 +393,6 @@ public class ForgeInfo
 
     return isInChain( getHeader(new ChainHash(h.getPrevBlockHash())), check);
   }
-
-
 
   /**
    * Looking back at most 'depth' blocks, return the highest blocks imported in each shard
@@ -491,6 +430,29 @@ public class ForgeInfo
     }
 
     return map;
+
+  }
+
+
+  /**
+   * Get highest coordinator among this list
+   */
+  public BlockHeader getHighestCoordinator(Collection<BlockHeader> lst)
+  {
+    BlockHeader highest = null;
+
+    for(BlockHeader h : lst)
+    {
+      if (Dancer.isCoordinator(h.getShardId()))
+      {
+        if ((highest == null) || (h.getBlockHeight() > highest.getBlockHeight()))
+        {
+          highest = h;
+        }
+      }
+    }
+
+    return highest;
 
   }
 }

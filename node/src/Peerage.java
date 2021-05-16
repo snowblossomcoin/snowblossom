@@ -135,11 +135,11 @@ public class Peerage
 
     {
       BlockSummary head = node.getBlockIngestor(shard_id).getHead();
-      ChainHash start = node.getForgeInfo().descend( 
-        new ChainHash(head.getHeader().getSnowHash()), 
-        node.getParams().getMaxShardSkewHeight()+2);
 
-      block_set.addAll(node.getForgeInfo().climb(start, shard_id));
+      block_set.addAll(node.getForgeInfo().getBlocksAround(
+        new ChainHash(head.getHeader().getSnowHash()),
+        node.getParams().getMaxShardSkewHeight()+2,
+        shard_id));
     }
 
     for(ChainHash h : block_set)
