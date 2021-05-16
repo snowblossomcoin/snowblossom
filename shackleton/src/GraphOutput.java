@@ -41,6 +41,8 @@ public class GraphOutput
       node.put("name", name);
       node.put("group","s" + bh.getShardId());
       node.put("shard", bh.getShardId());
+      node.put("timestamp", bh.getTimestamp());
+      node.put("height", bh.getBlockHeight());
       node_array.add(node);
       id++;
     }

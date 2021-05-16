@@ -40,8 +40,6 @@ public class ShardTestBasic extends SpoonTest
     waitForHeight(node, 5, 38,25);
     waitForHeight(node, 6, 38,25);
 
-    System.out.println(node.getBlockIngestor(0).getHead());
-    System.out.println(node.getBlockIngestor(2).getHead());
 
     miner.stop();
     miner2.stop();
