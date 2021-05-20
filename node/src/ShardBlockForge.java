@@ -260,6 +260,11 @@ public class ShardBlockForge
     // TOOD - replace with multi-head maybe
     for(BlockHeader coord_head : node.getForgeInfo().getShardHeads(coord_shard))
     {
+      System.out.println(String.format("Exploring from coord head: %s s:%d h:%d",
+        new ChainHash(coord_head.getSnowHash()).toString(),
+        coord_head.getShardId(),
+        coord_head.getBlockHeight()));
+
 
       // Starting from the more recent coordinator head
       // Find all the imported shard heads
