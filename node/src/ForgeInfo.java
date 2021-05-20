@@ -134,11 +134,11 @@ public class ForgeInfo
   {
     List<BlockHeader> out = new LinkedList<>();
 
+    if (node.getInterestShards().contains(shard_id))
     if (node.getBlockIngestor(shard_id) != null)
     {
       BlockSummary bs = node.getBlockIngestor(shard_id).getHead();
       if (bs != null) out.add(bs.getHeader());
-
       return out;
     }
 
@@ -151,9 +151,9 @@ public class ForgeInfo
       ImportedBlock ib = node.getShardUtxoImport().getImportBlock( hash );
       if (ib == null)
       {
-      logger.info(String.format("Request for shard %d head: %s but we do not have an imported block for that."
-        , shard_id,
-      hash.toString()));
+        logger.info(String.format("Request for shard %d head: %s but we do not have an imported block for that.", 
+          shard_id,
+          hash.toString()));
       }
       else
       {
