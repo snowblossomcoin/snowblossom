@@ -272,6 +272,8 @@ public class ShardBlockForge
       // We can still build a block by bringing in more recent blocks on that shard to bring it to within skew
       Map<Integer, BlockHeader> import_heads = node.getForgeInfo().getImportedShardHeads( coord_head, node.getParams().getMaxShardSkewHeight()*2);
 
+      System.out.print(getSummaryString(import_heads));
+
       HashSet<ChainHash> possible_prevs = new HashSet<>();
 
       // For each imported shard head, get all the new blocks under each
@@ -819,6 +821,22 @@ public class ShardBlockForge
   {
     return getSignature(summary.getHeader(), summary.getImportedShardsMap());
   }
+
+  public String getSummaryString(Map<Integer, BlockHeader> import_map)
+  {
+    StringBuilder sb = new StringBuilder();
+    for(Map.Entry<Integer, BlockHeader> me : import_map.entrySet())
+    {
+      BlockHeader h = me.getValue();
+
+      sb.append(" " + new ChainHash(h.getSnowHash()) + " s:" + h.getShardId() +" h:" + h.getBlockHeight());
+      sb.append("\n");
+    }
+
+    return sb.toString();
+  }
+
+
 
 
   public class ConceptUpdateThread extends PeriodicThread
