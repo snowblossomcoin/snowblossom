@@ -282,7 +282,7 @@ public class ShardUtxoImport
       }
     }
 
-    logger.info(String.format("Highest known for %d - %s", shard, out.toString()));
+    logger.fine(String.format("Highest known for %d - %s", shard, out.toString()));
     
     return out;
   }

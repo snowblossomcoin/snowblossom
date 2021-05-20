@@ -16,6 +16,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
+import java.util.logging.Logger;
 import snowblossom.lib.*;
 import snowblossom.proto.*;
 import java.util.Collection;
@@ -27,6 +28,7 @@ import java.util.Collection;
  */
 public class ForgeInfo
 {
+  private static final Logger logger = Logger.getLogger("snowblossom.node");
   public static final int CACHE_SIZE=16*6*3;
 
   private SoftLRUCache<ByteString, BlockSummary> block_summary_cache = new SoftLRUCache<>(CACHE_SIZE);
@@ -147,7 +149,16 @@ public class ForgeInfo
     for(ChainHash hash : lst)
     {
       ImportedBlock ib = node.getShardUtxoImport().getImportBlock( hash );
-      if (ib != null) out.add(ib.getHeader());
+      if (ib == null)
+      {
+      logger.info(String.format("Request for shard %d head: %s but we do not have an imported block for that."
+        , shard_id,
+      hash.toString()));
+      }
+      else
+      {
+        out.add(ib.getHeader());
+      }
 
     }
     return out;
