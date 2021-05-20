@@ -30,11 +30,8 @@ public class ShardTestFullJambo extends SpoonTest
 
     String trust_folder_base = test_folder.newFolder().getPath();
 
-    int ports[]=new int[5];
 
     SnowBlossomNode node0 = startNode(0, "regshard", ImmutableMap.of("shards","0", "trustnet_key_path", trust_folder_base));
-    ports[0] = node0.getServicePorts().get(0);
-
 
     AddressSpecHash trust_addr = node0.getTrustnetAddress();
     String trust_str = AddressUtil.getAddressString("node", trust_addr);
@@ -48,6 +45,8 @@ public class ShardTestFullJambo extends SpoonTest
     SnowBlossomNode node4 = startNode(0, "regshard",
       ImmutableMap.of("shards","6", "trustnet_key_path", trust_folder_base, "trustnet_signers", trust_str));
 
+    int ports[]=new int[5];
+    ports[0] = node0.getServicePorts().get(0);
     ports[1] = node1.getServicePorts().get(0);
     ports[2] = node2.getServicePorts().get(0);
     ports[3] = node3.getServicePorts().get(0);
@@ -58,7 +57,7 @@ public class ShardTestFullJambo extends SpoonTest
     node2.getPeerage().connectPeer("localhost", ports[0]);
     node3.getPeerage().connectPeer("localhost", ports[0]);
     node4.getPeerage().connectPeer("localhost", ports[0]);
-    Thread.sleep(1000);
+    Thread.sleep(3000);
 
     KeyPair key_pair = KeyUtil.generateECCompressedKey();
     AddressSpec claim = AddressUtil.getSimpleSpecForKey(key_pair.getPublic(), SignatureUtil.SIG_TYPE_ECDSA_COMPRESSED);
@@ -69,10 +68,10 @@ public class ShardTestFullJambo extends SpoonTest
     SnowBlossomMiner miner3 = startMiner(ports[3], to_addr, snow_path, "regshard");
     SnowBlossomMiner miner4 = startMiner(ports[4], to_addr, snow_path, "regshard");
 
-    waitForHeight(node0, 3, 36, 220);
-    waitForHeight(node0, 4, 36, 10);
-    waitForHeight(node0, 5, 36, 10);
-    waitForHeight(node0, 6, 36, 10);
+    waitForHeight(node1, 3, 36, 100);
+    waitForHeight(node2, 4, 36, 80);
+    waitForHeight(node3, 5, 36, 80);
+    waitForHeight(node4, 6, 36, 80);
     
     miner1.stop();
     miner2.stop();

@@ -252,6 +252,7 @@ public class SpoonTest
     config_map.put("network", network);
     config_map.put("tx_index", "true");
     config_map.put("addr_index", "true");
+    config_map.put("peer_count", "64");
 
     if (extra!=null)
     {

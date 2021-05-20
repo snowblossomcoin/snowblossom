@@ -9,7 +9,9 @@ import duckutil.TimeRecordAuto;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
@@ -112,14 +114,46 @@ public class ForgeInfo
       return null;
     }
 
-    ImportedBlock ib = node.getShardUtxoImport().getHighestKnownForShard(shard_id);
-    if (ib != null)
-    {
-      return ib.getHeader();
-    }
+    Set<ChainHash> head_list = node.getShardUtxoImport().getHighestKnownForShard(shard_id);
+
+    // send them all, not just one random
+    ArrayList<ChainHash> lst = new ArrayList<>();
+    lst.addAll(head_list);
+    if (lst.size() == 0) return null;
+    Collections.shuffle(lst);
+    ImportedBlock ib = node.getShardUtxoImport().getImportBlock( lst.get(0) );
+    if (ib != null) return ib.getHeader();
+
     return null;
 
   }
+
+  public List<BlockHeader> getShardHeads(int shard_id)
+  {
+    List<BlockHeader> out = new LinkedList<>();
+
+    if (node.getBlockIngestor(shard_id) != null)
+    {
+      BlockSummary bs = node.getBlockIngestor(shard_id).getHead();
+      if (bs != null) out.add(bs.getHeader());
+
+      return out;
+    }
+
+    Set<ChainHash> head_list = node.getShardUtxoImport().getHighestKnownForShard(shard_id);
+
+    // send them all, not just one random
+    ArrayList<ChainHash> lst = new ArrayList<>();
+    for(ChainHash hash : lst)
+    {
+      ImportedBlock ib = node.getShardUtxoImport().getImportBlock( hash );
+      if (ib != null) out.add(ib.getHeader());
+
+    }
+    return out;
+
+  }
+
 
   /**
    * Return the set of shards that appear to be active on the network.

@@ -33,12 +33,12 @@ public class ShardTestBasic extends SpoonTest
 
 
     waitForHeight(node, 0, 19,75);
-    waitForHeight(node, 1, 28,35);
-    waitForHeight(node, 2, 28,25);
-    waitForHeight(node, 3, 38,35);
-    waitForHeight(node, 4, 38,25);
-    waitForHeight(node, 5, 38,25);
-    waitForHeight(node, 6, 38,25);
+    waitForHeight(node, 1, 27,35);
+    waitForHeight(node, 2, 27,25);
+    waitForHeight(node, 3, 37,35);
+    waitForHeight(node, 4, 37,25);
+    waitForHeight(node, 5, 37,25);
+    waitForHeight(node, 6, 37,25);
 
 
     miner.stop();

@@ -4,9 +4,9 @@ import snowblossom.lib.ChainHash;
 import snowblossom.lib.trie.HashedTrie;
 import snowblossom.proto.Block;
 import snowblossom.proto.BlockSummary;
-import snowblossom.proto.GoldSet;
 import snowblossom.proto.Transaction;
 import snowblossom.proto.ImportedBlock;
+import snowblossom.proto.ExternalHeadList;
 
 import java.math.BigInteger;
 
@@ -15,8 +15,8 @@ public interface DBFace
   public ProtoDBMap<Block> getBlockMap();
   public ProtoDBMap<BlockSummary> getBlockSummaryMap();
   public ProtoDBMap<Transaction> getTransactionMap();
-  public ProtoDBMap<GoldSet> getGoldSetMap();
   public ProtoDBMap<ImportedBlock> getImportedBlockMap();
+  public ProtoDBMap<ExternalHeadList> getExternalShardHeadMap();
 
   public ChainHash getBlockHashAtHeight(int shard, int height);
   public ChainHash getBlockHashAtHeight(int height);

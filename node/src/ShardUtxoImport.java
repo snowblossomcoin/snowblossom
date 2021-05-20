@@ -49,7 +49,6 @@ public class ShardUtxoImport
 
   private ExpiringLRUCache<ChainHash, Boolean> block_pull_cache = new ExpiringLRUCache<>(1000, 60000L);
 
-  private HashMap<Integer, ImportedBlock> highest_known_map = new HashMap<>();
 
   public static final int TRUST_MAX_DEPTH = 6;
 
@@ -269,47 +268,57 @@ public class ShardUtxoImport
     }
   }
 
-  public ImportedBlock getHighestKnownForShard(int shard)
+  public Set<ChainHash> getHighestKnownForShard(int shard)
   {
-    synchronized(highest_known_map)
-    {
-      if (highest_known_map.containsKey(shard)) return highest_known_map.get(shard);
-    }
+    ByteString key = ByteString.copyFrom(new String("ext-" + shard).getBytes());
+    ExternalHeadList list = node.getDB().getExternalShardHeadMap().get(key); 
 
-    ByteString key = ByteString.copyFrom(new String("external-head-" + shard).getBytes());
-    ImportedBlock ib = node.getDB().getImportedBlockMap().get(key);
-
-    if (ib != null)
+    HashSet<ChainHash> out = new HashSet<>();
+    if (list != null)
     {
-      synchronized(highest_known_map)
+      for(ByteString bs : list.getHeadHashesList())
       {
-        highest_known_map.put(shard, ib);
+        out.add(new ChainHash(bs));
       }
     }
-    return ib;
-
+    return out;
   }
+
+  private Object highest_known_lock = new Object();
 
   private void saveHighestForKnownShard(ImportedBlock ib)
   {
     int shard_id = ib.getHeader().getShardId();
-    ImportedBlock old_ib = getHighestKnownForShard(shard_id);
 
-    boolean save = false;
+    ByteString key = ByteString.copyFrom(new String("ext-" + shard_id).getBytes());
+    ExternalHeadList.Builder list = ExternalHeadList.newBuilder();
 
-    if ((old_ib == null) || 
-        (ib.getHeader().getBlockHeight() > old_ib.getHeader().getBlockHeight()))
+    synchronized(highest_known_lock)
     {
-      ByteString key = ByteString.copyFrom(new String("external-head-" + shard_id).getBytes());
-      node.getDB().getImportedBlockMap().put(key, ib);
-      synchronized(highest_known_map)
+      
+      ExternalHeadList old = node.getDB().getExternalShardHeadMap().get(key);
+      if (old != null) list.mergeFrom(old);
+
+      if (list.getBlockHeight() > ib.getHeader().getBlockHeight()) return;
+
+      if (list.getBlockHeight() < ib.getHeader().getBlockHeight())
       {
-        highest_known_map.put(shard_id, ib);
+        list.clear();
+        list.setBlockHeight(ib.getHeader().getBlockHeight());
       }
+      else
+      {
+        for(ByteString bs : list.getHeadHashesList())
+        {
+          if (bs.equals(ib.getHeader().getSnowHash())) return;
+        }
+      }
+      list.addHeadHashes( ib.getHeader().getSnowHash() );
+
+      node.getDB().getExternalShardHeadMap().put(key, list.build());
+
     }
 
   }
-
-  
 
 }

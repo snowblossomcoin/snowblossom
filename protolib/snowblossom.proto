@@ -481,15 +481,14 @@ message BlockSummary {
   int64 block_tx_count = 13;
 }
 
-message GoldSet {
-  // Maps shard id to block hash
-  map<int32, bytes> shard_to_hash = 1;
-}
-
 message PeerList {
   repeated PeerInfo peers = 1;
 }
 
+message ExternalHeadList {
+  int32 block_height = 1;
+  repeated bytes head_hashes =2;
+}
 
 // If anything is added or changed here, it is vital to update
 // WalletUtil.mergeDatabase as needed and increase WalletUtil.WALLET_DB_VERSION

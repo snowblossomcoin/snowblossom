@@ -15,9 +15,9 @@ import snowblossom.lib.trie.HashedTrie;
 import snowblossom.lib.trie.TrieDBMap;
 import snowblossom.proto.Block;
 import snowblossom.proto.BlockSummary;
-import snowblossom.proto.GoldSet;
 import snowblossom.proto.Transaction;
 import snowblossom.proto.ImportedBlock;
+import snowblossom.proto.ExternalHeadList;
 import java.math.BigInteger;
 
 public class DB implements DBFace
@@ -33,8 +33,9 @@ public class DB implements DBFace
   protected DBMap special_map;
   protected DBMap best_block_map;
   protected ProtoDBMap<Transaction> tx_map;
-  protected ProtoDBMap<GoldSet> gold_set_map;
   protected ProtoDBMap<ImportedBlock> imported_block_map;
+  protected ProtoDBMap<ExternalHeadList> external_shard_head_map;
+
   protected DBMap trust_map;
   protected DBMapMutationSet special_map_set;
   protected DBMapMutationSet child_block_map_set;
@@ -68,8 +69,8 @@ public class DB implements DBFace
     block_map = new ProtoDBMap(Block.newBuilder().build().getParserForType(), prov.openMap("block"));
     tx_map = new ProtoDBMap(Transaction.newBuilder().build().getParserForType(), prov.openMap("tx"));
     block_summary_map = new ProtoDBMap(BlockSummary.newBuilder().build().getParserForType(), prov.openMap("blocksummary"));
-    gold_set_map = new ProtoDBMap(GoldSet.newBuilder().build().getParserForType(), prov.openMap("gold"));
     imported_block_map = new ProtoDBMap(ImportedBlock.newBuilder().build().getParserForType(), prov.openMap("ib"));
+    external_shard_head_map = new ProtoDBMap(ExternalHeadList.newBuilder().build().getParserForType(), prov.openMap("xshm"));
 
     utxo_node_map = prov.openMap("u");
     block_height_map = prov.openMap("height");
@@ -111,10 +112,10 @@ public class DB implements DBFace
   public ProtoDBMap<Transaction> getTransactionMap(){return tx_map; }
 
   @Override
-  public ProtoDBMap<GoldSet> getGoldSetMap(){return gold_set_map; }
+  public ProtoDBMap<ImportedBlock> getImportedBlockMap(){return imported_block_map; }
 
   @Override
-  public ProtoDBMap<ImportedBlock> getImportedBlockMap(){return imported_block_map; }
+  public ProtoDBMap<ExternalHeadList> getExternalShardHeadMap(){return external_shard_head_map; } 
 
   @Override
   public DBMap getSpecialMap() { return special_map; }
