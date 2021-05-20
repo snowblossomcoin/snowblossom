@@ -257,7 +257,6 @@ public class ShardBlockForge
     // to be included in future coordinators as long as they don't include other coordinator 
     // forks
 
-    // TOOD - replace with multi-head maybe
     for(BlockHeader coord_head : node.getForgeInfo().getShardHeads(coord_shard))
     {
       System.out.println(String.format("Exploring from coord head: %s s:%d h:%d",

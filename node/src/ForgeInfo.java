@@ -143,6 +143,7 @@ public class ForgeInfo
     }
 
     Set<ChainHash> head_list = node.getShardUtxoImport().getHighestKnownForShard(shard_id);
+    logger.info(String.format("Get shard heads %d - %s", shard_id, head_list.toString()));
 
     // send them all, not just one random
     ArrayList<ChainHash> lst = new ArrayList<>();
