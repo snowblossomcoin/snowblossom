@@ -281,6 +281,9 @@ public class ShardUtxoImport
         out.add(new ChainHash(bs));
       }
     }
+
+    logger.info(String.format("Highest known for %d - %s", shard, out.toString()));
+    
     return out;
   }
 
