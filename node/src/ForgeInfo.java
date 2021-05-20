@@ -146,8 +146,7 @@ public class ForgeInfo
     logger.info(String.format("Get shard heads %d - %s", shard_id, head_list.toString()));
 
     // send them all, not just one random
-    ArrayList<ChainHash> lst = new ArrayList<>();
-    for(ChainHash hash : lst)
+    for(ChainHash hash : head_list)
     {
       ImportedBlock ib = node.getShardUtxoImport().getImportBlock( hash );
       if (ib == null)
