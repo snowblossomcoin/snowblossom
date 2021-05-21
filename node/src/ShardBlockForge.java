@@ -272,7 +272,8 @@ public class ShardBlockForge
       // We can still build a block by bringing in more recent blocks on that shard to bring it to within skew
       Map<Integer, BlockHeader> import_heads = node.getForgeInfo().getImportedShardHeads( coord_head, node.getParams().getMaxShardSkewHeight()*2);
 
-      System.out.print(getSummaryString(import_heads));
+      System.out.println("Import heads:");
+      System.out.println(getSummaryString(import_heads));
 
       HashSet<ChainHash> possible_prevs = new HashSet<>();
 
