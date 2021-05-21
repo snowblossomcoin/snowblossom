@@ -104,6 +104,7 @@ public class PeerLink implements StreamObserver<PeerMessage>
     {
       mlog.setOperation("peer_message");
       mlog.setModule("peer_link");
+      mlog.set("peer", getLinkId());
       mlog.set("size", msg.toByteString().size());
 
       if (msg.hasTx())
@@ -283,6 +284,9 @@ public class PeerLink implements StreamObserver<PeerMessage>
         BlockHeader header = msg.getHeader();
         mlog.set("hash", new ChainHash(header.getSnowHash()).toString());
         Validation.checkBlockHeaderBasics(node.getParams(), header, false);
+        mlog.set("head_hash", new ChainHash(header.getSnowHash()).toString());
+        mlog.set("head_shard", header.getShardId());
+        mlog.set("head_height", header.getBlockHeight());
         considerBlockHeader(header, msg.getReqHeaderShardId());
       }
       else if (msg.hasReqCluster())
@@ -375,14 +379,16 @@ public class PeerLink implements StreamObserver<PeerMessage>
     // if we don't have this block
     if (node.getDB().getBlockSummaryMap().get(header.getSnowHash())==null)
     {
-      logger.fine(String.format("Considering header context:%d shard:%d height:%d hash:%s", 
+      logger.info(String.format("Considering header context:%d shard:%d height:%d hash:%s prev:%s", 
         context_shard_id, header.getShardId(), header.getBlockHeight(),
-        new ChainHash(header.getSnowHash()).toString()));
+        new ChainHash(header.getSnowHash()).toString(),
+        new ChainHash(header.getPrevBlockHash()).toString()
+        ));
 
       int height = header.getBlockHeight();
       if ((height == 0) || (node.getDB().getBlockSummaryMap().get(header.getPrevBlockHash())!=null))
       { // but we have the prev block - get this block 
-        logger.fine("We have the prev block - requesting this one");
+        logger.info("We have the prev block - requesting this one");
         if (node.getBlockIngestor(shard_id).reserveBlock(new ChainHash(header.getSnowHash())))
         {
           writeMessage( PeerMessage.newBuilder()
@@ -411,7 +417,7 @@ public class PeerLink implements StreamObserver<PeerMessage>
         if ((context_shard_id != 0) || (node.getBlockIngestor(shard_id).getHeight() > 0))
         if (node.getBlockIngestor(shard_id).getHeight() + Globals.BLOCK_CHUNK_HEADER_DOWNLOAD_SIZE < next)
         { 
-          logger.fine("We are far off");
+          logger.info("We are far off");
           next = node.getBlockIngestor(shard_id).getHeight() + Globals.BLOCK_CHUNK_HEADER_DOWNLOAD_SIZE;
         }
 
@@ -431,7 +437,7 @@ public class PeerLink implements StreamObserver<PeerMessage>
               if (peer_block_map.get(new ShardBlock(context_shard_id,next)).equals(prev)) return;
             }
           }
-          logger.fine(String.format("Requesting header shard:%d height:%d", context_shard_id, next));
+          logger.info(String.format("Requesting header shard:%d height:%d", context_shard_id, next));
 
           writeMessage( PeerMessage.newBuilder()
             .setReqHeader(

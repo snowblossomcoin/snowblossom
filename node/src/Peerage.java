@@ -44,6 +44,7 @@ public class Peerage
     this.node = node;
 
     links = new HashMap<>();
+
     peer_rumor_list = new HashMap<String,PeerInfo>();
 
     ByteString peer_data = node.getDB().getSpecialMap().get("peerlist");
@@ -159,6 +160,12 @@ public class Peerage
   {
     PeerChainTip.Builder tip = PeerChainTip.newBuilder();
     BlockSummary summary = node.getBlockIngestor(shard_id).getHead();
+
+    logger.fine(String.format("Loaded tip on shard %d - s:%d h:%d", 
+      shard_id, 
+      summary.getHeader().getShardId(),
+      summary.getHeader().getBlockHeight()));
+
 
     tip.setNetworkName(node.getParams().getNetworkName());
     tip.setVersion(Globals.VERSION);
@@ -294,6 +301,11 @@ public class Peerage
   public void sendAllTips(int shard_id)
   {
     PeerChainTip tip = getTip(shard_id);
+    logger.fine(String.format("Sending tip on shard %d - s:%d h:%d", 
+      shard_id, 
+      tip.getHeader().getShardId(),
+      tip.getHeader().getBlockHeight()));
+
     for(PeerLink link : getLinkList())
     {
       try
@@ -439,7 +451,6 @@ public class Peerage
           for(int s : my_shards)
           {
             sendAllTips(s);
-            //my_shards.get(rnd.nextInt(my_shards.size())));
           }
 
           if (last_learn_time + REFRESH_LEARN_TIME < System.currentTimeMillis())

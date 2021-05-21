@@ -90,6 +90,9 @@ public class BlockIngestor implements ChainStateSource
       
     }
 
+    // TODO remove after whatever is fixed
+    updateHeights(chainhead, true);
+
   }
 
   private void checkResummary()
