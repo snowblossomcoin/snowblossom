@@ -161,12 +161,6 @@ public class Peerage
     PeerChainTip.Builder tip = PeerChainTip.newBuilder();
     BlockSummary summary = node.getBlockIngestor(shard_id).getHead();
 
-    logger.fine(String.format("Loaded tip on shard %d - s:%d h:%d", 
-      shard_id, 
-      summary.getHeader().getShardId(),
-      summary.getHeader().getBlockHeight()));
-
-
     tip.setNetworkName(node.getParams().getNetworkName());
     tip.setVersion(Globals.VERSION);
 

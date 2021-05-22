@@ -405,7 +405,9 @@ public class BlockIngestor implements ChainStateSource
 
   private void updateHeights(BlockSummary summary)
   {
-    updateHeights(summary, false);
+    //Forcing a recheck because I think
+    // there might be some race condition or something
+    updateHeights(summary, true);
   }
 
   /**
