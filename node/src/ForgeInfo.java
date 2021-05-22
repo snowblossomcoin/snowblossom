@@ -395,6 +395,33 @@ public class ForgeInfo
     return String.format("{s:%d h:%d imp:%d %s}", h.getShardId(), h.getBlockHeight(), import_count, hash);
   }
 
+  public String getBlockTextSummary(BlockHeader h)
+  {
+    StringBuilder sb = new StringBuilder();
+    sb.append(getHeaderString(h));
+    sb.append("\n");
+    for( BlockImportList bil : h.getShardImportMap().values())
+    {
+      for(ByteString bytes : bil.getHeightMap().values())
+      {
+        ChainHash imp_hash = new ChainHash(bytes);
+        BlockHeader imp_head = getHeader(imp_hash);
+        sb.append("  - ");
+        if (imp_head == null)
+        { 
+          sb.append("no header import - " + imp_head);
+        }
+        else
+        {
+          sb.append(getHeaderString(imp_head));
+        }
+        sb.append("\n");
+      }
+    }
+
+    return sb.toString();
+  }
+
   /**
    * Return the highest block of shard that has been included in the given header
    * or null if no such information can be found.

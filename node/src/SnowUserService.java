@@ -202,10 +202,12 @@ public class SnowUserService extends UserServiceGrpc.UserServiceImplBase impleme
       int shard_id = block.getHeader().getShardId();
       //TODO check to see if we are tracking that shard
       node.getBlockIngestor(shard_id).ingestBlock(block);
+      logger.info("Accepted block: " + node.getForgeInfo().getBlockTextSummary(block.getHeader()));
     }
     catch(ValidationException e)
     {
       logger.info("Rejecting block: " + e);
+      logger.info("Rejected block: " + node.getForgeInfo().getBlockTextSummary(block.getHeader()));
 
       responseObserver.onNext(SubmitReply.newBuilder()
           .setSuccess(false)
