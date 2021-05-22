@@ -67,7 +67,11 @@ public class SpoonTest
     for (int i = 0; i < 25; i++)
     {
       Thread.sleep(1000);
-      height = node.getBlockIngestor(shard_id).getHead().getHeader().getBlockHeight();
+      if (node.getBlockIngestor(shard_id) != null)
+      if (node.getBlockIngestor(shard_id).getHead() != null)
+      {
+        height = node.getBlockIngestor(shard_id).getHead().getHeader().getBlockHeight();
+      }
       if (height >= target) return;
     }
     Assert.fail(String.format("Waiting for %d blocks, only got %d", wait_for, height - start));
