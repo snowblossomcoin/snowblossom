@@ -489,7 +489,7 @@ public class ForgeInfo
   /**
    * Get highest coordinator among this list
    */
-  public BlockHeader getHighestCoordinator(Collection<BlockHeader> lst)
+  public static BlockHeader getHighestCoordinator(Collection<BlockHeader> lst)
   {
     BlockHeader highest = null;
 
