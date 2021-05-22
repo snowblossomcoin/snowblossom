@@ -447,10 +447,17 @@ public class ForgeInfo
     TreeMap<Integer, BlockHeader> map = new TreeMap<>();
 
     if (depth == 0) return map;
-    if (start == null) return map;
-    
-    // Take the things from lower first
-    map.putAll(getImportedShardHeads( getHeader(new ChainHash(start.getPrevBlockHash())),depth-1));
+    if (start == null)
+    {
+      logger.warning(String.format("Unable to find more shards back.  Looking for %d more", depth));
+      return map;
+    }
+   
+    if (start.getBlockHeight() > 0)
+    {
+      // Take the things from lower first
+      map.putAll(getImportedShardHeads( getHeader(new ChainHash(start.getPrevBlockHash())),depth-1));
+    }
 
     // Then add self, which is always newer
     map.put(start.getShardId(), start);

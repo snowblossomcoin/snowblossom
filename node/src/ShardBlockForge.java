@@ -270,7 +270,7 @@ public class ShardBlockForge
 
       // Note: the 2x is there because we might be at height X and some other shard is at X-skew-2 or something
       // We can still build a block by bringing in more recent blocks on that shard to bring it to within skew
-      Map<Integer, BlockHeader> import_heads = node.getForgeInfo().getImportedShardHeads( coord_head, node.getParams().getMaxShardSkewHeight()*2);
+      Map<Integer, BlockHeader> import_heads = node.getForgeInfo().getImportedShardHeads( coord_head, node.getParams().getMaxShardSkewHeight()*3);
 
       System.out.println("Import heads:");
       System.out.println(getSummaryString(import_heads));
@@ -288,110 +288,130 @@ public class ShardBlockForge
       }
       System.out.println("Possible_prevs: " + possible_prevs.size());
 
-      int exclude_inchain=0;
-      int exclude_imppath=0;
-
       for(ChainHash prev_hash : possible_prevs)
       {
-        BlockSummary prev = node.getForgeInfo().getSummary( prev_hash );
-        if (prev == null) continue;
-        synchronized(signature_cache)
-        {
-          signature_cache.put( getSignature(prev), true);
-        }
-        int prev_shard = prev.getHeader().getShardId();
-        int prev_height = prev.getHeader().getBlockHeight();
-        if (import_heads.containsKey(prev_shard))
-        {
-          // If this block is not in the chain from whatever the import_head has,
-          // don't bother with it
-          // We get into this state from a climb from a parent shard into a shard that we
-          // already have some locked information for
-          if (!node.getForgeInfo().isInChain(prev.getHeader(), import_heads.get(prev_shard))) {exclude_inchain++; continue; }
-          
-        }
-        List<BlockHeader> coord_imp_lst = node.getForgeInfo().getImportPath(prev, coord_head);
-        if (coord_imp_lst == null) {exclude_imppath++; continue;}
-
-        List<BlockConcept> concept_list = initiateBlockConcepts(prev);
-
-        for(BlockConcept bc : concept_list)
-        {
-          System.out.println("Considering: " + bc);
-          int bc_shard = bc.getHeader().getShardId();
-
-          if (!node.getInterestShards().contains(bc_shard)) continue;
-
-          // Already have a block of this shard at this height
-          if ((import_heads.containsKey(bc_shard)) && (import_heads.get(bc_shard).getBlockHeight() >= bc.getHeader().getBlockHeight())) continue;
-
-          // Add as many as are in compliance
-          for(BlockHeader h : coord_imp_lst)
-          {
-            if (bc == null) break;
-            if (dancer.isCompliant(h))
-            {
-              Map<Integer, BlockHeader> cur_imp_heads = node.getForgeInfo().getImportedShardHeads( h, node.getParams().getMaxShardSkewHeight()+2);
-
-              for(BlockHeader imp_h : cur_imp_heads.values())
-              {
-                if (!ShardUtil.getCoverSet(bc.getHeader().getShardId(), node.getParams())
-                  .contains(imp_h.getShardId()))
-                {
-                  List<BlockHeader> path = node.getForgeInfo().getImportPath(bc.getShardHeads(), imp_h);
-                  if (path == null)
-                  {
-
-                    // We have to be able to import the coordinator, or no point
-                    // but maybe we want to build a block without any imports
-                    // bah
-                    if(Dancer.isCoordinator(imp_h.getShardId()))
-                    {
-                      bc= null;
-                      break;
-                    }
-
-                  }
-
-                  if (path != null)
-                  {
-                    for(BlockHeader h_imp : path)
-                    {
-                      if (ShardUtil.getCoverSet(bc.getHeader().getShardId(), node.getParams())
-                                      .contains(h_imp.getShardId()))
-                      { // Can't import block in my coverset
-                        break;
-                      }
-                      bc = bc.importShard(h_imp);
-                    }
-                  }
-                }
-
-              }
-
-            }
-            else
-            {
-              break;
-            }
-          }
-          if (bc != null)
-          {
-            considerAdd(concepts, bc);
-          }
-
-        }
+        expandPrev(import_heads, prev_hash, coord_head, concepts);
 
       }
-      
-      System.out.println("exclude_inchain: " + exclude_inchain);
-      System.out.println("exclude_imppath: " +  exclude_imppath);
     }
 
     return concepts;
 
   }
 
+  /**
+   * Expand from the given previous block using the selected coordinator head.
+   */
+  public void expandPrev(Map<Integer, BlockHeader> import_heads, ChainHash prev_hash, BlockHeader coord_head, TreeSet<BlockConcept> concepts)
+    throws ValidationException
+  {
+    BlockSummary prev = node.getForgeInfo().getSummary( prev_hash );
+    if (prev == null) return;
+
+    synchronized(signature_cache)
+    {
+      signature_cache.put( getSignature(prev), true);
+    }
+    int prev_shard = prev.getHeader().getShardId();
+    int prev_height = prev.getHeader().getBlockHeight();
+    if (import_heads.containsKey(prev_shard))
+    {
+      // If this block is not in the chain from whatever the import_head has,
+      // don't bother with it
+      // We get into this state from a climb from a parent shard into a shard that we
+      // already have some locked information for
+      if (!node.getForgeInfo().isInChain(prev.getHeader(), import_heads.get(prev_shard)))
+      {
+        return; 
+      }
+    }
+
+    List<BlockHeader> coord_imp_lst = node.getForgeInfo().getImportPath(prev, coord_head);
+    if (coord_imp_lst == null) { return; }
+
+    List<BlockConcept> concept_list = initiateBlockConcepts(prev);
+
+    for(BlockConcept bc : concept_list)
+    {
+      System.out.println("Considering: " + bc);
+      expandConcept(import_heads, bc, coord_head, concepts, coord_imp_lst);
+
+    }
+
+
+  }
+
+  /**
+   * Expand a particular concept with a given coordinator head
+   */
+  public void expandConcept(Map<Integer, BlockHeader> import_heads, BlockConcept bc, BlockHeader coord_head, TreeSet<BlockConcept> concepts, List<BlockHeader> coord_imp_lst)
+    throws ValidationException
+  {
+    int bc_shard = bc.getHeader().getShardId();
+
+    if (!node.getInterestShards().contains(bc_shard)) return;
+
+    // Already have a block of this shard at this height
+    if (import_heads.containsKey(bc_shard))
+    if (import_heads.get(bc_shard).getBlockHeight() >= bc.getHeader().getBlockHeight()) 
+      return;
+
+    // Add as many as are in compliance
+    for(BlockHeader h : coord_imp_lst)
+    {
+      if (bc == null) return;
+      if (!dancer.isCompliant(h))
+      {
+        return;
+      }
+
+      Map<Integer, BlockHeader> cur_imp_heads = node.getForgeInfo().getImportedShardHeads( h, node.getParams().getMaxShardSkewHeight()*2);
+
+      for(BlockHeader imp_h : cur_imp_heads.values())
+      {
+        if (!ShardUtil.getCoverSet(bc.getHeader().getShardId(), node.getParams())
+          .contains(imp_h.getShardId()))
+        {
+          List<BlockHeader> path = node.getForgeInfo().getImportPath(bc.getShardHeads(), imp_h);
+					if (path == null)
+          {
+						// We have to be able to import the coordinator, or no point
+						// but maybe we want to build a block without any imports
+						// bah
+						if(Dancer.isCoordinator(imp_h.getShardId()))
+						{
+							return;
+						}
+          }
+
+          /*if (path == null)
+          {
+            return; // If we can't import any header, we are out. 
+          }*/
+
+          if (path != null)
+          {
+            for(BlockHeader h_imp : path)
+            {
+              if (!ShardUtil.getCoverSet(bc.getHeader().getShardId(), node.getParams())
+                              .contains(h_imp.getShardId()))
+              { // Import block that isn't in my my coverset
+                bc = bc.importShard(h_imp);
+              }
+            }
+          }
+        }
+
+      }
+
+    }
+    if (bc != null)
+    {
+      considerAdd(concepts, bc);
+    }
+
+
+  }
 
   /**
    * create concepts for blocks that could be generated based on this one.
@@ -577,7 +597,6 @@ public class ShardBlockForge
     private BigInteger rnd_val;
     private TreeMap<Integer, BlockHeader> shard_heads;
     private int advances_shard = 0;
-
 
     public BlockConcept(BlockSummary prev_summary, BlockHeader header)
     {

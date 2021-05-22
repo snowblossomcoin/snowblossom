@@ -25,7 +25,7 @@ public class Peerage
   public static final long REFRESH_LEARN_TIME = 3600L * 1000L; // 1hr
   public static final long SAVE_PEER_TIME = 60L * 1000L; // 1min
   public static final long PEER_EXPIRE_TIME = 3L * 86400L * 1000L; // 3 days
-  public static final long RANDOM_CLOSE_TIME = 3600L * 1000L; // 1hr
+  public static final long RANDOM_CLOSE_TIME = 300L * 1000L; // 5-min
 
   private static final Logger logger = Logger.getLogger("snowblossom.peering");
 
@@ -477,9 +477,8 @@ public class Peerage
       int connected = getLinkList().size();
       int desired = node.getConfig().getIntWithDefault("peer_count", 8);
       logger.log(Level.FINE, String.format("Connected to %d, desired %d", connected, desired));
-      if (desired <= connected)
+      if (connected > 4)
       {
-        pruneExpiredPeers();
         if (last_random_close + RANDOM_CLOSE_TIME < System.currentTimeMillis())
         {
           LinkedList<PeerLink> lst = new LinkedList<PeerLink>();
@@ -492,7 +491,11 @@ public class Peerage
           }
           last_random_close = System.currentTimeMillis();
         }
-        return;
+      }
+      if (desired <= connected)
+      {
+        pruneExpiredPeers();
+              return;
       }
 
       for(int att = 0; att < desired - connected; att++)
