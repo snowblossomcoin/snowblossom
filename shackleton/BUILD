@@ -24,3 +24,9 @@ java_test(
       "//protolib:protogrpc",
     ]
 )
+
+filegroup(
+  name = "webstatic",
+  srcs = glob(["webstatic/**"]),
+)
+

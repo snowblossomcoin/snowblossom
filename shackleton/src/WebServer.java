@@ -8,6 +8,8 @@ import duckutil.webserver.DuckWebServer;
 import duckutil.webserver.WebContext;
 import duckutil.webserver.WebHandler;
 import java.io.PrintStream;
+import java.io.InputStream;
+import java.net.URLConnection;
 import java.math.RoundingMode;
 import java.net.URLDecoder;
 import java.text.DecimalFormat;
@@ -47,6 +49,45 @@ public class WebServer implements WebHandler
 
     new DuckWebServer(host, port, this, 32);
 
+  }
+
+  public void staticHandle(WebContext t)
+    throws Exception
+  {
+    String path = t.getURI().getPath();
+
+    path = path.substring(8); // remove the "/static/" 
+    
+    InputStream in = Shackleton.class.getResourceAsStream( "/shackleton/webstatic/" + path );
+    if (in == null)
+    {
+      t.setContentType("text/plain");
+      t.out().println("No resource: " + path);
+      return;
+    }
+    else
+    {
+      String mime_type = Mimer.guessContentType(path);
+      if (mime_type != null)
+      {
+        t.setContentType(mime_type);
+      }
+      
+      byte[] buff = new byte[8192];
+
+      while(true)
+      {
+        int r = in.read(buff);
+        if (r < 0) break;
+        t.out().write(buff,0,r);
+      }
+      in.close();
+      t.out().flush();
+      
+      t.setHttpCode(200);
+
+
+    }
   }
 
   public void apiHandle(WebContext t)
@@ -736,6 +777,11 @@ public class WebServer implements WebHandler
       t.setHttpCode(404);
       apiHandle(t);
 
+    }
+    else if (t.getURI().getPath().startsWith("/static"))
+    {
+      t.setHttpCode(404);
+      staticHandle(t);
     }
     else
     {

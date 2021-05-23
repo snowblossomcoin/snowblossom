@@ -61,6 +61,7 @@ java_binary(
 java_binary(
   name = "ShackletonExplorer",
   main_class = "snowblossom.shackleton.Shackleton",
+  resources = [ "//shackleton:webstatic" ],
   runtime_deps = [
     "//shackleton:shackleton",
   ]
@@ -102,7 +103,7 @@ java_binary(
 java_binary(
   name = "Everything",
   main_class = "snowblossom.iceleaf.IceLeaf",
-  resources = [ "//iceleaf-ui:resources" ],
+  resources = [ "//iceleaf-ui:resources", "//shackleton:webstatic" ],
   runtime_deps = [
     "//lib:lib",
     "//node:node",

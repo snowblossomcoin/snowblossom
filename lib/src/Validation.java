@@ -642,7 +642,7 @@ public class Validation
     {
       if (!hash.equals(known_map.get(key)))
       {
-        throw new ValidationException("Block collision on: " + key);
+        throw new ValidationException("Block collision on: " + key + " {" + hash + " " + known_map.get(key) + "}");
       }
     }
     else

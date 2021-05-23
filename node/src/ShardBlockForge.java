@@ -185,7 +185,7 @@ public class ShardBlockForge
                 if (blk_h != null)
                 {
                   // exclude things that import coord blocks that do not match this one
-                  boolean invalid_coord_import =false;
+                  boolean invalid_coord_import = false;
                   if (blk_h.getShardImportMap().containsKey(coord_shard))
                   {
                     for(ByteString hash : blk_h.getShardImportMap().get(coord_shard).getHeightMap().values())

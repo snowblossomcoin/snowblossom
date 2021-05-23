@@ -400,13 +400,16 @@ public class ForgeInfo
     StringBuilder sb = new StringBuilder();
     sb.append(getHeaderString(h));
     sb.append("\n");
+    sb.append("  prev: " );
+    sb.append(getHeaderString( getHeader(new ChainHash(h.getPrevBlockHash())) ));
+    sb.append("\n");
     for( BlockImportList bil : h.getShardImportMap().values())
     {
       for(ByteString bytes : bil.getHeightMap().values())
       {
         ChainHash imp_hash = new ChainHash(bytes);
         BlockHeader imp_head = getHeader(imp_hash);
-        sb.append("  - ");
+        sb.append("   - ");
         if (imp_head == null)
         { 
           sb.append("no header import - " + imp_head);
