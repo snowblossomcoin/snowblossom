@@ -377,7 +377,7 @@ public class PeerLink implements StreamObserver<PeerMessage>
     }
 
     // if we don't have this block
-    if (node.getDB().getBlockSummaryMap().get(header.getSnowHash())==null)
+    if (node.getForgeInfo().getSummary(header.getSnowHash())==null)
     {
       logger.info(String.format("Considering header context:%d shard:%d height:%d hash:%s prev:%s", 
         context_shard_id, header.getShardId(), header.getBlockHeight(),

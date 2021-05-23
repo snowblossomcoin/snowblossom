@@ -394,6 +394,9 @@ public class WebServer implements WebHandler
 
     out.println("<h2>Rich List</h2>");
     out.println("<pre><a href='?search=richlist'>Rich List Report</a></pre>");
+    
+    out.println("<h2>Visualization</h2>");
+    out.println("<pre><a href='/static/shard-visual.html'>Shard Visualization</a></pre>");
 
     out.println("<h2>APIs</h2>");
     out.println("<pre><a href='/api'>APIs</a></pre>");

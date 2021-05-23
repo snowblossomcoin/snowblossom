@@ -324,6 +324,12 @@ public class ShardBlockForge
       {
         return; 
       }
+
+      // If there is something newer on this shard already skip it
+      if (import_heads.get(prev_shard).getBlockHeight() > prev_height)
+      {
+        return;
+      }
     }
 
     List<BlockHeader> coord_imp_lst = node.getForgeInfo().getImportPath(prev, coord_head);
