@@ -87,6 +87,10 @@ public class ForgeInfo
     }
     if (h == null)
     {
+      h = node.getDB().getBlockHeaderMap().get(hash.getBytes());
+    }
+    if (h == null)
+    {
       ImportedBlock ib = node.getShardUtxoImport().getImportBlock(hash);
       if (ib != null)
       {
@@ -468,43 +472,60 @@ public class ForgeInfo
 
     return isInChain( getHeader(new ChainHash(h.getPrevBlockHash())), check);
   }
+  
+  public Map<Integer, BlockHeader> getImportedShardHeads(BlockHeader bh, int depth)
+  {
+    return getImportedShardHeads(new ChainHash(bh.getSnowHash()), depth);
+  }
 
   /**
    * Looking back at most 'depth' blocks, return the highest blocks imported in each shard
    */
-  public Map<Integer, BlockHeader> getImportedShardHeads(BlockHeader start, int depth)
+  public Map<Integer, BlockHeader> getImportedShardHeads(ChainHash start_hash, int depth)
   {
+
+    BlockHeader start = getHeader(start_hash);
     TreeMap<Integer, BlockHeader> map = new TreeMap<>();
 
     if (depth == 0) return map;
     if (start == null)
     {
-      logger.warning(String.format("Unable to find more shards back.  Looking for %d more", depth));
+      logger.warning(String.format("Unable to find header for %s - Looking for %d more", 
+        start_hash.toString(), depth));
+      //throw new ValidationException(String.format("Unable to find header for %s - Looking for %d more",
+      //        start_hash.toString(), depth));
+
       return map;
     }
    
     if (start.getBlockHeight() > 0)
     {
-      // Take the things from lower first
-      map.putAll(getImportedShardHeads( getHeader(new ChainHash(start.getPrevBlockHash())),depth-1));
+      mergeHighest(map, getImportedShardHeads( new ChainHash(start.getPrevBlockHash()),depth-1));
     }
 
-    // Then add self, which is always newer
-    map.put(start.getShardId(), start);
+    mergeHighest(map, start);
 
     // Then add my import blocks, which must be newer than those in prev blocks
     for(Map.Entry<Integer, BlockImportList> me : start.getShardImportMap().entrySet())
     {
-      int shard_imp = me.getKey();
-
       for(Map.Entry<Integer, ByteString> bil : me.getValue().getHeightMap().entrySet())
       {
-        int height = bil.getKey();
         ChainHash hash = new ChainHash(bil.getValue());
         BlockHeader h = getHeader(hash);
         if (h != null)
         {
-          map.put(shard_imp, getHeader(hash));
+          mergeHighest(map, h);
+
+          // Recurse into the coordinator as well
+          if (Dancer.isCoordinator(h.getShardId()))
+          {
+            mergeHighest(map, getImportedShardHeads(hash, depth-1));
+          }
+        }
+        else
+        {
+          logger.warning(String.format("Unable to find header for %s - Looking for %d more", 
+            hash.toString(), depth));
         }
 
       }
@@ -512,6 +533,25 @@ public class ForgeInfo
     }
 
     return map;
+
+  }
+
+  protected static void mergeHighest(Map<Integer, BlockHeader> map, BlockHeader h)
+  {
+    mergeHighest(map, ImmutableMap.of(h.getShardId(), h));
+  }
+  protected static void mergeHighest(Map<Integer, BlockHeader> map, Map<Integer, BlockHeader> add)
+  {
+    for(Map.Entry<Integer, BlockHeader> me : add.entrySet())
+    {
+      int shard = me.getKey();
+      BlockHeader add_h = me.getValue();
+
+      if ((!map.containsKey(shard)) || (map.get(shard).getBlockHeight() < add_h.getBlockHeight()))
+      {
+        map.put(shard,add_h);
+      }
+    }
 
   }
 

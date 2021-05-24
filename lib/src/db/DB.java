@@ -15,6 +15,7 @@ import snowblossom.lib.trie.HashedTrie;
 import snowblossom.lib.trie.TrieDBMap;
 import snowblossom.proto.Block;
 import snowblossom.proto.BlockSummary;
+import snowblossom.proto.BlockHeader;
 import snowblossom.proto.Transaction;
 import snowblossom.proto.ImportedBlock;
 import snowblossom.proto.ExternalHeadList;
@@ -28,12 +29,14 @@ public class DB implements DBFace
   protected Executor exec;
   protected ProtoDBMap<Block> block_map; 
   protected ProtoDBMap<BlockSummary> block_summary_map; 
+  protected ProtoDBMap<BlockHeader> block_header_map; 
   protected DBMap utxo_node_map;
   protected DBMap block_height_map;
   protected DBMap special_map;
   protected DBMap best_block_map;
   protected ProtoDBMap<Transaction> tx_map;
   protected ProtoDBMap<ImportedBlock> imported_block_map;
+  
   protected ProtoDBMap<ExternalHeadList> external_shard_head_map;
 
   protected DBMap trust_map;
@@ -69,6 +72,7 @@ public class DB implements DBFace
     block_map = new ProtoDBMap(Block.newBuilder().build().getParserForType(), prov.openMap("block"));
     tx_map = new ProtoDBMap(Transaction.newBuilder().build().getParserForType(), prov.openMap("tx"));
     block_summary_map = new ProtoDBMap(BlockSummary.newBuilder().build().getParserForType(), prov.openMap("blocksummary"));
+    block_header_map = new ProtoDBMap(BlockHeader.newBuilder().build().getParserForType(), prov.openMap("bh"));
     imported_block_map = new ProtoDBMap(ImportedBlock.newBuilder().build().getParserForType(), prov.openMap("ib"));
     external_shard_head_map = new ProtoDBMap(ExternalHeadList.newBuilder().build().getParserForType(), prov.openMap("xshm"));
 
@@ -107,6 +111,9 @@ public class DB implements DBFace
 
   @Override 
   public ProtoDBMap<BlockSummary> getBlockSummaryMap(){return block_summary_map; }
+
+  @Override 
+  public ProtoDBMap<BlockHeader> getBlockHeaderMap(){return block_header_map; }
 
   @Override
   public ProtoDBMap<Transaction> getTransactionMap(){return tx_map; }

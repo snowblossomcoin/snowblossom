@@ -4,6 +4,7 @@ import snowblossom.lib.ChainHash;
 import snowblossom.lib.trie.HashedTrie;
 import snowblossom.proto.Block;
 import snowblossom.proto.BlockSummary;
+import snowblossom.proto.BlockHeader;
 import snowblossom.proto.Transaction;
 import snowblossom.proto.ImportedBlock;
 import snowblossom.proto.ExternalHeadList;
@@ -14,6 +15,7 @@ public interface DBFace
 {
   public ProtoDBMap<Block> getBlockMap();
   public ProtoDBMap<BlockSummary> getBlockSummaryMap();
+  public ProtoDBMap<BlockHeader> getBlockHeaderMap();
   public ProtoDBMap<Transaction> getTransactionMap();
   public ProtoDBMap<ImportedBlock> getImportedBlockMap();
   public ProtoDBMap<ExternalHeadList> getExternalShardHeadMap();

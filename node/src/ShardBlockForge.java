@@ -172,6 +172,8 @@ public class ShardBlockForge
           // If we are splitting into a non-coordinator shard, don't add any other imports
           if (isCoordinator(bc.getHeader().getShardId()))
           {
+            // We might be in a different shard from the parent
+            int local_coord_shard = bc.getHeader().getShardId();
             // Make a list sorted by block height of things we could possible include
             ListMultimap<Integer, BlockHeader> possible_import_blocks =
                    MultimapBuilder.treeKeys().arrayListValues().build();
@@ -186,9 +188,9 @@ public class ShardBlockForge
                 {
                   // exclude things that import coord blocks that do not match this one
                   boolean invalid_coord_import = false;
-                  if (blk_h.getShardImportMap().containsKey(coord_shard))
+                  if (blk_h.getShardImportMap().containsKey(local_coord_shard))
                   {
-                    for(ByteString hash : blk_h.getShardImportMap().get(coord_shard).getHeightMap().values())
+                    for(ByteString hash : blk_h.getShardImportMap().get(local_coord_shard).getHeightMap().values())
                     {
                       BlockHeader check = node.getForgeInfo().getHeader(new ChainHash(hash));
                       if ((check==null) || (!node.getForgeInfo().isInChain( prev_header, check)))
@@ -211,14 +213,14 @@ public class ShardBlockForge
             for(BlockHeader imp_blk : possible_import_blocks.values())
             {
               // Not in the cover set from this coordinator
-              if (!ShardUtil.getCoverSet(coord_shard, node.getParams()).contains(imp_blk.getShardId()))
+              if (!ShardUtil.getCoverSet(local_coord_shard, node.getParams()).contains(imp_blk.getShardId()))
               {
                 List<BlockHeader> imp_seq = node.getForgeInfo().getImportPath(bc.getShardHeads(), imp_blk);
                 if (dancer.isCompliant(imp_blk))
                 if (imp_seq != null)
                 if (imp_seq.size() == 1)
                 {
-                  BlockHeader join_point = node.getForgeInfo().getLatestShard(imp_blk, coord_shard);
+                  BlockHeader join_point = node.getForgeInfo().getLatestShard(imp_blk, local_coord_shard);
                   if (node.getForgeInfo().isInChain(prev_header, join_point))
                   {
                     bc = bc.importShard(imp_blk);

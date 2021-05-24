@@ -260,6 +260,7 @@ public class BlockIngestor implements ChainStateSource
         {
           // not positive we actually need this, but what the hell
           saveBlockChildMapping( ib.getHeader().getPrevBlockHash(), ib.getHeader().getSnowHash());
+          node.getDB().getBlockHeaderMap().put( ib.getHeader().getSnowHash(), ib.getHeader());
         }
         db.setBestBlockAt( blk.getHeader().getShardId(), blk.getHeader().getBlockHeight(), 
           BlockchainUtil.readInteger(summary.getWorkSum()));

@@ -28,29 +28,35 @@ public class ShardTestJambo extends SpoonTest
   {
     File snow_path = setupSnow("regshard");
 
-    Random rnd = new Random();
-    int port = 20000 + rnd.nextInt(30000);
 
-    SnowBlossomNode node0 = startNode(port-1, "regshard", ImmutableMap.of("shards","0"));
-    SnowBlossomNode node1 = startNode(port+0, "regshard", ImmutableMap.of("shards","3,4,5"));
-    SnowBlossomNode node2 = startNode(port+1, "regshard", ImmutableMap.of("shards","3,4,6"));
-    SnowBlossomNode node3 = startNode(port+2, "regshard", ImmutableMap.of("shards","3,5,6"));
-    SnowBlossomNode node4 = startNode(port+3, "regshard", ImmutableMap.of("shards","4,5,6"));
+    SnowBlossomNode node0 = startNode(0, "regshard", ImmutableMap.of("shards","0"));
+    SnowBlossomNode node1 = startNode(0, "regshard", ImmutableMap.of("shards","3,4,5"));
+    SnowBlossomNode node2 = startNode(0, "regshard", ImmutableMap.of("shards","3,4,6"));
+    SnowBlossomNode node3 = startNode(0, "regshard", ImmutableMap.of("shards","3,5,6"));
+    SnowBlossomNode node4 = startNode(0, "regshard", ImmutableMap.of("shards","4,5,6"));
+
+    int ports[]=new int[5];
+    ports[0] = node0.getServicePorts().get(0);
+    ports[1] = node1.getServicePorts().get(0);
+    ports[2] = node2.getServicePorts().get(0);
+    ports[3] = node3.getServicePorts().get(0);
+    ports[4] = node4.getServicePorts().get(0);
+
     Thread.sleep(100);
-    node1.getPeerage().connectPeer("localhost", port-1);
-    node2.getPeerage().connectPeer("localhost", port-1);
-    node3.getPeerage().connectPeer("localhost", port-1);
-    node4.getPeerage().connectPeer("localhost", port-1);
+    node1.getPeerage().connectPeer("localhost", ports[0]);
+    node2.getPeerage().connectPeer("localhost", ports[0]);
+    node3.getPeerage().connectPeer("localhost", ports[0]);
+    node4.getPeerage().connectPeer("localhost", ports[0]);
     Thread.sleep(1000);
 
     KeyPair key_pair = KeyUtil.generateECCompressedKey();
     AddressSpec claim = AddressUtil.getSimpleSpecForKey(key_pair.getPublic(), SignatureUtil.SIG_TYPE_ECDSA_COMPRESSED);
     AddressSpecHash to_addr = AddressUtil.getHashForSpec(claim);
 
-    SnowBlossomMiner miner1 = startMiner(port+0, to_addr, snow_path, "regshard");
-    SnowBlossomMiner miner2 = startMiner(port+1, to_addr, snow_path, "regshard");
-    SnowBlossomMiner miner3 = startMiner(port+2, to_addr, snow_path, "regshard");
-    SnowBlossomMiner miner4 = startMiner(port+3, to_addr, snow_path, "regshard");
+    SnowBlossomMiner miner1 = startMiner(ports[1], to_addr, snow_path, "regshard");
+    SnowBlossomMiner miner2 = startMiner(ports[2], to_addr, snow_path, "regshard");
+    SnowBlossomMiner miner3 = startMiner(ports[3], to_addr, snow_path, "regshard");
+    SnowBlossomMiner miner4 = startMiner(ports[4], to_addr, snow_path, "regshard");
 
     waitForHeight(node0, 3, 36, 180);
     waitForHeight(node0, 4, 36, 180);

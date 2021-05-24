@@ -121,26 +121,30 @@ public class Peerage
       // Find the coordinators that we know about
       if (Dancer.isCoordinator( bh.getShardId() ))
       {
-        Map<Integer, BlockHeader> import_map = 
-          node.getForgeInfo().getImportedShardHeads(bh, node.getParams().getMaxShardSkewHeight()+2);
+          Map<Integer, BlockHeader> import_map = 
+            node.getForgeInfo().getImportedShardHeads(bh, node.getParams().getMaxShardSkewHeight()+2);
 
-        // Start from what this coordinator knows about this shard 
-        // and include them here
-        if (import_map.containsKey(shard_id))
-        {
-          BlockHeader start = import_map.get(shard_id);
-          block_set.addAll(node.getForgeInfo().climb(new ChainHash(start.getSnowHash()), shard_id));
-        }
+          // Start from what this coordinator knows about this shard 
+          // and include them here
+          if (import_map.containsKey(shard_id))
+          {
+            BlockHeader start = import_map.get(shard_id);
+            block_set.addAll(node.getForgeInfo().climb(new ChainHash(start.getSnowHash()), -1));
+          }
       }
     }
 
-    {
+    { // Add things around this head
+
       BlockSummary head = node.getBlockIngestor(shard_id).getHead();
 
-      block_set.addAll(node.getForgeInfo().getBlocksAround(
-        new ChainHash(head.getHeader().getSnowHash()),
-        node.getParams().getMaxShardSkewHeight()+2,
-        shard_id));
+      block_set.addAll(
+        node.getForgeInfo().getBlocksAround(
+          new ChainHash(head.getHeader().getSnowHash()),
+          node.getParams().getMaxShardSkewHeight()+2,
+          -1
+        )
+      );
     }
 
     for(ChainHash h : block_set)

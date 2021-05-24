@@ -375,6 +375,8 @@ public class PeerLink implements StreamObserver<PeerMessage>
       peer_block_map.put(new ShardBlock(context_shard_id, header.getBlockHeight()), new ChainHash(header.getSnowHash()));
       peer_block_map.put(new ShardBlock(header), new ChainHash(header.getSnowHash()));
     }
+    
+    node.getDB().getBlockHeaderMap().put( header.getSnowHash(), header);
 
     // if we don't have this block
     if (node.getForgeInfo().getSummary(header.getSnowHash())==null)
