@@ -272,7 +272,8 @@ public class ShardBlockForge
 
       // Note: the 2x is there because we might be at height X and some other shard is at X-skew-2 or something
       // We can still build a block by bringing in more recent blocks on that shard to bring it to within skew
-      Map<Integer, BlockHeader> import_heads = node.getForgeInfo().getImportedShardHeads( coord_head, node.getParams().getMaxShardSkewHeight()*3);
+      Map<Integer, BlockHeader> import_heads = node.getForgeInfo().getImportedShardHeads( 
+        coord_head, node.getParams().getMaxShardSkewHeight()*3);
 
       System.out.println("Import heads:");
       System.out.println(getSummaryString(import_heads));
@@ -285,7 +286,7 @@ public class ShardBlockForge
         if (node.getInterestShards().contains(src_shard))
         {
           ChainHash h = new ChainHash( import_heads.get(src_shard).getSnowHash() );
-          possible_prevs.addAll( node.getForgeInfo().climb(h, src_shard) );
+          possible_prevs.addAll( node.getForgeInfo().climb(h, -1) );
         }
       }
       System.out.println("Possible_prevs: " + possible_prevs.size());
@@ -298,7 +299,6 @@ public class ShardBlockForge
     }
 
     return concepts;
-
   }
 
   /**
@@ -316,19 +316,27 @@ public class ShardBlockForge
     }
     int prev_shard = prev.getHeader().getShardId();
     int prev_height = prev.getHeader().getBlockHeight();
-    if (import_heads.containsKey(prev_shard))
+
+    // In the case that nothing from the current shard has been merged into
+    // the coordinator we need to roll backwards until we find one
+    int examine_shard = prev_shard;
+    while(!import_heads.containsKey(examine_shard))
+    {
+      examine_shard = ShardUtil.getShardParentId(examine_shard);
+    }
+    if (import_heads.containsKey(examine_shard))
     {
       // If this block is not in the chain from whatever the import_head has,
       // don't bother with it
       // We get into this state from a climb from a parent shard into a shard that we
       // already have some locked information for
-      if (!node.getForgeInfo().isInChain(prev.getHeader(), import_heads.get(prev_shard)))
+      if (!node.getForgeInfo().isInChain(prev.getHeader(), import_heads.get(examine_shard)))
       {
         return; 
       }
 
       // If there is something newer on this shard already skip it
-      if (import_heads.get(prev_shard).getBlockHeight() > prev_height)
+      if (import_heads.get(examine_shard).getBlockHeight() > prev_height)
       {
         return;
       }
