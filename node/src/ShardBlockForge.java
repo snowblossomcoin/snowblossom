@@ -180,7 +180,7 @@ public class ShardBlockForge
             for(BlockHeader current_import_head : prev.getImportedShardsMap().values())
             {
               Set<ChainHash> possible_hashes = 
-                node.getForgeInfo().climb( new ChainHash(current_import_head.getSnowHash()), -1);
+                node.getForgeInfo().climb( new ChainHash(current_import_head.getSnowHash()), local_coord_shard);
               for(ChainHash ch : possible_hashes)
               {
                 BlockHeader blk_h = node.getForgeInfo().getHeader(ch);

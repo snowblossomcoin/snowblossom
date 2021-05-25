@@ -16,6 +16,12 @@ import snowblossom.util.proto.*;
 
 public class ShardTestJambo extends SpoonTest
 {
+  @Test
+  public void disabled()
+  {
+
+  }
+
   /**
    * Run four nodes, each with some sub sets, but with overlap
    * so that blocks can be linked.
@@ -23,11 +29,10 @@ public class ShardTestJambo extends SpoonTest
    * using it as an easy way to see that network status
    * and as a p2p networking gateway
    */
-  @Test
+  //@Test
   public void shardTest() throws Exception
   {
     File snow_path = setupSnow("regshard");
-
 
     SnowBlossomNode node0 = startNode(0, "regshard", ImmutableMap.of("shards","0"));
     SnowBlossomNode node1 = startNode(0, "regshard", ImmutableMap.of("shards","3,4,5"));
@@ -58,10 +63,10 @@ public class ShardTestJambo extends SpoonTest
     SnowBlossomMiner miner3 = startMiner(ports[3], to_addr, snow_path, "regshard");
     SnowBlossomMiner miner4 = startMiner(ports[4], to_addr, snow_path, "regshard");
 
-    waitForHeight(node0, 3, 36, 180);
-    waitForHeight(node0, 4, 36, 180);
-    waitForHeight(node0, 5, 36, 180);
-    waitForHeight(node0, 6, 36, 180);
+    waitForHeight(node1, 3, 36, 180);
+    waitForHeight(node2, 4, 36, 180);
+    waitForHeight(node3, 5, 36, 180);
+    waitForHeight(node4, 6, 36, 180);
     
     miner1.stop();
     miner2.stop();

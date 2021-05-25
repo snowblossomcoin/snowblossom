@@ -142,7 +142,7 @@ public class Peerage
         node.getForgeInfo().getBlocksAround(
           new ChainHash(head.getHeader().getSnowHash()),
           node.getParams().getMaxShardSkewHeight()+2,
-          -1
+          shard_id
         )
       );
     }

@@ -293,14 +293,26 @@ public class ForgeInfo
     BlockHeader h = getHeader(start);
 
     if (h != null)
-    if ((shard_id < 0) || (h.getShardId() == shard_id))
     {
-      set.add(new ChainHash(h.getSnowHash()));
+      if ((shard_id < 0) || (h.getShardId() == shard_id))
+      {
+        set.add(new ChainHash(h.getSnowHash()));
+      }
+      if (shard_id >= 0)
+      {
+        // If we are into a higher shard, there is no way to get to a lower one
+        if (h.getShardId() > shard_id) return set;
+
+      }
     }
 
     for(ByteString next : node.getDB().getChildBlockMapSet().getSet(start.getBytes(), 2000))
     {
       set.addAll(climb(new ChainHash(next), shard_id));
+    }
+    if (set.size() > 100)
+    {
+      logger.warning("Climb set over 100: " + set.size() + " from " + start.toString());
     }
 
     return set;
