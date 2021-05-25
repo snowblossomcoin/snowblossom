@@ -280,16 +280,18 @@ public class ForgeInfo
     try(TimeRecordAuto tra_blk = TimeRecord.openAuto("ForgeInfo.getBlocksAround"))
     {
       ChainHash tree_root = descend(start, depth);
-      return climb(tree_root, shard_id);
+      return climb(tree_root, shard_id, depth*2);
     }
   }
 
   /**
    * @param shard_id stay in this shard id, or if -1 then all blocks
    */
-  public Set<ChainHash> climb(ChainHash start, int shard_id)
+  public Set<ChainHash> climb(ChainHash start, int shard_id, int max_steps)
   {
     HashSet<ChainHash> set = new HashSet<>();
+    if (max_steps <= 0) return set;
+
     BlockHeader h = getHeader(start);
 
     if (h != null)
@@ -308,7 +310,7 @@ public class ForgeInfo
 
     for(ByteString next : node.getDB().getChildBlockMapSet().getSet(start.getBytes(), 2000))
     {
-      set.addAll(climb(new ChainHash(next), shard_id));
+      set.addAll(climb(new ChainHash(next), shard_id, max_steps-1));
     }
     if (set.size() > 100)
     {

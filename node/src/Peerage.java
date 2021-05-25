@@ -129,7 +129,8 @@ public class Peerage
           if (import_map.containsKey(shard_id))
           {
             BlockHeader start = import_map.get(shard_id);
-            block_set.addAll(node.getForgeInfo().climb(new ChainHash(start.getSnowHash()), -1));
+            block_set.addAll(node.getForgeInfo().climb(new ChainHash(start.getSnowHash()), 
+              -1, node.getParams().getMaxShardSkewHeight()*2));
           }
       }
     }
@@ -142,7 +143,7 @@ public class Peerage
         node.getForgeInfo().getBlocksAround(
           new ChainHash(head.getHeader().getSnowHash()),
           node.getParams().getMaxShardSkewHeight()+2,
-          shard_id
+          -1
         )
       );
     }

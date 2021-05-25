@@ -180,7 +180,8 @@ public class ShardBlockForge
             for(BlockHeader current_import_head : prev.getImportedShardsMap().values())
             {
               Set<ChainHash> possible_hashes = 
-                node.getForgeInfo().climb( new ChainHash(current_import_head.getSnowHash()), local_coord_shard);
+                node.getForgeInfo().climb( new ChainHash(current_import_head.getSnowHash()), -1,
+                  node.getParams().getMaxShardSkewHeight()*2);
               for(ChainHash ch : possible_hashes)
               {
                 BlockHeader blk_h = node.getForgeInfo().getHeader(ch);
@@ -286,7 +287,7 @@ public class ShardBlockForge
         if (node.getInterestShards().contains(src_shard))
         {
           ChainHash h = new ChainHash( import_heads.get(src_shard).getSnowHash() );
-          possible_prevs.addAll( node.getForgeInfo().climb(h, -1) );
+          possible_prevs.addAll( node.getForgeInfo().climb(h, -1, node.getParams().getMaxShardSkewHeight()*2) );
         }
       }
       System.out.println("Possible_prevs: " + possible_prevs.size());
@@ -666,7 +667,8 @@ public class ShardBlockForge
           if (this_shard_import != null)
           {
             int highest = 0;
-            for(ChainHash hash : node.getForgeInfo().climb( new ChainHash(this_shard_import.getSnowHash()), -1))
+            for(ChainHash hash : node.getForgeInfo().climb( new ChainHash(this_shard_import.getSnowHash()), -1,
+              node.getParams().getMaxShardSkewHeight()*2))
             {
               BlockHeader h = node.getForgeInfo().getHeader(hash);
               if (h != null)
