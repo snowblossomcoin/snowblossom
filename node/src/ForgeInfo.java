@@ -29,7 +29,7 @@ import java.util.Collection;
 public class ForgeInfo
 {
   private static final Logger logger = Logger.getLogger("snowblossom.node");
-  public static final int CACHE_SIZE=16*6*3;
+  public static final int CACHE_SIZE=16*6*3*100;
 
   private SoftLRUCache<ByteString, BlockSummary> block_summary_cache = new SoftLRUCache<>(CACHE_SIZE);
   private SoftLRUCache<ChainHash, BlockHeader> block_header_cache = new SoftLRUCache<>(CACHE_SIZE);
@@ -46,14 +46,19 @@ public class ForgeInfo
   public BlockSummary getSummary(ByteString bytes)
   {
 
-    try(TimeRecordAuto tra_blk = TimeRecord.openAuto("ShardBlockForge.getSummary"))
+    try(TimeRecordAuto tra_blk = TimeRecord.openAuto("ForgeInfo.getSummary"))
     {
       synchronized(block_summary_cache)
       {
         BlockSummary bs = block_summary_cache.get(bytes);
         if (bs != null) return bs;
       }
-      BlockSummary bs = node.getDB().getBlockSummaryMap().get(bytes);
+      BlockSummary bs;
+
+      try(TimeRecordAuto tra_miss = TimeRecord.openAuto("ForgeInfo.getSummary_miss"))
+      {
+        bs = node.getDB().getBlockSummaryMap().get(bytes);
+      }
       if (bs != null)
       {
         synchronized(block_summary_cache)
@@ -61,7 +66,6 @@ public class ForgeInfo
           block_summary_cache.put(bytes, bs);
         }                                                                                                               
       }
-
       return bs;
     }
   }
