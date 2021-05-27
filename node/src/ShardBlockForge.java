@@ -765,6 +765,7 @@ public class ShardBlockForge
     public BlockHeader getHeader(){return header;}
     public BlockSummary getPrevSummary(){return prev_summary;}
     public List<ImportedBlock> getImportedBlocks(){return imported_blocks;}
+    public Integer getImportedBlockCount(){return imported_blocks.size(); }
     public int getAdvancesShard(){return advances_shard; }
     public int getHeight(){return getHeader().getBlockHeight(); }
     public Map<Integer, BlockHeader> getShardHeads(){return shard_heads; }
@@ -785,6 +786,13 @@ public class ShardBlockForge
         if (getHeight() < o.getHeight()) return -1;
         if (getHeight() > o.getHeight()) return 1;
       }
+
+      if (getHeight() < o.getHeight()) return -1;
+      if (getHeight() > o.getHeight()) return 1;
+
+      // More imports is better
+      if (getImportedBlockCount() > o.getImportedBlockCount()) return -1;
+      if (getImportedBlockCount() < o.getImportedBlockCount()) return 1;
 
       // larger is better
       //return o.getSortWork().compareTo(getSortWork());
