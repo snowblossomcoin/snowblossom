@@ -4,6 +4,7 @@ import com.google.protobuf.ByteString;
 import com.google.protobuf.util.JsonFormat;
 import duckutil.Config;
 import duckutil.LRUCache;
+import duckutil.SoftLRUCache;
 import duckutil.webserver.DuckWebServer;
 import duckutil.webserver.WebContext;
 import duckutil.webserver.WebHandler;
@@ -34,7 +35,7 @@ public class WebServer implements WebHandler
 
   private LRUCache<ChainHash, String> block_summary_lines = new LRUCache<>(1000);
 
-  private LRUCache<ChainHash, BlockSummary> block_summary_cache = new LRUCache<>(256 * 20);
+  private SoftLRUCache<ChainHash, BlockSummary> block_summary_cache = new SoftLRUCache<>(256 * 20);
 
 
   public WebServer(Config config, Shackleton shackleton)
@@ -103,6 +104,7 @@ public class WebServer implements WebHandler
       t.out().println("<H2>APIs</H2>");
       t.out().println("<li><a href='/api/total_coins'>total_coins</a></li>");
       t.out().println("<li><a href='/api/recent_json_graph'>recent_json_graph</a></li>");
+      t.out().println("<li><a href='/api/health_stats'>health_stats</a></li>");
       addFooter(t.out());
       t.setHttpCode(200);
       return;
@@ -124,6 +126,13 @@ public class WebServer implements WebHandler
       t.setHttpCode(200);
       t.out().println(getNetworkGraph(30));
 
+      return;
+    }
+    if (path.equals("/api/health_stats"))
+    {
+      t.setContentType("application/json");
+      t.setHttpCode(200);
+      t.out().println( shackleton.getHealthStats().getHealthStats() );
       return;
     }
 

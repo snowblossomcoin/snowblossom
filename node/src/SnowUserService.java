@@ -445,8 +445,7 @@ public class SnowUserService extends UserServiceGrpc.UserServiceImplBase impleme
 
     if (block_hash != null)
     {
-      BlockSummary sum = node.getDB().getBlockSummaryMap().get(block_hash.getBytes());
-      answer = sum.getHeader();
+      answer = node.getForgeInfo().getHeader(block_hash);
     }
     responseObserver.onNext(answer);
     responseObserver.onCompleted();

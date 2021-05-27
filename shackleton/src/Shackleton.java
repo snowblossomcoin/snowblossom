@@ -47,6 +47,7 @@ public class Shackleton
   private UserServiceBlockingStub blockingStub;
   private GetUTXOUtil get_utxo_util;
   private NetworkParams params;
+  private HealthStats health_stats;
 
   private VoteTracker vote_tracker;
   private RichList rich_list;
@@ -71,6 +72,8 @@ public class Shackleton
     
     vote_tracker=new VoteTracker(this);
     vote_tracker.start();
+
+    health_stats = new HealthStats(this);
     
     web_server = new WebServer(config, this);
 
@@ -89,6 +92,7 @@ public class Shackleton
   }
   public VoteTracker getVoteTracker(){return vote_tracker;}
   public GetUTXOUtil getUtxoUtil(){ return get_utxo_util;}
+  public HealthStats getHealthStats() {return health_stats;}
 
   public String getRichListReport(){return rich_list_report;}
 
