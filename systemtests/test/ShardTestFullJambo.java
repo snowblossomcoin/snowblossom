@@ -68,7 +68,7 @@ public class ShardTestFullJambo extends SpoonTest
     SnowBlossomMiner miner3 = startMiner(ports[3], to_addr, snow_path, "regshard");
     SnowBlossomMiner miner4 = startMiner(ports[4], to_addr, snow_path, "regshard");
 
-    waitForHeight(node1, 3, 36, 100);
+    waitForHeight(node1, 3, 36, 300);
     waitForHeight(node2, 4, 36, 80);
     waitForHeight(node3, 5, 36, 80);
     waitForHeight(node4, 6, 36, 80);

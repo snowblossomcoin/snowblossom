@@ -72,6 +72,7 @@ public class ShardUtxoImport
     try(TimeRecordAuto tra = TimeRecord.openAuto("ShardUtxoImport.getImportBlockForTarget"))
     {
       ImportedBlock src = getImportBlock(hash);
+      if (src == null) return null;
 
       ImportedBlock.Builder ibb = ImportedBlock.newBuilder();
       ibb.setHeader(src.getHeader());
