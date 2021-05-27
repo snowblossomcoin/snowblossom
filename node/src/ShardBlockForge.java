@@ -224,7 +224,14 @@ public class ShardBlockForge
                   BlockHeader join_point = node.getForgeInfo().getLatestShard(imp_blk, local_coord_shard);
                   if (node.getForgeInfo().isInChain(prev_header, join_point))
                   {
-                    bc = bc.importShard(imp_blk);
+                    try
+                    {
+                      bc = bc.importShard(imp_blk);
+                    }
+                    catch(ValidationException e)
+                    {
+                      logger.warning("Build validation: " + e);
+                    }
                   }
                 }
               }
@@ -412,8 +419,26 @@ public class ShardBlockForge
             {
               if (!ShardUtil.getCoverSet(bc.getHeader().getShardId(), node.getParams())
                               .contains(h_imp.getShardId()))
-              { // Import block that isn't in my my coverset
+              { 
+                // Import block that isn't in my my coverset
+                try
+                {
                 bc = bc.importShard(h_imp);
+                }
+                catch(ValidationException e)
+                {
+
+						      if(Dancer.isCoordinator(imp_h.getShardId()))
+                  {
+                    logger.warning("Unable to import coordinator shard: " +e);
+                    return;
+                  }
+                  else
+                  {
+                    logger.warning("Unable to import shard, discarding concept: " + e);
+                  }
+
+                }
               }
             }
           }
@@ -738,6 +763,13 @@ public class ShardBlockForge
 
         LinkedList<ImportedBlock> lst = new LinkedList<>();
         lst.addAll(imported_blocks);
+        ChainHash import_hash = new ChainHash( import_header.getSnowHash() );
+
+        ImportedBlock ib = node.getShardUtxoImport().getImportBlockForTarget(import_hash, header.getShardId());
+        if (ib == null)
+        {
+          throw new ValidationException("Unable to load imported block for " + import_hash);
+        }
         lst.add( node.getShardUtxoImport().getImportBlockForTarget(new ChainHash( import_header.getSnowHash() ), header.getShardId()));
 
         // Rebuild shard import map
