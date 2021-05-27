@@ -122,7 +122,7 @@ public class WebServer implements WebHandler
     {
       t.setContentType("application/json");
       t.setHttpCode(200);
-      t.out().println(getNetworkGraph(15));
+      t.out().println(getNetworkGraph(30));
 
       return;
     }

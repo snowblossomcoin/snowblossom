@@ -358,7 +358,6 @@ public class PeerLink implements StreamObserver<PeerMessage>
    */
   private void considerBlockHeader(BlockHeader header, int context_shard_id)
   {
-      
     int shard_id = header.getShardId();
     try
     {
@@ -374,80 +373,91 @@ public class PeerLink implements StreamObserver<PeerMessage>
     {
       peer_block_map.put(new ShardBlock(context_shard_id, header.getBlockHeight()), new ChainHash(header.getSnowHash()));
       peer_block_map.put(new ShardBlock(header), new ChainHash(header.getSnowHash()));
+      
+      ShardBlock prev_sb = new ShardBlock(context_shard_id, header.getBlockHeight()-1);
+      if (peer_block_map.containsKey(prev_sb))
+      {
+        if (!peer_block_map.get(prev_sb).equals(header.getPrevBlockHash()))
+        {
+          peer_block_map.remove(prev_sb);
+        }
+      }
     }
     
     node.getDB().getBlockHeaderMap().put( header.getSnowHash(), header);
 
-    // if we don't have this block
-    if (node.getForgeInfo().getSummary(header.getSnowHash())==null)
-    {
-      logger.info(String.format("Considering header context:%d shard:%d height:%d hash:%s prev:%s", 
-        context_shard_id, header.getShardId(), header.getBlockHeight(),
-        new ChainHash(header.getSnowHash()).toString(),
-        new ChainHash(header.getPrevBlockHash()).toString()
-        ));
+    // if we have this block, done
+    if (node.getForgeInfo().getSummary(header.getSnowHash())!=null) return;
 
-      int height = header.getBlockHeight();
-      if ((height == 0) || (node.getDB().getBlockSummaryMap().get(header.getPrevBlockHash())!=null))
-      { // but we have the prev block - get this block 
-        logger.info("We have the prev block - requesting this one");
-        if (node.getBlockIngestor(shard_id).reserveBlock(new ChainHash(header.getSnowHash())))
-        {
-          writeMessage( PeerMessage.newBuilder()
-            .setReqBlock(
-              RequestBlock.newBuilder().setBlockHash(header.getSnowHash()).build())
-            .build());
-        }
+    logger.info(String.format("Considering header context:%d shard:%d height:%d hash:%s prev:%s", 
+      context_shard_id, header.getShardId(), header.getBlockHeight(),
+      new ChainHash(header.getSnowHash()).toString(),
+      new ChainHash(header.getPrevBlockHash()).toString()
+      ));
+
+    int height = header.getBlockHeight();
+    if ((height == 0) || (node.getDB().getBlockSummaryMap().get(header.getPrevBlockHash())!=null))
+    { // but we have the prev block - get this block 
+      logger.info("We have the prev block - requesting this one");
+      if (node.getBlockIngestor(shard_id).reserveBlock(new ChainHash(header.getSnowHash())))
+      {
+        writeMessage( PeerMessage.newBuilder()
+          .setReqBlock(
+            RequestBlock.newBuilder().setBlockHash(header.getSnowHash()).build())
+          .build());
       }
-      else
+    }
+    else
+    { 
+
+      // get more headers, still in the woods
+
+      // Special case for shard startup
+      if ((context_shard_id != 0) && (node.getBlockIngestor(context_shard_id).getHeight() == 0))
+      {
+        // So we are into a new shard that we don't have any blocks for
+        // and who knows what we have of the parent and if the main chain of the parent
+        // is actually the chain and leads here
+      }
+      
+
+      int next = header.getBlockHeight();
+
+      // if we are a long way off, just jump to what we have plus chunk download size
+      // but only if we are on shard zero, or we already have a block in this shard
+      if ((context_shard_id != 0) || (node.getBlockIngestor(shard_id).getHeight() > 0))
+      if (node.getBlockIngestor(shard_id).getHeight() + Globals.BLOCK_CHUNK_HEADER_DOWNLOAD_SIZE < next)
       { 
+        logger.info("We are far off");
+        next = node.getBlockIngestor(shard_id).getHeight() + Globals.BLOCK_CHUNK_HEADER_DOWNLOAD_SIZE;
+      }
 
-        // get more headers, still in the woods
-
-        // Special case for shard startup
-        if ((context_shard_id != 0) && (node.getBlockIngestor(context_shard_id).getHeight() == 0))
-        {
-          // So we are into a new shard that we don't have any blocks for
-          // and who knows what we have of the parent and if the main chain of the parent
-          // is actually the chain and leads here
-        }
-
-        int next = header.getBlockHeight();
-
-        // if we are a long way off, just jump to what we have plus chunk download size
-        // but only if we are on shard zero, or we already have a block in this shard
-        if ((context_shard_id != 0) || (node.getBlockIngestor(shard_id).getHeight() > 0))
-        if (node.getBlockIngestor(shard_id).getHeight() + Globals.BLOCK_CHUNK_HEADER_DOWNLOAD_SIZE < next)
-        { 
-          logger.info("We are far off");
-          next = node.getBlockIngestor(shard_id).getHeight() + Globals.BLOCK_CHUNK_HEADER_DOWNLOAD_SIZE;
-        }
-
-        // Creep backwards until we get to a header we don't know about
+      // Creep backwards until we get to a header we don't know about
+      synchronized(peer_block_map)
+      {
         while(peer_block_map.containsKey(new ShardBlock(context_shard_id, next)))
         {
           next--;
         }
-        
-        if (next >= 0)
-        {
-          ChainHash prev = new ChainHash(header.getPrevBlockHash());
-          synchronized(peer_block_map)
-          {
-            if (peer_block_map.containsKey(new ShardBlock(context_shard_id,next)))
-            {
-              if (peer_block_map.get(new ShardBlock(context_shard_id,next)).equals(prev)) return;
-            }
-          }
-          logger.info(String.format("Requesting header shard:%d height:%d", context_shard_id, next));
-
-          writeMessage( PeerMessage.newBuilder()
-            .setReqHeader(
-              RequestBlockHeader.newBuilder().setBlockHeight(next).setShardId(context_shard_id).build())
-            .build());
-        }
       }
+      
+      if (next >= 0)
+      {
+        ChainHash prev = new ChainHash(header.getPrevBlockHash());
+        synchronized(peer_block_map)
+        {
+          if (peer_block_map.containsKey(new ShardBlock(context_shard_id,next)))
+          {
+            if (peer_block_map.get(new ShardBlock(context_shard_id,next)).equals(prev)) return;
+          }
+        }
+        logger.info(String.format("Requesting header shard:%d height:%d", context_shard_id, next));
 
+        writeMessage( PeerMessage.newBuilder()
+          .setReqHeader(
+            RequestBlockHeader.newBuilder().setBlockHeight(next).setShardId(context_shard_id).build())
+          .build());
+      }
     }
 
   }

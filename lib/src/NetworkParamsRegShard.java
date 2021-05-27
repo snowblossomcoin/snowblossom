@@ -95,7 +95,7 @@ public class NetworkParamsRegShard extends NetworkParams
   //public int getMaxShardId() {return 1022; } //allows 512 shards
   
   @Override
-  public int getMaxShardSkewHeight() {return 3; } 
+  public int getMaxShardSkewHeight() {return 6; } 
 
 
 }
