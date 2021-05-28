@@ -385,6 +385,7 @@ public class PeerLink implements StreamObserver<PeerMessage>
     }
 
     node.getDB().getBlockHeaderMap().put( header.getSnowHash(), header);
+    node.getDB().getChildBlockMapSet().add(header.getPrevBlockHash(), header.getSnowHash());
 
     // if we have this block, done
     if (node.getForgeInfo().getSummary(header.getSnowHash())!=null) return;
