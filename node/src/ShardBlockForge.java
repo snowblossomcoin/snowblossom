@@ -34,7 +34,7 @@ public class ShardBlockForge
   private SnowBlossomNode node;
   private NetworkParams params;
   private static final Logger logger = Logger.getLogger("snowblossom.node");
- 
+
   private final PrintStream forge_log;
   private TimeRecord time_record;
 
@@ -90,7 +90,7 @@ public class ShardBlockForge
         concept_update_thread.wake();
       }
       if (possible_set == null) return null;
-      if (possible_set.size() == 0) return null; 
+      if (possible_set.size() == 0) return null;
 
       Random rnd = new Random();
 
@@ -99,13 +99,13 @@ public class ShardBlockForge
 
       // First 4
       //BlockConcept selected = possible_set.get( rnd.nextInt(Math.min(4,possible_set.size())) );
-      
+
       // First
       BlockConcept selected = possible_set.get(0);
 
       try
       {
-        return fleshOut(selected, mine_to); 
+        return fleshOut(selected, mine_to);
 
       }
       catch(ValidationException e)
@@ -179,7 +179,7 @@ public class ShardBlockForge
                    MultimapBuilder.treeKeys().arrayListValues().build();
             for(BlockHeader current_import_head : prev.getImportedShardsMap().values())
             {
-              Set<ChainHash> possible_hashes = 
+              Set<ChainHash> possible_hashes =
                 node.getForgeInfo().climb( new ChainHash(current_import_head.getSnowHash()), -1,
                   node.getParams().getMaxShardSkewHeight()*2);
               for(ChainHash ch : possible_hashes)
@@ -206,7 +206,7 @@ public class ShardBlockForge
                   {
                     possible_import_blocks.put( blk_h.getBlockHeight(), blk_h );
                   }
-                  
+
                 }
               }
             }
@@ -250,7 +250,7 @@ public class ShardBlockForge
     return concepts;
 
   }
-  
+
 
   private Set<BlockConcept> exploreFromCoordinatorHead(int coord_shard)
     throws ValidationException
@@ -264,7 +264,7 @@ public class ShardBlockForge
     // Or just the leafs?
 
     // Since we start with what we have included, any of these blocks are potentially valid
-    // to be included in future coordinators as long as they don't include other coordinator 
+    // to be included in future coordinators as long as they don't include other coordinator
     // forks
 
     for(BlockHeader coord_head : node.getForgeInfo().getShardHeads(coord_shard))
@@ -280,7 +280,7 @@ public class ShardBlockForge
 
       // Note: the 2x is there because we might be at height X and some other shard is at X-skew-2 or something
       // We can still build a block by bringing in more recent blocks on that shard to bring it to within skew
-      Map<Integer, BlockHeader> import_heads = node.getForgeInfo().getImportedShardHeads( 
+      Map<Integer, BlockHeader> import_heads = node.getForgeInfo().getImportedShardHeads(
         coord_head, node.getParams().getMaxShardSkewHeight()*3);
 
       System.out.println("Import heads:");
@@ -340,7 +340,7 @@ public class ShardBlockForge
       // already have some locked information for
       if (!node.getForgeInfo().isInChain(prev.getHeader(), import_heads.get(examine_shard)))
       {
-        return; 
+        return;
       }
 
       // If there is something newer on this shard already skip it
@@ -377,7 +377,7 @@ public class ShardBlockForge
 
     // Already have a block of this shard at this height
     if (import_heads.containsKey(bc_shard))
-    if (import_heads.get(bc_shard).getBlockHeight() >= bc.getHeader().getBlockHeight()) 
+    if (import_heads.get(bc_shard).getBlockHeight() >= bc.getHeader().getBlockHeight())
       return;
 
     // Add as many as are in compliance
@@ -397,20 +397,20 @@ public class ShardBlockForge
           .contains(imp_h.getShardId()))
         {
           List<BlockHeader> path = node.getForgeInfo().getImportPath(bc.getShardHeads(), imp_h);
-					if (path == null)
+          if (path == null)
           {
-						// We have to be able to import the coordinator, or no point
-						// but maybe we want to build a block without any imports
-						// bah
-						if(Dancer.isCoordinator(imp_h.getShardId()))
-						{
-							return;
-						}
+            // We have to be able to import the coordinator, or no point
+            // but maybe we want to build a block without any imports
+            // bah
+            if(Dancer.isCoordinator(imp_h.getShardId()))
+            {
+              return;
+            }
           }
 
           /*if (path == null)
           {
-            return; // If we can't import any header, we are out. 
+            return; // If we can't import any header, we are out.
           }*/
 
           if (path != null)
@@ -419,7 +419,7 @@ public class ShardBlockForge
             {
               if (!ShardUtil.getCoverSet(bc.getHeader().getShardId(), node.getParams())
                               .contains(h_imp.getShardId()))
-              { 
+              {
                 // Import block that isn't in my my coverset
                 try
                 {
@@ -428,7 +428,7 @@ public class ShardBlockForge
                 catch(ValidationException e)
                 {
 
-						      if(Dancer.isCoordinator(imp_h.getShardId()))
+                  if(Dancer.isCoordinator(imp_h.getShardId()))
                   {
                     logger.warning("Unable to import coordinator shard: " +e);
                     return;
@@ -463,7 +463,7 @@ public class ShardBlockForge
   {
     try(TimeRecordAuto tra_blk = TimeRecord.openAuto("ShardBlockForge.initiateBlockConcepts"))
     {
-      
+
       LinkedList<BlockConcept> lst = new LinkedList<>();
 
       BlockHeader.Builder header_builder = BlockHeader.newBuilder();
@@ -524,7 +524,7 @@ public class ShardBlockForge
       BigInteger target = PowUtil.calcNextTarget(prev_summary, params, time);
       header_builder.setTimestamp(time);
       header_builder.setTarget(BlockchainUtil.targetBigIntegerToBytes(target));
- 
+
       ChainHash prev_utxo_root = new ChainHash(prev_summary.getHeader().getUtxoRootHash());
       if (header_builder.getShardId() != prev_summary.getHeader().getShardId())
       if (!ShardUtil.getInheritSet(header_builder.getShardId()).contains(prev_summary.getHeader().getShardId()))
@@ -534,7 +534,7 @@ public class ShardBlockForge
       }
       UtxoUpdateBuffer utxo_buffer = new UtxoUpdateBuffer( node.getUtxoHashedTrie(), prev_utxo_root);
 
-      
+
       // Add import shards to utxo buffer
       block_builder.addAllImportedBlocks( concept.getImportedBlocks() );
       for(ImportedBlock ib : block_builder.getImportedBlocksList())
@@ -545,7 +545,7 @@ public class ShardBlockForge
         }
       }
 
-      
+
       // Copy in just for size estimate - we will do it again later
       block_builder.setHeader(header_builder.build());
 
@@ -554,7 +554,7 @@ public class ShardBlockForge
 
       List<Transaction> regular_transactions = node.getMemPool(header_builder.getShardId())
         .getTransactionsForBlock(prev_utxo_root, max_tx_fill_size);
-     
+
       long fee_sum = 0L;
 
       Set<Integer> shard_cover_set = ShardUtil.getCoverSet(header_builder.getShardId(), params);
@@ -621,7 +621,7 @@ public class ShardBlockForge
   {
     return dancer.isCoordinator(shard);
   }
-  
+
 
   /**
    * Represents a block we could flesh out and mine, if it makes sense to do so
@@ -679,7 +679,7 @@ public class ShardBlockForge
 
         // Count as advancing if we are the highest under current coordinator
         // get coordinator import
-        // see what the longest 
+        // see what the longest
 
         BlockHeader boss_coordinator = node.getForgeInfo().getHighestCoordinator(shard_heads.values());
 
@@ -813,7 +813,7 @@ public class ShardBlockForge
       if (getAdvancesShard() < o.getAdvancesShard()) return 1;
 
       if (getAdvancesShard() == 1)
-      { 
+      {
         // smallest height is next best - grow the shorter shard
         if (getHeight() < o.getHeight()) return -1;
         if (getHeight() > o.getHeight()) return 1;
@@ -828,7 +828,7 @@ public class ShardBlockForge
 
       // larger is better
       //return o.getSortWork().compareTo(getSortWork());
-      
+
 
       return getRandomVal().compareTo(o.getRandomVal());
 
@@ -931,7 +931,7 @@ public class ShardBlockForge
     public void runPass()
       throws Exception
     {
-      
+
       if (forge_log != null)
       {
         //time_record.reset();
@@ -943,11 +943,11 @@ public class ShardBlockForge
         tickleUserService();
         return;
       }
-    
+
 
       // Possible blocks to mine
       TreeSet<BlockConcept> possible_set = new TreeSet<>();
-        
+
       if (node.getBlockIngestor(0).getHead() == null)
       {
         // Let the old thing do the genesis gag
@@ -1020,7 +1020,7 @@ public class ShardBlockForge
   {
     return node.getForgeInfo().getSummary(hash);
   }
- 
+
   public void tickle(BlockSummary bs)
   {
     ArrayList<BlockConcept> cur_top = current_top_concepts;
@@ -1029,7 +1029,7 @@ public class ShardBlockForge
       ArrayList<BlockConcept> pruned_concepts = new ArrayList<>();
       for(BlockConcept bc : cur_top)
       {
-        if ((bs.getHeader().getShardId() != bc.getHeader().getShardId()) 
+        if ((bs.getHeader().getShardId() != bc.getHeader().getShardId())
           ||
         (bs.getHeader().getBlockHeight() != bc.getHeader().getBlockHeight()))
         {

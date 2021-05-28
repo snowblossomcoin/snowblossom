@@ -62,7 +62,7 @@ public class SpoonTestPool extends SpoonTest
 
     // Second miner getting paid
     waitForFunds(client, to_addr3, 30);
-    
+
     miner.stop();
     miner2.stop();
     Thread.sleep(500);

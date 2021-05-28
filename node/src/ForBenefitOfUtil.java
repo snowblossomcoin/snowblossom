@@ -109,7 +109,7 @@ public class ForBenefitOfUtil
     {
       throw new RuntimeException("Wrong size tx_info: " + tx_info.size());
     }
-    
+
     TxOutPoint.Builder op = TxOutPoint.newBuilder();
 
     op.setTxHash( tx_info.substring(0, Globals.BLOCKCHAIN_HASH_LEN));
@@ -137,8 +137,8 @@ public class ForBenefitOfUtil
     // TODO - filter by currently valid utxos
     TxOutList.Builder list = TxOutList.newBuilder();
 
-    ByteString search_key = FBO_MAP_PREFIX.concat(spec_hash.getBytes()); 
-    
+    ByteString search_key = FBO_MAP_PREFIX.concat(spec_hash.getBytes());
+
     TreeMap<ByteString, ByteString> map = db.getDataMap(trie_root, search_key, 10000);
 
     for(Map.Entry<ByteString, ByteString> me : map.entrySet())
@@ -225,7 +225,7 @@ public class ForBenefitOfUtil
     Collator collator = Collator.getInstance(Locale.US);
     collator.setStrength(Collator.PRIMARY);
     collator.setDecomposition(Collator.FULL_DECOMPOSITION);
-    
+
     return ByteString.copyFrom(collator.getCollationKey(n1).toByteArray());
 
   }
@@ -234,7 +234,7 @@ public class ForBenefitOfUtil
     ByteString str = normalize(new String(name.toByteArray()));
 
     return DigestUtil.hash(str);
-    
+
   }
 
 }

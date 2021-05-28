@@ -67,7 +67,7 @@ public class FeeEstimator
     tx_list_arr.addAll(tx_list);
 
     long end_size = 0L;
-    long end_fee = 0L; 
+    long end_fee = 0L;
 
     for(int i = tx_list_arr.size() / 2; i<tx_list_arr.size(); i++)
     {
@@ -84,7 +84,7 @@ public class FeeEstimator
     last_calc_time = System.currentTimeMillis();
   }
 
-  
+
 
 
 }

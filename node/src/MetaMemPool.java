@@ -9,7 +9,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import snowblossom.lib.AddressSpecHash;
 import snowblossom.lib.ChainHash;
-import snowblossom.lib.Validation;
 import snowblossom.lib.ValidationException;
 import snowblossom.proto.Transaction;
 
@@ -39,7 +38,7 @@ public class MetaMemPool
       catch(ValidationException e)
       { // to be expected
         logger.log(Level.FINER, "pool rejected",e);
-  
+
       }
     }
     return false;

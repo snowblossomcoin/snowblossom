@@ -2,16 +2,16 @@ package snowblossom.node;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.protobuf.ByteString;
-import duckutil.LRUCache;
 import duckutil.SoftLRUCache;
 import duckutil.TimeRecord;
 import duckutil.TimeRecordAuto;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
@@ -19,7 +19,6 @@ import java.util.TreeSet;
 import java.util.logging.Logger;
 import snowblossom.lib.*;
 import snowblossom.proto.*;
-import java.util.Collection;
 
 /**
  * Class for accessing various information needed to build new blocks in a sharded setup.
@@ -64,7 +63,7 @@ public class ForgeInfo
         synchronized(block_summary_cache)
         {
           block_summary_cache.put(bytes, bs);
-        }                                                                                                               
+        }
       }
       return bs;
     }
@@ -159,7 +158,7 @@ public class ForgeInfo
       ImportedBlock ib = node.getShardUtxoImport().getImportBlock( hash );
       if (ib == null)
       {
-        logger.info(String.format("Request for shard %d head: %s but we do not have an imported block for that.", 
+        logger.info(String.format("Request for shard %d head: %s but we do not have an imported block for that.",
           shard_id,
           hash.toString()));
       }
@@ -233,7 +232,7 @@ public class ForgeInfo
       if (block_inclusion_cache.containsKey(hash))
         return block_inclusion_cache.get(hash);
     }
-    
+
     Map<String, ChainHash> map = getInclusionMapInternal(hash, node.getParams().getMaxShardSkewHeight()+2);
 
     if (map != null)
@@ -246,16 +245,16 @@ public class ForgeInfo
     }
     return map;
   }
- 
+
   private Map<String, ChainHash> getInclusionMapInternal(ChainHash hash, int depth)
   {
     HashMap<String, ChainHash> map = new HashMap<>(16,0.5f);
 
-    BlockHeader h = getHeader(hash); 
+    BlockHeader h = getHeader(hash);
     if (h == null) return null;
     Validation.checkCollisionsNT(map, h.getShardId(), h.getBlockHeight(), hash);
     Validation.checkCollisionsNT(map, h.getShardImportMap());
-    
+
     BlockSummary bs = getSummary(hash);
     if(bs != null)
     {
@@ -433,7 +432,7 @@ public class ForgeInfo
         BlockHeader imp_head = getHeader(imp_hash);
         sb.append("   - ");
         if (imp_head == null)
-        { 
+        {
           sb.append("no header import - " + imp_head);
         }
         else
@@ -490,7 +489,7 @@ public class ForgeInfo
 
     return isInChain( getHeader(new ChainHash(h.getPrevBlockHash())), check);
   }
-  
+
   public Map<Integer, BlockHeader> getImportedShardHeads(BlockHeader bh, int depth)
   {
     return getImportedShardHeads(new ChainHash(bh.getSnowHash()), depth);
@@ -508,14 +507,14 @@ public class ForgeInfo
     if (depth == 0) return map;
     if (start == null)
     {
-      logger.warning(String.format("Unable to find header for %s - Looking for %d more", 
+      logger.warning(String.format("Unable to find header for %s - Looking for %d more",
         start_hash.toString(), depth));
       //throw new ValidationException(String.format("Unable to find header for %s - Looking for %d more",
       //        start_hash.toString(), depth));
 
       return map;
     }
-   
+
     if (start.getBlockHeight() > 0)
     {
       mergeHighest(map, getImportedShardHeads( new ChainHash(start.getPrevBlockHash()),depth-1));
@@ -542,7 +541,7 @@ public class ForgeInfo
         }
         else
         {
-          logger.warning(String.format("Unable to find header for %s - Looking for %d more", 
+          logger.warning(String.format("Unable to find header for %s - Looking for %d more",
             hash.toString(), depth));
         }
 

@@ -1,18 +1,17 @@
 package snowblossom.node;
 
 import duckutil.RateLimit;
-import snowblossom.proto.Transaction;
 import java.util.concurrent.LinkedBlockingQueue;
-import java.util.logging.Logger;
 import java.util.concurrent.TimeUnit;
-
+import java.util.logging.Logger;
+import snowblossom.proto.Transaction;
 
 /**
  * Buffers transactions to broadcast and sends them at a fixed rate
  */
 public class TxBroadcaster extends Thread
 {
- 
+
   private static final Logger logger = Logger.getLogger("snowblossom.peering");
 
   public static final int MAX_QUEUE_SIZE=2500;
@@ -51,7 +50,7 @@ public class TxBroadcaster extends Thread
         if (tx != null)
         {
           rate_limit.waitForRate(1.0);
-          peerage.broadcastTransaction(tx);  
+          peerage.broadcastTransaction(tx);
         }
 
       }

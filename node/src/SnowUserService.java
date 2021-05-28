@@ -94,7 +94,7 @@ public class SnowUserService extends UserServiceGrpc.UserServiceImplBase impleme
   {
     synchronized(tickle_trigger)
     {
-      tickle_trigger.notifyAll(); 
+      tickle_trigger.notifyAll();
     }
   }
 
@@ -219,7 +219,7 @@ public class SnowUserService extends UserServiceGrpc.UserServiceImplBase impleme
 
     responseObserver.onNext(SubmitReply.newBuilder().setSuccess(true).build());
     responseObserver.onCompleted();
-  
+
   }
 
   @Override
@@ -242,7 +242,7 @@ public class SnowUserService extends UserServiceGrpc.UserServiceImplBase impleme
           .build());
         responseObserver.onCompleted();
         return;
-  
+
       }
     }
     catch(ValidationException e)
@@ -269,7 +269,7 @@ public class SnowUserService extends UserServiceGrpc.UserServiceImplBase impleme
 
     responseObserver.onNext(SubmitReply.newBuilder().setSuccess(true).build());
     responseObserver.onCompleted();
-  
+
   }
 
   @Override
@@ -355,7 +355,7 @@ public class SnowUserService extends UserServiceGrpc.UserServiceImplBase impleme
         reply.putReplyMap(s, getUtxoNodeDetails( utxo_root, request ));
       }
     }
-    
+
     responseObserver.onNext(reply.build());
     responseObserver.onCompleted();
   }
@@ -581,7 +581,7 @@ public class SnowUserService extends UserServiceGrpc.UserServiceImplBase impleme
       observer.onCompleted();
       return;
     }
- 
+
   }
 
   @Override
@@ -613,7 +613,7 @@ public class SnowUserService extends UserServiceGrpc.UserServiceImplBase impleme
     try
     {
       TxOutList lst = null;
-  
+
       ByteString type = null;
 
       if (req.getNameType() == RequestNameID.IdType.USERNAME)
@@ -719,7 +719,7 @@ public class SnowUserService extends UserServiceGrpc.UserServiceImplBase impleme
   {
     public final BlockSubscriberInfo info;
     public TemplateUpdateObserver(BlockSubscriberInfo info)
-    { 
+    {
       this.info = info;
 
     }

@@ -38,7 +38,7 @@ public class Peerage
 
   private volatile BlockHeader highest_seen_header;
   private long last_random_close = System.currentTimeMillis();
-  
+
   public Peerage(SnowBlossomNode node)
   {
     this.node = node;
@@ -79,7 +79,7 @@ public class Peerage
           peer_out.close();
         }
 
-        
+
         logger.log(Level.FINER, "Peers: " + peer_rumor_list.keySet());
       }
       catch(Exception e)
@@ -121,15 +121,15 @@ public class Peerage
       // Find the coordinators that we know about
       if (Dancer.isCoordinator( bh.getShardId() ))
       {
-          Map<Integer, BlockHeader> import_map = 
+          Map<Integer, BlockHeader> import_map =
             node.getForgeInfo().getImportedShardHeads(bh, node.getParams().getMaxShardSkewHeight()+2);
 
-          // Start from what this coordinator knows about this shard 
+          // Start from what this coordinator knows about this shard
           // and include them here
           if (import_map.containsKey(shard_id))
           {
             BlockHeader start = import_map.get(shard_id);
-            block_set.addAll(node.getForgeInfo().climb(new ChainHash(start.getSnowHash()), 
+            block_set.addAll(node.getForgeInfo().climb(new ChainHash(start.getSnowHash()),
               -1, node.getParams().getMaxShardSkewHeight()*2));
           }
       }
@@ -157,7 +157,7 @@ public class Peerage
         tip_info.addPreviews(bp);
       }
     }
-    
+
     return tip_info.build();
   }
 
@@ -210,7 +210,7 @@ public class Peerage
         tip.addPeers(shuffled_peer_list.poll());
       }
     }
-   
+
     return tip.build();
   }
 
@@ -300,8 +300,8 @@ public class Peerage
   public void sendAllTips(int shard_id)
   {
     PeerChainTip tip = getTip(shard_id);
-    logger.fine(String.format("Sending tip on shard %d - s:%d h:%d", 
-      shard_id, 
+    logger.fine(String.format("Sending tip on shard %d - s:%d h:%d",
+      shard_id,
       tip.getHeader().getShardId(),
       tip.getHeader().getBlockHeight()));
 
@@ -436,7 +436,7 @@ public class Peerage
       Random rnd = new Random();
 
       while(true)
-      {   
+      {
         try
         {
           connectToPeers();
@@ -505,7 +505,7 @@ public class Peerage
 
       for(int att = 0; att < desired - connected; att++)
       {
-        
+
 
         logger.log(Level.FINEST, "Looking for more peers to connect to");
         TreeSet<String> exclude_set = new TreeSet<>();
@@ -586,7 +586,7 @@ public class Peerage
           {
             to_remove.add(me.getKey());
           }
-        
+
         }
 
         for(String key : to_remove)
@@ -601,7 +601,7 @@ public class Peerage
   private ByteString internal_node_id;
   private synchronized ByteString getNodeId()
   {
-    
+
     // If we use the DB, then nodes will have the same ID if the DB
     // is cloned for whatever reason
     //ByteString id = node.getDB().getSpecialMap().get("node_id");
@@ -690,15 +690,15 @@ public class Peerage
         }
       }
     }
- 
+
     self_peer_names = ImmutableSet.copyOf(self_names);
     self_peer_info = ImmutableList.copyOf(self_peers);
 
     return self_peers;
-    
+
   }
 
 
-  
+
 
 }

@@ -21,15 +21,15 @@ public class Dancer
   {
     this.node = node;
   }
-  
+
   public static boolean isCoordinator(int shard)
   {
     return (ShardUtil.getInheritSet(shard).contains(0));
   }
   public boolean isCompliant(BlockHeader header)
-  {   
+  {
     boolean comp = isCompliant(header, 3);
-    
+
     if (!comp)
     {
       logger.warning("Block out of compliance: " + node.getForgeInfo().getHeaderString(header));
@@ -112,7 +112,7 @@ public class Dancer
       }
     }
 
-    return true; // WOOO 
+    return true; // WOOO
 
 
   }

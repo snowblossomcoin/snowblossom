@@ -30,8 +30,8 @@ import snowblossom.lib.db.lobstack.LobstackDB;
 import snowblossom.lib.db.rocksdb.JRocksDB;
 import snowblossom.lib.tls.CertGen;
 import snowblossom.lib.trie.HashedTrie;
-import snowblossom.proto.WalletDatabase;
 import snowblossom.proto.BlockHeader;
+import snowblossom.proto.WalletDatabase;
 
 public class SnowBlossomNode
 {
@@ -47,7 +47,7 @@ public class SnowBlossomNode
     }
 
     ConfigFile config = new ConfigFile(args[0]);
-    
+
     LogSetup.setup(config);
     //LogSetup.listLoggers();
 
@@ -110,7 +110,7 @@ public class SnowBlossomNode
     loadWidgets();
     openShards();
 
-    
+
 
     startServices();
 
@@ -127,7 +127,7 @@ public class SnowBlossomNode
   private void setupParams()
   {
     params = NetworkParams.loadFromConfig(config);
-    
+
     TreeSet<Integer> cover_set = new TreeSet<>();
     TreeSet<Integer> config_set = new TreeSet<>();
 
@@ -173,7 +173,7 @@ public class SnowBlossomNode
     trustnet_wallet_db = loadWalletFromConfig("trustnet_key_path");
     if (trustnet_wallet_db != null)
     {
-      AddressSpecHash trust_addr = getTrustnetAddress(); 
+      AddressSpecHash trust_addr = getTrustnetAddress();
       logger.info("Trustnet signing key: " + AddressUtil.getAddressString("node", trust_addr) );
     }
 
@@ -436,10 +436,10 @@ public class SnowBlossomNode
           int active = 0;
           if (getForgeInfo().getNetworkActiveShards().containsKey(c)) active=1;
           if (getForgeInfo().getShardHead(c) != null)
-          { 
+          {
             active=1;
 
-            // The case of if we split off the child shards but that 
+            // The case of if we split off the child shards but that
             // split got reorged out
             BlockHeader c_head = getForgeInfo().getShardHead(c);
             if (c_head.getBlockHeight() <= s_head.getBlockHeight())
@@ -450,7 +450,7 @@ public class SnowBlossomNode
 
 
           if (active>0)
-          {     
+          {
             child++;
           }
         }

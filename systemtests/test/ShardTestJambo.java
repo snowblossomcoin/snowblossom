@@ -25,7 +25,7 @@ public class ShardTestJambo extends SpoonTest
   /**
    * Run four nodes, each with some sub sets, but with overlap
    * so that blocks can be linked.
-   * node-0 has no miner and views entire network. 
+   * node-0 has no miner and views entire network.
    * using it as an easy way to see that network status
    * and as a p2p networking gateway
    */
@@ -67,7 +67,7 @@ public class ShardTestJambo extends SpoonTest
     waitForHeight(node2, 4, 36, 180);
     waitForHeight(node3, 5, 36, 180);
     waitForHeight(node4, 6, 36, 180);
-    
+
     miner1.stop();
     miner2.stop();
     miner3.stop();

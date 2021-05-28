@@ -1,17 +1,15 @@
 package snowblossom.node;
 
-import com.google.common.collect.ImmutableList;
 import com.google.protobuf.ByteString;
 import duckutil.ExpiringLRUCache;
-import duckutil.SoftLRUCache;
 import duckutil.MetricLog;
+import duckutil.SoftLRUCache;
 import duckutil.TimeRecord;
 import duckutil.TimeRecordAuto;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
@@ -137,7 +135,7 @@ public class ShardUtxoImport
           catch(ValidationException e)
           {
             throw new RuntimeException(e);
-          } 
+          }
 
           int out_idx = 0;
           for(TransactionOutput tx_out : tx_inner.getOutputsList())
@@ -191,7 +189,7 @@ public class ShardUtxoImport
     if (tip.getHeader().getSnowHash().size() == 0) return null;
 
     int shard_id = tip.getHeader().getShardId();
-    
+
     // If this is a shard we actually track
     if (node.getInterestShards().contains(shard_id)) return null;
 
@@ -199,7 +197,7 @@ public class ShardUtxoImport
 
     // We trust no one
     if (trusted_signers.size() == 0) return null;
-    
+
     if (tip.getSignedHead() == null) return null;
     if (tip.getSignedHead().getPayload().size() == 0) return null;
 
@@ -212,11 +210,11 @@ public class ShardUtxoImport
     if (!trusted_signers.contains(signer)) return null;
     mlog.set("trusted_sig",1);
 
-    
+
     // Now we have a valid signed head from a trusted signer
-    logger.finer(String.format("Got signed tip from trusted peer (signer:%s)", 
+    logger.finer(String.format("Got signed tip from trusted peer (signer:%s)",
       AddressUtil.getAddressString("node", signer)));
-    
+
     PeerTipInfo tip_info = payload.getPeerTipInfo();
 
     LinkedList<ChainHash> request_list = new LinkedList<>();
@@ -248,7 +246,7 @@ public class ShardUtxoImport
   {
     Validation.validateImportedBlock(node.getParams(), ib);
 
-    logger.info(String.format("Added ImportedBlock (s:%d h:%d %s)", 
+    logger.info(String.format("Added ImportedBlock (s:%d h:%d %s)",
       ib.getHeader().getShardId(),
       ib.getHeader().getBlockHeight(),
       new ChainHash(ib.getHeader().getSnowHash()).toString()));
@@ -272,7 +270,7 @@ public class ShardUtxoImport
   public Set<ChainHash> getHighestKnownForShard(int shard)
   {
     ByteString key = ByteString.copyFrom(new String("ext-" + shard).getBytes());
-    ExternalHeadList list = node.getDB().getExternalShardHeadMap().get(key); 
+    ExternalHeadList list = node.getDB().getExternalShardHeadMap().get(key);
 
     HashSet<ChainHash> out = new HashSet<>();
     if (list != null)
@@ -284,7 +282,7 @@ public class ShardUtxoImport
     }
 
     logger.fine(String.format("Highest known for %d - %s", shard, out.toString()));
-    
+
     return out;
   }
 
@@ -299,7 +297,7 @@ public class ShardUtxoImport
 
     synchronized(highest_known_lock)
     {
-      
+
       ExternalHeadList old = node.getDB().getExternalShardHeadMap().get(key);
       if (old != null) list.mergeFrom(old);
 

@@ -30,7 +30,7 @@ public class BlockIngestor implements ChainStateSource
   private SnowBlossomNode node;
   private DB db;
   private NetworkParams params;
-  
+
   private volatile BlockSummary chainhead;
 
   public static final int SUMMARY_VERSION = 5;
@@ -59,7 +59,7 @@ public class BlockIngestor implements ChainStateSource
       HEAD = ByteString.copyFrom(new String("head").getBytes());
     }
     else
-    { 
+    {
       HEAD = ByteString.copyFrom(new String("head-" + shard_id).getBytes());
     }
 
@@ -84,10 +84,10 @@ public class BlockIngestor implements ChainStateSource
     {
       node.setStatus(String.format("Loaded chain tip: shard %d height %d %s",
         shard_id,
-        chainhead.getHeader().getBlockHeight(), 
+        chainhead.getHeader().getBlockHeight(),
         new ChainHash(chainhead.getHeader().getSnowHash())));
       checkResummary();
-      
+
       // TODO remove after whatever is fixed
       updateHeights(chainhead, true);
     }
@@ -135,7 +135,7 @@ public class BlockIngestor implements ChainStateSource
         {
           prevsummary = db.getBlockSummaryMap().get( prevblock.getBytes() );
         }
-      
+
         long tx_body_size = 0;
         for(Transaction tx : blk.getTransactionsList())
         {
@@ -151,7 +151,7 @@ public class BlockIngestor implements ChainStateSource
         db.getBlockSummaryMap().put( hash.getBytes(), summary);
 
       }
-      
+
 
       // Resave head
       chainhead = db.getBlockSummaryMap().get( chainhead.getHeader().getSnowHash());
@@ -175,7 +175,7 @@ public class BlockIngestor implements ChainStateSource
   public boolean ingestBlock(Block blk)
     throws ValidationException
   {
-    
+
     if (time_record != null) time_record.reset();
 
     ChainHash blockhash;
@@ -262,7 +262,7 @@ public class BlockIngestor implements ChainStateSource
           saveBlockChildMapping( ib.getHeader().getPrevBlockHash(), ib.getHeader().getSnowHash());
           node.getDB().getBlockHeaderMap().put( ib.getHeader().getSnowHash(), ib.getHeader());
         }
-        db.setBestBlockAt( blk.getHeader().getShardId(), blk.getHeader().getBlockHeight(), 
+        db.setBestBlockAt( blk.getHeader().getShardId(), blk.getHeader().getBlockHeight(),
           BlockchainUtil.readInteger(summary.getWorkSum()));
 
 
@@ -297,7 +297,7 @@ public class BlockIngestor implements ChainStateSource
         }
       }
 
-       
+
       ChainHash prev_hash = new ChainHash(blk.getHeader().getPrevBlockHash());
       logger.info(String.format("New block: Shard %d Height %d %s (tx:%d sz:%d) - from %s", shard_id, blk.getHeader().getBlockHeight(), blockhash, blk.getTransactionsCount(), blk.toByteString().size(),prev_hash ));
       node.getBlockForge().tickle(summary);
@@ -373,14 +373,14 @@ public class BlockIngestor implements ChainStateSource
   {
     HashMap<ByteString, ByteString> update_map = new HashMap<>();
 
-    logger.finer(String.format("indexes: %s %s", tx_index, addr_index)); 
+    logger.finer(String.format("indexes: %s %s", tx_index, addr_index));
 
     // Block to TX index
     if (tx_index)
     {
       TransactionMapUtil.saveTransactionMap(blk, update_map);
     }
-    
+
     // Address to TX List
     if (addr_index)
     {
@@ -393,8 +393,8 @@ public class BlockIngestor implements ChainStateSource
 
     ChainHash prev_trie_hash = new ChainHash(summary_prev.getChainIndexTrieHash());
 
-    
-    ByteString new_hash_root = node.getDB().getChainIndexTrie().mergeBatch( 
+
+    ByteString new_hash_root = node.getDB().getChainIndexTrie().mergeBatch(
       summary_prev.getChainIndexTrieHash(), update_map);
 
     ChainHash new_trie_hash = new ChainHash(new_hash_root);
@@ -499,7 +499,7 @@ public class BlockIngestor implements ChainStateSource
     }
   }
 
-  
+
   private void saveBlockChildMapping(ByteString parent, ByteString child)
   {
     saveBlockChildMapping( new ChainHash(parent), new ChainHash(child) );
@@ -507,7 +507,7 @@ public class BlockIngestor implements ChainStateSource
 
   /**
    * Save the mapping of this parent to child block
-   */ 
+   */
   private void saveBlockChildMapping(ChainHash parent, ChainHash child)
   {
     if (node.getDB().getChildBlockMapSet() != null)

@@ -56,7 +56,7 @@ public class AddressHistoryUtil
   public static HistoryList getHistory(AddressSpecHash spec_hash, DB db, BlockSummary summary)
     throws ValidationException
   {
-    
+
     ByteString key = MAP_PREFIX.concat(spec_hash.getBytes());
 
     LinkedList<TrieNode> proof = new LinkedList<>();
@@ -68,7 +68,7 @@ public class AddressHistoryUtil
       results,
       Globals.ADDRESS_HISTORY_MAX_REPLY);
 
-    
+
     //List<ByteString> value_set = db.getAddressHistoryMap().getSet(spec_hash.getBytes(), Globals.ADDRESS_HISTORY_MAX_REPLY);
 
     HistoryList.Builder hist_list = HistoryList.newBuilder();

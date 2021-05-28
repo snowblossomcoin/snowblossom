@@ -26,14 +26,14 @@ public class BlockForge
   private SnowBlossomNode node;
   private NetworkParams params;
   private final int shard_id;
-  
+
   public BlockForge(SnowBlossomNode node, int shard_id)
   {
     this.node = node;
     this.params = node.getParams();
     this.shard_id = shard_id;
   }
- 
+
   /**
    * auto mode - use head if it exists or make it if appropriate
    */
@@ -72,7 +72,7 @@ public class BlockForge
         }
       }
     }
-    
+
     return getBlockTemplate(prev_summary, mine_to);
 
   }
@@ -84,10 +84,10 @@ public class BlockForge
    */
   public Block getBlockTemplate(BlockSummary prev_summary, SubscribeBlockTemplateRequest mine_to)
   {
-    
+
     Block.Builder block_builder = Block.newBuilder();
     BlockHeader.Builder header_builder = BlockHeader.newBuilder();
-    
+
     header_builder.setVersion(1);
     header_builder.setShardId(shard_id);
 
@@ -99,7 +99,7 @@ public class BlockForge
       // Can't mine on this shard any more
       return null;
     }
-     
+
     header_builder.setBlockHeight(prev_summary.getHeader().getBlockHeight() + 1);
     header_builder.setPrevBlockHash(prev_summary.getHeader().getSnowHash());
     if (header_builder.getBlockHeight() >= params.getActivationHeightShards())
@@ -117,7 +117,7 @@ public class BlockForge
     try
     {
 
-      UtxoUpdateBuffer utxo_buffer = new UtxoUpdateBuffer( node.getUtxoHashedTrie(), 
+      UtxoUpdateBuffer utxo_buffer = new UtxoUpdateBuffer( node.getUtxoHashedTrie(),
         prev_utxo_root);
 
       importShards(prev_summary, block_builder, header_builder, utxo_buffer);
@@ -219,7 +219,7 @@ public class BlockForge
           int parent = ShardUtil.getShardParentId(external_shard_id);
           start_point = effective_head.get(parent) ;
         }
-        
+
 
         if (start_point != null)
         {
@@ -250,7 +250,7 @@ public class BlockForge
                   throw new RuntimeException(e);
                 }
               }
-              
+
               // Add imported blocks
               block_builder.addImportedBlocks( ib );
 
@@ -282,10 +282,10 @@ public class BlockForge
         BigInteger work = BlockchainUtil.readInteger(bs.getWorkSum());
         BlockImportList.Builder bil = BlockImportList.newBuilder();
         bil.putHeightMap( bs.getHeader().getBlockHeight(), bs.getHeader().getSnowHash() );
-        
+
         options.put(work, bil.build());
 
-        TreeMap<BigInteger,BlockImportList> down = getPath(new ChainHash(bs.getHeader().getSnowHash()), 
+        TreeMap<BigInteger,BlockImportList> down = getPath(new ChainHash(bs.getHeader().getSnowHash()),
           external_shard_id);
 
         for(Map.Entry<BigInteger, BlockImportList> me : down.entrySet())
@@ -391,7 +391,7 @@ public class BlockForge
     for(Map.Entry<String, Long> me : amount_output_map.entrySet())
     {
       AddressSpecHash addr = AddressUtil.getHashForAddress(params.getAddressPrefix(), me.getKey());
-      outs.add( 
+      outs.add(
         TransactionOutput.newBuilder()
           .setValue(me.getValue())
           .setRecipientSpecHash(addr.getBytes())

@@ -22,9 +22,9 @@ import snowblossom.proto.TransactionInput;
 import snowblossom.proto.TransactionOutput;
 
 /**
- * This class has the potential to be the most complex here.  
+ * This class has the potential to be the most complex here.
  *  There are quite a number of concerns to keep straight.  Fortunately, making sure the resulting
- * blocks are valid is responcibility of other code.  Also, we don't need the perfect selection of 
+ * blocks are valid is responcibility of other code.  Also, we don't need the perfect selection of
  * transactions, just need it to be workable and valid.
  *
  * Objectives:
@@ -57,7 +57,7 @@ public class MemPool
   // since a tx could be needed for multiple clusters and make a block out of it.
   //
   // Easy as eating pancakes.
-  // 
+  //
   private ChainHash utxo_for_pri_map = null;
   private TreeMultimap<Double, TXCluster> priority_map = TreeMultimap.<Double, TXCluster>create();
 
@@ -82,7 +82,7 @@ public class MemPool
 
   public MemPool(HashedTrie utxo_hashed_trie, ChainStateSource chain_state_source)
   {
-    this(utxo_hashed_trie, chain_state_source, Globals.LOW_FEE_SIZE_IN_BLOCK); 
+    this(utxo_hashed_trie, chain_state_source, Globals.LOW_FEE_SIZE_IN_BLOCK);
   }
 
   public MemPool(HashedTrie utxo_hashed_trie, ChainStateSource chain_state_source, int low_fee_max)
@@ -243,7 +243,7 @@ public class MemPool
         mlog.setOperation("add_transaction");
         mlog.setModule("mem_pool");
         mlog.set("added", 0);
-      
+
         if ((p2p_source) && (!accepts_p2p_tx))
         {
           mlog.set("reject_p2p", 1);
@@ -252,7 +252,7 @@ public class MemPool
 
         ChainHash tx_hash = new ChainHash(tx.getTxHash());
         mlog.set("tx_id", tx_hash.toString());
-        if (known_transactions.containsKey(tx_hash)) 
+        if (known_transactions.containsKey(tx_hash))
         {
           mlog.set("already_known", 1);
           return false;
@@ -274,7 +274,7 @@ public class MemPool
         if (tx_ratio < Globals.LOW_FEE)
         {
           mlog.set("low_fee", 1);
-          
+
           if (known_transactions.size() >= MEM_POOL_MAX_LOW)
           {
             throw new ValidationException("mempool is too full for low fee transactions");
@@ -314,7 +314,7 @@ public class MemPool
         {
           long t2 = System.nanoTime();
           TXCluster cluster = buildTXCluster(tx);
-          mlog.set("cluster_tx_count", cluster.tx_list.size()); 
+          mlog.set("cluster_tx_count", cluster.tx_list.size());
           mlog.set("cluster_tx_size", cluster.total_size);
           TimeRecord.record(t2, "mempool:build_cluster");
           if (cluster == null)
@@ -588,9 +588,9 @@ public class MemPool
       tx_list = ImmutableList.copyOf(tx_in_list);
 
       HashSet<ChainHash> s = new HashSet<>();
-      
+
       total_size=0;
-      
+
 
       for (Transaction t : tx_in_list)
       {
@@ -643,7 +643,7 @@ public class MemPool
 
   public class TicklerBroadcast extends PeriodicThread
   {
-    private ExpiringLRUCache<ChainHash, Boolean> send_cache = new ExpiringLRUCache<>(10000, 300000); 
+    private ExpiringLRUCache<ChainHash, Boolean> send_cache = new ExpiringLRUCache<>(10000, 300000);
 
     public TicklerBroadcast()
     {

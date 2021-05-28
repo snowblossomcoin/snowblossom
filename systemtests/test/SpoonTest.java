@@ -146,7 +146,7 @@ public class SpoonTest
   protected void testConsolidateFunds(SnowBlossomNode node, SnowBlossomClient client, KeyPair key_pair, AddressSpecHash from_addr) throws Exception
   {
     List<TransactionBridge> funds = client.getSpendable(from_addr);
-    
+
     System.out.println("Funds: " + funds.size());
     Assert.assertTrue(funds.size() > 3);
 
@@ -180,9 +180,9 @@ public class SpoonTest
 
     Assert.assertNotNull(node.getDB());
 
-    TransactionStatus status = TransactionMapUtil.getTxStatus( 
-      new ChainHash(tx.getTxHash()), 
-      node.getDB(), 
+    TransactionStatus status = TransactionMapUtil.getTxStatus(
+      new ChainHash(tx.getTxHash()),
+      node.getDB(),
       node.getBlockIngestor().getHead());
 
     System.out.println(status);
@@ -305,7 +305,7 @@ public class SpoonTest
     config_map.put("network", network);
     NetworkParams params = NetworkParams.loadFromConfig(new ConfigMem(config_map));
     config_map.put("mine_to_address", mine_to.toAddressString(params));
-    config_map.put("rate_limit","100000.0"); 
+    config_map.put("rate_limit","100000.0");
     if (port % 2 == 1)
     {
       config_map.put("memfield", "true");
@@ -353,7 +353,7 @@ public class SpoonTest
     return new SnowBlossomClient(new ConfigMem(config_map));
   }
 
- 
+
 
   protected SnowBlossomClient startClient(int port) throws Exception
   {

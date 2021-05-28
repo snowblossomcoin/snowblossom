@@ -19,7 +19,7 @@ public class ShardTestFullJambo extends SpoonTest
   /**
    * Run four nodes, each with some sub sets, with no overlap.
    * They have to use trust network to get anywhere.
-   * node-0 has no miner and views entire network. 
+   * node-0 has no miner and views entire network.
    * using it as an easy way to see that network status
    * and as a p2p networking gateway
    */
@@ -36,7 +36,7 @@ public class ShardTestFullJambo extends SpoonTest
     AddressSpecHash trust_addr = node0.getTrustnetAddress();
     String trust_str = AddressUtil.getAddressString("node", trust_addr);
 
-    SnowBlossomNode node1 = startNode(0, "regshard", 
+    SnowBlossomNode node1 = startNode(0, "regshard",
       ImmutableMap.of("shards","3", "trustnet_key_path", trust_folder_base, "trustnet_signers", trust_str));
     SnowBlossomNode node2 = startNode(0, "regshard",
       ImmutableMap.of("shards","4", "trustnet_key_path", trust_folder_base, "trustnet_signers", trust_str));
@@ -77,7 +77,7 @@ public class ShardTestFullJambo extends SpoonTest
     waitForHeight(node0, 4, 36, 10);
     waitForHeight(node0, 5, 36, 10);
     waitForHeight(node0, 6, 36, 10);
-    
+
     miner1.stop();
     miner2.stop();
     miner3.stop();
