@@ -37,9 +37,8 @@ public class GraphOutput
       name_map.put(hash, name);
       id_map.put(hash, id);
       JSONObject node = new JSONObject();
-      node.put("id", id);
+      node.put("hash", hash);
       node.put("name", name);
-      node.put("group","s" + bh.getShardId());
       node.put("shard", bh.getShardId());
       node.put("timestamp", bh.getTimestamp());
       node.put("height", bh.getBlockHeight());
@@ -57,8 +56,8 @@ public class GraphOutput
       if (id_map.containsKey(prev))
       {
         JSONObject link = new JSONObject();
-        link.put("source", my_id);
-        link.put("target", id_map.get(prev));
+        link.put("source", hash);
+        link.put("target", prev);
         link.put("parent", 1);
         link_array.add(link);
       }
@@ -71,8 +70,8 @@ public class GraphOutput
           if (id_map.containsKey(imp_hash))
           {
             JSONObject link = new JSONObject();
-            link.put("source", my_id);
-            link.put("target", id_map.get(imp_hash));
+            link.put("source", hash);
+            link.put("target", imp_hash);
             link.put("import", 1);
             link_array.add(link);
 
