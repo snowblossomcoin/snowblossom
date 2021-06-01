@@ -440,7 +440,7 @@ public class Peerage
         try
         {
           connectToPeers();
-          Thread.sleep(1000); // TODO - set to something reasonable
+          Thread.sleep(10000);
           pruneLinks();
           // TODO - don't send all tips all the time
           // might want to do a rotation through shards

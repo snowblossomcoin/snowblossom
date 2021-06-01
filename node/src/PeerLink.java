@@ -12,6 +12,8 @@ import java.util.logging.Logger;
 import snowblossom.lib.*;
 import snowblossom.proto.*;
 import snowblossom.lib.tls.MsgSigUtil;
+import com.google.common.collect.SetMultimap;
+import com.google.common.collect.MultimapBuilder;
 
 /**
  * This class exists to present a single view of a peer regardless
@@ -35,6 +37,8 @@ public class PeerLink implements StreamObserver<PeerMessage>
   private PeerInfo peer_info; //only set when we are client
 
   private TreeMap<ShardBlock, ChainHash> peer_block_map = new TreeMap<>();
+  private SetMultimap<ChainHash, ChainHash> desire_block_map =
+                     MultimapBuilder.hashKeys().hashSetValues().build();
 
   public PeerLink(SnowBlossomNode node, StreamObserver<PeerMessage> sink)
   {
@@ -251,6 +255,23 @@ public class PeerLink implements StreamObserver<PeerMessage>
                 }
               }
             }
+
+            // Think about getting more blocks from desire map
+            synchronized(desire_block_map)
+            {
+              ChainHash block_hash = new ChainHash(blk.getHeader().getSnowHash());
+              for(ChainHash hash : desire_block_map.get(block_hash))
+              {
+                writeMessage( PeerMessage.newBuilder()
+                  .setReqHeader(
+                    RequestBlockHeader.newBuilder()
+                      .setBlockHash(hash.getBytes())
+                      .build())
+                  .build());
+              }
+              desire_block_map.removeAll(block_hash);
+
+            }
           }
         }
         catch(ValidationException ve)
@@ -285,7 +306,14 @@ public class PeerLink implements StreamObserver<PeerMessage>
         {
           mlog.set("hash", hash.toString());
           BlockSummary summary = node.getDB().getBlockSummaryMap().get(hash.getBytes());
-          writeMessage( PeerMessage.newBuilder().setHeader(summary.getHeader()).setReqHeaderShardId(shard).build() );
+          if (summary == null)
+          {
+            mlog.set("missing_summary", 1);
+          }
+          else
+          {
+            writeMessage( PeerMessage.newBuilder().setHeader(summary.getHeader()).setReqHeaderShardId(shard).build() );
+          }
         }
       }
       else if (msg.hasHeader())
@@ -379,27 +407,43 @@ public class PeerLink implements StreamObserver<PeerMessage>
     for(BlockPreview bp : tip_info.getPreviewsList())
     {
       if (node.getInterestShards().contains(bp.getShardId())) // we care
-      if (node.getForgeInfo().getSummary(new ChainHash( bp.getPrevBlockHash()))!=null) // we have parent
       if (node.getForgeInfo().getSummary(new ChainHash( bp.getSnowHash())) == null) // we don't have it
       {
-        // TODO request header
+        if (node.getForgeInfo().getSummary(new ChainHash( bp.getPrevBlockHash()))!=null) // we have parent
+        {
+          // TODO request header
 
-        ChainHash hash = new ChainHash( bp.getSnowHash());
-        logger.info("Requesting header from tip info preview: " + hash);
+          ChainHash hash = new ChainHash( bp.getSnowHash());
 
-        writeMessage( PeerMessage.newBuilder()
-          .setReqHeader(
-            RequestBlockHeader.newBuilder()
-              .setBlockHash(hash.getBytes())
-              .setShardId(bp.getShardId())
-              .build())
-          .build());
+          if (node.getBlockIngestor(bp.getShardId()).reserveBlock(hash))
+          {
+            logger.info("Requesting block from tip info preview: " + hash);
+            logger.info("We have the prev block - requesting this one from tip info");
+              writeMessage( PeerMessage.newBuilder()
+                .setReqBlock(
+                RequestBlock.newBuilder().setBlockHash(hash.getBytes()).build())
+                .build());
+          }
 
-        // TODO - remove or change to reserve
-        /*writeMessage( PeerMessage.newBuilder()
-          .setReqBlock(
-            RequestBlock.newBuilder().setBlockHash(hash.getBytes()).build())
-          .build());*/
+          /*writeMessage( PeerMessage.newBuilder()
+            .setReqHeader(
+              RequestBlockHeader.newBuilder()
+                .setBlockHash(hash.getBytes())
+                .setShardId(bp.getShardId())
+                .build())
+            .build());*/
+
+        }
+        else
+        { // We want it, add to desire map
+
+          synchronized(desire_block_map)
+          {
+            desire_block_map.put(new ChainHash( bp.getPrevBlockHash() ),
+              new ChainHash( bp.getSnowHash() ));
+
+          }
+        }
       }
 
     }
@@ -454,9 +498,9 @@ public class PeerLink implements StreamObserver<PeerMessage>
     int height = header.getBlockHeight();
     if ((height == 0) || (node.getDB().getBlockSummaryMap().get(header.getPrevBlockHash())!=null))
     { // but we have the prev block - get this block
-      logger.info("We have the prev block - requesting this one");
       if (node.getBlockIngestor(shard_id).reserveBlock(new ChainHash(header.getSnowHash())))
       {
+        logger.info("We have the prev block - requesting this one");
         writeMessage( PeerMessage.newBuilder()
           .setReqBlock(
             RequestBlock.newBuilder().setBlockHash(header.getSnowHash()).build())
