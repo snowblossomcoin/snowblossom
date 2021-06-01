@@ -30,8 +30,6 @@ import snowblossom.proto.*;
 public class ShardBlockForge
 {
 
-  public static final int IMPORT_PASSES=1;
-
   private SnowBlossomNode node;
   private NetworkParams params;
   private static final Logger logger = Logger.getLogger("snowblossom.node");
@@ -42,8 +40,6 @@ public class ShardBlockForge
   private volatile long last_template_request = 0L;
   private volatile ArrayList<BlockConcept> current_top_concepts = null;
   private ConceptUpdateThread concept_update_thread;
-
-  private ByteString GOLD_MAP_KEY = ByteString.copyFrom("forge".getBytes());
 
   private Dancer dancer;
 
@@ -230,7 +226,6 @@ public class ShardBlockForge
                         invalid_coord_import = true;
                       }
                     }
-
                   }
 
                   if (!invalid_coord_import)
@@ -331,6 +326,7 @@ public class ShardBlockForge
       for(int src_shard : import_heads.keySet())
       {
         if (node.getInterestShards().contains(src_shard))
+        if (!ShardUtil.containsBothChildren(src_shard, import_heads.keySet()))
         {
           ChainHash h = new ChainHash( import_heads.get(src_shard).getSnowHash() );
           Set<ChainHash> set_from_src_shard = node.getForgeInfo().climb(h, -1,

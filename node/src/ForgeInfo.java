@@ -30,7 +30,7 @@ public class ForgeInfo
   private static final Logger logger = Logger.getLogger("snowblossom.node");
   public static final int CACHE_SIZE=16*6*3*100;
 
-  private SoftLRUCache<ByteString, BlockSummary> block_summary_cache = new SoftLRUCache<>(CACHE_SIZE);
+  private SoftLRUCache<ChainHash, BlockSummary> block_summary_cache = new SoftLRUCache<>(CACHE_SIZE);
   private SoftLRUCache<ChainHash, BlockHeader> block_header_cache = new SoftLRUCache<>(CACHE_SIZE);
   private SoftLRUCache<ChainHash, Map<String, ChainHash> > block_inclusion_cache = new SoftLRUCache<>(CACHE_SIZE);
 
@@ -44,34 +44,33 @@ public class ForgeInfo
 
   public BlockSummary getSummary(ByteString bytes)
   {
+    return getSummary(new ChainHash(bytes));
+  }
 
+  public BlockSummary getSummary(ChainHash hash)
+  {
     try(TimeRecordAuto tra_blk = TimeRecord.openAuto("ForgeInfo.getSummary"))
     {
       synchronized(block_summary_cache)
       {
-        BlockSummary bs = block_summary_cache.get(bytes);
+        BlockSummary bs = block_summary_cache.get(hash);
         if (bs != null) return bs;
       }
       BlockSummary bs;
 
       try(TimeRecordAuto tra_miss = TimeRecord.openAuto("ForgeInfo.getSummary_miss"))
       {
-        bs = node.getDB().getBlockSummaryMap().get(bytes);
+        bs = node.getDB().getBlockSummaryMap().get(hash.getBytes());
       }
       if (bs != null)
       {
         synchronized(block_summary_cache)
         {
-          block_summary_cache.put(bytes, bs);
+          block_summary_cache.put(hash, bs);
         }
       }
       return bs;
     }
-  }
-
-  public BlockSummary getSummary(ChainHash hash)
-  {
-    return getSummary(hash.getBytes());
   }
 
   public BlockHeader getHeader(ChainHash hash)
@@ -150,7 +149,7 @@ public class ForgeInfo
     }
 
     Set<ChainHash> head_list = node.getShardUtxoImport().getHighestKnownForShard(shard_id);
-    logger.info(String.format("Get shard heads %d - %s", shard_id, head_list.toString()));
+    logger.fine(String.format("Get shard heads %d - %s", shard_id, head_list.toString()));
 
     // send them all, not just one random
     for(ChainHash hash : head_list)
@@ -315,9 +314,9 @@ public class ForgeInfo
     {
       set.addAll(climb(new ChainHash(next), shard_id, max_steps-1));
     }
-    if (set.size() > 100)
+    if (set.size() > 1000)
     {
-      logger.warning("Climb set over 100: " + set.size() + " from " + start.toString());
+      logger.warning("Climb set over 1000: " + set.size() + " from " + start.toString());
     }
 
     return set;
@@ -403,12 +402,17 @@ public class ForgeInfo
     }
   }
 
-  public String getHeaderString(BlockHeader h)
+  public static String getHeaderString(BlockHeader h)
   {
+    if (h==null) return "null";
+
     int import_count =0;
-    for( BlockImportList bil : h.getShardImportMap().values())
+    if (h.getVersion() >= 2)
     {
-      import_count+=bil.getHeightMap().size();
+      for( BlockImportList bil : h.getShardImportMap().values())
+      {
+        import_count+=bil.getHeightMap().size();
+      }
     }
 
     String hash = "blank";

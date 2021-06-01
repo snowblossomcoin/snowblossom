@@ -46,6 +46,16 @@ public class ShardUtil
     return ImmutableList.of( getShardChildIdLeft(parent_id), getShardChildIdRight(parent_id) );
   }
 
+  public static boolean containsBothChildren(int parent_id, Set<Integer> shards)
+  {
+    return (
+      shards.contains(getShardChildIdLeft(parent_id)) 
+      && 
+      shards.contains(getShardChildIdRight(parent_id))
+      );
+
+  }
+
   /** When children shards are created, the left shard (the odd one)
    inherits things that were for the parent. */
   public static Set<Integer> getInheritSet(int shard_id)

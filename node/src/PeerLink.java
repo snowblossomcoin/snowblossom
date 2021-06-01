@@ -11,6 +11,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import snowblossom.lib.*;
 import snowblossom.proto.*;
+import snowblossom.lib.tls.MsgSigUtil;
 
 /**
  * This class exists to present a single view of a peer regardless
@@ -170,9 +171,10 @@ public class PeerLink implements StreamObserver<PeerMessage>
                 .build());
             }
             mlog.set("req_imp_block_count", req_import_blocks.size());
-
           }
         }
+        checkTipForInterestThing(msg.getTip());
+
 
         // When we first get a tip from a node we connected to
         // update the peer info showing the success in getting a tip
@@ -261,15 +263,24 @@ public class PeerLink implements StreamObserver<PeerMessage>
       else if (msg.hasReqHeader())
       {
         mlog.set("type","req_header");
-        // Peer is asking for a block header
-        int height = msg.getReqHeader().getBlockHeight();
+        ChainHash hash;
         int shard = msg.getReqHeader().getShardId();
-        mlog.set("height", height);
         mlog.set("shard", shard);
+
+        if (msg.getReqHeader().getBlockHash().size() > 0)
+        {
+          hash = new ChainHash(msg.getReqHeader().getBlockHash());
+        }
+        else
+        {
+          // Peer is asking for a block header
+          int height = msg.getReqHeader().getBlockHeight();
+          mlog.set("height", height);
+          hash = node.getDB().getBlockHashAtHeight(shard, height);
+        }
 
         // Note: this could be returning headers in parent shards
         // since we are recording them all in the height map
-        ChainHash hash = node.getDB().getBlockHashAtHeight(shard, height);
         if (hash != null)
         {
           mlog.set("hash", hash.toString());
@@ -350,6 +361,50 @@ public class PeerLink implements StreamObserver<PeerMessage>
       writeMessage( PeerMessage.newBuilder()
         .setTx(tx).build());
     }
+  }
+
+  private void checkTipForInterestThing(PeerChainTip tip)
+    throws ValidationException
+  {
+    if (tip.getHeader().getSnowHash().size() == 0) return;
+    if (tip.getSignedHead() == null) return;
+    if (tip.getSignedHead().getPayload().size() == 0) return;
+
+    // We are not checking signature is by someone we care about
+    // So take anything here as a pack of usual p2p lies
+    SignedMessagePayload payload = MsgSigUtil.validateSignedMessage(tip.getSignedHead(), node.getParams());
+
+    PeerTipInfo tip_info = payload.getPeerTipInfo();
+
+    for(BlockPreview bp : tip_info.getPreviewsList())
+    {
+      if (node.getInterestShards().contains(bp.getShardId())) // we care
+      if (node.getForgeInfo().getSummary(new ChainHash( bp.getPrevBlockHash()))!=null) // we have parent
+      if (node.getForgeInfo().getSummary(new ChainHash( bp.getSnowHash())) == null) // we don't have it
+      {
+        // TODO request header
+
+        ChainHash hash = new ChainHash( bp.getSnowHash());
+        logger.info("Requesting header from tip info preview: " + hash);
+
+        writeMessage( PeerMessage.newBuilder()
+          .setReqHeader(
+            RequestBlockHeader.newBuilder()
+              .setBlockHash(hash.getBytes())
+              .setShardId(bp.getShardId())
+              .build())
+          .build());
+
+        // TODO - remove or change to reserve
+        /*writeMessage( PeerMessage.newBuilder()
+          .setReqBlock(
+            RequestBlock.newBuilder().setBlockHash(hash.getBytes()).build())
+          .build());*/
+      }
+
+    }
+
+
   }
 
   /**

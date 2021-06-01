@@ -45,6 +45,45 @@ public class SpoonTest
     Globals.addCryptoProvider();
   }
 
+  /**
+   * Override this to print state before a failure
+   */
+  public void preFailReport()
+    throws Exception
+  {
+
+  }
+
+  /**
+   * Print a bunch of information about what a node knows about the shards
+   */
+  protected void printNodeShardStatus(SnowBlossomNode node, String label)
+  {
+    System.out.println("-------------- Node Shard Report ----------------------");
+    System.out.println("NODE: " + label);
+
+    System.out.println("Interest shards: " + node.getInterestShards());
+    System.out.println("Active shards: " + node.getActiveShards());
+    System.out.println("Building shards: " + node.getCurrentBuildingShards());
+
+    for(int shard = 0; shard <= node.getParams().getMaxShardId(); shard++)
+    {
+      for(BlockHeader bh : node.getForgeInfo().getShardHeads(shard))
+      {
+        ChainHash hash = new ChainHash(bh.getSnowHash());
+        boolean has_summary = (node.getForgeInfo().getSummary(hash) != null);
+        boolean has_export = (node.getShardUtxoImport().getImportBlock(hash) != null);
+
+        System.out.println(String.format("Shard head %d sum:%b exp:%b - %s",
+          shard, has_summary, has_export, node.getForgeInfo().getHeaderString(bh)));
+      }
+
+    }
+     
+
+    System.out.println("-------------- Node Shard Report End ------------------");
+  }
+
   protected void testMinedBlocks(SnowBlossomNode node) throws Exception
   {
     waitForMoreBlocks(node, 3);
@@ -74,6 +113,7 @@ public class SpoonTest
       }
       if (height >= target) return;
     }
+    preFailReport();
     Assert.fail(String.format("Waiting for %d blocks, only got %d", wait_for, height - start));
 
   }
@@ -96,6 +136,7 @@ public class SpoonTest
         if (height >= target) return;
       }
     }
+    preFailReport();
     Assert.fail(String.format("Waiting for %d blocks, only got %d", target, height));
 
   }
@@ -108,6 +149,7 @@ public class SpoonTest
       if (node.getActiveShards().contains(shard_id)) return;
       Thread.sleep(1000);
     }
+    preFailReport();
     Assert.fail(String.format("Shard %d did not become active", shard_id));
 
   }
@@ -122,6 +164,7 @@ public class SpoonTest
       }
       Thread.sleep(1000);
     }
+    preFailReport();
     Assert.fail(String.format("Shard %d did not become active", shard_id));
 
   }
@@ -138,6 +181,7 @@ public class SpoonTest
 
     }
 
+    preFailReport();
     Assert.fail(String.format("Waiting for funds.  Didn't get any after %d seconds", max_seconds));
 
   }
