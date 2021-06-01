@@ -159,7 +159,7 @@ java_test(
         "@duckutil//:duckutil_lib",
         "@build_stack_rules_proto//java:grpc_netty",
     ],
-    size = "medium",
+    size = "large",
 )
 
 
