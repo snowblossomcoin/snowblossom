@@ -81,10 +81,10 @@ public class ShardTestFullJambo extends SpoonTest
     waitForHeight(node3, 5, 36, 80);
     waitForHeight(node4, 6, 36, 80);
 
-    //waitForHeight(node0, 3, 36, 100);
-    //waitForHeight(node0, 4, 36, 20);
-    //waitForHeight(node0, 5, 36, 20);
-    //waitForHeight(node0, 6, 36, 20);
+    waitForHeight(node0, 3, 36, 100);
+    waitForHeight(node0, 4, 36, 80);
+    waitForHeight(node0, 5, 36, 80);
+    waitForHeight(node0, 6, 36, 80);
 
     miner1.stop();
     miner2.stop();
