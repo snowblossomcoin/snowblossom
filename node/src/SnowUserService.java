@@ -683,26 +683,29 @@ public class SnowUserService extends UserServiceGrpc.UserServiceImplBase impleme
           sendNewBlocks();
 
           //TODO - should maybe look at more than last block in case we missed a few
-          ChainHash head_block = new ChainHash(node.getBlockIngestor().getHead().getHeader().getSnowHash());
-
-          Block b = node.getDB().getBlockMap().get(head_block.getBytes());
-          ChainHash utxo_root_hash = new ChainHash(b.getHeader().getUtxoRootHash());
-
-          HashSet<AddressSpecHash> involved = new HashSet<>();
-          for(Transaction tx : b.getTransactionsList())
+          if (node.getBlockIngestor().getHead() != null)
           {
-            TransactionInner inner = TransactionUtil.getInner(tx);
-            for (TransactionInput in : inner.getInputsList())
-            {
-              involved.add(new AddressSpecHash(in.getSpecHash()));
-            }
-            for (TransactionOutput out : inner.getOutputsList())
-            {
-              involved.add(new AddressSpecHash(out.getRecipientSpecHash()));
-            }
-          }
+            ChainHash head_block = new ChainHash(node.getBlockIngestor().getHead().getHeader().getSnowHash());
 
-          sendAddressUpdates(involved, utxo_root_hash);
+            Block b = node.getDB().getBlockMap().get(head_block.getBytes());
+            ChainHash utxo_root_hash = new ChainHash(b.getHeader().getUtxoRootHash());
+
+            HashSet<AddressSpecHash> involved = new HashSet<>();
+            for(Transaction tx : b.getTransactionsList())
+            {
+              TransactionInner inner = TransactionUtil.getInner(tx);
+              for (TransactionInput in : inner.getInputsList())
+              {
+                involved.add(new AddressSpecHash(in.getSpecHash()));
+              }
+              for (TransactionOutput out : inner.getOutputsList())
+              {
+                involved.add(new AddressSpecHash(out.getRecipientSpecHash()));
+              }
+            }
+
+            sendAddressUpdates(involved, utxo_root_hash);
+          }
 
 
         }

@@ -14,6 +14,9 @@ import snowblossom.lib.*;
 import snowblossom.lib.tls.MsgSigUtil;
 import snowblossom.proto.*;
 
+import com.google.common.collect.SetMultimap;
+import com.google.common.collect.MultimapBuilder;
+
 /**
  * Joe: Should I class that handles communicating with a bunch of peers be called the Peerage?
  * Tyler: Gossiper
@@ -25,7 +28,7 @@ public class Peerage
   public static final long REFRESH_LEARN_TIME = 3600L * 1000L; // 1hr
   public static final long SAVE_PEER_TIME = 60L * 1000L; // 1min
   public static final long PEER_EXPIRE_TIME = 3L * 86400L * 1000L; // 3 days
-  public static final long RANDOM_CLOSE_TIME = 300L * 1000L; // 5-min
+  public static final long RANDOM_CLOSE_TIME = 3600L * 1000L; // 60-min
 
   private static final Logger logger = Logger.getLogger("snowblossom.peering");
 
@@ -201,6 +204,7 @@ public class Peerage
 
     if (self_peer_info != null)
     {
+      // Always add self first
       tip.addAllPeers(self_peer_info);
     }
     for(int i=0; i<10; i++)
@@ -359,6 +363,7 @@ public class Peerage
             .setHost(address)
             .setPort(node.getParams().getDefaultPort())
             .setLearned(System.currentTimeMillis() - PEER_EXPIRE_TIME + REFRESH_LEARN_TIME)
+            .setVersion("seed")
             .build();
           learnPeer(pi, true);
 
@@ -369,6 +374,7 @@ public class Peerage
             .setHost("snow-tx1.snowblossom.org")
             .setPort(443)
             .setLearned(System.currentTimeMillis() - PEER_EXPIRE_TIME + REFRESH_LEARN_TIME)
+            .setVersion("seed")
             .build();
           learnPeer(pi, true);
         }
@@ -477,8 +483,18 @@ public class Peerage
     }
 
 
+    
     private void connectToPeers()
     {
+      // Existing method is to just try to make sure to have peer_count links
+      // new method will do the following:
+      // For shards we are interested in, try to have at least SHARD_INTEREST_PEER_COUNT links for each shard.
+      // For shards we are not interested in, if we have a trust address set, have at least TRUST_PEER_COUNT links for each shard
+      // Have at least peer_count links
+      ConnectionReport cr = getConnectionReport();
+
+      logger.info(cr.toString());
+
       int connected = getLinkList().size();
       int desired = node.getConfig().getIntWithDefault("peer_count", 8);
       logger.log(Level.FINE, String.format("Connected to %d, desired %d", connected, desired));
@@ -679,7 +695,7 @@ public class Peerage
             .setNodeId(node_id)
             .setConnectionType(PeerInfo.ConnectionType.GRPC_TLS)
             .setNodeSnowAddress(node.getTlsAddress().getBytes())
-            .addAllShardIdSet( node.getActiveShards() );
+            .addAllShardIdSet( node.getInterestShards() );
 
           if (node.getTrustnetAddress() != null)
           {
@@ -698,7 +714,105 @@ public class Peerage
 
   }
 
+  public ConnectionReport getConnectionReport()
+  {
+    ConnectionReport cr = new ConnectionReport();
+    synchronized(links)
+    {
+      for(PeerLink pl : links.values())
+      {
+        cr.addPeerInfo(pl.getPeerInfo());
+      }
+    }
 
+    return cr;
+  }
 
+  
+  public class ConnectionReport
+  {
+    // What peers we are connected to
+    HashMap<ByteString, PeerInfo> connected_ids;
+
+    // What peers we have in our trust network for each shard
+    SetMultimap<Integer, ByteString> trust_network_map;
+
+    // What peers we have that are interested in each shard
+    SetMultimap<Integer, ByteString> interest_network_map;
+
+    public ConnectionReport()
+    {
+      connected_ids = new HashMap<>();
+      trust_network_map = MultimapBuilder.treeKeys().hashSetValues().build();
+      interest_network_map = MultimapBuilder.treeKeys().hashSetValues().build();
+    }
+
+    public synchronized void addPeerInfo(PeerInfo pi)
+    {
+      if (pi == null) return;
+
+      // Has a node id
+      if (pi.getNodeId().size() == 0) return;
+
+      // Not self
+      if (pi.getNodeId().equals(getNodeId())) return;
+
+      ByteString node_id = pi.getNodeId();
+
+      connected_ids.put(node_id, pi);
+
+      for(int shard : pi.getShardIdSetList())
+      {
+        interest_network_map.put(shard, node_id);
+      }
+
+      if (pi.getTrustnetAddress().size() > 0)
+      {
+        AddressSpecHash trust_addr = new AddressSpecHash(pi.getTrustnetAddress());
+        if (node.getShardUtxoImport().getTrustedSigner().contains(trust_addr))
+        {
+          for(int shard : pi.getShardIdSetList())
+          {
+            trust_network_map.put(shard, node_id);
+          }
+        }
+      }
+    }
+
+    public String toString()
+    {
+      StringBuilder sb = new StringBuilder();
+      sb.append("ConnectionReport{");
+
+      sb.append("nodes:" + connected_ids.size());
+
+      Set<Integer> interest = node.getInterestShards();
+      boolean has_trust = (node.getShardUtxoImport().getTrustedSigner().size() > 0);
+
+      for(int i=0; i<=node.getParams().getMaxShardId(); i++)
+      {
+        if (interest.contains(i))
+        {
+          sb.append(",i" + i + "=" + interest_network_map.get(i).size());
+        }
+        else
+        {
+          if (has_trust)
+          {
+            sb.append(",e" + i + "=" + trust_network_map.get(i).size());
+          }
+
+        }
+
+        
+      }
+
+      sb.append("}");
+
+      return sb.toString();
+
+    }
+
+  }
 
 }
