@@ -663,19 +663,22 @@ public class Peerage
 
         for(String host : advertise_hosts)
         {
-          PeerInfo pi = PeerInfo.newBuilder()
+          PeerInfo.Builder pi = PeerInfo.newBuilder()
             .setHost(host)
             .setPort(port)
             .setLearned(System.currentTimeMillis())
             .setVersion(Globals.VERSION)
             .setNodeId(node_id)
             .setConnectionType(PeerInfo.ConnectionType.GRPC_TCP)
-            .addAllShardIdSet( node.getInterestShards() )
-            .build();
+            .addAllShardIdSet( node.getInterestShards() );
+            
+          if (node.getTrustnetAddress() != null)
+          {
+            pi.setTrustnetAddress(node.getTrustnetAddress().getBytes());
+          }
 
-          self_peers.add(pi);
-
-          self_names.add(PeerUtil.getString(pi));
+          self_peers.add(pi.build());
+          self_names.add(PeerUtil.getString(pi.build()));
         }
       }
     }
