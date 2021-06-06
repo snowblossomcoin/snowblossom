@@ -670,7 +670,7 @@ public class Peerage
             .setVersion(Globals.VERSION)
             .setNodeId(node_id)
             .setConnectionType(PeerInfo.ConnectionType.GRPC_TCP)
-            .addAllShardIdSet( node.getConfigShards() )
+            .addAllShardIdSet( node.getInterestShards() )
             .build();
 
           self_peers.add(pi);
