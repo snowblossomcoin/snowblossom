@@ -455,6 +455,7 @@ message NodeStatus {
   string network = 7;
   repeated int32 network_active_shards = 10;
   map<int32, bytes> shard_head_map = 11;
+  map<int32, bytes> net_shard_head_map = 12;
 }
 
 

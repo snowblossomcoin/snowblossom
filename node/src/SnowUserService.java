@@ -382,13 +382,13 @@ public class SnowUserService extends UserServiceGrpc.UserServiceImplBase impleme
     
     for(Map.Entry<Integer, BlockHeader> me : node.getForgeInfo().getNetworkActiveShards().entrySet())
     {
-      ns.putShardHeadMap(me.getKey(), me.getValue().getSnowHash()); 
+      ns.putNetShardHeadMap(me.getKey(), me.getValue().getSnowHash()); 
     }
     
-    /*for(int s : node.getCurrentBuildingShards())
+    for(int s : node.getCurrentBuildingShards())
     {
       ns.putShardHeadMap(s, node.getBlockIngestor(s).getHead().getHeader().getSnowHash());
-    }*/
+    }
     ns.addAllNetworkActiveShards(node.getForgeInfo().getNetworkActiveShards().keySet());
 
     responseObserver.onNext(ns.build());
