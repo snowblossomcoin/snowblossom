@@ -427,9 +427,16 @@ public class SnowUserService extends UserServiceGrpc.UserServiceImplBase impleme
     ChainHash block_hash = new ChainHash(req.getBlockHash());
 
     BlockSummary sum = node.getDB().getBlockSummaryMap().get(block_hash.getBytes());
+    if (sum != null)
+    {
 
-    responseObserver.onNext(sum);
-    responseObserver.onCompleted();
+      responseObserver.onNext(sum);
+      responseObserver.onCompleted();
+    }
+    else
+    {
+      responseObserver.onError(new Exception("No such summary found"));
+    }
 
 
   }
