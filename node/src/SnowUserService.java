@@ -379,10 +379,16 @@ public class SnowUserService extends UserServiceGrpc.UserServiceImplBase impleme
     {
       ns.setHeadSummary(node.getBlockIngestor().getHead());
     }
-    for(int s : node.getCurrentBuildingShards())
+    
+    for(Map.Entry<Integer, BlockHeader> me : node.getForgeInfo().getNetworkActiveShards().entrySet())
+    {
+      ns.putShardHeadMap(me.getKey(), me.getValue().getSnowHash()); 
+    }
+    
+    /*for(int s : node.getCurrentBuildingShards())
     {
       ns.putShardHeadMap(s, node.getBlockIngestor(s).getHead().getHeader().getSnowHash());
-    }
+    }*/
     ns.addAllNetworkActiveShards(node.getForgeInfo().getNetworkActiveShards().keySet());
 
     responseObserver.onNext(ns.build());
