@@ -243,7 +243,7 @@ public class SnowBlossomNode
     }
     catch(Exception e)
     {
-      logger.warning(e);
+      logger.warning(e.toString());
     }
 
   }
