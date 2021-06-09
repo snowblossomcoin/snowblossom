@@ -1,6 +1,7 @@
 package snowblossom.node;
 
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableList;
 import com.google.protobuf.ByteString;
 import duckutil.SoftLRUCache;
 import duckutil.TimeRecord;
