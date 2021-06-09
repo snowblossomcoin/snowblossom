@@ -235,6 +235,19 @@ public class SnowBlossomNode
     }
   }
 
+  public void tryOpenShard(int shard_id)
+  {
+    try
+    {
+      openShard(shard_id);
+    }
+    catch(Exception e)
+    {
+      logger.warning(e);
+    }
+
+  }
+
   private void startWidgets()
   {
     logger.fine("Widget start");
