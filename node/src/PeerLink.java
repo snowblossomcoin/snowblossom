@@ -422,6 +422,8 @@ public class PeerLink implements StreamObserver<PeerMessage>
 
           ChainHash hash = new ChainHash( bp.getSnowHash());
 
+          node.openShard(bp.getShardId());
+
           if (node.getBlockIngestor(bp.getShardId()).reserveBlock(hash))
           {
             logger.info("Requesting block from tip info preview: " + hash);
