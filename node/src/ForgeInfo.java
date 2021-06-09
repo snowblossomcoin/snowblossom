@@ -116,7 +116,7 @@ public class ForgeInfo
 
   public void saveExtCoordHead(int shard_id, ChainHash hash)
   {
-    logger.info(String.format("Saving ext coord head: %d %s", shard_id, hash.toString()));
+    logger.fine(String.format("Saving ext coord head: %d %s", shard_id, hash.toString()));
     synchronized(ext_coord_head)
     {
       ext_coord_head.put(shard_id, hash);
@@ -144,7 +144,6 @@ public class ForgeInfo
     }
     if (ext_coord_head_hash != null)
     {
-      logger.info(String.format("Using ext coord head: %d %s", shard_id, ext_coord_head_hash.toString()));
       return getHeader(ext_coord_head_hash);
     }
 
