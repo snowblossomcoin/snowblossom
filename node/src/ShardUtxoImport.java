@@ -1,5 +1,6 @@
 package snowblossom.node;
 
+import com.google.common.collect.ImmutableSet;
 import com.google.protobuf.ByteString;
 import duckutil.ExpiringLRUCache;
 import duckutil.MetricLog;
@@ -47,6 +48,10 @@ public class ShardUtxoImport
 
   private ExpiringLRUCache<ChainHash, Boolean> block_pull_cache = new ExpiringLRUCache<>(1000, 60000L);
 
+  public Set<AddressSpecHash> getTrustedSigner()
+  {
+    return ImmutableSet.copyOf(trusted_signers);
+  }
 
   public static final int TRUST_MAX_DEPTH = 6;
 

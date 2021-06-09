@@ -357,7 +357,7 @@ public class ShardBlockForge
   public void expandPrev(Map<Integer, BlockHeader> import_heads, ChainHash prev_hash, BlockHeader coord_head, TreeSet<BlockConcept> concepts)
     throws ValidationException
   {
-    System.out.println("Expanding: " + prev_hash);
+    //System.out.println("Expanding: " + prev_hash);
     BlockSummary prev = node.getForgeInfo().getSummary( prev_hash );
     if (prev == null)
     {
@@ -368,7 +368,7 @@ public class ShardBlockForge
       return;
     }
 
-    System.out.println("Expanding: " + prev_hash + " A");
+    //System.out.println("Expanding: " + prev_hash + " A");
 
     synchronized(signature_cache)
     {
@@ -401,7 +401,7 @@ public class ShardBlockForge
         return;
       }
     }
-    System.out.println("Expanding: " + prev_hash + " B");
+    //System.out.println("Expanding: " + prev_hash + " B");
 
     List<BlockHeader> coord_imp_lst = node.getForgeInfo().getImportPath(prev, coord_head);
     if (coord_imp_lst == null) { return; }
