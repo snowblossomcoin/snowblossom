@@ -173,6 +173,28 @@ public class ForgeInfo
       return out;
     }
 
+    ChainHash ext_coord_head_hash = null;
+    synchronized(ext_coord_head)
+    {
+      if (ext_coord_head.containsKey(shard_id))
+      {
+        ext_coord_head_hash = ext_coord_head.get(shard_id);
+      }
+    }
+    if (ext_coord_head_hash != null)
+    {
+      BlockHeader bh = getHeader(ext_coord_head_hash);
+      if (bh != null)
+      {
+        return ImmutableList.of(bh);
+      }
+      else
+      {
+        logger.warning(String.format("We heard ext_coord_head_hash of %s but don't have the header",
+          ext_coord_head_hash.toString()));
+      }
+    }
+
     Set<ChainHash> head_list = node.getShardUtxoImport().getHighestKnownForShard(shard_id);
     logger.fine(String.format("Get shard heads %d - %s", shard_id, head_list.toString()));
 
