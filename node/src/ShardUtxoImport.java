@@ -225,7 +225,7 @@ public class ShardUtxoImport
     if (tip_info.getCoordHead().getSnowHash().size() > 0)
     {
       BlockPreview bp = tip_info.getCoordHead();
-      node.getForgeInfo().saveExtCoordHead(bp.getShardId(), new ChainHash(bp.getSnowHash()));
+      node.getForgeInfo().saveExtCoordHead(bp);
 
     }
 

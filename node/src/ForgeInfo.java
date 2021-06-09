@@ -35,7 +35,7 @@ public class ForgeInfo
   private SoftLRUCache<ChainHash, BlockHeader> block_header_cache = new SoftLRUCache<>(CACHE_SIZE);
   private SoftLRUCache<ChainHash, Map<String, ChainHash> > block_inclusion_cache = new SoftLRUCache<>(CACHE_SIZE);
 
-  private Map<Integer, ChainHash> ext_coord_head = new TreeMap<>();
+  private Map<Integer, BlockPreview> ext_coord_head = new TreeMap<>();
 
   private SnowBlossomNode node;
 
@@ -115,12 +115,16 @@ public class ForgeInfo
 
   }
 
-  public void saveExtCoordHead(int shard_id, ChainHash hash)
+  public void saveExtCoordHead(BlockPreview bp)
   {
-    logger.fine(String.format("Saving ext coord head: %d %s", shard_id, hash.toString()));
+    logger.fine(String.format("Saving ext coord head: %d %s", bp.getShardId(), new ChainHash(bp.getSnowHash())));
     synchronized(ext_coord_head)
     {
-      ext_coord_head.put(shard_id, hash);
+      if ((!ext_coord_head.containsKey(bp.getShardId())) ||
+      (ext_coord_head.get(bp.getShardId()).getBlockHeight() <= bp.getBlockHeight() ))
+      {
+        ext_coord_head.put(bp.getShardId(), bp);
+      }
     }
 
   }
@@ -135,17 +139,26 @@ public class ForgeInfo
       return null;
     }
 
-    ChainHash ext_coord_head_hash = null;
+    BlockPreview ext_coord_head_bp = null;
     synchronized(ext_coord_head)
     {
       if (ext_coord_head.containsKey(shard_id))
       {
-        ext_coord_head_hash = ext_coord_head.get(shard_id);
+        ext_coord_head_bp = ext_coord_head.get(shard_id);
       }
     }
-    if (ext_coord_head_hash != null)
+    if (ext_coord_head_bp != null)
     {
-      return getHeader(ext_coord_head_hash);
+      BlockHeader bh = getHeader(new ChainHash(ext_coord_head_bp.getSnowHash()));
+      if (bh != null)
+      {
+        return bh;
+      }
+      else
+      {
+        logger.warning(String.format("We heard ext_coord_head_hash of %s but don't have the header",
+          new ChainHash(ext_coord_head_bp.getSnowHash()).toString()));
+      }
     }
 
     Set<ChainHash> head_list = node.getShardUtxoImport().getHighestKnownForShard(shard_id);
@@ -174,17 +187,17 @@ public class ForgeInfo
       return out;
     }
 
-    ChainHash ext_coord_head_hash = null;
+    BlockPreview ext_coord_head_bp = null;
     synchronized(ext_coord_head)
     {
       if (ext_coord_head.containsKey(shard_id))
       {
-        ext_coord_head_hash = ext_coord_head.get(shard_id);
+        ext_coord_head_bp = ext_coord_head.get(shard_id);
       }
     }
-    if (ext_coord_head_hash != null)
+    if (ext_coord_head_bp != null)
     {
-      BlockHeader bh = getHeader(ext_coord_head_hash);
+      BlockHeader bh = getHeader(new ChainHash(ext_coord_head_bp.getSnowHash()));
       if (bh != null)
       {
         return ImmutableList.of(bh);
@@ -192,8 +205,9 @@ public class ForgeInfo
       else
       {
         logger.warning(String.format("We heard ext_coord_head_hash of %s but don't have the header",
-          ext_coord_head_hash.toString()));
+          new ChainHash(ext_coord_head_bp.getSnowHash()).toString()));
       }
+
     }
 
     Set<ChainHash> head_list = node.getShardUtxoImport().getHighestKnownForShard(shard_id);
