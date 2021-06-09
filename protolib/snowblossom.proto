@@ -294,10 +294,7 @@ message PeerInfo {
   }
   ConnectionType connection_type = 10;
   repeated int32 shard_id_set = 11; // The set of shards I am configured for
-  bytes trustnet_address = 12; // should switch this entire peer info into a signed object
-                               // since otherwise, someone should fake a trustnet address and get
-                               // a node to waste its peer pool connecting to nodes that are not 
-                               // actually part of its trust network
+  bytes trustnet_address = 12;
 }
 
 message TransactionStatus {
@@ -455,7 +452,6 @@ message NodeStatus {
   string network = 7;
   repeated int32 network_active_shards = 10;
   map<int32, bytes> shard_head_map = 11;
-  map<int32, bytes> net_shard_head_map = 12;
 }
 
 

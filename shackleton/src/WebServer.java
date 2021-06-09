@@ -606,10 +606,7 @@ public class WebServer implements WebHandler
     for(int shard : shards)
     {
       BlockSummary bs_shard_head = bs_map.get(shard);
-      if (bs_shard_head != null)
-      {
-        printChainSummary(bs_shard_head, out);
-      }
+      printChainSummary(bs_shard_head, out);
 
     }
 
@@ -623,10 +620,7 @@ public class WebServer implements WebHandler
       int shard = me.getKey();
       ChainHash hash = new ChainHash(me.getValue());
       BlockSummary bs = getBlockSummary(hash);
-      if (bs != null)
-      {
-        out.put(shard,bs);
-      }
+      out.put(shard,bs);
 
     }
     return out;
@@ -639,13 +633,12 @@ public class WebServer implements WebHandler
     Map<Integer, BlockSummary> bs_map = getShardSummaryMap(ns);
     TreeSet<Integer> shards = new TreeSet<>();
     shards.addAll(bs_map.keySet());
-    System.out.println("Shard heads: " + shards + " " + bs_map.keySet());
+    System.out.println("Shard heads: " + shards);
 
     HashSet<ChainHash> included_blocks = new HashSet<>();
     out.println("<table class='table table-hover' id='blocktable'>");
     out.println("<thead><tr><th>Shard</th><th>Height</th><th>Hash</th><th>Tx</th><th>Size</th><th>Miner</th><th>Remark</th><th>Timestamp</th></tr></thead>");
 
-    
 
     for(int shard : shards)
     {
@@ -746,27 +739,18 @@ public class WebServer implements WebHandler
       if (block_summary_cache.containsKey(hash)) return block_summary_cache.get(hash);
     }
 
-    try
+    BlockSummary bs = shackleton.getStub().getBlockSummary( 
+      RequestBlockSummary.newBuilder().setBlockHash(hash.getBytes()).build());
+
+    if (bs != null)
     {
-      BlockSummary bs = shackleton.getStub().getBlockSummary( 
-        RequestBlockSummary.newBuilder().setBlockHash(hash.getBytes()).build());
-      if (bs != null)
+      synchronized(block_summary_cache)
       {
-        synchronized(block_summary_cache)
-        {
-          block_summary_cache.put(hash, bs);
-        }
+        block_summary_cache.put(hash, bs);
       }
-
-      return bs;
-
-
     }
-    catch(Exception e)
-    {
-      e.printStackTrace();
-      return null;
-    }
+    return bs;
+
   }
 
 

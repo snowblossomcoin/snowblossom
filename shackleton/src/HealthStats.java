@@ -83,7 +83,7 @@ public class HealthStats
   private Map<Integer, BlockHeader> getShardHeaderMap(NodeStatus ns)
   {
     TreeMap<Integer, BlockHeader> out = new TreeMap<>();
-    for(Map.Entry<Integer, ByteString> me : ns.getNetShardHeadMap().entrySet())
+    for(Map.Entry<Integer, ByteString> me : ns.getShardHeadMap().entrySet())
     {
       int shard = me.getKey();
       ChainHash hash = new ChainHash(me.getValue());
