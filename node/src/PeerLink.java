@@ -1,5 +1,7 @@
 package snowblossom.node;
 
+import com.google.common.collect.MultimapBuilder;
+import com.google.common.collect.SetMultimap;
 import duckutil.MetricLog;
 import io.grpc.ManagedChannel;
 import io.grpc.stub.StreamObserver;
@@ -10,10 +12,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import snowblossom.lib.*;
-import snowblossom.proto.*;
 import snowblossom.lib.tls.MsgSigUtil;
-import com.google.common.collect.SetMultimap;
-import com.google.common.collect.MultimapBuilder;
+import snowblossom.proto.*;
 
 /**
  * This class exists to present a single view of a peer regardless

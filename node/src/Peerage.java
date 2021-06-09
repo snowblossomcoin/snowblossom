@@ -1,24 +1,22 @@
 package snowblossom.node;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.MultimapBuilder;
+import com.google.common.collect.SetMultimap;
 import com.google.protobuf.ByteString;
 import duckutil.AtomicFileOutputStream;
-import duckutil.NetUtil;
 import duckutil.ExpiringLRUCache;
-import java.text.DecimalFormat;
+import duckutil.NetUtil;
 import java.io.PrintStream;
 import java.net.InetAddress;
+import java.text.DecimalFormat;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import snowblossom.lib.*;
 import snowblossom.lib.tls.MsgSigUtil;
 import snowblossom.proto.*;
-
-import com.google.common.collect.SetMultimap;
-import com.google.common.collect.MultimapBuilder;
 
 /**
  * Joe: Should I class that handles communicating with a bunch of peers be called the Peerage?
@@ -515,7 +513,7 @@ public class Peerage
     }
 
 
-    
+
     private void connectToPeers()
     {
       // Existing method is to just try to make sure to have peer_count links
@@ -549,7 +547,7 @@ public class Peerage
       }
       if (desired <= connected)
       {
-        // Only forget about saved peer data 
+        // Only forget about saved peer data
         // if we have managed some connections
         // this allows us to have been off for weeks or months and not purge
         // the peers data until we get some new connections
@@ -568,7 +566,7 @@ public class Peerage
         {
           if (!exclude_set.contains(i.getNodeId()))
           {
-            double val = cr.getUtilityScore(i); 
+            double val = cr.getUtilityScore(i);
             synchronized(connect_attempt_cache)
             {
               if (connect_attempt_cache.get(PeerUtil.getString(i))==null)
@@ -712,7 +710,7 @@ public class Peerage
             .setNodeId(node_id)
             .setConnectionType(PeerInfo.ConnectionType.GRPC_TCP)
             .addAllShardIdSet( node.getInterestShards() );
-            
+
           if (node.getTrustnetAddress() != null)
           {
             pi.setTrustnetAddress(node.getTrustnetAddress().getBytes());
@@ -769,7 +767,7 @@ public class Peerage
     return cr;
   }
 
-  
+
   public class ConnectionReport
   {
     // What peers we are connected to
@@ -895,7 +893,7 @@ public class Peerage
 
         }
 
-        
+
       }
 
       sb.append("}");
