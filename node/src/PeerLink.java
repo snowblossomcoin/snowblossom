@@ -34,7 +34,7 @@ public class PeerLink implements StreamObserver<PeerMessage>
   private String link_id;
   private long last_received_message_time;
   private boolean got_first_tip = false;
-  private PeerInfo peer_info; //only set when we are client
+  private PeerInfo peer_info; //set immediately when we are client, set eventually otherwise
 
   private TreeMap<ShardBlock, ChainHash> peer_block_map = new TreeMap<>();
   private SetMultimap<ChainHash, ChainHash> desire_block_map =
@@ -200,6 +200,13 @@ public class PeerLink implements StreamObserver<PeerMessage>
           mlog.set("head_height", header.getBlockHeight());
           considerBlockHeader(header, header.getShardId());
           node.getPeerage().setHighestHeader(header);
+        }
+
+        // save first peer info as opposite side
+        if (tip.getPeersCount() > 0)
+        {
+          peer_info = tip.getPeers(0); // first entry is host we are talking to
+
         }
         for(PeerInfo pi : tip.getPeersList())
         {
@@ -610,6 +617,16 @@ public class PeerLink implements StreamObserver<PeerMessage>
   public String getLinkId()
   {
     return link_id;
+  }
+
+  /**
+   * Might be null, if we are the server and we haven't gotten a tip yet.
+   * Might be lies, we just store whatever the other side sends.
+   * Might change, as the other side updates what they send
+   */
+  public PeerInfo getPeerInfo()
+  {
+    return peer_info;
   }
 
 }
