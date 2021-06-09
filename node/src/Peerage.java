@@ -136,6 +136,16 @@ public class Peerage
 
     Set<ChainHash> block_set = new HashSet<>();
 
+    if (Dancer.isCoordinator(shard_id))
+    {
+      BlockHeader coord_head = node.getForgeInfo().getShardHead(shard_id);
+      if (coord_head != null)
+      {
+        BlockPreview bp = BlockchainUtil.getPreview(coord_head);
+        tip_info.setCoordHead(bp);
+      }
+    }
+
     for(BlockHeader bh : node.getForgeInfo().getNetworkActiveShards().values())
     {
       // Find the coordinators that we know about

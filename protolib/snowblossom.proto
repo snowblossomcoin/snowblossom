@@ -267,6 +267,7 @@ message PeerChainTip {
 
 message PeerTipInfo {
   repeated BlockPreview previews = 1;
+  BlockPreview coord_head = 2; // Best known coordinator head
 }
 
 message BlockPreview {

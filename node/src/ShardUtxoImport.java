@@ -222,6 +222,13 @@ public class ShardUtxoImport
 
     PeerTipInfo tip_info = payload.getPeerTipInfo();
 
+    if (tip_info.getCoordHead().getSnowHash().size() > 0)
+    {
+      BlockPreview bp = tip_info.getCoordHead();
+      node.getForgeInfo().saveExtCoordHead(bp.getShardId(), new ChainHash(bp.getSnowHash()));
+
+    }
+
     LinkedList<ChainHash> request_list = new LinkedList<>();
 
     for(BlockPreview bp : tip_info.getPreviewsList())

@@ -34,6 +34,8 @@ public class ForgeInfo
   private SoftLRUCache<ChainHash, BlockHeader> block_header_cache = new SoftLRUCache<>(CACHE_SIZE);
   private SoftLRUCache<ChainHash, Map<String, ChainHash> > block_inclusion_cache = new SoftLRUCache<>(CACHE_SIZE);
 
+  private Map<Integer, ChainHash> ext_coord_head = new TreeMap<>();
+
   private SnowBlossomNode node;
 
   public ForgeInfo(SnowBlossomNode node)
@@ -112,6 +114,16 @@ public class ForgeInfo
 
   }
 
+  public void saveExtCoordHead(int shard_id, ChainHash hash)
+  {
+    logger.info(String.format("Saving ext coord head: %d %s", shard_id, hash.toString()));
+    synchronized(ext_coord_head)
+    {
+      ext_coord_head.put(shard_id, hash);
+    }
+
+  }
+
   public BlockHeader getShardHead(int shard_id)
   {
     if (node.getBlockIngestor(shard_id) != null)
@@ -120,6 +132,20 @@ public class ForgeInfo
       if (bs != null) return bs.getHeader();
 
       return null;
+    }
+
+    ChainHash ext_coord_head_hash = null;
+    synchronized(ext_coord_head)
+    {
+      if (ext_coord_head.containsKey(shard_id))
+      {
+        ext_coord_head_hash = ext_coord_head.get(shard_id);
+      }
+    }
+    if (ext_coord_head_hash != null)
+    {
+      logger.info(String.format("Using ext coord head: %d %s", shard_id, ext_coord_head_hash.toString()));
+      return getHeader(ext_coord_head_hash);
     }
 
     Set<ChainHash> head_list = node.getShardUtxoImport().getHighestKnownForShard(shard_id);
