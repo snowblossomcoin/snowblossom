@@ -117,12 +117,12 @@ public class ForgeInfo
 
   public void saveExtCoordHead(BlockPreview bp)
   {
-    logger.fine(String.format("Saving ext coord head: %d %s", bp.getShardId(), new ChainHash(bp.getSnowHash())));
     synchronized(ext_coord_head)
     {
       if ((!ext_coord_head.containsKey(bp.getShardId())) ||
       (ext_coord_head.get(bp.getShardId()).getBlockHeight() <= bp.getBlockHeight() ))
       {
+        logger.fine(String.format("Saving ext coord head: %d %s", bp.getShardId(), new ChainHash(bp.getSnowHash())));
         ext_coord_head.put(bp.getShardId(), bp);
       }
     }

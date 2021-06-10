@@ -34,9 +34,7 @@ public class WebServer implements WebHandler
   private Shackleton shackleton;
 
   private LRUCache<ChainHash, String> block_summary_lines = new LRUCache<>(1000);
-
   private SoftLRUCache<ChainHash, BlockSummary> block_summary_cache = new SoftLRUCache<>(256 * 20);
-
 
   public WebServer(Config config, Shackleton shackleton)
     throws Exception

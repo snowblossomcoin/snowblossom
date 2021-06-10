@@ -303,48 +303,51 @@ public class ShardBlockForge
       if (coord_head != null)
       {
 
-      System.out.println(String.format("Exploring from coord head: %s s:%d h:%d",
-        new ChainHash(coord_head.getSnowHash()).toString(),
-        coord_head.getShardId(),
-        coord_head.getBlockHeight()));
+        System.out.println(String.format("Exploring from coord head: %s s:%d h:%d",
+          new ChainHash(coord_head.getSnowHash()).toString(),
+          coord_head.getShardId(),
+          coord_head.getBlockHeight()));
 
 
-      // Starting from the more recent coordinator head
-      // Find all the imported shard heads
+        // Starting from the more recent coordinator head
+        // Find all the imported shard heads
 
-      // Note: the 3x is there because we might be at height X and some other shard is at X-skew-2 or something
-      // We can still build a block by bringing in more recent blocks on that shard to bring it to within skew
-      Map<Integer, BlockHeader> import_heads = node.getForgeInfo().getImportedShardHeads(
-        coord_head, node.getParams().getMaxShardSkewHeight()*3);
+        // Note: the 3x is there because we might be at height X and some other shard is at X-skew-2 or something
+        // We can still build a block by bringing in more recent blocks on that shard to bring it to within skew
+        Map<Integer, BlockHeader> import_heads = node.getForgeInfo().getImportedShardHeads(
+          coord_head, node.getParams().getMaxShardSkewHeight()*3);
 
-      System.out.println("Import heads:");
-      System.out.println(getSummaryString(import_heads));
+        System.out.println("Import heads:");
+        System.out.println(getSummaryString(import_heads));
 
-      HashSet<ChainHash> possible_prevs = new HashSet<>();
+        HashSet<ChainHash> possible_prevs = new HashSet<>();
 
-      // For each imported shard head, get all the new blocks under each
-      for(int src_shard : import_heads.keySet())
-      {
-        if (node.getInterestShards().contains(src_shard))
-        if (!ShardUtil.containsBothChildren(src_shard, import_heads.keySet()))
+        // In case we need to expand into new shard
+        possible_prevs.add(new ChainHash(coord_head.getSnowHash()));
+
+        // For each imported shard head, get all the new blocks under each
+        for(int src_shard : import_heads.keySet())
         {
-          ChainHash h = new ChainHash( import_heads.get(src_shard).getSnowHash() );
-          Set<ChainHash> set_from_src_shard = node.getForgeInfo().climb(h, -1,
-            node.getParams().getMaxShardSkewHeight()*2);
+          if (node.getInterestShards().contains(src_shard))
+          if (!ShardUtil.containsBothChildren(src_shard, import_heads.keySet()))
+          {
+            ChainHash h = new ChainHash( import_heads.get(src_shard).getSnowHash() );
+            Set<ChainHash> set_from_src_shard = node.getForgeInfo().climb(h, -1,
+              node.getParams().getMaxShardSkewHeight()*2);
 
-          System.out.println(String.format("Possible prevs from shard%d - %d - %s",
-            src_shard, set_from_src_shard.size(), set_from_src_shard));
+            System.out.println(String.format("Possible prevs from shard %d - %d - %s",
+              src_shard, set_from_src_shard.size(), set_from_src_shard));
 
-          possible_prevs.addAll( set_from_src_shard );
+            possible_prevs.addAll( set_from_src_shard );
+          }
         }
-      }
-      System.out.println("Possible_prevs: " + possible_prevs.size());
+        System.out.println("Possible_prevs: " + possible_prevs.size());
 
-      for(ChainHash prev_hash : possible_prevs)
-      {
-        expandPrev(import_heads, prev_hash, coord_head, concepts);
+        for(ChainHash prev_hash : possible_prevs)
+        {
+          expandPrev(import_heads, prev_hash, coord_head, concepts);
 
-      }
+        }
       }
     }
 
