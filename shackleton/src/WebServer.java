@@ -141,10 +141,10 @@ public class WebServer implements WebHandler
   public JSONObject getNetworkGraph(int blocks_back)
   {
     NodeStatus node_status = shackleton.getStub().getNodeStatus(QueryUtil.nr());
-    Map<Integer, BlockSummary> bs_map = getShardSummaryMap(node_status);
+    Map<Integer, BlockHeader> head_map = shackleton.getStuffCache().getNetShardHeaderMap(node_status);
 
     TreeSet<Integer> shards = new TreeSet<>();
-    shards.addAll(bs_map.keySet());
+    shards.addAll(head_map.keySet());
 
     HashSet<ChainHash> included_blocks = new HashSet<>();
     LinkedList<BlockHeader> block_list = new LinkedList<>();
@@ -153,21 +153,21 @@ public class WebServer implements WebHandler
     for(int shard : shards)
     {
       int count_in_shard = 0;
-      BlockSummary bs = bs_map.get(shard);
+      BlockHeader head = head_map.get(shard);
       while(
-        (bs != null) && 
+        (head != null) && 
         (count_in_shard < blocks_back) &&
-        (!included_blocks.contains(new ChainHash(bs.getHeader().getSnowHash())))
+        (!included_blocks.contains(new ChainHash(head.getSnowHash())))
         )
       {
-        ChainHash hash = new ChainHash(bs.getHeader().getSnowHash());
+        ChainHash hash = new ChainHash(head.getSnowHash());
         included_blocks.add(hash);
-        block_list.add(bs.getHeader());
+        block_list.add(head);
 
-        if (bs.getHeader().getBlockHeight() == 0) bs = null;
+        if (head.getBlockHeight() == 0) head = null;
         else
         {
-          bs = getBlockSummary( new ChainHash(bs.getHeader().getPrevBlockHash()));
+          head = shackleton.getStuffCache().getBlockHeader( new ChainHash(head.getPrevBlockHash()));
         }
         count_in_shard++;
 

@@ -48,6 +48,7 @@ public class Shackleton
   private GetUTXOUtil get_utxo_util;
   private NetworkParams params;
   private HealthStats health_stats;
+  private StuffCache stuff_cache;
 
   private VoteTracker vote_tracker;
   private RichList rich_list;
@@ -67,6 +68,8 @@ public class Shackleton
     asyncStub = UserServiceGrpc.newStub(channel);
     blockingStub = UserServiceGrpc.newBlockingStub(channel);
     get_utxo_util = new GetUTXOUtil(new StubHolder(channel), params);
+
+    stuff_cache = new StuffCache(this);
 
     rich_list = new RichList(params, blockingStub, get_utxo_util);
     
@@ -93,6 +96,7 @@ public class Shackleton
   public VoteTracker getVoteTracker(){return vote_tracker;}
   public GetUTXOUtil getUtxoUtil(){ return get_utxo_util;}
   public HealthStats getHealthStats() {return health_stats;}
+  public StuffCache getStuffCache(){ return stuff_cache;}
 
   public String getRichListReport(){return rich_list_report;}
 

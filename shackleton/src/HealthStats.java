@@ -12,7 +12,6 @@ public class HealthStats
 {
 
   private Shackleton shackleton;
-  private SoftLRUCache<ChainHash, BlockHeader> header_cache = new SoftLRUCache<>(10000);
 
   public HealthStats(Shackleton shackleton)
   {
@@ -27,7 +26,7 @@ public class HealthStats
     stats.put("generated_time", System.currentTimeMillis());
 
     NodeStatus node_status = shackleton.getStub().getNodeStatus(QueryUtil.nr());
-    Map<Integer, BlockHeader> heads = getShardHeaderMap(node_status);
+    Map<Integer, BlockHeader> heads = shackleton.getStuffCache().getNetShardHeaderMap(node_status);
 
     JSONObject shards = new JSONObject();
     stats.put("shards", shards);
@@ -70,7 +69,7 @@ public class HealthStats
 
       if (current.getBlockHeight() == 0) break;
 
-      current = getBlockHeader(new ChainHash(current.getPrevBlockHash()));
+      current = shackleton.getStuffCache().getBlockHeader(new ChainHash(current.getPrevBlockHash()));
     }
 
     shard_1hr.populate(shard_data, "counts_1hr");
@@ -80,40 +79,6 @@ public class HealthStats
 
   }
 
-  private Map<Integer, BlockHeader> getShardHeaderMap(NodeStatus ns)
-  {
-    TreeMap<Integer, BlockHeader> out = new TreeMap<>();
-    for(Map.Entry<Integer, ByteString> me : ns.getNetShardHeadMap().entrySet())
-    {
-      int shard = me.getKey();
-      ChainHash hash = new ChainHash(me.getValue());
-      BlockHeader bh = getBlockHeader(hash);
-      out.put(shard,bh);
-
-    }
-    return out;
-  }
-
-  public BlockHeader getBlockHeader(ChainHash hash)
-  {
-    synchronized(header_cache)
-    {
-      if (header_cache.get(hash) != null) return header_cache.get(hash);
-    }
-
-    BlockHeader bh = shackleton.getStub().getBlockHeader(
-    RequestBlockHeader.newBuilder().setBlockHash(hash.getBytes()).build());
-
-    if (bh!=null)
-    {
-      synchronized(header_cache)
-      {
-        header_cache.put(hash, bh);
-      }
-    }
-
-    return bh;
-  }
 
   public class ChainStats
   {
