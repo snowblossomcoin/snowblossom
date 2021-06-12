@@ -258,7 +258,7 @@ public class PeerLink implements StreamObserver<PeerMessage>
             scanForBlocksToRequest();
 
             // TODO this peer block map mess can probably be removed
-            int next = blk.getHeader().getBlockHeight()+1;
+            /*int next = blk.getHeader().getBlockHeight()+1;
             ShardBlock next_sb = new ShardBlock(blk.getHeader().getShardId(), next);
 
             synchronized(peer_block_map)
@@ -276,7 +276,7 @@ public class PeerLink implements StreamObserver<PeerMessage>
                     .build());
                 }
               }
-            }
+            }*/
 
             // Think about getting more blocks from desire map
             synchronized(desire_header_map)
