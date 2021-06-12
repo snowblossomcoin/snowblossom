@@ -255,6 +255,7 @@ public class PeerLink implements StreamObserver<PeerMessage>
 
                 if (node.getBlockIngestor(blk.getHeader().getShardId()).reserveBlock(target))
                 {
+                  logger.info("Requesting next block: " + next_sb);
                   writeMessage( PeerMessage.newBuilder()
                     .setReqBlock(
                       RequestBlock.newBuilder().setBlockHash(target.getBytes()).build())
@@ -450,7 +451,6 @@ public class PeerLink implements StreamObserver<PeerMessage>
           {
             desire_block_map.put(new ChainHash( bp.getPrevBlockHash() ),
               new ChainHash( bp.getSnowHash() ));
-
           }
         }
       }
@@ -503,6 +503,7 @@ public class PeerLink implements StreamObserver<PeerMessage>
       new ChainHash(header.getSnowHash()).toString(),
       new ChainHash(header.getPrevBlockHash()).toString()
       ));
+
 
     int height = header.getBlockHeight();
     if ((height == 0) || (node.getDB().getBlockSummaryMap().get(header.getPrevBlockHash())!=null))

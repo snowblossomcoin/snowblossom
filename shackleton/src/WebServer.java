@@ -156,6 +156,7 @@ public class WebServer implements WebHandler
       BlockHeader head = head_map.get(shard);
       while(
         (head != null) && 
+        (head.getSnowHash().size() > 0) && 
         (count_in_shard < blocks_back) &&
         (!included_blocks.contains(new ChainHash(head.getSnowHash())))
         )
