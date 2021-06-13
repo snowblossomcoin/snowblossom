@@ -4,7 +4,7 @@ option java_multiple_files = true;
 option java_package = "snowblossom.proto";
 option java_outer_classname = "SnowBlossomProto";
 
-import "protolib/trie.proto";
+import "trie.proto";
 
 package snowblossom;
 
