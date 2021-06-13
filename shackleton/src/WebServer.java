@@ -33,8 +33,8 @@ public class WebServer implements WebHandler
   private static final Logger logger = Logger.getLogger("snowblossom.shackleton");
   private Shackleton shackleton;
 
-  private LRUCache<ChainHash, String> block_summary_lines = new LRUCache<>(1000);
-  private SoftLRUCache<ChainHash, BlockSummary> block_summary_cache = new SoftLRUCache<>(256 * 20);
+  private LRUCache<ChainHash, String> block_summary_lines = new LRUCache<>(10000);
+  private SoftLRUCache<ChainHash, BlockSummary> block_summary_cache = new SoftLRUCache<>(256 * 50);
 
   public WebServer(Config config, Shackleton shackleton)
     throws Exception
