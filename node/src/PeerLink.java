@@ -38,6 +38,9 @@ public class PeerLink implements StreamObserver<PeerMessage>
   private PeerInfo peer_info; //set immediately when we are client, set eventually otherwise
 
   private TreeMap<ShardBlock, ChainHash> peer_block_map = new TreeMap<>();
+
+  // These are pretty much doing the same thing - can likely be reduced
+
   private SetMultimap<ChainHash, ChainHash> desire_header_map =
                      MultimapBuilder.hashKeys().hashSetValues().build();
   private SetMultimap<ChainHash, ChainHash> desire_block_map =
@@ -448,15 +451,6 @@ public class PeerLink implements StreamObserver<PeerMessage>
                 RequestBlock.newBuilder().setBlockHash(hash.getBytes()).build())
                 .build());
           }
-
-          /*writeMessage( PeerMessage.newBuilder()
-            .setReqHeader(
-              RequestBlockHeader.newBuilder()
-                .setBlockHash(hash.getBytes())
-                .setShardId(bp.getShardId())
-                .build())
-            .build());*/
-
         }
         else
         { // We want it, add to desire map
