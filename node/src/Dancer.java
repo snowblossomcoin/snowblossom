@@ -6,6 +6,7 @@ import java.util.logging.Logger;
 import snowblossom.lib.ChainHash;
 import snowblossom.lib.ShardUtil;
 import snowblossom.proto.*;
+import duckutil.LRUCache;
 
 /** See section in Snowblossom Book about "The Dance"
  * https://docs.google.com/document/d/17cljhZnAiQTL9yzhZ_INxKx131LUzNs2paP2kCCgljo/edit#heading=h.2w202zag3l1f
@@ -16,6 +17,7 @@ public class Dancer
   private static final Logger logger = Logger.getLogger("snowblossom.node");
   private final SnowBlossomNode node;
 
+  
 
   public Dancer(SnowBlossomNode node)
   {
@@ -26,9 +28,33 @@ public class Dancer
   {
     return (ShardUtil.getInheritSet(shard).contains(0));
   }
+
+  private LRUCache<ChainHash, Boolean> comp_cache = new LRUCache<>(25000);
+  private LRUCache<String, Boolean> comp_cache_depth = new LRUCache<>(25000);
+
   public boolean isCompliant(BlockHeader header)
   {
+    if (comp_cache.size() > 20000)
+    {
+      logger.info("comp cache full: " + comp_cache.size());
+    }
+    if (header==null) return true; //this isn't a super strict check
+
+    ChainHash hash = new ChainHash(header.getSnowHash());
+    synchronized(comp_cache)
+    {
+      if (comp_cache.containsKey(hash))
+      {
+        return comp_cache.get(hash);
+      }
+    }
+
     boolean comp = isCompliant(header, 3);
+
+    synchronized(comp_cache)
+    {
+      comp_cache.put(hash, comp);
+    }
 
     if (!comp)
     {
@@ -47,6 +73,34 @@ public class Dancer
   {
     if (depth==0) return true;
     if (header==null) return true; //this isn't a super strict check
+
+    ChainHash hash = new ChainHash(header.getSnowHash());
+    synchronized(comp_cache)
+    {
+      if (comp_cache.containsKey(hash))
+      {
+        return comp_cache.get(hash);
+      }
+    }
+    String key=hash.toString() +"/" + depth;
+    synchronized(comp_cache_depth)
+    {
+      if (comp_cache_depth.containsKey(key))
+      {
+        return comp_cache_depth.get(key);
+      }
+    }
+    boolean comp = isCompliantInternal(header, depth);
+    synchronized(comp_cache_depth)
+    {
+      comp_cache_depth.put(key, comp);
+    }
+    return comp;
+
+  }
+
+  public boolean isCompliantInternal(BlockHeader header, int depth)
+  {
 
     int import_depth = node.getParams().getMaxShardSkewHeight()*2+1;
 
