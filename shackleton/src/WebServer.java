@@ -413,7 +413,7 @@ public class WebServer implements WebHandler
     int min = Math.max(0, header.getBlockHeight()-75);
 
     out.println("<table class='table table-hover' id='blocktable'>");
-    out.println("<thead><tr><th>Shard</th><th>Height</th><th>Hash</th><th>Tx</th><th>Size</th><th>Miner</th><th>Remark</th><th>Timestamp</th></tr></thead>");
+    out.println("<thead><tr><th>Shard</th><th>Height</th><th>Hash</th><th>Tx</th><th>Size</th><th>Imp</th><th>Miner</th><th>Remark</th><th>Timestamp</th></tr></thead>");
 
     for(int h=header.getBlockHeight(); h>=min; h--)
     {
@@ -506,12 +506,20 @@ public class WebServer implements WebHandler
     sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
 
     Date resultdate = new Date(blk.getHeader().getTimestamp());
+    int import_count = 0;
+    for(BlockImportList bil : blk.getHeader().getShardImportMap().values())
+    {
+      import_count += bil.getHeightMap().size();
 
-    String s = String.format("<tr><td>%d</td><td>%d</td><td>%s</td><td>%d</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>",
+    }
+
+    String s = String.format("<tr><td>%d</td><td>%d</td><td>%s</td><td>%d</td><td>%s</td><td>%d</td><td>%s</td><td>%s</td><td>%s</td></tr>",
         blk.getHeader().getShardId(),
         blk.getHeader().getBlockHeight(),
         link,
-        tx_count, ((int)(size / 1024)) + "kB", "<a href='/?search=" + miner + "'>" + miner + "</a>", remark, sdf.format(resultdate) + " UTC");
+        tx_count, ((int)(size / 1024)) + "kB",
+        import_count,
+        "<a href='/?search=" + miner + "'>" + miner + "</a>", remark, sdf.format(resultdate) + " UTC");
 
     synchronized(block_summary_lines)
     {
@@ -585,7 +593,31 @@ public class WebServer implements WebHandler
     out.println("timestamp: " + header.getTimestamp() + " :: " + sdf.format(resultdate) + " UTC");
     out.println("snow_field: " + header.getSnowField());
     out.println("size: " + blk.toByteString().size());
+    out.println("</pre>");
     out.println();
+
+    if (header.getShardImportMap().size() > 0)
+    {
+    out.println("<h3>Block Imports</h3>");
+
+    for(Map.Entry<Integer, BlockImportList> bil : header.getShardImportMap().entrySet())
+    {
+      int imp_shard = bil.getKey();
+      for(Map.Entry<Integer, ByteString> me : bil.getValue().getHeightMap().entrySet())
+      {
+        int imp_height = me.getKey();
+        ChainHash imp_hash = new ChainHash(me.getValue());
+    
+        String link = String.format("<a href='/?search=%s'> %s </a>", imp_hash, imp_hash.toString());
+
+        out.println(String.format("<li>s:%d h:%d %s</li>",
+          imp_shard,
+          imp_height,
+          link));
+      }
+
+    }
+    }
 
     out.flush();
 
@@ -642,7 +674,7 @@ public class WebServer implements WebHandler
 
     HashSet<ChainHash> included_blocks = new HashSet<>();
     out.println("<table class='table table-hover' id='blocktable'>");
-    out.println("<thead><tr><th>Shard</th><th>Height</th><th>Hash</th><th>Tx</th><th>Size</th><th>Miner</th><th>Remark</th><th>Timestamp</th></tr></thead>");
+    out.println("<thead><tr><th>Shard</th><th>Height</th><th>Hash</th><th>Tx</th><th>Size</th><th>Imp</th><th>Miner</th><th>Remark</th><th>Timestamp</th></tr></thead>");
 
     
 
@@ -684,7 +716,7 @@ public class WebServer implements WebHandler
 
     HashSet<ChainHash> included_blocks = new HashSet<>();
     out.println("<table class='table table-hover' id='blocktable'>");
-    out.println("<thead><tr><th>Shard</th><th>Height</th><th>Hash</th><th>Tx</th><th>Size</th><th>Miner</th><th>Remark</th><th>Timestamp</th></tr></thead>");
+    out.println("<thead><tr><th>Shard</th><th>Height</th><th>Hash</th><th>Tx</th><th>Size</th><th>Imp</th><th>Miner</th><th>Remark</th><th>Timestamp</th></tr></thead>");
 
 
     for(int shard : shards)
