@@ -2,7 +2,7 @@ java_binary(
   name = "SnowBlossomNode",
   main_class = "snowblossom.node.SnowBlossomNode",
   jvm_flags = [ 
-    "-Xmx6g",
+    "-Xmx8g",
   ],
   runtime_deps = [
     "//node",
