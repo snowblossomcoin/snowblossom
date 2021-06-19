@@ -162,6 +162,15 @@ public class BlockForgeTest
     }
   }
 
+  @Test
+  public void testProtoNullBlock()
+  {
+    Block block = Block.newBuilder().build();
+    BlockTemplate bt = BlockTemplate.newBuilder()
+      .setBlock(block)
+      .build();
 
+
+  }
 
 }

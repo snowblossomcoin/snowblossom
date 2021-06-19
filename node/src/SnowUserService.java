@@ -47,7 +47,7 @@ public class SnowUserService extends UserServiceGrpc.UserServiceImplBase impleme
   {
     logger.log(Level.INFO, "Subscribe block template stream called");
 
-    BlockSubscriberInfo info = new BlockSubscriberInfo(null, responseObserver);
+    BlockSubscriberInfo info = new BlockSubscriberInfo(null, responseObserver, null);
 
     synchronized(block_subscribers)
     {
@@ -56,15 +56,31 @@ public class SnowUserService extends UserServiceGrpc.UserServiceImplBase impleme
 
     return new TemplateUpdateObserver(info);
 
+  }
+
+  @Override
+  public StreamObserver<SubscribeBlockTemplateRequest> subscribeBlockTemplateStreamExtended(StreamObserver<BlockTemplate> responseObserver)
+  {
+    logger.log(Level.INFO, "Subscribe block template stream called");
+
+    BlockSubscriberInfo info = new BlockSubscriberInfo(null, null, responseObserver);
+
+    synchronized(block_subscribers)
+    {
+      block_subscribers.add(info);
+    }
+
+    return new TemplateUpdateObserver(info);
 
   }
+
 
   @Override
   public void subscribeBlockTemplate(SubscribeBlockTemplateRequest req, StreamObserver<Block> responseObserver)
   {
     logger.log(Level.FINE, "Subscribe block template called");
 
-    BlockSubscriberInfo info = new BlockSubscriberInfo(req, responseObserver);
+    BlockSubscriberInfo info = new BlockSubscriberInfo(req, responseObserver, null);
 
     synchronized(block_subscribers)
     {
@@ -78,8 +94,8 @@ public class SnowUserService extends UserServiceGrpc.UserServiceImplBase impleme
   {
     if (node.areWeSynced())
     {
-      Block block = node.getBlockForge().getBlockTemplate(info.req);
-      info.sink.onNext(block);
+      BlockTemplate bt = node.getBlockForge().getBlockTemplate(info.req);
+      info.send(bt);
     }
     else
     {
@@ -662,16 +678,43 @@ public class SnowUserService extends UserServiceGrpc.UserServiceImplBase impleme
   class BlockSubscriberInfo
   {
     volatile SubscribeBlockTemplateRequest req;
-    final StreamObserver<Block> sink;
+    private final StreamObserver<Block> sink;
+    private final StreamObserver<BlockTemplate> template_sink;
 
-    public BlockSubscriberInfo(SubscribeBlockTemplateRequest req, StreamObserver<Block> sink)
+    public BlockSubscriberInfo(SubscribeBlockTemplateRequest req, 
+      StreamObserver<Block> sink,
+      StreamObserver<BlockTemplate> template_sink
+      )
     {
       this.req = req;
       this.sink = sink;
+      this.template_sink = template_sink;
     }
+
     public void updateTemplate(SubscribeBlockTemplateRequest req)
     {
       this.req = req;
+    }
+
+    public void send(BlockTemplate block_template)
+    {
+      if (sink != null)
+      {
+        if ((block_template == null) || 
+           (block_template.getBlock().getHeader().getVersion() == 0))
+        {
+          sink.onNext(null);
+        }
+        else
+        {
+          sink.onNext(block_template.getBlock());
+        }
+      }
+      if (template_sink != null)
+      {
+        template_sink.onNext(block_template);
+      }
+
     }
   }
 

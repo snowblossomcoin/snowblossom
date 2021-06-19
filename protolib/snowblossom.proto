@@ -213,6 +213,7 @@ service UserService {
   /* Subscribe to getting block templates to mine with, 
    * but can use an RPC stream to update the template request */
   rpc SubscribeBlockTemplateStream( stream SubscribeBlockTemplateRequest ) returns (stream Block) {}
+  rpc SubscribeBlockTemplateStreamExtended( stream SubscribeBlockTemplateRequest ) returns (stream BlockTemplate) {}
   rpc SubmitBlock ( Block ) returns ( SubmitReply ) {}
   rpc SubmitTransaction ( Transaction ) returns ( SubmitReply ) {}
   rpc GetUTXONode( GetUTXONodeRequest ) returns ( GetUTXONodeReply ) {}
@@ -232,6 +233,11 @@ service UserService {
   rpc GetIDList ( RequestNameID ) returns ( TxOutList ) {} 
 
   rpc SubscribeAddressUpdates ( RequestAddress ) returns ( stream AddressUpdate ) {} 
+}
+
+message BlockTemplate {
+  Block block = 1;
+  bool advances_shard = 2;
 }
 
 

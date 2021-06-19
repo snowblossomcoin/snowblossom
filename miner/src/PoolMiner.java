@@ -85,6 +85,10 @@ public class PoolMiner implements PoolClientOperator
     }
     else
     {
+      if (!config.isSet("pool_host"))
+      { 
+        logger.warning("Must set either pool_host or pool_host_list, fam");
+      }
       pool_client = new PoolClient(config, this);
     }
 

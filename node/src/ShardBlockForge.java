@@ -68,7 +68,7 @@ public class ShardBlockForge
 
   }
 
-  public Block getBlockTemplate(SubscribeBlockTemplateRequest mine_to)
+  public BlockTemplate getBlockTemplate(SubscribeBlockTemplateRequest mine_to)
   {
     try(TimeRecordAuto tra_gbt = TimeRecord.openAuto("ShardBlockForge.getBlockTemplate"))
     {
@@ -102,7 +102,19 @@ public class ShardBlockForge
 
       try
       {
-        return fleshOut(selected, mine_to);
+        Block block = fleshOut(selected, mine_to);
+        if (block != null)
+        {
+          
+          return BlockTemplate.newBuilder()
+            .setBlock(block)
+            .setAdvancesShard(selected.advancesShard())
+            .build();
+        }
+        else
+        {
+          return null;
+        }
 
       }
       catch(ValidationException e)
@@ -859,6 +871,10 @@ public class ShardBlockForge
     public Map<Integer, BlockHeader> getShardHeads(){return shard_heads; }
     private BigInteger getSortWork(){return sort_work; }
     private BigInteger getRandomVal(){return rnd_val;}
+    public boolean advancesShard()
+    {
+      return advances_shard > 0;
+    }
 
     /** sorting such that best block is first */
     @Override

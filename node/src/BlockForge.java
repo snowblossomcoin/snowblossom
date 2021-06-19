@@ -37,7 +37,7 @@ public class BlockForge
   /**
    * auto mode - use head if it exists or make it if appropriate
    */
-  public Block getBlockTemplate(SubscribeBlockTemplateRequest mine_to)
+  public BlockTemplate getBlockTemplate(SubscribeBlockTemplateRequest mine_to)
   {
     BlockSummary prev_summary = node.getBlockIngestor(shard_id).getHead();
 
@@ -82,7 +82,7 @@ public class BlockForge
    * Assumes the prev_summary is set correctly
    * in terms of utxo (as should be added by this block) as per shard rules
    */
-  public Block getBlockTemplate(BlockSummary prev_summary, SubscribeBlockTemplateRequest mine_to)
+  public BlockTemplate getBlockTemplate(BlockSummary prev_summary, SubscribeBlockTemplateRequest mine_to)
   {
 
     Block.Builder block_builder = Block.newBuilder();
@@ -168,7 +168,10 @@ public class BlockForge
       header_builder.setUtxoRootHash( utxo_buffer.simulateUpdates().getBytes());
 
       block_builder.setHeader(header_builder.build());
-      return block_builder.build();
+      return BlockTemplate.newBuilder()
+        .setBlock(block_builder.build())
+        .setAdvancesShard(true)
+        .build();
     }
     catch(ValidationException e)
     {
