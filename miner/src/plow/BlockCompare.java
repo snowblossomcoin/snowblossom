@@ -55,7 +55,24 @@ public class BlockCompare implements Comparable<BlockCompare>
     return bt.hashCode();
   }
 
+  public double getRewardPerHash()
+  {
+    double diff = PowUtil.getDiffForTarget(
+      BlockchainUtil.targetBytesToBigInteger(
+        bt.getBlock().getHeader().getTarget()));
+    double hashes = Math.pow(2.0, diff);
+  
+    Transaction coinbase = bt.getBlock().getTransactions(0);
+    TransactionInner inner = TransactionUtil.getInner(coinbase);
+    double reward = 0.0;
+    for(TransactionOutput out : inner.getOutputsList())
+    {
+      reward += out.getValue();
+    }
 
+    return reward/hashes;
+
+  }
 
   // First item is best item
   @Override
@@ -64,14 +81,14 @@ public class BlockCompare implements Comparable<BlockCompare>
     if (bt.getAdvancesShard() > o.bt.getAdvancesShard()) return -1;
     if (bt.getAdvancesShard() < o.bt.getAdvancesShard()) return 1;
 
-    // TODO - figure out reward per hash thing
+    if (getRewardPerHash() > o.getRewardPerHash()) return -1;
+    if (getRewardPerHash() < o.getRewardPerHash()) return 1;
 
     if (bt.getBlock().getHeader().getBlockHeight() < o.bt.getBlock().getHeader().getBlockHeight()) return -1;
     if (bt.getBlock().getHeader().getBlockHeight() > o.bt.getBlock().getHeader().getBlockHeight()) return 1;
 
     if (bt.getBlock().getHeader().getTimestamp() > o.bt.getBlock().getHeader().getTimestamp()) return -1; 
     if (bt.getBlock().getHeader().getTimestamp() < o.bt.getBlock().getHeader().getTimestamp()) return 1; 
-
 
     return 0;
   }

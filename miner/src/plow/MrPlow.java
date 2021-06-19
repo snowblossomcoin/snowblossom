@@ -396,10 +396,13 @@ public class MrPlow
 
       if ((last_block_template == null) || (!new_template.equals(last_block_template)))
       {
+        DecimalFormat df = new DecimalFormat("0.00000000");
+
         last_block_template = potential_blocks.first().getBlockTemplate().getBlock();
-        logger.info(String.format("Selected block: s:%d h:%d", 
+        logger.info(String.format("Selected block: s:%d h:%d %s", 
           last_block_template.getHeader().getShardId(), 
-          last_block_template.getHeader().getBlockHeight()));
+          last_block_template.getHeader().getBlockHeight(),
+          df.format(potential_blocks.first().getRewardPerHash())));
         agent.updateBlockTemplate(last_block_template);
       }
     }
