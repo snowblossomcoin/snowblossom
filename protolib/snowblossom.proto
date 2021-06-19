@@ -237,7 +237,7 @@ service UserService {
 
 message BlockTemplate {
   Block block = 1;
-  bool advances_shard = 2;
+  int32 advances_shard = 2;
 }
 
 
@@ -463,6 +463,7 @@ message NodeStatus {
   repeated int32 network_active_shards = 10;
   map<int32, bytes> shard_head_map = 11;
   map<int32, bytes> net_shard_head_map = 12;
+  repeated int32 interest_shards = 13;
 }
 
 

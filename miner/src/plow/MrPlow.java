@@ -13,6 +13,7 @@ import io.grpc.stub.StreamObserver;
 import java.math.BigInteger;
 import java.text.DecimalFormat;
 import java.util.List;
+import java.util.LinkedList;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.concurrent.atomic.AtomicLong;
@@ -28,6 +29,8 @@ import snowblossom.mining.proto.*;
 import snowblossom.proto.*;
 import snowblossom.proto.UserServiceGrpc.UserServiceBlockingStub;
 import snowblossom.proto.UserServiceGrpc.UserServiceStub;
+import com.google.common.collect.ImmutableList;
+import java.util.TreeSet;
 
 public class MrPlow
 {
@@ -42,12 +45,10 @@ public class MrPlow
   public static final int SHARES_IN_VIEW_FOR_UPTARGET = 12;
   public static final int SHARES_IN_VIEW_FOR_DOWNTARGET = 4;
 
-  public static final long TEMPLATE_AGE_MAX_MS=40000L; //Should get updates every 30 seconds
+  public static final long TEMPLATE_MAX_AGE = 100000L;
 
   public static ByteString BLOCK_KEY = ByteString.copyFrom(new String("blocks_found").getBytes());
   public static String PPLNS_STATE_KEY = "pplns_state";
-
-
 
   public static void main(String args[]) throws Exception
   {
@@ -67,12 +68,6 @@ public class MrPlow
   }
 
   private volatile Block last_block_template;
-  private volatile long last_block_template_time;
-
-  private UserServiceStub asyncStub;
-  private UserServiceBlockingStub blockingStub;
-
-  private StreamObserver<SubscribeBlockTemplateRequest> template_update_observer;
 
   private final NetworkParams params;
 
@@ -89,6 +84,7 @@ public class MrPlow
   private final int min_diff;
 
   private final PlowLoop loop;
+  private List<NodeConnection> connections;
 
   public MrPlow(Config config) throws Exception
   {
@@ -108,8 +104,6 @@ public class MrPlow
       time_record = new TimeRecord();
       TimeRecord.setSharedRecord(time_record);
     }
-
-    
 
     int port = config.getIntWithDefault("mining_pool_port",23380);
     agent = new MiningPoolServiceAgent(this);
@@ -139,6 +133,7 @@ public class MrPlow
     share_manager = new ShareManager(fixed_fee_map, pplns_state);
     report_manager = new ReportManager();
 
+    startConnections();
     subscribe();
 
     Server s = ServerBuilder
@@ -152,7 +147,6 @@ public class MrPlow
       new MrPlowJsonHandler(this).registerHandlers(json_server);
 
     }
-
     s.start();
 
     loop = new PlowLoop();
@@ -251,26 +245,26 @@ public class MrPlow
         share_manager.prune(shares_to_keep);
       }
   }
+
+  private void startConnections()
+  {
+    config.require("node_uri");
+
+    List<String> uri_list = config.getList("node_uri");
+    LinkedList<NodeConnection> conns = new LinkedList<>();
+
+    for(String uri : uri_list)
+    {
+      NodeConnection nc = new NodeConnection(this, uri, params);
+      nc.start();
+      conns.add(nc);
+    }
+
+    connections = ImmutableList.copyOf(conns);
+  }
+
   private void subscribe() throws Exception
   {
-    if (channel != null)
-    if (last_block_template_time + TEMPLATE_AGE_MAX_MS < System.currentTimeMillis())
-    {
-      logger.info(String.format("No block template in %s ms.  Restarting connection.", TEMPLATE_AGE_MAX_MS));
-      channel.shutdownNow();
-      channel = null;
-    }
-
-    if (channel == null)
-    {
-
-      channel = StubUtil.openChannel(config, params);
-      asyncStub = UserServiceGrpc.newStub(channel);
-      blockingStub = UserServiceGrpc.newBlockingStub(channel);
-      template_update_observer = asyncStub.subscribeBlockTemplateStream(new BlockTemplateEater());
-
-    }
-
     CoinbaseExtras.Builder extras = CoinbaseExtras.newBuilder();
     if (config.isSet("remark"))
     {
@@ -295,12 +289,17 @@ public class MrPlow
 
     Map<String, Double> rates = share_manager.getPayRatios();
 
-    template_update_observer.onNext(
+    SubscribeBlockTemplateRequest req = 
       SubscribeBlockTemplateRequest.newBuilder()
         .putAllPayRatios( rates )
-        .setExtras(extras.build()).build());
+        .setExtras(extras.build())
+        .build();
     logger.info("Block template updated - " + rates);
 
+    for(NodeConnection nc : connections)
+    {
+      nc.updateSubscription(req);
+    }
   }
 
   private AddressSpecHash getPoolAddress() throws Exception
@@ -321,7 +320,6 @@ public class MrPlow
 
   public NetworkParams getParams() {return params;}
 
-  public UserServiceBlockingStub getBlockingStub(){return blockingStub;}
   public ShareManager getShareManager(){return share_manager;}
   public ReportManager getReportManager(){return report_manager;}
   public MiningPoolServiceAgent getAgent(){return agent;}
@@ -373,34 +371,69 @@ public class MrPlow
     return last_block_template;
   }
 
-
-
-  public class BlockTemplateEater implements StreamObserver<Block>
+  public void updateBlockTemplate()
   {
-    public void onCompleted() {}
+    TreeSet<BlockCompare> potential_blocks = new TreeSet<>();
 
-    public void onError(Throwable t) 
+    for(NodeConnection nc : connections)
     {
-      logger.info("Got error:" + t);
-      last_block_template_time = 0L;
-    }
-
-    public void onNext(Block b)
-    {
-      if (b.getHeader().getTarget().size() == 0)
+      BlockTemplate bt = nc.getLatestBlockTemplate();
+      if (bt != null)
+      if (bt.getBlock().getHeader().getTimestamp() + TEMPLATE_MAX_AGE > System.currentTimeMillis())
       {
-        last_block_template = null;
-        logger.info("Got null template");
-
-      }
-      else
-      {
-        logger.info("Got block template: height:" + b.getHeader().getBlockHeight() + " transactions:" + b.getTransactionsCount());
-
-        last_block_template = b;
-        last_block_template_time = System.currentTimeMillis();
-        agent.updateBlockTemplate(b);
+        potential_blocks.add(new BlockCompare(bt));
       }
     }
+
+    if (potential_blocks.size() == 0)
+    {
+      logger.warning("Selected no block template");
+      last_block_template = null;
+    }
+    else
+    {
+      Block new_template = potential_blocks.first().getBlockTemplate().getBlock();
+
+      if ((last_block_template == null) || (!new_template.equals(last_block_template)))
+      {
+        last_block_template = potential_blocks.first().getBlockTemplate().getBlock();
+        logger.info(String.format("Selected block: s:%d h:%d", 
+          last_block_template.getHeader().getShardId(), 
+          last_block_template.getHeader().getBlockHeight()));
+        agent.updateBlockTemplate(last_block_template);
+      }
+    }
+
+  }
+
+  public void submitBlock(Block blk)
+  {
+    for(NodeConnection nc : connections)
+    {
+      nc.submitBlock(blk, new SubmitReporter());
+    }
+  }
+
+  public class SubmitReporter implements StreamObserver<SubmitReply>
+  {
+    @Override
+    public void onCompleted()
+    {
+
+    }
+    
+    @Override
+    public void onError(Throwable t)
+    {
+      logger.warning("Block submit error: " + t);
+    }
+
+    @Override
+    public void onNext(SubmitReply reply)
+    {
+      logger.info("Block submit reply: " + reply);
+    }
+   
+
   }
 }

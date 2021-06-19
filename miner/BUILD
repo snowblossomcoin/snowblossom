@@ -9,6 +9,7 @@ java_library(
       "//lib:rocksdb",
       "//lib:atomicfiledb",
       "//client",
+      "@io_grpc_grpc_java//context",
       "@duckutil//:duckutil_jsonrpc_lib",
       "@duckutil//:duckutil_lib",
       "@maven//:com_thetransactioncompany_jsonrpc2_base",

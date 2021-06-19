@@ -406,6 +406,7 @@ public class SnowUserService extends UserServiceGrpc.UserServiceImplBase impleme
       ns.putShardHeadMap(s, node.getBlockIngestor(s).getHead().getHeader().getSnowHash());
     }
     ns.addAllNetworkActiveShards(node.getForgeInfo().getNetworkActiveShards().keySet());
+    ns.addAllInterestShards(node.getInterestShards());
 
     responseObserver.onNext(ns.build());
     responseObserver.onCompleted();

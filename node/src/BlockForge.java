@@ -170,7 +170,7 @@ public class BlockForge
       block_builder.setHeader(header_builder.build());
       return BlockTemplate.newBuilder()
         .setBlock(block_builder.build())
-        .setAdvancesShard(true)
+        .setAdvancesShard(1)
         .build();
     }
     catch(ValidationException e)

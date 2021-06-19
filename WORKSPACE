@@ -17,7 +17,7 @@ git_repository(
   name = "build_stack_rules_proto",
   remote = "https://github.com/fireduck64/rules_proto",
   commit = "3e0b10c45c5e15b3ee17b3aa8a7ffe6e16b018cc",
-  shallow_since = "1579204983 -0800"
+  shallow_since = "1614632955 -0800"
 )
 
 load("@build_stack_rules_proto//:deps.bzl", "io_grpc_grpc_java")
@@ -37,8 +37,8 @@ java_grpc_library()
 git_repository(
   name = "duckutil",
   remote = "https://github.com/fireduck64/duckutil",
-  commit = "91a72955daa1f67e33c9111bedb50b674ab2a7b3",
-  shallow_since = "1622004355 -0700",
+  commit = "46cdddf732d879992a7fb9999b341035a3dac366",
+  shallow_since = "1624077542 -0700"
 )
 
 maven_install(

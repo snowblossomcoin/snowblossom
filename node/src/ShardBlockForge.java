@@ -108,7 +108,7 @@ public class ShardBlockForge
           
           return BlockTemplate.newBuilder()
             .setBlock(block)
-            .setAdvancesShard(selected.advancesShard())
+            .setAdvancesShard(selected.getAdvancesShard())
             .build();
         }
         else

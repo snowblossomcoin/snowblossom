@@ -34,6 +34,7 @@ public class StubHolder
 
   public UserServiceBlockingStub getBlockingStub(){return blocking_stub;}
   public UserServiceStub getAsyncStub(){return stub;}
+  public ManagedChannel getChannel(){return channel;}
 
   public OfferPayInterface getOfferPayInterface(){return offer_pay_interface;}
   public void setOfferPayInterface(OfferPayInterface offer_pay_interface)
