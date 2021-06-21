@@ -33,7 +33,7 @@ public class BlockIngestor implements ChainStateSource
 
   private volatile BlockSummary chainhead;
 
-  public static final int SUMMARY_VERSION = 5;
+  public static final int SUMMARY_VERSION = 6;
 
   private LRUCache<ChainHash, Long> block_pull_map = new LRUCache<>(2000);
   private LRUCache<ChainHash, Long> tx_cluster_pull_map = new LRUCache<>(2000);

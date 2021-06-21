@@ -104,7 +104,12 @@ public class BlockchainUtil
       // true if this is the first block of a fresh split
       boolean fresh_block_split=false;
 
-      if (header.getVersion() == 2)
+      if (header.getVersion() == 1)
+      {
+        // Record self regardless
+        bs.putImportedShards(header.getShardId(), header);
+      }
+      else if (header.getVersion() == 2)
       { 
         // update the tx body running average
         long prev_tx_size_average;
