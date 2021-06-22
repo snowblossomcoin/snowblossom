@@ -84,16 +84,24 @@ public class NodeConnection extends PeriodicThread implements StreamObserver<Blo
       last_template = null;
       template_update_observer = null;
 
-      logger.info("Attempting new connection to: " + uri);
-      stub_holder.update(StubUtil.openChannel(uri, params));
-      node_status = stub_holder.getBlockingStub().getNodeStatus( NullRequest.newBuilder().build() );
-
-      template_update_observer = stub_holder.getAsyncStub().subscribeBlockTemplateStreamExtended(this);
-      if (last_template_req != null)
+      try
       {
-        template_update_observer.onNext(last_template_req);
+
+        logger.info("Attempting new connection to: " + uri);
+        stub_holder.update(StubUtil.openChannel(uri, params));
+        node_status = stub_holder.getBlockingStub().getNodeStatus( NullRequest.newBuilder().build() );
+
+        template_update_observer = stub_holder.getAsyncStub().subscribeBlockTemplateStreamExtended(this);
+        if (last_template_req != null)
+        {
+          template_update_observer.onNext(last_template_req);
+        }
+        last_network = System.currentTimeMillis();
       }
-      last_network = System.currentTimeMillis();
+      catch(Throwable t)
+      {
+        logger.info(String.format("Error connecting to %s - %s", uri, t.toString()));
+      }
     }
 
   }
@@ -160,7 +168,7 @@ public class NodeConnection extends PeriodicThread implements StreamObserver<Blo
 		if (bt.getBlock().getHeader().getVersion() == 0)
 		{
 			last_template = null;
-			logger.info("Got null template");
+			logger.info("Got null template from " + uri);
 		}
 		else
 		{
