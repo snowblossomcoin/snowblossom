@@ -4,6 +4,7 @@
 * Added database type "atomic_file" for use with MrPlow
 * Added data migration tool for MrPlow data
 * On non-64-bit JVM default to use non-TLS seeds (Issue #179)
+* Add total_coins_json api
 
 ## 1.8.0
 
