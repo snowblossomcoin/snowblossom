@@ -156,7 +156,7 @@ public class ForgeInfo
       }
       else
       {
-        logger.warning(String.format("We heard ext_coord_head_hash of %s but don't have the header",
+        logger.fine(String.format("We heard ext_coord_head_hash of %s but don't have the header",
           new ChainHash(ext_coord_head_bp.getSnowHash()).toString()));
       }
     }
@@ -204,7 +204,7 @@ public class ForgeInfo
       }
       else
       {
-        logger.warning(String.format("We heard ext_coord_head_hash of %s but don't have the header",
+        logger.fine(String.format("We heard ext_coord_head_hash of %s but don't have the header",
           new ChainHash(ext_coord_head_bp.getSnowHash()).toString()));
       }
 
