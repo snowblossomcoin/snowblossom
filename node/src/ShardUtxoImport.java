@@ -171,10 +171,14 @@ public class ShardUtxoImport
         ib = ibb.build();
       }
 
-      synchronized(cache)
+      try(TimeRecordAuto tra_cache = TimeRecord.openAuto("ShardUtxoImport.getImportBlock_cachesave"))
       {
-        cache.put(hash, ib);
+        synchronized(cache)
+        {
+          cache.put(hash, ib);
+        }
       }
+
       return ib;
     }
 
