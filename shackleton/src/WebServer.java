@@ -17,6 +17,7 @@ import java.util.LinkedList;
 import java.util.Map;
 import java.util.TimeZone;
 import java.util.logging.Logger;
+import net.minidev.json.JSONObject;
 import snowblossom.lib.*;
 import snowblossom.proto.*;
 
@@ -53,6 +54,7 @@ public class WebServer implements WebHandler
       addHeader(t.out());
       t.out().println("<H2>APIs</H2>");
       t.out().println("<a href='/api/total_coins'>total_coins</a>");
+      t.out().println("<a href='/api/total_coins_json'>total_coins_json</a>");
       addFooter(t.out());
       t.setHttpCode(200);
       return;
@@ -66,8 +68,19 @@ public class WebServer implements WebHandler
       t.out().println(df.format(total_value / 1e6));
       t.setHttpCode(200);
       return;
-
     }
+    if (path.equals("/api/total_coins_json"))
+    {
+      t.setContentType("application/json");
+      long total_value = shackleton.getTotalValue();
+      double coins = total_value / 1e6;
+      JSONObject obj = new JSONObject();
+      obj.put("total_coins", coins);
+      t.out().println(obj);
+      t.setHttpCode(200);
+      return;
+    }
+
 
     t.setHttpCode(404);
 
@@ -92,7 +105,7 @@ public class WebServer implements WebHandler
           displayStatus(out);
           return;
         }
-        
+
 
         if (search.startsWith("load-"))
         {
@@ -136,7 +149,7 @@ public class WebServer implements WebHandler
             return;
           }
         }
-        
+
         AddressSpecHash address = null;
         try
         {
@@ -213,8 +226,8 @@ public class WebServer implements WebHandler
         displayTransaction(out, tx);
       }
     }
-    
-    return true; 
+
+    return true;
 
 
   }
@@ -281,7 +294,7 @@ public class WebServer implements WebHandler
     out.println("<tr><td>Per Month</td><td><input type='text' id='hash3' value='0' size=12 disabled> Snow</td></tr>");
     out.println("</table>");
     out.println("<script>window.avgdiff=" + df.format(avg_diff) + ";</script>");
-    
+
     out.println("<h2>Vote Status</h2>");
     out.println("<pre>");
     shackleton.getVoteTracker().getVotingReport(node_status, out);
@@ -436,12 +449,12 @@ public class WebServer implements WebHandler
 
       out.flush();
 
-      for(Transaction tx : blk.getTransactionsList()) 
+      for(Transaction tx : blk.getTransactionsList())
       {
             LinkedList<Double> inValues = new LinkedList<Double>();
-            try 
+            try
       {
-                for(TransactionInput in : TransactionUtil.getInner(tx).getInputsList()) 
+                for(TransactionInput in : TransactionUtil.getInner(tx).getInputsList())
     {
                   int idx = in.getSrcTxOutIdx();
                   Transaction txo = shackleton.getStub().getTransaction( RequestTransaction.newBuilder().setTxHash(in.getSrcTxId()).build());
@@ -450,7 +463,7 @@ public class WebServer implements WebHandler
                   double value = outo.getValue() / Globals.SNOW_VALUE_D;
                   inValues.addLast(value);
                 }
-            } catch(Exception e) 
+            } catch(Exception e)
       {
                 out.println(e);
             }
@@ -496,7 +509,7 @@ public class WebServer implements WebHandler
 
   out.println("</pre>");
 
-      
+
   }
 
 
