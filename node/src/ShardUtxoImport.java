@@ -42,7 +42,7 @@ public class ShardUtxoImport
    TOTO These objects might get big and we want to cache relative to number of
    active threads on the network.  Might want to get smarter here.
    */
-  private SoftLRUCache<ChainHash, ImportedBlock> cache = new SoftLRUCache<>(16*16);
+  private SoftLRUCache<ChainHash, ImportedBlock> cache = new SoftLRUCache<>(ForgeInfo.CACHE_SIZE);
 
   private HashSet<AddressSpecHash> trusted_signers = new HashSet<>();
 
