@@ -641,7 +641,6 @@ public class WebServer implements WebHandler
   }
 
 
-<<<<<<< HEAD
   private void printBraidSummary(PrintStream out, NodeStatus ns)
   {
     TreeSet<Integer> shards = new TreeSet<>();
@@ -697,23 +696,6 @@ public class WebServer implements WebHandler
 
       BlockSummary bs = bs_shard_head;
       if (bs != null)
-=======
-      for(Transaction tx : blk.getTransactionsList())
-      {
-            LinkedList<Double> inValues = new LinkedList<Double>();
-            try
-      {
-                for(TransactionInput in : TransactionUtil.getInner(tx).getInputsList())
-    {
-                  int idx = in.getSrcTxOutIdx();
-                  Transaction txo = shackleton.getStub().getTransaction( RequestTransaction.newBuilder().setTxHash(in.getSrcTxId()).build());
-                  TransactionInner innero = TransactionUtil.getInner(txo);
-                  TransactionOutput outo = innero.getOutputs(idx);
-                  double value = outo.getValue() / Globals.SNOW_VALUE_D;
-                  inValues.addLast(value);
-                }
-            } catch(Exception e)
->>>>>>> master
       {
         ChainHash hash = new ChainHash(bs.getHeader().getSnowHash());
         included_blocks.add(hash);
