@@ -6,6 +6,7 @@ import java.util.SplittableRandom;
 import java.util.logging.Logger;
 import java.util.ArrayList;
 import java.util.TreeMap;
+import java.util.Set;
 import snowblossom.lib.*;
 import snowblossom.proto.*;
 import snowblossom.util.proto.*;
@@ -32,6 +33,8 @@ public class LoadTestShard implements StreamObserver<SubmitReply>
   private final boolean use_pending=true;
 
   private int preferred_shard = -1;
+  private ArrayList<Integer> preferred_shards = new ArrayList<>();
+
   private RateLimit rate_limit = new RateLimit(15.0, 15.0);
 
 	private RateReporter rate_sent = new RateReporter();
@@ -112,7 +115,15 @@ public class LoadTestShard implements StreamObserver<SubmitReply>
         int dst_shard = active_shards.get( rnd.nextInt(active_shards.size() ) );
         if (preferred_shard >= 0)
         {
-          if (rnd.nextDouble() < 0.95) dst_shard=preferred_shard;
+          if (rnd.nextDouble() < 0.95)
+          {
+            dst_shard = preferred_shard;
+            if (preferred_shards.size() > 0)
+            {
+              dst_shard = preferred_shards.get(rnd.nextInt(preferred_shards.size()));
+            }
+
+          }
         }
 
         out_list.add( TransactionOutput.newBuilder()
@@ -158,6 +169,12 @@ public class LoadTestShard implements StreamObserver<SubmitReply>
       if (preferred_shard >= 0)
       {
         tx_config.setChangeShardId( preferred_shard );
+        if (preferred_shards.size() > 0)
+        {
+          tx_config.setChangeShardId(preferred_shards.get(rnd.nextInt(preferred_shards.size())));
+        }
+
+
       }
       else
       {
@@ -197,6 +214,21 @@ public class LoadTestShard implements StreamObserver<SubmitReply>
         NodeStatus ns = client.getNodeStatus();
         active_shards.clear();
         active_shards.addAll(ns.getNetworkActiveShardsList());
+
+        if (preferred_shard >= 0)
+        {
+          Set<Integer> pref_children 
+            = ShardUtil.getChildrenRecursive(preferred_shard, client.getParams().getMaxShardId());
+          preferred_shards.clear();
+          for(int s : active_shards)
+          {
+            if (pref_children.contains(s))
+            {
+               preferred_shards.add(s);
+            }
+          }
+        }
+        logger.info(String.format("Active shards: %s Preferred shards: %s",active_shards, preferred_shards));
       }
       SplittableRandom rnd = new SplittableRandom();
 
