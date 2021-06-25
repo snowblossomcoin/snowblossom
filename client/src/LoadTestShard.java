@@ -252,10 +252,13 @@ public class LoadTestShard implements StreamObserver<SubmitReply>
 
 
       int sent = 0;
+      long start_send_time = System.currentTimeMillis();
+      long end_send_time = start_send_time + 120L * 1000L;
       while(spendable_map.size() > 0)
       {
         if (trySend(spendable_map, rnd)) sent++;
         if (sent >= 5000) break;
+        if (System.currentTimeMillis() > end_send_time) break;
       }
       if (sent==0)
       {
