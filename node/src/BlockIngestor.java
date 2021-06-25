@@ -89,7 +89,7 @@ public class BlockIngestor implements ChainStateSource
       checkResummary();
 
       // TODO remove after whatever is fixed
-      updateHeights(chainhead, true);
+      //updateHeights(chainhead, true);
     }
 
 
@@ -408,7 +408,7 @@ public class BlockIngestor implements ChainStateSource
   {
     //Forcing a recheck because I think
     // there might be some race condition or something
-    updateHeights(summary, true);
+    updateHeights(summary, false);
   }
 
   /**
