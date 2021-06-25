@@ -483,10 +483,15 @@ public class Peerage
           ArrayList<Integer> my_shards = new ArrayList<>();
           my_shards.addAll(node.getActiveShards());
 
+          Collections.shuffle(my_shards);
+          int sent_count=0;
           for(int s : my_shards)
           {
             sendAllTips(s);
+            sent_count++;
+            if (sent_count > 16) break;
           }
+
 
           if (last_learn_time + REFRESH_LEARN_TIME < System.currentTimeMillis())
           {
