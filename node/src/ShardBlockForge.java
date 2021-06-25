@@ -135,8 +135,8 @@ public class ShardBlockForge
   {
     if (!bc.isComplete())
     {
-      System.out.println("Rejecting incomplete: " + bc);
-      System.out.println(bc.toStringFull());
+      //System.out.println("Rejecting incomplete: " + bc);
+      //System.out.println(bc.toStringFull());
       return;
     }
 
@@ -146,7 +146,7 @@ public class ShardBlockForge
     {
       if (signature_cache.containsKey( sig ))
       {
-        System.out.println("Duplicate: " + bc);
+        //System.out.println("Duplicate: " + bc);
         return;
       }
     }
@@ -204,7 +204,7 @@ public class ShardBlockForge
 
       for(BlockConcept bc : concept_list)
       {
-        System.out.println("exploreCoordinator"+coord_shard+": " + bc.toString());
+        //System.out.println("exploreCoordinator"+coord_shard+": " + bc.toString());
         // If it is a shard we actually work on
         if (node.getInterestShards().contains(bc.getHeader().getShardId()))
         {
@@ -288,7 +288,7 @@ public class ShardBlockForge
   private Set<BlockConcept> exploreFromCoordinatorHead(int coord_shard)
     throws ValidationException
   {
-    System.out.println("exploreFromCoordinatorHead(" + coord_shard +")");
+    logger.fine("exploreFromCoordinatorHead(" + coord_shard +")");
     TreeSet<BlockConcept> concepts = new TreeSet<>();
     // Start with the highest block for the coordinator shard
     // Then take the set of import blocks <integer,blockhead> and descend from all of those
@@ -315,7 +315,7 @@ public class ShardBlockForge
       if (coord_head != null)
       {
 
-        System.out.println(String.format("Exploring from coord head: %s s:%d h:%d",
+        logger.fine(String.format("Exploring from coord head: %s s:%d h:%d",
           new ChainHash(coord_head.getSnowHash()).toString(),
           coord_head.getShardId(),
           coord_head.getBlockHeight()));
@@ -329,8 +329,8 @@ public class ShardBlockForge
         Map<Integer, BlockHeader> import_heads = node.getForgeInfo().getImportedShardHeads(
           coord_head, node.getParams().getMaxShardSkewHeight()*3);
 
-        System.out.println("Import heads:");
-        System.out.println(getSummaryString(import_heads));
+        //System.out.println("Import heads:");
+        //System.out.println(getSummaryString(import_heads));
 
         HashSet<ChainHash> possible_prevs = new HashSet<>();
 
@@ -347,13 +347,13 @@ public class ShardBlockForge
             Set<ChainHash> set_from_src_shard = node.getForgeInfo().climb(h, -1,
               node.getParams().getMaxShardSkewHeight()*2);
 
-            System.out.println(String.format("Possible prevs from shard %d - %d - %s",
+            logger.fine(String.format("Possible prevs from shard %d - %d - %s",
               src_shard, set_from_src_shard.size(), set_from_src_shard));
 
             possible_prevs.addAll( set_from_src_shard );
           }
         }
-        System.out.println("Possible_prevs: " + possible_prevs.size());
+        logger.fine("Possible_prevs: " + possible_prevs.size());
 
         for(ChainHash prev_hash : possible_prevs)
         {
@@ -425,7 +425,7 @@ public class ShardBlockForge
 
     for(BlockConcept bc : concept_list)
     {
-      System.out.println("Considering: " + bc);
+      //System.out.println("Considering: " + bc);
       expandConcept(import_heads, bc, coord_head, concepts, coord_imp_lst);
 
     }
