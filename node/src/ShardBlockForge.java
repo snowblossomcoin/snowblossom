@@ -498,12 +498,12 @@ public class ShardBlockForge
 
                   if(Dancer.isCoordinator(imp_h.getShardId()))
                   {
-                    logger.warning("Unable to import coordinator shard: " +e);
+                    logger.fine("Unable to import coordinator shard: " +e);
                     return;
                   }
                   else
                   {
-                    logger.warning("Unable to import shard, discarding concept: " + e);
+                    logger.fine("Unable to import shard, discarding concept: " + e);
                   }
 
                 }

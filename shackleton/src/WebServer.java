@@ -360,7 +360,7 @@ public class WebServer implements WebHandler
 
     printBraidHeads(out, node_status);
     printBraidSummary(out, node_status);
-    printBraidStatus(out, node_status);
+    //printBraidStatus(out, node_status);
 
     out.println("<h2>Chain Status</h2>");
     out.println("<pre>");
