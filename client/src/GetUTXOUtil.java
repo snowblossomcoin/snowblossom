@@ -21,19 +21,19 @@ import snowblossom.trie.proto.*;
 
 public class GetUTXOUtil
 {
-  public static final long UTXO_ROOT_EXPIRE=500L; 
+  public static final long UTXO_ROOT_EXPIRE=60000L; 
 
   private static final Logger logger = Logger.getLogger("snowblossom.client");
 
   // Saves cache of address,utxo_root to list of bridges, which will
   // never change for that given input pair
-  private LRUCache<String, List<TransactionBridge> > spendable_cache = new LRUCache<>(10000);
+  private LRUCache<String, List<TransactionBridge> > spendable_cache = new LRUCache<>(50000);
 
   private StubHolder stub_holder;
 
   private long utxo_shard_time = 0;
   private ImmutableMap<Integer, ChainHash> utxo_shard_map = null;
-  private LRUCache<ChainHash, BlockHeader> header_cache = new LRUCache<>(1000);
+  private LRUCache<ChainHash, BlockHeader> header_cache = new LRUCache<>(20000);
 
   private NetworkParams params;
 

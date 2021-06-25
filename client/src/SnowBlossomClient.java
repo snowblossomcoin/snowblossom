@@ -454,7 +454,7 @@ public class SnowBlossomClient
     
     if (exec==null)
     {
-      exec = TaskMaster.getBasicExecutor(64,"client_lookup");
+      exec = TaskMaster.getBasicExecutor(256,"client_lookup");
     }
 
     get_utxo_util = new GetUTXOUtil(this.stub_holder, params);
