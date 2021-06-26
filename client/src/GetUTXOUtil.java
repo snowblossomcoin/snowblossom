@@ -21,7 +21,7 @@ import snowblossom.trie.proto.*;
 
 public class GetUTXOUtil
 {
-  public static final long UTXO_ROOT_EXPIRE=60000L; 
+  public static final long UTXO_ROOT_EXPIRE=500L; 
 
   private static final Logger logger = Logger.getLogger("snowblossom.client");
 
