@@ -18,6 +18,7 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.logging.Logger;
+import java.util.Random;
 import snowblossom.lib.*;
 import snowblossom.proto.*;
 
@@ -83,35 +84,41 @@ public class ForgeInfo
       BlockHeader h = block_header_cache.get(hash);
       if (h != null) return h;
     }
+    try(TimeRecordAuto tra_blk = TimeRecord.openAuto("ForgeInfo.getHeader_miss"))
+    {
 
-    BlockHeader h = null;
-    BlockSummary summary = getSummary(hash);
-    if (summary != null)
-    {
-      h = summary.getHeader();
-    }
-    if (h == null)
-    {
-      h = node.getDB().getBlockHeaderMap().get(hash.getBytes());
-    }
-    if (h == null)
-    {
-      ImportedBlock ib = node.getShardUtxoImport().getImportBlock(hash);
-      if (ib != null)
+      BlockHeader h = null;
+      BlockSummary summary = getSummary(hash);
+      if (summary != null)
       {
-        h = ib.getHeader();
+        h = summary.getHeader();
       }
-    }
-
-    if (h!=null)
-    {
-      synchronized(block_header_cache)
+      if (h == null)
       {
-        block_header_cache.put(hash, h);
+        h = node.getDB().getBlockHeaderMap().get(hash.getBytes());
       }
-    }
+      if (h == null)
+      {
+        ImportedBlock ib = node.getShardUtxoImport().getImportBlock(hash);
+        if (ib != null)
+        {
+          h = ib.getHeader();
+        }
+      }
 
-    return h;
+      if (h!=null)
+      {
+        try(TimeRecordAuto tra_save = TimeRecord.openAuto("ForgeInfo.getHeader_save"))
+        {
+          synchronized(block_header_cache)
+          {
+            block_header_cache.put(hash, h);
+          }
+        }
+      }
+
+      return h;
+    }
 
   }
 
@@ -131,105 +138,111 @@ public class ForgeInfo
 
   public BlockHeader getShardHead(int shard_id)
   {
-    if (node.getBlockIngestor(shard_id) != null)
+    try(TimeRecordAuto tra = TimeRecord.openAuto("ForgeInfo.getShardHead"))
     {
-      BlockSummary bs = node.getBlockIngestor(shard_id).getHead();
-      if (bs != null) return bs.getHeader();
+      if (node.getBlockIngestor(shard_id) != null)
+      {
+        BlockSummary bs = node.getBlockIngestor(shard_id).getHead();
+        if (bs != null) return bs.getHeader();
+
+        return null;
+      }
+
+      BlockPreview ext_coord_head_bp = null;
+      synchronized(ext_coord_head)
+      {
+        if (ext_coord_head.containsKey(shard_id))
+        {
+          ext_coord_head_bp = ext_coord_head.get(shard_id);
+        }
+      }
+      if (ext_coord_head_bp != null)
+      {
+        BlockHeader bh = getHeader(new ChainHash(ext_coord_head_bp.getSnowHash()));
+        if (bh != null)
+        {
+          return bh;
+        }
+        else
+        {
+          logger.fine(String.format("We heard ext_coord_head_hash of %s but don't have the header",
+            new ChainHash(ext_coord_head_bp.getSnowHash()).toString()));
+        }
+      }
+
+      Set<ChainHash> head_list = node.getShardUtxoImport().getHighestKnownForShard(shard_id);
+
+      // send them all, not just one random
+      ArrayList<ChainHash> lst = new ArrayList<>();
+      lst.addAll(head_list);
+      if (lst.size() == 0) return null;
+      Collections.shuffle(lst);
+      ImportedBlock ib = node.getShardUtxoImport().getImportBlock( lst.get(0) );
+      if (ib != null) return ib.getHeader();
 
       return null;
     }
-
-    BlockPreview ext_coord_head_bp = null;
-    synchronized(ext_coord_head)
-    {
-      if (ext_coord_head.containsKey(shard_id))
-      {
-        ext_coord_head_bp = ext_coord_head.get(shard_id);
-      }
-    }
-    if (ext_coord_head_bp != null)
-    {
-      BlockHeader bh = getHeader(new ChainHash(ext_coord_head_bp.getSnowHash()));
-      if (bh != null)
-      {
-        return bh;
-      }
-      else
-      {
-        logger.fine(String.format("We heard ext_coord_head_hash of %s but don't have the header",
-          new ChainHash(ext_coord_head_bp.getSnowHash()).toString()));
-      }
-    }
-
-    Set<ChainHash> head_list = node.getShardUtxoImport().getHighestKnownForShard(shard_id);
-
-    // send them all, not just one random
-    ArrayList<ChainHash> lst = new ArrayList<>();
-    lst.addAll(head_list);
-    if (lst.size() == 0) return null;
-    Collections.shuffle(lst);
-    ImportedBlock ib = node.getShardUtxoImport().getImportBlock( lst.get(0) );
-    if (ib != null) return ib.getHeader();
-
-    return null;
 
   }
 
   public List<BlockHeader> getShardHeads(int shard_id)
   {
-    List<BlockHeader> out = new LinkedList<>();
-
-    if (node.getInterestShards().contains(shard_id))
-    if (node.getBlockIngestor(shard_id) != null)
+    try(TimeRecordAuto tra = TimeRecord.openAuto("ForgeInfo.getShardHeads"))
     {
-      BlockSummary bs = node.getBlockIngestor(shard_id).getHead();
-      if (bs != null) out.add(bs.getHeader());
+      List<BlockHeader> out = new LinkedList<>();
+
+      if (node.getInterestShards().contains(shard_id))
+      if (node.getBlockIngestor(shard_id) != null)
+      {
+        BlockSummary bs = node.getBlockIngestor(shard_id).getHead();
+        if (bs != null) out.add(bs.getHeader());
+        return out;
+      }
+
+      BlockPreview ext_coord_head_bp = null;
+      synchronized(ext_coord_head)
+      {
+        if (ext_coord_head.containsKey(shard_id))
+        {
+          ext_coord_head_bp = ext_coord_head.get(shard_id);
+        }
+      }
+      if (ext_coord_head_bp != null)
+      {
+        BlockHeader bh = getHeader(new ChainHash(ext_coord_head_bp.getSnowHash()));
+        if (bh != null)
+        {
+          return ImmutableList.of(bh);
+        }
+        else
+        {
+          logger.fine(String.format("We heard ext_coord_head_hash of %s but don't have the header",
+            new ChainHash(ext_coord_head_bp.getSnowHash()).toString()));
+        }
+
+      }
+
+      Set<ChainHash> head_list = node.getShardUtxoImport().getHighestKnownForShard(shard_id);
+      logger.fine(String.format("Get shard heads %d - %s", shard_id, head_list.toString()));
+
+      // send them all, not just one random
+      for(ChainHash hash : head_list)
+      {
+        ImportedBlock ib = node.getShardUtxoImport().getImportBlock( hash );
+        if (ib == null)
+        {
+          logger.info(String.format("Request for shard %d head: %s but we do not have an imported block for that.",
+            shard_id,
+            hash.toString()));
+        }
+        else
+        {
+          out.add(ib.getHeader());
+        }
+
+      }
       return out;
     }
-
-    BlockPreview ext_coord_head_bp = null;
-    synchronized(ext_coord_head)
-    {
-      if (ext_coord_head.containsKey(shard_id))
-      {
-        ext_coord_head_bp = ext_coord_head.get(shard_id);
-      }
-    }
-    if (ext_coord_head_bp != null)
-    {
-      BlockHeader bh = getHeader(new ChainHash(ext_coord_head_bp.getSnowHash()));
-      if (bh != null)
-      {
-        return ImmutableList.of(bh);
-      }
-      else
-      {
-        logger.fine(String.format("We heard ext_coord_head_hash of %s but don't have the header",
-          new ChainHash(ext_coord_head_bp.getSnowHash()).toString()));
-      }
-
-    }
-
-    Set<ChainHash> head_list = node.getShardUtxoImport().getHighestKnownForShard(shard_id);
-    logger.fine(String.format("Get shard heads %d - %s", shard_id, head_list.toString()));
-
-    // send them all, not just one random
-    for(ChainHash hash : head_list)
-    {
-      ImportedBlock ib = node.getShardUtxoImport().getImportBlock( hash );
-      if (ib == null)
-      {
-        logger.info(String.format("Request for shard %d head: %s but we do not have an imported block for that.",
-          shard_id,
-          hash.toString()));
-      }
-      else
-      {
-        out.add(ib.getHeader());
-      }
-
-    }
-    return out;
 
   }
 
@@ -241,47 +254,50 @@ public class ForgeInfo
    */
   public Map<Integer, BlockHeader> getNetworkActiveShards()
   {
-    TreeMap<Integer, BlockHeader> network_active = new TreeMap<>();
-    int max_height = 0;
-
-    for(int i=0; i<= node.getParams().getMaxShardId(); i++)
+    try(TimeRecordAuto tra = TimeRecord.openAuto("ForgeInfo.getNetworkActiveShards"))
     {
-      // We might not have info on intermediate shards that we are not tracking
+      TreeMap<Integer, BlockHeader> network_active = new TreeMap<>();
+      int max_height = 0;
+
+      for(int i=0; i<= node.getParams().getMaxShardId(); i++)
       {
-        BlockHeader h = getShardHead(i);
-        if (h != null)
+        // We might not have info on intermediate shards that we are not tracking
         {
-          network_active.put(i, h);
-          max_height = Math.max( max_height, h.getBlockHeight() );
+          BlockHeader h = getShardHead(i);
+          if (h != null)
+          {
+            network_active.put(i, h);
+            max_height = Math.max( max_height, h.getBlockHeight() );
+          }
         }
       }
-    }
 
-    // Remove shards where there are both children
-    // that have enough height to not worry about
-    TreeSet<Integer> to_remove = new TreeSet<>();
+      // Remove shards where there are both children
+      // that have enough height to not worry about
+      TreeSet<Integer> to_remove = new TreeSet<>();
 
-    for(int shard_id : network_active.keySet())
-    {
-      int h = network_active.get(shard_id).getBlockHeight();
-      int child_count=0;
-      for(int c : ShardUtil.getShardChildIds(shard_id))
+      for(int shard_id : network_active.keySet())
       {
-        if (network_active.containsKey(c))
+        int h = network_active.get(shard_id).getBlockHeight();
+        int child_count=0;
+        for(int c : ShardUtil.getShardChildIds(shard_id))
         {
-          int hc = network_active.get(c).getBlockHeight();
-          if (hc > h + node.getParams().getMaxShardSkewHeight() * 2) child_count++;
+          if (network_active.containsKey(c))
+          {
+            int hc = network_active.get(c).getBlockHeight();
+            if (hc > h + node.getParams().getMaxShardSkewHeight() * 2) child_count++;
+          }
         }
+        if (child_count == 2) to_remove.add(shard_id);
+        if (h + node.getParams().getMaxShardSkewHeight() + 2 < max_height) to_remove.add(shard_id);
       }
-      if (child_count == 2) to_remove.add(shard_id);
-      if (h + node.getParams().getMaxShardSkewHeight() + 2 < max_height) to_remove.add(shard_id);
-    }
-    for(int x : to_remove)
-    {
-      network_active.remove(x);
-    }
+      for(int x : to_remove)
+      {
+        network_active.remove(x);
+      }
 
-    return network_active;
+      return network_active;
+    }
 
   }
 
@@ -567,8 +583,18 @@ public class ForgeInfo
   public Map<Integer, BlockHeader> getImportedShardHeads(ChainHash start_hash, int depth)
   {
 
-    BlockHeader start = getHeader(start_hash);
     TreeMap<Integer, BlockHeader> map = new TreeMap<>();
+
+    // try it using the summary
+    BlockSummary bs = getSummary(start_hash);
+    if (bs != null)
+    {
+      map.putAll( bs.getImportedShardsMap());
+      map.put(bs.getHeader().getShardId(), bs.getHeader());
+      return map;
+    }
+
+    BlockHeader start = getHeader(start_hash);
 
     if (depth == 0) return map;
     if (start == null)

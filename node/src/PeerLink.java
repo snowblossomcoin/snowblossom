@@ -14,7 +14,6 @@ import java.util.logging.Logger;
 import snowblossom.lib.*;
 import snowblossom.lib.tls.MsgSigUtil;
 import snowblossom.proto.*;
-import com.google.protobuf.ByteString;
 
 /**
  * This class exists to present a single view of a peer regardless

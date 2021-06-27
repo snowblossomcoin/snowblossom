@@ -1,12 +1,12 @@
 package snowblossom.node;
 
 import com.google.protobuf.ByteString;
+import duckutil.LRUCache;
 import java.util.Map;
 import java.util.logging.Logger;
 import snowblossom.lib.ChainHash;
 import snowblossom.lib.ShardUtil;
 import snowblossom.proto.*;
-import duckutil.LRUCache;
 
 /** See section in Snowblossom Book about "The Dance"
  * https://docs.google.com/document/d/17cljhZnAiQTL9yzhZ_INxKx131LUzNs2paP2kCCgljo/edit#heading=h.2w202zag3l1f
@@ -17,7 +17,7 @@ public class Dancer
   private static final Logger logger = Logger.getLogger("snowblossom.node");
   private final SnowBlossomNode node;
 
-  
+
 
   public Dancer(SnowBlossomNode node)
   {

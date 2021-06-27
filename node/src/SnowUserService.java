@@ -2,6 +2,7 @@ package snowblossom.node;
 
 import com.google.protobuf.ByteString;
 import duckutil.LRUCache;
+import duckutil.MetricLog;
 import io.grpc.stub.StreamObserver;
 import java.util.Collection;
 import java.util.HashMap;
@@ -291,42 +292,47 @@ public class SnowUserService extends UserServiceGrpc.UserServiceImplBase impleme
   @Override
   public void getUTXONode(GetUTXONodeRequest request, StreamObserver<GetUTXONodeReply> responseObserver)
   {
-    ChainHash utxo_root = null;
-    if (request.getUtxoTypeCase() == GetUTXONodeRequest.UtxoTypeCase.UTXO_ROOT_HASH)
+    try(MetricLog mlog = new MetricLog())
     {
-      utxo_root = new ChainHash(request.getUtxoRootHash());
-    }
-    else if (request.getUtxoTypeCase() == GetUTXONodeRequest.UtxoTypeCase.SHARD_ID)
-    {
-      int shard_id = request.getShardId();
-
-      utxo_root = UtxoUpdateBuffer.EMPTY;
-      BlockSummary summary = node.getBlockIngestor(shard_id).getHead();
-      if (summary != null)
+      mlog.setModule("SnowUserService");
+      mlog.setOperation("GetUTXONode");
+      ChainHash utxo_root = null;
+      if (request.getUtxoTypeCase() == GetUTXONodeRequest.UtxoTypeCase.UTXO_ROOT_HASH)
       {
-        utxo_root = new ChainHash(summary.getHeader().getUtxoRootHash());
+        utxo_root = new ChainHash(request.getUtxoRootHash());
       }
-    }
-    else if (request.getUtxoTypeCase() == GetUTXONodeRequest.UtxoTypeCase.ALL_SHARDS)
-    {
-      responseObserver.onError(new Exception("Unsupported all_shards request - use other method"));
-      return;
-
-    }
-    else
-    {
-      // Root of shard 0 case
-      utxo_root = UtxoUpdateBuffer.EMPTY;
-      BlockSummary summary = node.getBlockIngestor(0).getHead();
-      if (summary != null)
+      else if (request.getUtxoTypeCase() == GetUTXONodeRequest.UtxoTypeCase.SHARD_ID)
       {
-        utxo_root = new ChainHash(summary.getHeader().getUtxoRootHash());
+        int shard_id = request.getShardId();
+
+        utxo_root = UtxoUpdateBuffer.EMPTY;
+        BlockSummary summary = node.getBlockIngestor(shard_id).getHead();
+        if (summary != null)
+        {
+          utxo_root = new ChainHash(summary.getHeader().getUtxoRootHash());
+        }
+      }
+      else if (request.getUtxoTypeCase() == GetUTXONodeRequest.UtxoTypeCase.ALL_SHARDS)
+      {
+        responseObserver.onError(new Exception("Unsupported all_shards request - use other method"));
+        return;
+
+      }
+      else
+      {
+        // Root of shard 0 case
+        utxo_root = UtxoUpdateBuffer.EMPTY;
+        BlockSummary summary = node.getBlockIngestor(0).getHead();
+        if (summary != null)
+        {
+          utxo_root = new ChainHash(summary.getHeader().getUtxoRootHash());
+        }
+
       }
 
+      responseObserver.onNext(getUtxoNodeDetails(utxo_root, request));
+      responseObserver.onCompleted();
     }
-
-    responseObserver.onNext(getUtxoNodeDetails(utxo_root, request));
-    responseObserver.onCompleted();
   }
 
   private GetUTXONodeReply getUtxoNodeDetails(ChainHash utxo_root, GetUTXONodeRequest request)
@@ -355,61 +361,73 @@ public class SnowUserService extends UserServiceGrpc.UserServiceImplBase impleme
   @Override
   public void getUTXONodeMulti(GetUTXONodeRequest request, StreamObserver<GetUTXOReplyList> responseObserver)
   {
-    if (request.getUtxoTypeCase() != GetUTXONodeRequest.UtxoTypeCase.ALL_SHARDS)
+    try(MetricLog mlog = new MetricLog())
     {
-      responseObserver.onError(new Exception("unsupported type request - use other method"));
-      return;
-    }
-    GetUTXOReplyList.Builder reply = GetUTXOReplyList.newBuilder();
-
-    for(int s : node.getCurrentBuildingShards())
-    {
-      BlockSummary summary = node.getBlockIngestor(s).getHead();
-      if (summary != null)
+      mlog.setModule("SnowUserService");
+      mlog.setOperation("GetUTXONodeMulti");
+ 
+      if (request.getUtxoTypeCase() != GetUTXONodeRequest.UtxoTypeCase.ALL_SHARDS)
       {
-        ChainHash utxo_root = new ChainHash(summary.getHeader().getUtxoRootHash());
-        reply.putReplyMap(s, getUtxoNodeDetails( utxo_root, request ));
+        responseObserver.onError(new Exception("unsupported type request - use other method"));
+        return;
       }
-    }
+      GetUTXOReplyList.Builder reply = GetUTXOReplyList.newBuilder();
 
-    responseObserver.onNext(reply.build());
-    responseObserver.onCompleted();
+      for(int s : node.getCurrentBuildingShards())
+      {
+        BlockSummary summary = node.getBlockIngestor(s).getHead();
+        if (summary != null)
+        {
+          ChainHash utxo_root = new ChainHash(summary.getHeader().getUtxoRootHash());
+          reply.putReplyMap(s, getUtxoNodeDetails( utxo_root, request ));
+        }
+      }
+
+      responseObserver.onNext(reply.build());
+      responseObserver.onCompleted();
+    }
   }
 
 
   @Override
   public void getNodeStatus(NullRequest null_request, StreamObserver<NodeStatus> responseObserver)
   {
-    NodeStatus.Builder ns = NodeStatus.newBuilder();
-
-    ns
-      .setMemPoolSize(node.getMemPool().getMemPoolSize())
-      .setConnectedPeers(node.getPeerage().getConnectedPeerCount())
-      .setEstimatedNodes(node.getPeerage().getEstimateUniqueNodes())
-      .setNodeVersion(Globals.VERSION)
-      .putAllVersionMap(node.getPeerage().getVersionMap());
-
-    ns.setNetwork( node.getParams().getNetworkName() );
-
-    if (node.getBlockIngestor().getHead() != null)
+    try(MetricLog mlog = new MetricLog())
     {
-      ns.setHeadSummary(node.getBlockIngestor().getHead());
-    }
+      mlog.setModule("SnowUserService");
+      mlog.setOperation("GetNodeStatus");
 
-    for(Map.Entry<Integer, BlockHeader> me : node.getForgeInfo().getNetworkActiveShards().entrySet())
-    {
-      ns.putNetShardHeadMap(me.getKey(), me.getValue().getSnowHash());
-    }
+      NodeStatus.Builder ns = NodeStatus.newBuilder();
 
-    for(int s : node.getCurrentBuildingShards())
-    {
-      ns.putShardHeadMap(s, node.getBlockIngestor(s).getHead().getHeader().getSnowHash());
-    }
-    ns.addAllNetworkActiveShards(node.getForgeInfo().getNetworkActiveShards().keySet());
-    ns.addAllInterestShards(node.getInterestShards());
+      ns
+        .setMemPoolSize(node.getMemPool().getMemPoolSize())
+        .setConnectedPeers(node.getPeerage().getConnectedPeerCount())
+        .setEstimatedNodes(node.getPeerage().getEstimateUniqueNodes())
+        .setNodeVersion(Globals.VERSION)
+        .putAllVersionMap(node.getPeerage().getVersionMap());
 
-    responseObserver.onNext(ns.build());
-    responseObserver.onCompleted();
+      ns.setNetwork( node.getParams().getNetworkName() );
+
+      if (node.getBlockIngestor().getHead() != null)
+      {
+        ns.setHeadSummary(node.getBlockIngestor().getHead());
+      }
+
+      for(Map.Entry<Integer, BlockHeader> me : node.getForgeInfo().getNetworkActiveShards().entrySet())
+      {
+        ns.putNetShardHeadMap(me.getKey(), me.getValue().getSnowHash());
+      }
+
+      for(int s : node.getCurrentBuildingShards())
+      {
+        ns.putShardHeadMap(s, node.getBlockIngestor(s).getHead().getHeader().getSnowHash());
+      }
+      ns.addAllNetworkActiveShards(node.getForgeInfo().getNetworkActiveShards().keySet());
+      ns.addAllInterestShards(node.getInterestShards());
+
+      responseObserver.onNext(ns.build());
+      responseObserver.onCompleted();
+    }
   }
 
   @Override
@@ -454,8 +472,6 @@ public class SnowUserService extends UserServiceGrpc.UserServiceImplBase impleme
     {
       responseObserver.onError(new Exception("No such summary found"));
     }
-
-
   }
 
   @Override
@@ -519,38 +535,48 @@ public class SnowUserService extends UserServiceGrpc.UserServiceImplBase impleme
   @Override
   public void getMempoolTransactionList(RequestAddress req, StreamObserver<TransactionHashList> observer)
   {
-    AddressSpecHash spec_hash = new AddressSpecHash(req.getAddressSpecHash());
-
-    TransactionHashList.Builder list = TransactionHashList.newBuilder();
-    for(ChainHash h : node.getMemPool().getTransactionsForAddress(spec_hash))
+    try(MetricLog mlog = new MetricLog())
     {
-      list.addTxHashes(h.getBytes());
-    }
+      mlog.setModule("SnowUserService");
+      mlog.setOperation("GetMempoolTransactionList");
+      AddressSpecHash spec_hash = new AddressSpecHash(req.getAddressSpecHash());
 
-    observer.onNext( list.build());
-    observer.onCompleted();
+      TransactionHashList.Builder list = TransactionHashList.newBuilder();
+      for(ChainHash h : node.getMemPool().getTransactionsForAddress(spec_hash))
+      {
+        list.addTxHashes(h.getBytes());
+      }
+
+      observer.onNext( list.build());
+      observer.onCompleted();
+    }
   }
 
   @Override
   public void getMempoolTransactionMap(RequestAddress req, StreamObserver<TransactionShardMap> observer)
   {
-    AddressSpecHash spec_hash = new AddressSpecHash(req.getAddressSpecHash());
-
-    Map<Integer, Set<ChainHash> > m = node.getMemPool().getTransactionsForAddressByShard(spec_hash);
-
-    TransactionShardMap.Builder shard_map = TransactionShardMap.newBuilder();
-
-    for(Map.Entry<Integer, Set<ChainHash> > me : m.entrySet())
+    try(MetricLog mlog = new MetricLog())
     {
-      TransactionHashList.Builder lst = TransactionHashList.newBuilder();
-      for(ChainHash h : me.getValue())
+      mlog.setModule("SnowUserService");
+      mlog.setOperation("GetMempoolTransactionMap");
+      AddressSpecHash spec_hash = new AddressSpecHash(req.getAddressSpecHash());
+
+      Map<Integer, Set<ChainHash> > m = node.getMemPool().getTransactionsForAddressByShard(spec_hash);
+
+      TransactionShardMap.Builder shard_map = TransactionShardMap.newBuilder();
+
+      for(Map.Entry<Integer, Set<ChainHash> > me : m.entrySet())
       {
-        lst.addTxHashes(h.getBytes());
+        TransactionHashList.Builder lst = TransactionHashList.newBuilder();
+        for(ChainHash h : me.getValue())
+        {
+          lst.addTxHashes(h.getBytes());
+        }
+        shard_map.putShardMap(me.getKey(), lst.build());
       }
-      shard_map.putShardMap(me.getKey(), lst.build());
+      observer.onNext( shard_map.build() );
+      observer.onCompleted();
     }
-    observer.onNext( shard_map.build() );
-    observer.onCompleted();
   }
 
 
@@ -586,32 +612,33 @@ public class SnowUserService extends UserServiceGrpc.UserServiceImplBase impleme
   @Override
   public void getAddressHistory(RequestAddress req, StreamObserver<HistoryList> observer)
   {
-    AddressSpecHash spec_hash = new AddressSpecHash(req.getAddressSpecHash());
-    try
+    try(MetricLog mlog = new MetricLog())
     {
+      mlog.setModule("SnowUserService");
+      mlog.setOperation("GetAddressHistory");
+   
+      AddressSpecHash spec_hash = new AddressSpecHash(req.getAddressSpecHash());
+      try
+      {
+        observer.onNext( AddressHistoryUtil.getHistory(spec_hash, node.getDB(), node.getBlockIngestor().getHead()) );
+        observer.onCompleted();
+      }
+      catch(ValidationException e)
+      {
+        observer.onNext(HistoryList.newBuilder().setNotEnabled(true).build());
+        observer.onCompleted();
+      }
+      catch(Throwable e)
+      {
+        String addr = AddressUtil.getAddressString(node.getParams().getAddressPrefix(), spec_hash);
+        logger.info("Exception "+addr+" " + e.toString());
 
-      observer.onNext( AddressHistoryUtil.getHistory(spec_hash, node.getDB(), node.getBlockIngestor().getHead()) );
-      observer.onCompleted();
-
-
+        observer.onNext(HistoryList.newBuilder().build());
+        observer.onError(e);
+        observer.onCompleted();
+        return;
+      }
     }
-    catch(ValidationException e)
-    {
-      observer.onNext(HistoryList.newBuilder().setNotEnabled(true).build());
-      observer.onCompleted();
-
-    }
-    catch(Throwable e)
-    {
-      String addr = AddressUtil.getAddressString(node.getParams().getAddressPrefix(), spec_hash);
-      logger.info("Exception "+addr+" " + e.toString());
-
-      observer.onNext(HistoryList.newBuilder().build());
-      observer.onError(e);
-      observer.onCompleted();
-      return;
-    }
-
   }
 
   @Override
@@ -682,7 +709,7 @@ public class SnowUserService extends UserServiceGrpc.UserServiceImplBase impleme
     private final StreamObserver<Block> sink;
     private final StreamObserver<BlockTemplate> template_sink;
 
-    public BlockSubscriberInfo(SubscribeBlockTemplateRequest req, 
+    public BlockSubscriberInfo(SubscribeBlockTemplateRequest req,
       StreamObserver<Block> sink,
       StreamObserver<BlockTemplate> template_sink
       )
@@ -701,7 +728,7 @@ public class SnowUserService extends UserServiceGrpc.UserServiceImplBase impleme
     {
       if (sink != null)
       {
-        if ((block_template == null) || 
+        if ((block_template == null) ||
            (block_template.getBlock().getHeader().getVersion() == 0))
         {
           sink.onNext(null);

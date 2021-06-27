@@ -74,7 +74,7 @@ public class MemPool
   // Indicates if this mempool should ever accept p2p transactions
   private final boolean accepts_p2p_tx;
 
-  private Object tickle_trigger = new Object();
+  private Tickler tickler;
   private ImmutableList<MemPoolTickleInterface> mempool_listener = ImmutableList.of();
 
   private ImmutableSet<Integer> shard_cover_set;
@@ -98,7 +98,8 @@ public class MemPool
 
     shard_cover_set = ImmutableSet.copyOf( chain_state_source.getShardCoverSet() );
 
-    new Tickler().start();
+    tickler = new Tickler();
+    tickler.start();
     new TicklerBroadcast().start();
   }
 
@@ -617,10 +618,7 @@ public class MemPool
   public void tickleBlocks(ChainHash utxo_root_hash)
   {
     tickle_hash = utxo_root_hash;
-    synchronized (tickle_trigger)
-    {
-      tickle_trigger.notifyAll();
-    }
+    tickler.wake();
   }
 
   private Peerage peerage = null;
@@ -647,7 +645,7 @@ public class MemPool
 
     public TicklerBroadcast()
     {
-      super(5000,100.0);
+      super(5000,250.0);
       setName("MemPool/TicklerBroadcast");
       setDaemon(true);
     }
@@ -672,36 +670,24 @@ public class MemPool
     }
   }
 
-  public class Tickler extends Thread
+  public class Tickler extends PeriodicThread
   {
     public Tickler()
     {
+      super(300000,2500);
       setName("MemPool/Tickler");
       setDaemon(true);
     }
 
-    public void run()
+    @Override
+    public void runPass()
+      throws Exception
     {
-      while (true)
-      {
-        try
+        if (tickle_hash != null)
         {
-          synchronized (tickle_trigger)
-          {
-            tickle_trigger.wait();
-          }
-          if (tickle_hash != null)
-          {
-            rebuildPriorityMap(tickle_hash);
-            tickle_hash = null;
-          }
-          Thread.sleep(5000);
+          rebuildPriorityMap(tickle_hash);
+          tickle_hash = null;
         }
-        catch (Throwable t)
-        {
-          logger.log(Level.INFO, "Tickle error: " + t);
-        }
-      }
     }
 
   }

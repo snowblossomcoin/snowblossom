@@ -433,9 +433,28 @@ public class SnowBlossomNode
   public Set<Integer> getInterestShards(){return shard_interest_set; }
   public Set<Integer> getConfigShards(){return shard_config_set;}
 
+  
+  private Object current_building_shards_lock = new Object();
+  private ImmutableSet<Integer> current_building_shards = null;
+  private long current_building_shards_time = 0;
+
   public Set<Integer> getCurrentBuildingShards()
   {
-    // TODO - don't recompute this every damn time
+    synchronized(current_building_shards_lock)
+    {
+      if ((current_building_shards == null) || (System.currentTimeMillis() > current_building_shards_time + 2000L))
+      {
+        current_building_shards_time = System.currentTimeMillis();
+        current_building_shards = ImmutableSet.copyOf(calcCurrentBuildingShards());
+      }
+      return current_building_shards;
+    }
+  }
+
+
+  private Set<Integer> calcCurrentBuildingShards()
+  {
+    logger.fine("Recalculating current building shards");
     TreeSet<Integer> res = new TreeSet<>();
 
     for(int s : getActiveShards())

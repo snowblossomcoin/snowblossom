@@ -8,6 +8,8 @@ import com.google.protobuf.ByteString;
 import duckutil.AtomicFileOutputStream;
 import duckutil.ExpiringLRUCache;
 import duckutil.NetUtil;
+import duckutil.PeriodicThread;
+import duckutil.TimeRecord;
 import java.io.PrintStream;
 import java.net.InetAddress;
 import java.text.DecimalFormat;
@@ -126,8 +128,6 @@ public class Peerage
     link.writeMessage(PeerMessage.newBuilder().setTip(getTip(0)).build());
   }
 
-  // TODO - later we will want to send all shards in one
-  // rather than breaking this out by shard.  But for now...
   private PeerTipInfo getTipInfo(int shard_id)
   {
     PeerTipInfo.Builder tip_info = PeerTipInfo.newBuilder();
@@ -149,6 +149,7 @@ public class Peerage
       // Find the coordinators that we know about
       if (Dancer.isCoordinator( bh.getShardId() ))
       {
+          logger.fine("Coordinator seems to be: " + bh.getShardId());
           Map<Integer, BlockHeader> import_map =
             node.getForgeInfo().getImportedShardHeads(bh, node.getParams().getMaxShardSkewHeight()+2);
 
@@ -175,6 +176,7 @@ public class Peerage
         )
       );
     }
+    logger.fine("Block set: " + block_set.size());
 
     for(ChainHash h : block_set)
     {
@@ -456,10 +458,11 @@ public class Peerage
 
   }
 
-  public class PeerageMaintThread extends Thread
+  public class PeerageMaintThread extends PeriodicThread
   {
     public PeerageMaintThread()
     {
+      super(120000);
       setName("PeerageMaintThread");
       setDaemon(true);
     }
@@ -467,54 +470,53 @@ public class Peerage
     long last_learn_time = 0L;
     long save_peer_time = System.currentTimeMillis();
 
-    public void run()
+    @Override
+    public void runPass()
+      throws Exception
     {
+      //TimeRecord time_record = new TimeRecord();
+      //TimeRecord.setSharedRecord(time_record);
+
+      logger.info("Prune Links");
+      pruneLinks();
+      logger.info("Connect to peers");
+      connectToPeers();
       Random rnd = new Random();
+      // TODO - don't send all tips all the time
+      // might want to do a rotation through shards
+      ArrayList<Integer> my_shards = new ArrayList<>();
+      my_shards.addAll(node.getActiveShards());
 
-      while(true)
+      Collections.shuffle(my_shards);
+      int sent_count=0;
+      for(int s : my_shards)
       {
-        try
-        {
-          connectToPeers();
-          Thread.sleep(10000);
-          pruneLinks();
-          // TODO - don't send all tips all the time
-          // might want to do a rotation through shards
-          ArrayList<Integer> my_shards = new ArrayList<>();
-          my_shards.addAll(node.getActiveShards());
-
-          Collections.shuffle(my_shards);
-          int sent_count=0;
-          for(int s : my_shards)
-          {
-            sendAllTips(s);
-            sent_count++;
-            if (sent_count > 16) break;
-          }
-
-
-          if (last_learn_time + REFRESH_LEARN_TIME < System.currentTimeMillis())
-          {
-            last_learn_time = System.currentTimeMillis();
-            learnSelfAndSeed();
-          }
-          if (save_peer_time + SAVE_PEER_TIME < System.currentTimeMillis())
-          {
-            save_peer_time = System.currentTimeMillis();
-            PeerList.Builder peer_list = PeerList.newBuilder();
-            synchronized(peer_rumor_list)
-            {
-              peer_list.addAllPeers(peer_rumor_list.values());
-            }
-
-            node.getDB().getSpecialMap().put("peerlist", peer_list.build().toByteString());
-          }
-        }
-        catch(Throwable t)
-        {
-          logger.log(Level.WARNING, "PeerageMaintThread", t);
-        }
+        logger.fine("Send tips: " + s);
+        sendAllTips(s);
+        sent_count++;
+        if (sent_count > 16) break;
       }
+
+
+      if (last_learn_time + REFRESH_LEARN_TIME < System.currentTimeMillis())
+      {
+        last_learn_time = System.currentTimeMillis();
+        learnSelfAndSeed();
+      }
+      if (save_peer_time + SAVE_PEER_TIME < System.currentTimeMillis())
+      {
+        save_peer_time = System.currentTimeMillis();
+        PeerList.Builder peer_list = PeerList.newBuilder();
+        synchronized(peer_rumor_list)
+        {
+          peer_list.addAllPeers(peer_rumor_list.values());
+        }
+
+        node.getDB().getSpecialMap().put("peerlist", peer_list.build().toByteString());
+      }
+
+      //time_record.printReport(System.out);
+
     }
 
 

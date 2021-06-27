@@ -105,7 +105,7 @@ public class ShardBlockForge
         Block block = fleshOut(selected, mine_to);
         if (block != null)
         {
-          
+
           return BlockTemplate.newBuilder()
             .setBlock(block)
             .setAdvancesShard(selected.getAdvancesShard())
