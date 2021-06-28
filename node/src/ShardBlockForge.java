@@ -204,6 +204,7 @@ public class ShardBlockForge
   private void exploreCoordinatorSpecific(BlockHeader prev_header, int coord_shard, TreeSet<BlockConcept> concepts)
   {
       BlockSummary prev = node.getForgeInfo().getSummary( prev_header.getSnowHash() );
+      if (prev == null) return;
 
       synchronized(signature_cache)
       {

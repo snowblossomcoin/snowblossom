@@ -462,7 +462,7 @@ public class Peerage
   {
     public PeerageMaintThread()
     {
-      super(120000);
+      super(12000);
       setName("PeerageMaintThread");
       setDaemon(true);
     }
