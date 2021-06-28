@@ -23,9 +23,11 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.logging.Logger;
+import duckutil.MetricLog;
 import snowblossom.lib.*;
 import snowblossom.lib.trie.HashUtils;
 import snowblossom.proto.*;
+import java.util.Collections;
 
 public class ShardBlockForge
 {
@@ -154,40 +156,48 @@ public class ShardBlockForge
 
   }
 
-  private Set<BlockConcept> exploreCoordinator(int coord_shard)
+  private Set<BlockConcept> exploreCoordinator(int coord_shard, MetricLog mlog_parent)
     throws ValidationException
   {
-    TreeSet<BlockConcept> concepts = new TreeSet<>();
-    // We are just assuming the current head is following the dance.
-    // Things will get real weird real quick if not.
-
-    Collection<BlockHeader> prev_heads = node.getForgeInfo().getShardHeads(coord_shard);
-
-    //while(concepts.size() == 0)
+    try(MetricLog mlog = new MetricLog(mlog_parent, "exploreCoordinator"))
     {
-      HashSet<ChainHash> parent_hash_set = new HashSet<>();
-      for(BlockHeader prev_header : prev_heads)
-      {
-        exploreCoordinatorSpecific(prev_header, coord_shard, concepts);
-        parent_hash_set.add(new ChainHash(prev_header.getPrevBlockHash()));
-      }
+      mlog.set("shard", coord_shard);
 
-      // In case we have no good concepts, build something from a parent
-      // failure is not an option
-      LinkedList<BlockHeader> parent_heads = new LinkedList<>();
-      for(ChainHash hash : parent_hash_set)
+      TreeSet<BlockConcept> concepts = new TreeSet<>();
+      // We are just assuming the current head is following the dance.
+      // Things will get real weird real quick if not.
+
+      Collection<BlockHeader> prev_heads = node.getForgeInfo().getShardHeads(coord_shard);
+      mlog.set("head_count", prev_heads.size());
+      logger.info("Head count: " + prev_heads.size());
+
+      //while(concepts.size() == 0)
       {
-        BlockHeader bh = node.getForgeInfo().getHeader(hash);
-        if (bh != null)
+        //HashSet<ChainHash> parent_hash_set = new HashSet<>();
+        for(BlockHeader prev_header : prev_heads)
         {
-          parent_heads.add(bh);
+          exploreCoordinatorSpecific(prev_header, coord_shard, concepts);
+          //parent_hash_set.add(new ChainHash(prev_header.getPrevBlockHash()));
         }
+
+        // In case we have no good concepts, build something from a parent
+        // failure is not an option
+        /*LinkedList<BlockHeader> parent_heads = new LinkedList<>();
+        for(ChainHash hash : parent_hash_set)
+        {
+          BlockHeader bh = node.getForgeInfo().getHeader(hash);
+          if (bh != null)
+          {
+            parent_heads.add(bh);
+          }
+        }
+        prev_heads = parent_heads;*/
+
       }
-      prev_heads = parent_heads;
+      mlog.set("count", concepts.size());
 
+      return concepts;
     }
-
-    return concepts;
 
   }
 
@@ -201,6 +211,7 @@ public class ShardBlockForge
       }
 
       List<BlockConcept> concept_list = initiateBlockConcepts(prev);
+      logger.info("exploreCoordinatorSpecific concepts: " + concept_list.size());
 
       for(BlockConcept bc : concept_list)
       {
@@ -216,63 +227,84 @@ public class ShardBlockForge
             // Make a list sorted by block height of things we could possible include
             ListMultimap<Integer, BlockHeader> possible_import_blocks =
                    MultimapBuilder.treeKeys().arrayListValues().build();
+            Set<ChainHash> possible_hashes = new HashSet<>();
+
             for(BlockHeader current_import_head : prev.getImportedShardsMap().values())
             {
-              Set<ChainHash> possible_hashes =
+              int depth = node.getParams().getMaxShardSkewHeight()*2;
+              depth = 3;
+              possible_hashes.addAll(
                 node.getForgeInfo().climb( new ChainHash(current_import_head.getSnowHash()), -1,
-                  node.getParams().getMaxShardSkewHeight()*2);
-              for(ChainHash ch : possible_hashes)
+                  depth));
+            }
+
+            logger.info("Possible import hashes: " + possible_hashes.size());
+            for(ChainHash ch : possible_hashes)
+            {
+              BlockHeader blk_h = node.getForgeInfo().getHeader(ch);
+              if (blk_h != null)
+              if (blk_h.getBlockHeight() + node.getParams().getMaxShardSkewHeight()*2 >= prev_header.getBlockHeight())
               {
-                BlockHeader blk_h = node.getForgeInfo().getHeader(ch);
-                if (blk_h != null)
+                // exclude things that import coord blocks that do not match this one
+                boolean invalid_coord_import = false;
+                if (blk_h.getShardImportMap().containsKey(local_coord_shard))
                 {
-                  // exclude things that import coord blocks that do not match this one
-                  boolean invalid_coord_import = false;
-                  if (blk_h.getShardImportMap().containsKey(local_coord_shard))
+                  for(ByteString hash : blk_h.getShardImportMap().get(local_coord_shard).getHeightMap().values())
                   {
-                    for(ByteString hash : blk_h.getShardImportMap().get(local_coord_shard).getHeightMap().values())
+                    BlockHeader check = node.getForgeInfo().getHeader(new ChainHash(hash));
+                    if ((check==null) || (!node.getForgeInfo().isInChain( prev_header, check)))
                     {
-                      BlockHeader check = node.getForgeInfo().getHeader(new ChainHash(hash));
-                      if ((check==null) || (!node.getForgeInfo().isInChain( prev_header, check)))
-                      {
-                        invalid_coord_import = true;
-                      }
+                      invalid_coord_import = true;
                     }
                   }
+                }
+                // TODO a parent of this block might include a different coordinator block
+                // so not so sure about the logic here
 
-                  if (!invalid_coord_import)
-                  {
-                    possible_import_blocks.put( blk_h.getBlockHeight(), blk_h );
-                  }
-
+                if (!invalid_coord_import)
+                {
+                  possible_import_blocks.put( blk_h.getBlockHeight(), blk_h );
                 }
               }
             }
-
+            logger.info("Possible import blocks: " + possible_import_blocks.size());
+          
             for(BlockHeader imp_blk : possible_import_blocks.values())
             {
-              // Not in the cover set from this coordinator
-              if (!ShardUtil.getCoverSet(local_coord_shard, node.getParams()).contains(imp_blk.getShardId()))
+              logger.info(String.format("Checking block for import: s:%d h:%d - %s",
+                imp_blk.getShardId(),
+                imp_blk.getBlockHeight(),
+                new ChainHash(imp_blk.getSnowHash())));
+
+              TimeRecord time_record = new TimeRecord();                                                                                                                    TimeRecord.setSharedRecord(time_record);
+
+              try(TimeRecordAuto tra = TimeRecord.openAuto("ShardBlockForge.coordBuild"))
               {
-                List<BlockHeader> imp_seq = node.getForgeInfo().getImportPath(bc.getShardHeads(), imp_blk);
-                if (dancer.isCompliant(imp_blk))
-                if (imp_seq != null)
-                if (imp_seq.size() == 1)
+                // Not in the cover set from this coordinator
+                if (!ShardUtil.getCoverSet(local_coord_shard, node.getParams()).contains(imp_blk.getShardId()))
                 {
-                  BlockHeader join_point = node.getForgeInfo().getLatestShard(imp_blk, local_coord_shard);
-                  if (node.getForgeInfo().isInChain(prev_header, join_point))
+                  List<BlockHeader> imp_seq = node.getForgeInfo().getImportPath(bc.getShardHeads(), imp_blk);
+                  if (dancer.isCompliant(imp_blk))
+                  if (imp_seq != null)
+                  if (imp_seq.size() == 1)
                   {
-                    try
+                    BlockHeader join_point = node.getForgeInfo().getLatestShard(imp_blk, local_coord_shard);
+                    if (node.getForgeInfo().isInChain(prev_header, join_point))
                     {
-                      bc = bc.importShard(imp_blk);
-                    }
-                    catch(ValidationException e)
-                    {
-                      logger.warning("Build validation: " + e);
+                      try
+                      {
+                        bc = bc.importShard(imp_blk);
+                      }
+                      catch(ValidationException e)
+                      {
+                        logger.warning("Build validation: " + e);
+                      }
                     }
                   }
                 }
               }
+
+              time_record.printReport(System.out);
             }
 
           }
@@ -285,85 +317,99 @@ public class ShardBlockForge
 
   }
 
-  private Set<BlockConcept> exploreFromCoordinatorHead(int coord_shard)
+  private Set<BlockConcept> exploreFromCoordinatorHead(int coord_shard, MetricLog mlog_parent)
     throws ValidationException
   {
-    logger.fine("exploreFromCoordinatorHead(" + coord_shard +")");
-    TreeSet<BlockConcept> concepts = new TreeSet<>();
-    // Start with the highest block for the coordinator shard
-    // Then take the set of import blocks <integer,blockhead> and descend from all of those
-    // Those are our potential block parents
-    // Build concepts from them all.
-    // Or just the leafs?
-
-    // Since we start with what we have included, any of these blocks are potentially valid
-    // to be included in future coordinators as long as they don't include other coordinator
-    // forks
-
-    /*HashSet<ChainHash> coord_heads = new HashSet<>();
-    for(BlockHeader bh : node.getForgeInfo().getShardHeads(coord_shard))
+    try(MetricLog mlog = new MetricLog(mlog_parent, "exploreFromCoordinatorHead"))
     {
-      coord_heads.addAll( node.getForgeInfo().getBlocksAround(
-        new ChainHash(bh.getSnowHash()), 3, coord_shard));
-    }*/
+      mlog.set("coord_shard", coord_shard);
+      logger.fine("exploreFromCoordinatorHead(" + coord_shard +")");
+      TreeSet<BlockConcept> concepts = new TreeSet<>();
+      // Start with the highest block for the coordinator shard
+      // Then take the set of import blocks <integer,blockhead> and descend from all of those
+      // Those are our potential block parents
+      // Build concepts from them all.
+      // Or just the leafs?
 
-    // TODO - switch to get blocks around
-    for(BlockHeader coord_head : node.getForgeInfo().getShardHeads(coord_shard))
-    //for(ChainHash coord_hash : coord_heads)
-    {
-      //BlockHeader coord_head = node.getForgeInfo().getHeader(coord_hash);
-      if (coord_head != null)
+      // Since we start with what we have included, any of these blocks are potentially valid
+      // to be included in future coordinators as long as they don't include other coordinator
+      // forks
+
+      /*HashSet<ChainHash> coord_heads = new HashSet<>();
+      for(BlockHeader bh : node.getForgeInfo().getShardHeads(coord_shard))
       {
+        coord_heads.addAll( node.getForgeInfo().getBlocksAround(
+          new ChainHash(bh.getSnowHash()), 3, coord_shard));
+      }*/
 
-        logger.fine(String.format("Exploring from coord head: %s s:%d h:%d",
-          new ChainHash(coord_head.getSnowHash()).toString(),
-          coord_head.getShardId(),
-          coord_head.getBlockHeight()));
-
-
-        // Starting from the more recent coordinator head
-        // Find all the imported shard heads
-
-        // Note: the 3x is there because we might be at height X and some other shard is at X-skew-2 or something
-        // We can still build a block by bringing in more recent blocks on that shard to bring it to within skew
-        Map<Integer, BlockHeader> import_heads = node.getForgeInfo().getImportedShardHeads(
-          coord_head, node.getParams().getMaxShardSkewHeight()*3);
-
-        //System.out.println("Import heads:");
-        //System.out.println(getSummaryString(import_heads));
-
-        HashSet<ChainHash> possible_prevs = new HashSet<>();
-
-        // In case we need to expand into new shard
-        possible_prevs.add(new ChainHash(coord_head.getSnowHash()));
-
-        // For each imported shard head, get all the new blocks under each
-        for(int src_shard : import_heads.keySet())
+      // TODO - switch to get blocks around
+      for(BlockHeader coord_head : node.getForgeInfo().getShardHeads(coord_shard))
+      //for(ChainHash coord_hash : coord_heads)
+      {
+        //BlockHeader coord_head = node.getForgeInfo().getHeader(coord_hash);
+        if (coord_head != null)
         {
-          if (node.getInterestShards().contains(src_shard))
-          if (!ShardUtil.containsBothChildren(src_shard, import_heads.keySet()))
+
+          logger.fine(String.format("Exploring from coord head: %s s:%d h:%d",
+            new ChainHash(coord_head.getSnowHash()).toString(),
+            coord_head.getShardId(),
+            coord_head.getBlockHeight()));
+
+
+          // Starting from the more recent coordinator head
+          // Find all the imported shard heads
+
+          // Note: the 3x is there because we might be at height X and some other shard is at X-skew-2 or something
+          // We can still build a block by bringing in more recent blocks on that shard to bring it to within skew
+          Map<Integer, BlockHeader> import_heads = node.getForgeInfo().getImportedShardHeads(
+            coord_head, node.getParams().getMaxShardSkewHeight()*3);
+
+          //System.out.println("Import heads:");
+          //System.out.println(getSummaryString(import_heads));
+
+          TreeMap<Double, ChainHash> possible_prevs_map = new TreeMap<>();
+          HashSet<ChainHash> possible_prevs = new HashSet<>();
+
+          // In case we need to expand into new shard
+          possible_prevs.add(new ChainHash(coord_head.getSnowHash()));
+          Random rnd = new Random();
+
+          // For each imported shard head, get all the new blocks under each
+          for(int src_shard : import_heads.keySet())
           {
-            ChainHash h = new ChainHash( import_heads.get(src_shard).getSnowHash() );
-            Set<ChainHash> set_from_src_shard = node.getForgeInfo().climb(h, -1,
-              node.getParams().getMaxShardSkewHeight()*2);
+            if (node.getInterestShards().contains(src_shard))
+            if (!ShardUtil.containsBothChildren(src_shard, import_heads.keySet()))
+            {
+              ChainHash h = new ChainHash( import_heads.get(src_shard).getSnowHash() );
+              Set<ChainHash> set_from_src_shard = node.getForgeInfo().climb(h, -1,
+                node.getParams().getMaxShardSkewHeight()*2);
 
-            logger.fine(String.format("Possible prevs from shard %d - %d - %s",
-              src_shard, set_from_src_shard.size(), set_from_src_shard));
+              logger.fine(String.format("Possible prevs from shard %d - %d - %s",
+                src_shard, set_from_src_shard.size(), set_from_src_shard));
 
-            possible_prevs.addAll( set_from_src_shard );
+              possible_prevs.addAll( set_from_src_shard );
+              BlockHeader last_header = import_heads.get(src_shard);
+              for(ChainHash ch : set_from_src_shard)
+              {
+                possible_prevs_map.put( rnd.nextDouble() + last_header.getBlockHeight(), ch);
+              }
+
+            }
+          }
+          logger.info("Possible_prevs: " + possible_prevs.size());
+          mlog.set("possible_prevs", possible_prevs.size());
+
+          for(ChainHash prev_hash : possible_prevs_map.values())
+          {
+            expandPrev(import_heads, prev_hash, coord_head, concepts);
+            if (concepts.size() > 20) break;
           }
         }
-        logger.fine("Possible_prevs: " + possible_prevs.size());
-
-        for(ChainHash prev_hash : possible_prevs)
-        {
-          expandPrev(import_heads, prev_hash, coord_head, concepts);
-
-        }
       }
-    }
 
-    return concepts;
+      mlog.set("count", concepts.size());
+      return concepts;
+    }
   }
 
   /**
@@ -1003,6 +1049,7 @@ public class ShardBlockForge
     public void runPass()
       throws Exception
     {
+      MetricLog mlog = getMlog();
 
       if (forge_log != null)
       {
@@ -1013,6 +1060,7 @@ public class ShardBlockForge
       {
         current_top_concepts = null;
         tickleUserService();
+        mlog.set("no_req",1);
         return;
       }
 
@@ -1026,13 +1074,6 @@ public class ShardBlockForge
         return;
       }
 
-      for(int src_shard : node.getCurrentBuildingShards())
-      {
-        if (isCoordinator(src_shard))
-        { // Coordinator dance
-          possible_set.addAll( exploreCoordinator(src_shard) );
-        }
-      }
       int highest_coord = 0;
       for(int coord : node.getForgeInfo().getNetworkActiveShards().keySet())
       {
@@ -1041,8 +1082,22 @@ public class ShardBlockForge
           highest_coord = Math.max(highest_coord, coord);
         }
       }
-      possible_set.addAll(exploreFromCoordinatorHead(highest_coord));
 
+      possible_set.addAll( exploreCoordinator(highest_coord, mlog) );
+
+      /*for(int src_shard : node.getCurrentBuildingShards())
+      {
+        if (isCoordinator(src_shard))
+        { // Coordinator dance
+          possible_set.addAll( exploreCoordinator(src_shard, mlog) );
+        }
+      }*/
+ 
+      // TODO put back
+      possible_set.addAll(exploreFromCoordinatorHead(highest_coord, mlog));
+
+      mlog.set("possible_set_size", possible_set.size());
+      mlog.set("shards", node.getCurrentBuildingShards().toString());
 
 
       System.out.println("ZZZ Possible blocks: " + possible_set.size() + " on " + node.getCurrentBuildingShards());

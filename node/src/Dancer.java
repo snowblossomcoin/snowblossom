@@ -101,6 +101,7 @@ public class Dancer
 
   public boolean isCompliantInternal(BlockHeader header, int depth)
   {
+    if (depth < 1000) return true; // basically disable check
 
     int import_depth = node.getParams().getMaxShardSkewHeight()*2+1;
 

@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.protobuf.ByteString;
 import duckutil.SoftLRUCache;
+import duckutil.LRUCache;
 import duckutil.TimeRecord;
 import duckutil.TimeRecordAuto;
 import java.util.ArrayList;
@@ -35,6 +36,8 @@ public class ForgeInfo
   private SoftLRUCache<ChainHash, BlockSummary> block_summary_cache = new SoftLRUCache<>(CACHE_SIZE);
   private SoftLRUCache<ChainHash, BlockHeader> block_header_cache = new SoftLRUCache<>(CACHE_SIZE);
   private SoftLRUCache<ChainHash, Map<String, ChainHash> > block_inclusion_cache = new SoftLRUCache<>(CACHE_SIZE);
+  private LRUCache<String, Boolean> in_chain_cache = new LRUCache<>(CACHE_SIZE);
+
 
   private Map<Integer, BlockPreview> ext_coord_head = new TreeMap<>();
 
@@ -372,19 +375,23 @@ public class ForgeInfo
     HashSet<ChainHash> set = new HashSet<>();
     if (max_steps <= 0) return set;
 
-    BlockHeader h = getHeader(start);
+    set.add(start);
 
-    if (h != null)
+    if (shard_id >= 0)
     {
-      if ((shard_id < 0) || (h.getShardId() == shard_id))
-      {
-        set.add(new ChainHash(h.getSnowHash()));
-      }
-      if (shard_id >= 0)
-      {
-        // If we are into a higher shard, there is no way to get to a lower one
-        if (h.getShardId() > shard_id) return set;
+      BlockHeader h = getHeader(start);
 
+      if (h != null)
+      {
+        if ((shard_id < 0) || (h.getShardId() == shard_id))
+        {
+          set.add(new ChainHash(h.getSnowHash()));
+        }
+        if (shard_id >= 0)
+        {
+          // If we are into a higher shard, there is no way to get to a lower one
+          if (h.getShardId() > shard_id) return set;
+        }
       }
     }
 
@@ -428,55 +435,58 @@ public class ForgeInfo
    */
   public List<BlockHeader> getImportPath(Map<Integer,BlockHeader> start, BlockHeader target)
   {
-    if (target == null) return null;
+    try(TimeRecordAuto tra = TimeRecord.openAuto("ForgeInfo.getImportPath"))
+    {
+      if (target == null) return null;
 
-    int shard_id = target.getShardId();
-    if (start.containsKey(shard_id))
-    { // We have something for this shard
-      BlockHeader included = start.get(shard_id);
+      int shard_id = target.getShardId();
+      if (start.containsKey(shard_id))
+      { // We have something for this shard
+        BlockHeader included = start.get(shard_id);
 
-      if (target.getBlockHeight() < included.getBlockHeight())
-      { // We already have a block that is past this one, impossible
-        return null;
-      }
-      if (target.getBlockHeight() == included.getBlockHeight())
-      {
-        if (target.getSnowHash().equals(included.getSnowHash()))
-        {
-          // We are home
-          return new LinkedList<BlockHeader>();
-        }
-        else
-        {
-          // Wrong block is included at this height - impossible
+        if (target.getBlockHeight() < included.getBlockHeight())
+        { // We already have a block that is past this one, impossible
           return null;
         }
+        if (target.getBlockHeight() == included.getBlockHeight())
+        {
+          if (target.getSnowHash().equals(included.getSnowHash()))
+          {
+            // We are home
+            return new LinkedList<BlockHeader>();
+          }
+          else
+          {
+            // Wrong block is included at this height - impossible
+            return null;
+          }
+        }
+        if(target.getBlockHeight() > included.getBlockHeight())
+        {
+            BlockHeader prev = getHeader(new ChainHash(target.getPrevBlockHash()));
+
+            List<BlockHeader> sub_list = getImportPath(start, prev);
+            if (sub_list == null) return null;
+
+            // If we reached it, then add ourselves on and done
+            sub_list.add(target);
+            return sub_list;
+        }
+
+        throw new RuntimeException("unreachable");
+
       }
-      if(target.getBlockHeight() > included.getBlockHeight())
-      {
-          BlockHeader prev = getHeader(new ChainHash(target.getPrevBlockHash()));
+      else
+      { // The summary does not have the shard in question, just keep going down
+        BlockHeader prev = getHeader(new ChainHash(target.getPrevBlockHash()));
 
-          List<BlockHeader> sub_list = getImportPath(start, prev);
-          if (sub_list == null) return null;
+        List<BlockHeader> sub_list = getImportPath(start, prev);
+        if (sub_list == null) return null;
 
-          // If we reached it, then add ourselves on and done
-          sub_list.add(target);
-          return sub_list;
+        // If we reached it, then add ourselves on and done
+        sub_list.add(target);
+        return sub_list;
       }
-
-      throw new RuntimeException("unreachable");
-
-    }
-    else
-    { // The summary does not have the shard in question, just keep going down
-      BlockHeader prev = getHeader(new ChainHash(target.getPrevBlockHash()));
-
-      List<BlockHeader> sub_list = getImportPath(start, prev);
-      if (sub_list == null) return null;
-
-      // If we reached it, then add ourselves on and done
-      sub_list.add(target);
-      return sub_list;
     }
   }
 
@@ -534,27 +544,32 @@ public class ForgeInfo
    */
   public BlockHeader getLatestShard(BlockHeader h, int shard_id)
   {
-    if (h==null) return null;
-    Set<Integer> parents = ShardUtil.getAllParents(shard_id);
-    parents.add(shard_id);
-
-    if (parents.contains(h.getShardId())) return h;
-
-    for(int s : parents)
+    try(TimeRecordAuto tra = TimeRecord.openAuto("ForgeInfo.getLatestShard"))
     {
-      if (h.getShardImportMap().containsKey(s))
+      if (h==null) return null;
+      Set<Integer> parents = ShardUtil.getAllParents(shard_id);
+      parents.add(shard_id);
+
+      if (parents.contains(h.getShardId())) return h;
+
+      for(int s : parents)
       {
-        BlockImportList bil = h.getShardImportMap().get(s);
-        TreeSet<Integer> heights = new TreeSet<>();
-        heights.addAll(bil.getHeightMap().keySet());
+        if (h.getShardImportMap().containsKey(s))
+        {
+          BlockImportList bil = h.getShardImportMap().get(s);
+          TreeSet<Integer> heights = new TreeSet<>();
+          heights.addAll(bil.getHeightMap().keySet());
 
-        ChainHash hash = new ChainHash(bil.getHeightMap().get(heights.last()));
+          ChainHash hash = new ChainHash(bil.getHeightMap().get(heights.last()));
 
-        return getHeader(hash);
+          return getHeader(hash);
+        }
       }
+      return getLatestShard(getHeader(new ChainHash(h.getPrevBlockHash())), shard_id);
     }
-    return getLatestShard(getHeader(new ChainHash(h.getPrevBlockHash())), shard_id);
   }
+
+
 
   /**
    * Return true iff check is part of the chain ending with h
@@ -563,13 +578,39 @@ public class ForgeInfo
   {
     if (check == null) return false;
     if (h == null) return false;
-    if (h.getBlockHeight() < check.getBlockHeight()) return false;
-    if (h.getBlockHeight() == check.getBlockHeight())
+    try(TimeRecordAuto tra = TimeRecord.openAuto("ForgeInfo.isInChain"))
     {
-      return h.getSnowHash().equals(check.getSnowHash());
-    }
+      String key = new ChainHash(h.getSnowHash()).toString() 
+        + new ChainHash(check.getSnowHash()).toString();
+      /*logger.info(String.format("isInChain: h(%d %d) check(%d %d)",
+        h.getShardId(), h.getBlockHeight(),
+        check.getShardId(), check.getBlockHeight()));
+       */
 
-    return isInChain( getHeader(new ChainHash(h.getPrevBlockHash())), check);
+      synchronized(in_chain_cache)
+      {
+        if (in_chain_cache.containsKey(key))
+        {
+          return in_chain_cache.get(key); 
+        }
+      }
+      
+      //Random rnd = new Random();
+      //if (rnd.nextDouble() < 0.0001) throw new RuntimeException("MEOW");
+
+      if (h.getBlockHeight() < check.getBlockHeight()) return false;
+      if (h.getBlockHeight() == check.getBlockHeight())
+      {
+        return h.getSnowHash().equals(check.getSnowHash());
+      }
+
+      boolean rec_answer = isInChain( getHeader(new ChainHash(h.getPrevBlockHash())), check);
+      synchronized(in_chain_cache)
+      {
+        in_chain_cache.put(key, rec_answer);
+      }
+      return rec_answer;
+    }
   }
 
   public Map<Integer, BlockHeader> getImportedShardHeads(BlockHeader bh, int depth)
