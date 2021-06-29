@@ -403,7 +403,7 @@ public class ShardBlockForge
           for(ChainHash prev_hash : possible_prevs_map.values())
           {
             expandPrev(import_heads, prev_hash, coord_head, concepts);
-            if (concepts.size() > 20) break;
+            //if (concepts.size() > 20) break;
           }
         }
       }
