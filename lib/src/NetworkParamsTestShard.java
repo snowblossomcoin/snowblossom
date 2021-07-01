@@ -85,11 +85,11 @@ public class NetworkParamsTestShard extends NetworkParams
   public int getMinShardLength() { return 10; }
 
   @Override
-  //public int getMaxShardId() {return 6; } //allows 4 shards
+  public int getMaxShardId() {return 6; } //allows 4 shards
   //public int getMaxShardId() {return 14; } //allows 8 shards
   //public int getMaxShardId() {return 28+2; } //allows 16 shards
   //public int getMaxShardId() {return 62; } // allows 32 shards
-  public int getMaxShardId() {return 126; } //allows 64 shards
+  //public int getMaxShardId() {return 126; } //allows 64 shards
   //public int getMaxShardId() {return 254; } // allows 128 shards
   //public int getMaxShardId() {return 512; } //allows 256 shards
   //public int getMaxShardId() {return 1022; } //allows 512 shards
@@ -98,7 +98,7 @@ public class NetworkParamsTestShard extends NetworkParams
   public int getMaxShardSkewHeight() {return 6; } 
     
   @Override
-  public int getShardForkThreshold() { return 20; }
+  public int getShardForkThreshold() { return 2000; }
 
 
 }
