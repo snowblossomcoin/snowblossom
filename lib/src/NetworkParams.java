@@ -125,54 +125,55 @@ public abstract class NetworkParams
     if (config.isSet("network"))
     {
       String network = config.get("network");
+      return loadFromName(network);
+    }
+    return new NetworkParamsProd();
 
-      if (network.equals("snowblossom"))
-      {
-        return new NetworkParamsProd();
-      }
-      else if (network.equals("mainnet"))
-      {
-        return new NetworkParamsProd();
-      }
-      else if (network.equals("testnet"))
-      {
-        logger.info("Using network teapot - testnet");
-        return new NetworkParamsTestnet();
-      }
-      else if (network.equals("teapot"))
-      {
-        logger.info("Using network teapot - testnet");
-        return new NetworkParamsTestnet();
-      }
-      else if (network.equals("spoon"))
-      {
-        logger.info("Using network spoon - regtest");
-        return new NetworkParamsRegtest();
-      }
-      else if (network.equals("regtest"))
-      {
-        logger.info("Using network spoon - regtest");
-        return new NetworkParamsRegtest();
-      }
-      else if (network.equals("regshard"))
-      {
-        logger.info("Using network regshard");
-        return new NetworkParamsRegShard();
-      }
-      else if (network.equals("testshard"))
-      {
-        logger.info("Using network test shard");
-        return new NetworkParamsTestShard();
-      }
-      else
-      {
-        logger.log(Level.SEVERE, String.format("Unknown network: %s", network));
-        return null;
-      }
+  }
+  public static NetworkParams loadFromName(String network)
+  {
+    if (network.equals("snowblossom"))
+    {
+      return new NetworkParamsProd();
+    }
+    else if (network.equals("mainnet"))
+    {
+      return new NetworkParamsProd();
+    }
+    else if (network.equals("testnet"))
+    {
+      logger.info("Using network teapot - testnet");
+      return new NetworkParamsTestnet();
+    }
+    else if (network.equals("teapot"))
+    {
+      logger.info("Using network teapot - testnet");
+      return new NetworkParamsTestnet();
+    }
+    else if (network.equals("spoon"))
+    {
+      logger.info("Using network spoon - regtest");
+      return new NetworkParamsRegtest();
+    }
+    else if (network.equals("regtest"))
+    {
+      logger.info("Using network spoon - regtest");
+      return new NetworkParamsRegtest();
+    }
+    else if (network.equals("regshard"))
+    {
+      logger.info("Using network regshard");
+      return new NetworkParamsRegShard();
+    }
+    else if (network.equals("testshard"))
+    {
+      logger.info("Using network test shard");
+      return new NetworkParamsTestShard();
     }
     else
     {
-      return new NetworkParamsProd();
+      logger.log(Level.SEVERE, String.format("Unknown network: %s", network));
+      return null;
     }
 
   }

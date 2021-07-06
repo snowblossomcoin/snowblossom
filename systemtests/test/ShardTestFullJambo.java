@@ -38,7 +38,7 @@ public class ShardTestFullJambo extends SpoonTest
     String trust_folder_base = test_folder.newFolder().getPath();
 
 
-    node0 = startNode(0, "regshard", 
+    node0 = startNode(0, "regshard",
       ImmutableMap.of("shards","0", "trustnet_key_path", trust_folder_base));
 
     AddressSpecHash trust_addr = node0.getTrustnetAddress();

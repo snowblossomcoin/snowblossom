@@ -85,6 +85,7 @@ public class MrPlow
 
   private final PlowLoop loop;
   private List<NodeConnection> connections;
+  private final Server grpc_server;
 
   public MrPlow(Config config) throws Exception
   {
@@ -136,21 +137,25 @@ public class MrPlow
     startConnections();
     subscribe();
 
-    Server s = ServerBuilder
+    grpc_server = ServerBuilder
       .forPort(port)
       .addService(agent)
       .build();
+    grpc_server.start();
 
     if (config.isSet("rpc_port"))
     {
       JsonRpcServer json_server = new JsonRpcServer(config, false);
       new MrPlowJsonHandler(this).registerHandlers(json_server);
-
     }
-    s.start();
 
     loop = new PlowLoop();
     loop.start();
+  }
+
+  public int getGrpcPort()
+  {
+    return grpc_server.getPort();
   }
 
   public int getMinDiff()

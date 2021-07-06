@@ -44,7 +44,7 @@ public class SpoonTestPool extends SpoonTest
     MrPlow plow = startMrPlow(port, to_addr2);
     Thread.sleep(4000);
 
-    PoolMiner miner = startPoolMiner(port+1, to_addr, snow_path);
+    PoolMiner miner = startPoolMiner(plow.getGrpcPort(), to_addr, snow_path);
     Thread.sleep(25000);
 
     waitForMoreBlocks(node, 10);
@@ -58,7 +58,7 @@ public class SpoonTestPool extends SpoonTest
     // Miner getting paid
     waitForFunds(client, to_addr, 30);
 
-    PoolMiner miner2 = startPoolMiner(port+1, to_addr3, snow_path);
+    PoolMiner miner2 = startPoolMiner(plow.getGrpcPort(), to_addr3, snow_path);
 
     // Second miner getting paid
     waitForFunds(client, to_addr3, 30);

@@ -35,10 +35,10 @@ public class ShardTestDuelPool extends SpoonTest
     String trust_folder_base_a = test_folder.newFolder().getPath();
     String trust_folder_base_b = test_folder.newFolder().getPath();
 
-    node_a_seed = startNode(0, "regshard", 
+    node_a_seed = startNode(0, "regshard",
       ImmutableMap.of("shards","0", "trustnet_key_path", trust_folder_base_a));
 
-    node_b_seed = startNode(0, "regshard", 
+    node_b_seed = startNode(0, "regshard",
       ImmutableMap.of("shards","0", "trustnet_key_path", trust_folder_base_b));
 
     AddressSpecHash trust_addr_a = node_a_seed.getTrustnetAddress();
