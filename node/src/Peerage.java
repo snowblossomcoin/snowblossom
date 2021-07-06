@@ -474,8 +474,6 @@ public class Peerage
     public void runPass()
       throws Exception
     {
-      //TimeRecord time_record = new TimeRecord();
-      //TimeRecord.setSharedRecord(time_record);
 
       logger.info("Prune Links");
       pruneLinks();
@@ -515,7 +513,6 @@ public class Peerage
         node.getDB().getSpecialMap().put("peerlist", peer_list.build().toByteString());
       }
 
-      //time_record.printReport(System.out);
 
     }
 

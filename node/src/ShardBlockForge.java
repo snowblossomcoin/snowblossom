@@ -36,9 +36,6 @@ public class ShardBlockForge
   private NetworkParams params;
   private static final Logger logger = Logger.getLogger("snowblossom.node");
 
-  private final PrintStream forge_log;
-  private TimeRecord time_record;
-
   private volatile long last_template_request = 0L;
   private volatile ArrayList<BlockConcept> current_top_concepts = null;
   private ConceptUpdateThread concept_update_thread;
@@ -52,16 +49,6 @@ public class ShardBlockForge
   {
     this.node = node;
     this.params = node.getParams();
-    if (node.getConfig().isSet("forge_log"))
-    {
-      forge_log = new PrintStream(new FileOutputStream(node.getConfig().get("forge_log"), true));
-      time_record = new TimeRecord();
-      TimeRecord.setSharedRecord(time_record);
-    }
-    else
-    {
-      forge_log = null;
-    }
 
     this.dancer = new Dancer(node);
 
@@ -277,8 +264,6 @@ public class ShardBlockForge
                 imp_blk.getBlockHeight(),
                 new ChainHash(imp_blk.getSnowHash())));
 
-              TimeRecord time_record = new TimeRecord();                                                                                                                    TimeRecord.setSharedRecord(time_record);
-
               try(TimeRecordAuto tra = TimeRecord.openAuto("ShardBlockForge.coordBuild"))
               {
                 // Not in the cover set from this coordinator
@@ -305,7 +290,6 @@ public class ShardBlockForge
                 }
               }
 
-              time_record.printReport(System.out);
             }
 
           }
@@ -1052,10 +1036,6 @@ public class ShardBlockForge
     {
       MetricLog mlog = getMlog();
 
-      if (forge_log != null)
-      {
-        //time_record.reset();
-      }
       // If no template requests for 5 minutes, don't bother
       if (last_template_request + 300000L < System.currentTimeMillis())
       {
@@ -1117,15 +1097,6 @@ public class ShardBlockForge
       current_top_concepts = good_concepts;
 
       tickleUserService();
-
-      if (forge_log != null)
-      {
-        forge_log.println("--------------------------------");
-        time_record.printReport(forge_log);
-        time_record.reset();
-        forge_log.println("--------------------------------");
-      }
-
 
     }
   }

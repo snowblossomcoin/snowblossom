@@ -38,9 +38,6 @@ public class BlockIngestor implements ChainStateSource
   private LRUCache<ChainHash, Long> block_pull_map = new LRUCache<>(2000);
   private LRUCache<ChainHash, Long> tx_cluster_pull_map = new LRUCache<>(2000);
 
-  private static PrintStream block_log;
-  private static TimeRecord time_record;
-
   private final boolean tx_index;
   private final boolean addr_index;
   private final int shard_id;
@@ -66,18 +63,6 @@ public class BlockIngestor implements ChainStateSource
     tx_index = node.getConfig().getBoolean("tx_index");
     addr_index = node.getConfig().getBoolean("addr_index");
 
-    {
-    if (node.getConfig().isSet("block_log"))
-    {
-      if (block_log == null)
-      {
-      // TODO - there are multiple shards running BlockIngestor - this is all jacked
-      block_log = new PrintStream(new FileOutputStream(node.getConfig().get("block_log"), true));
-      time_record = new TimeRecord();
-      TimeRecord.setSharedRecord(time_record);
-      }
-    }
-    }
 
     chainhead = db.getBlockSummaryMap().get(HEAD);
     if (chainhead != null)
@@ -175,8 +160,6 @@ public class BlockIngestor implements ChainStateSource
   public boolean ingestBlock(Block blk)
     throws ValidationException
   {
-
-    if (time_record != null) time_record.reset();
 
     ChainHash blockhash;
     try(TimeRecordAuto tra_blk = TimeRecord.openAuto("BlockIngestor.ingestBlock");
@@ -336,29 +319,6 @@ public class BlockIngestor implements ChainStateSource
         node.getPeerage().sendAllTips(summary.getHeader().getShardId());
       }
 
-    }
-
-    if (block_log != null)
-    {
-      block_log.println("-------------------------------------------------------------");
-      block_log.println(String.format("Block{shard:%d height:%d - %s tx_count:%d size:%d }",
-        blk.getHeader().getShardId(),
-        blk.getHeader().getBlockHeight(),
-        blockhash.toString(),
-        blk.getTransactionsCount(),
-        blk.toByteString().size()
-      ));
-
-      if (node.getConfig().getBoolean("block_log_full"))
-      {
-        for(Transaction tx : blk.getTransactionsList())
-        {
-          TransactionUtil.prettyDisplayTx(tx, block_log, params);
-          block_log.println();
-        }
-      }
-      time_record.printReport(block_log);
-      time_record.reset();
     }
 
     return true;

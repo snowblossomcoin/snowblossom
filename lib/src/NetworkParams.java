@@ -98,7 +98,7 @@ public abstract class NetworkParams
   // for block transaction data is over this, then split this shard
   public int getShardForkThreshold() { return getMaxBlockSize() / 2; }
   
-  public int getGrpcMaxMessageSize(){return getMaxBlockSize() + 60000;}
+  public int getGrpcMaxMessageSize(){return getMaxBlockSize() + 1000000;}
 
   public abstract int getMaxBlockSize();
 

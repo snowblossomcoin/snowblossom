@@ -3,6 +3,8 @@ package snowblossom.node;
 import com.google.protobuf.ByteString;
 import duckutil.LRUCache;
 import duckutil.MetricLog;
+import duckutil.TimeRecord;
+import duckutil.TimeRecordAuto;
 import io.grpc.stub.StreamObserver;
 import java.util.Collection;
 import java.util.HashMap;
@@ -212,80 +214,86 @@ public class SnowUserService extends UserServiceGrpc.UserServiceImplBase impleme
   @Override
   public void submitBlock(Block block, StreamObserver<SubmitReply> responseObserver)
   {
-    try
+    try(TimeRecordAuto tra = TimeRecord.openAuto("SnowUserService.submitBlock"))
     {
-      logger.info("Submit block: " + node.getForgeInfo().getHeaderString(block.getHeader()));
+      try
+      {
+        logger.info("Submit block: " + node.getForgeInfo().getHeaderString(block.getHeader()));
 
-      int shard_id = block.getHeader().getShardId();
-      //TODO check to see if we are tracking that shard
-      node.getBlockIngestor(shard_id).ingestBlock(block);
-      logger.info("Accepted block: " + node.getForgeInfo().getBlockTextSummary(block.getHeader()));
-    }
-    catch(ValidationException e)
-    {
-      logger.info("Rejecting block: " + e);
-      logger.info("Rejected block: " + node.getForgeInfo().getBlockTextSummary(block.getHeader()));
+        int shard_id = block.getHeader().getShardId();
+        //TODO check to see if we are tracking that shard
+        node.getBlockIngestor(shard_id).ingestBlock(block);
+        logger.info("Accepted block: " + node.getForgeInfo().getBlockTextSummary(block.getHeader()));
+      }
+      catch(ValidationException e)
+      {
+        logger.info("Rejecting block: " + e);
+        logger.info("Rejected block: " + node.getForgeInfo().getBlockTextSummary(block.getHeader()));
 
-      responseObserver.onNext(SubmitReply.newBuilder()
-          .setSuccess(false)
-          .setErrorMessage("Rejecting block: " + e)
-        .build());
+        responseObserver.onNext(SubmitReply.newBuilder()
+            .setSuccess(false)
+            .setErrorMessage("Rejecting block: " + e)
+          .build());
+        responseObserver.onCompleted();
+        return;
+      }
+
+      responseObserver.onNext(SubmitReply.newBuilder().setSuccess(true).build());
       responseObserver.onCompleted();
-      return;
+
     }
-
-    responseObserver.onNext(SubmitReply.newBuilder().setSuccess(true).build());
-    responseObserver.onCompleted();
-
   }
 
   @Override
   public void submitTransaction(Transaction tx, StreamObserver<SubmitReply> responseObserver)
   {
-    try
+    try(TimeRecordAuto tra = TimeRecord.openAuto("SnowUserService.submitTransaction"))
     {
-      tx = Transaction.parseFrom(tx.toByteString());
-      if (node.getMemPool().addTransaction(tx, false))
+      try
       {
-        node.getTxBroadcaster().send(tx);
+        tx = Transaction.parseFrom(tx.toByteString());
+        if (node.getMemPool().addTransaction(tx, false))
+        {
+          node.getTxBroadcaster().send(tx);
+        }
+        else
+        {
+          logger.fine("Rejecting transaction: no mempool accepted");
+
+          responseObserver.onNext(SubmitReply.newBuilder()
+            .setSuccess(false)
+            .setErrorMessage("no mempool accepted")
+            .build());
+          responseObserver.onCompleted();
+          return;
+
+        }
       }
-      else
+      catch(ValidationException e)
       {
-        logger.fine("Rejecting transaction: no mempool accepted");
+        logger.info("Rejecting transaction: " + e);
 
         responseObserver.onNext(SubmitReply.newBuilder()
-          .setSuccess(false)
-          .setErrorMessage("no mempool accepted")
+            .setSuccess(false)
+            .setErrorMessage(e.toString())
           .build());
         responseObserver.onCompleted();
         return;
-
       }
-    }
-    catch(ValidationException e)
-    {
-      logger.info("Rejecting transaction: " + e);
+      catch(com.google.protobuf.InvalidProtocolBufferException e)
+      {
+        logger.info("Rejecting transaction, strange error: " + e);
+        responseObserver.onNext(SubmitReply.newBuilder()
+            .setSuccess(false)
+            .setErrorMessage(e.toString())
+          .build());
+        responseObserver.onCompleted();
+        return;
+      }
 
-      responseObserver.onNext(SubmitReply.newBuilder()
-          .setSuccess(false)
-          .setErrorMessage(e.toString())
-        .build());
+      responseObserver.onNext(SubmitReply.newBuilder().setSuccess(true).build());
       responseObserver.onCompleted();
-      return;
     }
-    catch(com.google.protobuf.InvalidProtocolBufferException e)
-    {
-      logger.info("Rejecting transaction, strange error: " + e);
-      responseObserver.onNext(SubmitReply.newBuilder()
-          .setSuccess(false)
-          .setErrorMessage(e.toString())
-        .build());
-      responseObserver.onCompleted();
-      return;
-    }
-
-    responseObserver.onNext(SubmitReply.newBuilder().setSuccess(true).build());
-    responseObserver.onCompleted();
 
   }
 

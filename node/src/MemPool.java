@@ -238,9 +238,12 @@ public class MemPool
       long t1 = System.nanoTime();
       Validation.checkTransactionBasics(tx, false);
       mlog.set("basic_validation", 1);
-      TimeRecord.record(t1, "tx_validation");
+      TimeRecord.record(t1, "mempool:tx_validation");
+
+      long t_lock = System.nanoTime();
       synchronized(this)
       {
+        TimeRecord.record(t_lock, "mempool:have_lock");
         mlog.setOperation("add_transaction");
         mlog.setModule("mem_pool");
         mlog.set("added", 0);

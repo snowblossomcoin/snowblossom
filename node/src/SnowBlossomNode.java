@@ -105,6 +105,7 @@ public class SnowBlossomNode
     config.require("db_type");
     logger.info(String.format("Starting SnowBlossomNode version %s", Globals.VERSION));
 
+    setupProfiler();
     setupParams();
     loadDB();
     loadWidgets();
@@ -123,6 +124,18 @@ public class SnowBlossomNode
   {
     terminate=true;
   }
+
+  private void setupProfiler()
+    throws Exception
+  {
+    if (config.isSet("profiler_log"))
+    {
+      long time = config.getLongWithDefault("profiler_period",20000);
+      new Profiler(time, new PrintStream(new FileOutputStream( config.get("profiler_log"), true) )).start();
+    }
+
+  }
+
 
   private void setupParams()
   {
