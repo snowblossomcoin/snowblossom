@@ -164,6 +164,12 @@ public class MrPlow
     return min_diff;
   }
 
+  public int getMaxDiff()
+  {
+    BigInteger target = BlockchainUtil.targetBytesToBigInteger(getBlockTemplate().getHeader().getTarget());
+    return ((int)PowUtil.getDiffForTarget(target)) - 1;
+  }
+
   private void loadDB()
     throws Exception
   {
