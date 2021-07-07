@@ -69,6 +69,16 @@ public class NodeConnection extends PeriodicThread implements StreamObserver<Blo
     setDaemon(true);
   }
 
+  public String getUri()
+  {
+    return uri;
+  }
+  public long getLastNetworkTime()
+  {
+    return last_network;
+  }
+  
+
   @Override
   public void runPass()
     throws Exception

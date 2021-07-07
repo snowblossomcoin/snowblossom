@@ -274,6 +274,11 @@ public class MrPlow
     connections = ImmutableList.copyOf(conns);
   }
 
+  public List<NodeConnection> getConnections()
+  {
+    return connections;
+  }
+
   private void subscribe() throws Exception
   {
     CoinbaseExtras.Builder extras = CoinbaseExtras.newBuilder();
