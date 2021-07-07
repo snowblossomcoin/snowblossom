@@ -381,6 +381,22 @@ public class Peerage
     {
       learnPeer(info);
     }
+
+    if(node.getConfig().isSet("seed_uris"))
+    for(String uri : node.getConfig().getList("seed_uris"))
+    {
+      PeerInfo pi_uri = PeerUtil.getPeerInfoFromUri(uri, node.getParams());
+
+      if(pi_uri != null)
+      {
+        PeerInfo pi = PeerInfo.newBuilder()
+          .mergeFrom(pi_uri)
+          .setVersion("seed")
+          .setLearned(System.currentTimeMillis() - PEER_EXPIRE_TIME + REFRESH_LEARN_TIME)
+          .build();
+        learnPeer(pi, true);
+      }
+    }
     for(String s : node.getParams().getSeedNodes())
     {
       try
@@ -398,24 +414,24 @@ public class Peerage
             .setVersion("seed")
             .build();
           learnPeer(pi, true);
-
         }
-        if (node.getParams().getNetworkName().equals("snowblossom"))
-        {
-          PeerInfo pi = PeerInfo.newBuilder()
-            .setHost("snow-tx1.snowblossom.org")
-            .setPort(443)
-            .setLearned(System.currentTimeMillis() - PEER_EXPIRE_TIME + REFRESH_LEARN_TIME)
-            .setVersion("seed")
-            .build();
-          learnPeer(pi, true);
-        }
-      }
+       }
       catch(Exception e)
       {
         logger.info(String.format("Exception resolving %s - %s", s, e.toString()));
       }
     }
+    if (node.getParams().getNetworkName().equals("snowblossom"))
+    {
+      PeerInfo pi = PeerInfo.newBuilder()
+        .setHost("snow-tx1.snowblossom.org")
+        .setPort(443)
+        .setLearned(System.currentTimeMillis() - PEER_EXPIRE_TIME + REFRESH_LEARN_TIME)
+        .setVersion("seed")
+        .build();
+      learnPeer(pi, true);
+    }
+
 
   }
 

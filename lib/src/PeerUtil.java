@@ -2,6 +2,7 @@ package snowblossom.lib;
 
 import org.junit.Assert;
 import snowblossom.proto.PeerInfo;
+import java.net.URI;
 
 public class PeerUtil
 {
@@ -51,5 +52,51 @@ public class PeerUtil
     return true;
 
   }
+
+  public static PeerInfo getPeerInfoFromUri(String uri, NetworkParams params)
+  {
+    try
+    {
+      URI u = new URI(uri);
+
+      String host = u.getHost();
+      int port = u.getPort();
+      String scheme = u.getScheme();
+      if (scheme == null) scheme="grpc";
+
+      PeerInfo.Builder pi = PeerInfo.newBuilder();
+      pi.setHost(host);
+
+      if (scheme.equals("grpc"))
+      {
+        if (port == -1)
+        {	
+          port = params.getDefaultPort();
+        }
+        pi.setConnectionType(PeerInfo.ConnectionType.GRPC_TCP);
+      }
+      else if (scheme.equals("grpc+tls"))
+      {
+        if (port == -1)
+        {
+          port = params.getDefaultTlsPort();
+        }
+        pi.setConnectionType(PeerInfo.ConnectionType.GRPC_TLS);
+      }
+      else
+      {
+        throw new Exception("Unknown scheme: " + scheme);
+      }
+
+      pi.setPort(port);
+
+      return pi.build();
+    }
+    catch(Exception e)
+    {
+      return null;
+    }
+  }
+
 
 }
