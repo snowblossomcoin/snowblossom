@@ -94,6 +94,7 @@ public class PeerUtil
     }
     catch(Exception e)
     {
+      e.printStackTrace();
       return null;
     }
   }

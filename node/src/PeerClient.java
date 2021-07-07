@@ -21,7 +21,12 @@ public class PeerClient
     ManagedChannel channel;
     if (info.getConnectionType().equals(PeerInfo.ConnectionType.GRPC_TLS))
     {
-      AddressSpecHash node_address = new AddressSpecHash(info.getNodeSnowAddress());
+      AddressSpecHash node_address = null;
+      if (info.getNodeSnowAddress().size() > 0)
+      {
+        node_address = new AddressSpecHash(info.getNodeSnowAddress());
+      }
+
       SslContext ssl_ctx = GrpcSslContexts.forClient()
         .trustManager(SnowTrustManagerFactorySpi.getFactory(node_address, node.getParams()))
         .build();
