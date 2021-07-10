@@ -31,7 +31,7 @@ public class Peerage
   public static final long REFRESH_LEARN_TIME = 3600L * 1000L; // 1hr
   public static final long SAVE_PEER_TIME = 60L * 1000L; // 1min
   public static final long PEER_EXPIRE_TIME = 3L * 86400L * 1000L; // 3 days
-  public static final long RANDOM_CLOSE_TIME = 3600L * 1000L; // 60-min
+  public static final long RANDOM_CLOSE_TIME = 300L * 1000L; // 5-min
 
   /** min time before trying to reconnect to a specific port:host */
   public static final long RECONNECT_TIME = 300L * 1000L; //5 min
