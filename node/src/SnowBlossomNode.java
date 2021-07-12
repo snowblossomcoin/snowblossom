@@ -267,6 +267,8 @@ public class SnowBlossomNode
     peerage.start();
     new TimeWatcher().start();
     tx_broadcaster.start();
+
+    new Ender(this).start();
   }
 
   private void startServices()
