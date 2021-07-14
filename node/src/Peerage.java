@@ -354,6 +354,14 @@ public class Peerage
     }
   }
 
+  public void closeAll()
+  {
+    for(PeerLink link : getLinkList())
+    {
+      link.close();
+    }
+  }
+
   public void broadcastTransaction(Transaction tx)
   {
     for(PeerLink link : getLinkList())

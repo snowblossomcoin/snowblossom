@@ -4,18 +4,23 @@ import java.util.Random;
 
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import duckutil.PeriodicThread;
 
 
 /**
  * Written to try to figure out an issue.  Should not be used in production.
  */
-public class Ender extends Thread
+public class Ender extends PeriodicThread
 {
   private static final Logger logger = Logger.getLogger("snowblossom.node");
   final SnowBlossomNode node;
+  
+  boolean first=true;
 
   public Ender(SnowBlossomNode node)
   {
+    super(60L * 60L * 1000L, 15.0 * 60.0 * 1000.0);
+
     this.node = node;
     setName("Ender");
     setDaemon(true);
@@ -23,17 +28,20 @@ public class Ender extends Thread
   }
 
   @Override
-  public void run()
+  public void runPass()
+    throws Exception
   {
+    if (first)
+    {
+      first=false;
+      return;
+    }
     Random rnd = new Random();
     try
     {
-
-    long sleep_time_sec = rnd.nextInt(3600);
-
-    this.sleep(sleep_time_sec * 1000L);
-    logger.warning("Ender shutdown");
-    System.exit(0);
+      logger.warning("Ender shutdown");
+      //System.exit(0);
+      node.getPeerage().closeAll();
     }
     catch(Throwable e)
     {
