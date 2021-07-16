@@ -40,8 +40,8 @@ public class Ender extends PeriodicThread
     try
     {
       logger.warning("Ender shutdown");
-      //System.exit(0);
-      node.getPeerage().closeAll();
+      System.exit(0);
+      //node.getPeerage().closeAll();
     }
     catch(Throwable e)
     {
