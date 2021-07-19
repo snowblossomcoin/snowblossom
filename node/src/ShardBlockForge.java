@@ -985,13 +985,18 @@ public class ShardBlockForge
     StringBuilder sb = new StringBuilder();
     sb.append(" parent:" + new ChainHash(h.getPrevBlockHash()));
     sb.append(" shard:" + h.getShardId());
+
+    TreeSet<ChainHash> import_set = new TreeSet<>();
+
     for(Map.Entry<Integer, BlockHeader> me : import_map.entrySet())
     {
       if (me.getKey() != h.getShardId())
       {
-        sb.append(" " + new ChainHash(me.getValue().getSnowHash()));
+        import_set.add(new ChainHash(me.getValue().getSnowHash()));
       }
     }
+    sb.append(" ");
+    sb.append(import_set.toString());
 
     ByteString bytes = ByteString.copyFrom(sb.toString().getBytes());
     return new ChainHash( DigestUtil.hash(bytes) );
@@ -1137,6 +1142,10 @@ public class ShardBlockForge
       }
       current_top_concepts = pruned_concepts;
       logger.info(String.format("Pruned block concepts. Previous: %d, Now: %d", cur_top.size(), pruned_concepts.size()));
+    }
+    synchronized(signature_cache)
+    {
+      signature_cache.put(getSignature(bs), true);
     }
     concept_update_thread.wake();
 
