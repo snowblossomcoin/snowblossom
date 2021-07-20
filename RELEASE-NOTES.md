@@ -5,6 +5,7 @@
 * Added data migration tool for MrPlow data
 * On non-64-bit JVM default to use non-TLS seeds (Issue #179)
 * Add total_coins_json api
+* Update to bouncy-castle 1.69
 
 ## 1.8.0
 
