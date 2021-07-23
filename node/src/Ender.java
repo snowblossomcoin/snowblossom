@@ -39,8 +39,8 @@ public class Ender extends PeriodicThread
     Random rnd = new Random();
     try
     {
-      logger.warning("Ender shutdown");
-      System.exit(0);
+      //logger.warning("Ender shutdown");
+      //System.exit(0);
       //node.getPeerage().closeAll();
     }
     catch(Throwable e)
