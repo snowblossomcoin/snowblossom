@@ -704,7 +704,7 @@ public class ForgeInfo
       if (current.getBlockHeight() == 0) break;
       if (remaining == 0) break;
      
-      current = getHeader( new ChainHash(current.getSnowHash()));
+      current = getHeader( new ChainHash(current.getPrevBlockHash()));
     }
 
 

@@ -400,6 +400,7 @@ public class PeerLink implements StreamObserver<PeerMessage>
   private void investigatePreviews(Collection<BlockPreview> list)
   {
     // Investigate them in ascending block height order
+    logger.info("Investigating previews: " + list.size());
 
     ListMultimap<Integer, BlockPreview> preview_map =
       MultimapBuilder.treeKeys(). linkedListValues().build();
@@ -417,9 +418,11 @@ public class PeerLink implements StreamObserver<PeerMessage>
   /** See if we want to do anything with this preview */
   private void investigatePreview(BlockPreview bp)
   {
+    ChainHash hash = new ChainHash(bp.getSnowHash());
+    logger.info(String.format("Investigating preview s:%d h:%d - %s", bp.getShardId(), bp.getBlockHeight(), hash));
+
     int shard_id = bp.getShardId();
     if (!node.getInterestShards().contains(bp.getShardId())) return;
-    ChainHash hash = new ChainHash(bp.getSnowHash());
     ChainHash prev = new ChainHash(bp.getPrevBlockHash());
 
     boolean prev_plan;
@@ -464,7 +467,7 @@ public class PeerLink implements StreamObserver<PeerMessage>
         // and we don't have the previous block
         // then request more previews
 
-        logger.info(String.format("Requesting preview at %d - %s", bp.getBlockHeight()-1, prev));
+        logger.info(String.format("Requesting preview at s:%d h:%d - %s", bp.getShardId(), bp.getBlockHeight()-1, prev));
         writeMessage( PeerMessage.newBuilder()
           .setReqPreviewChain(
             RequestPreviewChain.newBuilder()
