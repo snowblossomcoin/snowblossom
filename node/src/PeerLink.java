@@ -400,7 +400,7 @@ public class PeerLink implements StreamObserver<PeerMessage>
   private void investigatePreviews(Collection<BlockPreview> list)
   {
     // Investigate them in ascending block height order
-    logger.info("Investigating previews: " + list.size());
+    logger.fine("Investigating previews: " + list.size());
 
     ListMultimap<Integer, BlockPreview> preview_map =
       MultimapBuilder.treeKeys(). linkedListValues().build();
@@ -419,7 +419,7 @@ public class PeerLink implements StreamObserver<PeerMessage>
   private void investigatePreview(BlockPreview bp)
   {
     ChainHash hash = new ChainHash(bp.getSnowHash());
-    logger.info(String.format("Investigating preview s:%d h:%d - %s", bp.getShardId(), bp.getBlockHeight(), hash));
+    logger.fine(String.format("Investigating preview s:%d h:%d - %s", bp.getShardId(), bp.getBlockHeight(), hash));
 
     int shard_id = bp.getShardId();
     if (!node.getInterestShards().contains(bp.getShardId())) return;
@@ -441,6 +441,11 @@ public class PeerLink implements StreamObserver<PeerMessage>
           .setReqBlock(
             RequestBlock.newBuilder().setBlockHash(hash.getBytes()).build())
           .build());
+
+      synchronized(plan_lock)
+      {
+        plan_block_set.add(hash);
+      }
       return;
     }
 
@@ -455,6 +460,10 @@ public class PeerLink implements StreamObserver<PeerMessage>
           .setReqBlock(
             RequestBlock.newBuilder().setBlockHash(hash.getBytes()).build())
           .build());
+      }
+      synchronized(plan_lock)
+      {
+        plan_block_set.add(hash);
       }
       return;
     }
