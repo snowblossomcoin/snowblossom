@@ -21,6 +21,8 @@ public class Globals
 
   public static final int COINBASE_REMARKS_MAX=100;
 
+  public static final int MAX_PREVIEW_CHAIN_LENGTH = 100;
+
   /** Hash of the addres spec objects, represents recipent address */
   public static final String ADDRESS_SPEC_HASH_ALGO="Skein-256-160";
   public static final int ADDRESS_SPEC_HASH_LEN = 20;

@@ -686,6 +686,32 @@ public class ForgeInfo
 
   }
 
+  public PreviewChain getPreviewChain(ChainHash start, int req)
+  {
+    PreviewChain.Builder chain = PreviewChain.newBuilder();
+
+    BlockHeader current = getHeader(start);
+    int remaining = Math.min(req, Globals.MAX_PREVIEW_CHAIN_LENGTH);
+
+    while(true)
+    {
+      if (current == null) break;
+      if (remaining <= 0) break;
+
+      chain.addPreviews( BlockchainUtil.getPreview(current) );
+      remaining--;
+      
+      if (current.getBlockHeight() == 0) break;
+      if (remaining == 0) break;
+     
+      current = getHeader( new ChainHash(current.getSnowHash()));
+    }
+
+
+    return chain.build();
+
+  }
+
   protected static void mergeHighest(Map<Integer, BlockHeader> map, BlockHeader h)
   {
     mergeHighest(map, ImmutableMap.of(h.getShardId(), h));
@@ -727,4 +753,6 @@ public class ForgeInfo
     return highest;
 
   }
+
+  
 }

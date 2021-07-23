@@ -256,6 +256,9 @@ message PeerMessage {
 
     RequestImportedBlock req_import_block = 8;
     ImportedBlock import_block = 9;
+
+    RequestPreviewChain req_preview_chain = 10;
+    PreviewChain preview_chain = 11;
   }
 
   int32 req_header_shard_id = 50;
@@ -267,9 +270,7 @@ message PeerChainTip {
   repeated PeerInfo peers = 3;
   string version = 4;
   SignedMessage signed_head = 5;
-
 }
-
 
 message PeerTipInfo {
   repeated BlockPreview previews = 1;
@@ -283,6 +284,14 @@ message BlockPreview {
   int32 shard_id = 4;
 }
 
+message RequestPreviewChain {
+  bytes start_block_hash = 1;
+  int32 requested_blocks_back = 2;
+}
+
+message PreviewChain {
+  repeated BlockPreview previews = 1;
+}
 
 
 message PeerInfo {

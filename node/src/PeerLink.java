@@ -2,10 +2,13 @@ package snowblossom.node;
 
 import com.google.common.collect.MultimapBuilder;
 import com.google.common.collect.SetMultimap;
+import com.google.common.collect.ListMultimap;
 import duckutil.MetricLog;
 import io.grpc.ManagedChannel;
 import io.grpc.stub.StreamObserver;
 import java.util.List;
+import java.util.HashSet;
+import java.util.Collection;
 import java.util.Random;
 import java.util.TreeMap;
 import java.util.concurrent.TimeUnit;
@@ -36,12 +39,13 @@ public class PeerLink implements StreamObserver<PeerMessage>
   private boolean got_first_tip = false;
   private PeerInfo peer_info; //set immediately when we are client, set eventually otherwise
 
-  private TreeMap<ShardBlock, ChainHash> peer_block_map = new TreeMap<>();
+  private Object plan_lock = new Object();
 
-  // These are pretty much doing the same thing - can likely be reduced
+  // Set of hashes that we have some sort of a plan to get already
+  private HashSet<ChainHash> plan_block_set = new HashSet<>();
 
-  private SetMultimap<ChainHash, ChainHash> desire_header_map =
-                     MultimapBuilder.hashKeys().hashSetValues().build();
+  // Maps hash of a block to the set of blocks we want to download
+  // once we have it
   private SetMultimap<ChainHash, ChainHash> desire_block_map =
                      MultimapBuilder.hashKeys().hashSetValues().build();
 
@@ -140,7 +144,6 @@ public class PeerLink implements StreamObserver<PeerMessage>
             if (node.areWeSynced())
             {
               ChainHash tx_id =  new ChainHash(tx.getTxHash());
-
 
               if (node.getBlockIngestor().reserveTxCluster(tx_id))
               {
@@ -259,43 +262,7 @@ public class PeerLink implements StreamObserver<PeerMessage>
           { // we could eat it, think about getting more blocks
             scanForBlocksToRequest();
 
-            // TODO this peer block map mess can probably be removed
-            /*int next = blk.getHeader().getBlockHeight()+1;
-            ShardBlock next_sb = new ShardBlock(blk.getHeader().getShardId(), next);
-
-            synchronized(peer_block_map)
-            {
-              if (peer_block_map.containsKey(next_sb))
-              {
-                ChainHash target = peer_block_map.get(next_sb);
-
-                if (node.getBlockIngestor(0).reserveBlock(target))
-                {
-                  logger.info("Requesting next block: " + next_sb);
-                  writeMessage( PeerMessage.newBuilder()
-                    .setReqBlock(
-                      RequestBlock.newBuilder().setBlockHash(target.getBytes()).build())
-                    .build());
-                }
-              }
-            }*/
-
             // Think about getting more blocks from desire map
-            synchronized(desire_header_map)
-            {
-              ChainHash block_hash = new ChainHash(blk.getHeader().getSnowHash());
-              for(ChainHash hash : desire_header_map.get(block_hash))
-              {
-                writeMessage( PeerMessage.newBuilder()
-                  .setReqHeader(
-                    RequestBlockHeader.newBuilder()
-                      .setBlockHash(hash.getBytes())
-                      .build())
-                  .build());
-              }
-              desire_header_map.removeAll(block_hash);
-
-            }
           }
         }
         catch(ValidationException ve)
@@ -383,6 +350,21 @@ public class PeerLink implements StreamObserver<PeerMessage>
 
         node.getShardUtxoImport().addImportedBlock(msg.getImportBlock());
       }
+      else if (msg.hasReqPreviewChain())
+      {
+        RequestPreviewChain req = msg.getReqPreviewChain();
+
+        PreviewChain chain = node.getForgeInfo().getPreviewChain(
+          new ChainHash(req.getStartBlockHash()), 
+          req.getRequestedBlocksBack());
+        writeMessage( PeerMessage.newBuilder().setPreviewChain(chain).build() );
+      }
+      else if (msg.hasPreviewChain())
+      {
+        PreviewChain pre_chain = msg.getPreviewChain();
+
+        investigatePreviews( pre_chain.getPreviewsList() ); 
+      }
     }
     catch(ValidationException e)
     {
@@ -414,6 +396,94 @@ public class PeerLink implements StreamObserver<PeerMessage>
         .setTx(tx).build());
     }
   }
+  
+  private void investigatePreviews(Collection<BlockPreview> list)
+  {
+    // Investigate them in ascending block height order
+
+    ListMultimap<Integer, BlockPreview> preview_map =
+      MultimapBuilder.treeKeys(). linkedListValues().build();
+    
+    for(BlockPreview bp : list)
+    {
+      preview_map.put( bp.getBlockHeight(), bp);
+    }
+    for(BlockPreview bp : preview_map.values())
+    {
+      investigatePreview(bp);
+    }
+  }
+
+  /** See if we want to do anything with this preview */
+  private void investigatePreview(BlockPreview bp)
+  {
+    int shard_id = bp.getShardId();
+    if (!node.getInterestShards().contains(bp.getShardId())) return;
+    ChainHash hash = new ChainHash(bp.getSnowHash());
+    ChainHash prev = new ChainHash(bp.getPrevBlockHash());
+
+    boolean prev_plan;
+    synchronized(plan_lock)
+    {
+      if (plan_block_set.contains(hash)) return; //already have a plan
+      prev_plan = plan_block_set.contains(prev);
+    }
+
+    if (node.getForgeInfo().getSummary(hash) != null) return; //already have it
+
+    if (bp.getBlockHeight() == 0)
+    {
+      logger.info("Requesting block: " + hash);
+        writeMessage( PeerMessage.newBuilder()
+          .setReqBlock(
+            RequestBlock.newBuilder().setBlockHash(hash.getBytes()).build())
+          .build());
+      return;
+    }
+
+    boolean prev_db = (node.getForgeInfo().getSummary(prev) != null);
+    if (prev_db)
+    {
+      // Request it now
+      if (node.getBlockIngestor(0).reserveBlock(hash))
+      {
+        logger.info("Requesting block: " + hash);
+        writeMessage( PeerMessage.newBuilder()
+          .setReqBlock(
+            RequestBlock.newBuilder().setBlockHash(hash.getBytes()).build())
+          .build());
+      }
+      return;
+    }
+    else
+    {
+
+      if (!prev_plan)
+      {
+        // If we don't have a plan to get the previous block
+        // and we don't have the previous block
+        // then request more previews
+
+        logger.info(String.format("Requesting preview at %d - %s", bp.getBlockHeight()-1, prev));
+        writeMessage( PeerMessage.newBuilder()
+          .setReqPreviewChain(
+            RequestPreviewChain.newBuilder()
+              .setStartBlockHash( prev.getBytes() )
+              .setRequestedBlocksBack( Globals.MAX_PREVIEW_CHAIN_LENGTH )
+              .build()
+            )
+           .build());
+      }
+
+    }
+
+    synchronized(plan_lock)
+    {
+      plan_block_set.add(hash);
+      desire_block_map.put(prev, hash);
+    }
+
+  }
 
   private void checkTipForInterestThing(PeerChainTip tip)
     throws ValidationException
@@ -428,44 +498,13 @@ public class PeerLink implements StreamObserver<PeerMessage>
 
     PeerTipInfo tip_info = payload.getPeerTipInfo();
 
-    for(BlockPreview bp : tip_info.getPreviewsList())
-    {
-      if (node.getInterestShards().contains(bp.getShardId())) // we care
-      if (node.getForgeInfo().getSummary(new ChainHash( bp.getSnowHash())) == null) // we don't have it
-      {
-        if (node.getForgeInfo().getSummary(new ChainHash( bp.getPrevBlockHash()))!=null) // we have parent
-        {
-          // TODO request header
-
-          ChainHash hash = new ChainHash( bp.getSnowHash());
-
-          node.tryOpenShard(bp.getShardId());
-
-          if (node.getBlockIngestor(0).reserveBlock(hash))
-          {
-            logger.info("Requesting block from tip info preview: " + hash);
-            logger.info("We have the prev block - requesting this one from tip info");
-              writeMessage( PeerMessage.newBuilder()
-                .setReqBlock(
-                RequestBlock.newBuilder().setBlockHash(hash.getBytes()).build())
-                .build());
-          }
-        }
-        else
-        { // We want it, add to desire map
-
-          synchronized(desire_header_map)
-          {
-            desire_header_map.put(new ChainHash( bp.getPrevBlockHash() ),
-              new ChainHash( bp.getSnowHash() ));
-          }
-        }
-      }
-
-    }
+    investigatePreviews(tip_info.getPreviewsList());
   }
 
 
+  /**
+   * This might be pretty slow - maybe not use this so much
+   */
   private void scanForBlocksToRequest()
   {
     synchronized(desire_block_map)
@@ -503,128 +542,14 @@ public class PeerLink implements StreamObserver<PeerMessage>
    */
   private void considerBlockHeader(BlockHeader header, int context_shard_id)
   {
+    investigatePreview( BlockchainUtil.getPreview(header) );
     int shard_id = header.getShardId();
-    try
-    {
-      node.openShard(shard_id);
-    }
-    catch(Exception e)
-    {
-      throw new RuntimeException(e);
-    }
+    node.tryOpenShard(shard_id);
+
     if (!node.getActiveShards().contains(shard_id)) return;
-
-    synchronized(peer_block_map)
-    {
-      peer_block_map.put(new ShardBlock(context_shard_id, header.getBlockHeight()), new ChainHash(header.getSnowHash()));
-      peer_block_map.put(new ShardBlock(header), new ChainHash(header.getSnowHash()));
-
-      ShardBlock prev_sb = new ShardBlock(context_shard_id, header.getBlockHeight()-1);
-      if (peer_block_map.containsKey(prev_sb))
-      {
-        if (!peer_block_map.get(prev_sb).equals(header.getPrevBlockHash()))
-        {
-          peer_block_map.remove(prev_sb);
-        }
-      }
-    }
 
     node.getDB().getBlockHeaderMap().put( header.getSnowHash(), header);
     node.getDB().getChildBlockMapSet().add(header.getPrevBlockHash(), header.getSnowHash());
-
-    // if we have this block, done
-    if (node.getForgeInfo().getSummary(header.getSnowHash())!=null) return;
-
-    logger.info(String.format("Considering header context:%d shard:%d height:%d hash:%s prev:%s",
-      context_shard_id, header.getShardId(), header.getBlockHeight(),
-      new ChainHash(header.getSnowHash()).toString(),
-      new ChainHash(header.getPrevBlockHash()).toString()
-      ));
-
-
-    int height = header.getBlockHeight();
-    if ((height == 0) || (node.getDB().getBlockSummaryMap().get(header.getPrevBlockHash())!=null))
-    { // but we have the prev block - get this block
-      if (node.getBlockIngestor(0).reserveBlock(new ChainHash(header.getSnowHash())))
-      {
-        logger.info("We have the prev block - requesting this one");
-        writeMessage( PeerMessage.newBuilder()
-          .setReqBlock(
-            RequestBlock.newBuilder().setBlockHash(header.getSnowHash()).build())
-          .build());
-      }
-    }
-    else
-    {
-      // We want this block but can't have it yet
-      synchronized(desire_block_map)
-      {
-        desire_block_map.put(new ChainHash( header.getPrevBlockHash() ),
-          new ChainHash( header.getSnowHash() ));
-      }
-
-      // get more headers, still in the woods
-
-      // Special case for shard startup
-      if ((context_shard_id != 0) && (node.getBlockIngestor(context_shard_id).getHeight() == 0))
-      {
-        // So we are into a new shard that we don't have any blocks for
-        // and who knows what we have of the parent and if the main chain of the parent
-        // is actually the chain and leads here
-      }
-
-
-      int next = header.getBlockHeight();
-
-      // if we are a long way off, just jump to what we have plus chunk download size
-      // but only if we are on shard zero, or we already have a block in this shard
-      if ((context_shard_id != 0) || (node.getBlockIngestor(shard_id).getHeight() > 0))
-      if (node.getBlockIngestor(shard_id).getHeight() + Globals.BLOCK_CHUNK_HEADER_DOWNLOAD_SIZE < next)
-      {
-        logger.info("We are far off");
-        next = node.getBlockIngestor(shard_id).getHeight() + Globals.BLOCK_CHUNK_HEADER_DOWNLOAD_SIZE;
-      }
-
-      // Creep backwards until we get to a header we don't know about
-      boolean scan_only=false;
-      synchronized(peer_block_map)
-      {
-        while(peer_block_map.containsKey(new ShardBlock(context_shard_id, next)))
-        {
-          ChainHash h = peer_block_map.get(new ShardBlock(context_shard_id, next));
-          if (node.getDB().getBlockSummaryMap().get(h.getBytes())!=null)
-          {
-            scan_only=true;
-            break;
-          }
-          next--;
-        }
-      }
-
-      if (scan_only)
-      {
-        scanForBlocksToRequest();
-        return;
-      }
-
-      if (next >= 0)
-      {
-        ChainHash prev = new ChainHash(header.getPrevBlockHash());
-        synchronized(peer_block_map)
-        {
-          if (peer_block_map.containsKey(new ShardBlock(context_shard_id,next)))
-          {
-            if (peer_block_map.get(new ShardBlock(context_shard_id,next)).equals(prev)) return;
-          }
-        }
-        logger.info(String.format("Requesting header shard:%d height:%d", context_shard_id, next));
-
-        writeMessage( PeerMessage.newBuilder()
-          .setReqHeader(
-            RequestBlockHeader.newBuilder().setBlockHeight(next).setShardId(context_shard_id).build())
-          .build());
-      }
-    }
 
   }
 
