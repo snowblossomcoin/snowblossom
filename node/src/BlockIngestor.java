@@ -74,7 +74,8 @@ public class BlockIngestor implements ChainStateSource
       checkResummary();
 
       // TODO remove after whatever is fixed
-      updateHeights(chainhead, true);
+      //updateHeights(chainhead, true);
+      updateHeights(chainhead, false);
     }
 
 
