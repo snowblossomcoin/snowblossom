@@ -88,10 +88,10 @@ public class NetworkParamsTestShard extends NetworkParams
   @Override
   //public int getMaxShardId() {return 6; } //allows 4 shards
   //public int getMaxShardId() {return 6; } //allows 4 shards
-  //public int getMaxShardId() {return 14; } //allows 8 shards
+  public int getMaxShardId() {return 14; } //allows 8 shards
   //public int getMaxShardId() {return 28+2; } //allows 16 shards
   //public int getMaxShardId() {return 62; } // allows 32 shards
-  public int getMaxShardId() {return 126; } //allows 64 shards
+  //public int getMaxShardId() {return 126; } //allows 64 shards
   //public int getMaxShardId() {return 254; } // allows 128 shards
   //public int getMaxShardId() {return 512; } //allows 256 shards
   //public int getMaxShardId() {return 1022; } //allows 512 shards
