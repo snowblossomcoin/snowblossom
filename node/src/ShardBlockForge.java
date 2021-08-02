@@ -71,10 +71,11 @@ public class ShardBlockForge
 
       ArrayList<BlockConcept> possible_set = current_top_concepts;
 
-      if ((possible_set == null) || (possible_set.size() == 0))
+      /*if ((possible_set == null) || (possible_set.size() == 0))
       {
         concept_update_thread.wake();
-      }
+      }*/
+
       if (possible_set == null) return null;
       if (possible_set.size() == 0) return null;
 
