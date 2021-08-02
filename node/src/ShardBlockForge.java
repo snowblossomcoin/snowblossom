@@ -1142,15 +1142,18 @@ public class ShardBlockForge
       }
       current_top_concepts = pruned_concepts;
       logger.info(String.format("Pruned block concepts. Previous: %d, Now: %d", cur_top.size(), pruned_concepts.size()));
+      if (cur_top.size() != pruned_concepts.size())
+      {
+        concept_update_thread.wake();
+
+        // Notify miners
+        tickleUserService();
+      }
     }
     synchronized(signature_cache)
     {
       signature_cache.put(getSignature(bs), true);
     }
-    concept_update_thread.wake();
-
-    // Notify miners
-    tickleUserService();
 
   }
 
