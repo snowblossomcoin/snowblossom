@@ -6,6 +6,7 @@ set -eu
 cd /data
 
 cat <<EOF > /tmp/pool.conf
+env_override_prefix=snow_pool_
 log_config_file=${SNOWBLOSSOM_LOG_CONF:-log.conf}
 node_host=${SNOWBLOSSOM_NODE_HOST:-node}
 node_port=${SNOWBLOSSOM_NODE_PORT:-2338}
@@ -24,4 +25,4 @@ cp /tmp/pool.conf ./
 [[ ! -f log.conf ]] && cp /snowblossom/log.conf ./
 [[ ! -d logs ]] && mkdir logs
 
-bash /snowblossom/scripts/snowblossom snowblossom.miner.plow.MrPlow node.conf
+bash /snowblossom/scripts/snowblossom snowblossom.miner.plow.MrPlow pool.conf
