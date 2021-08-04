@@ -17,7 +17,7 @@ auto_snow=true
 snow_path=/data/snowfields
 EOF
 
-cp /tmp/solominer.conf ./
+cp /tmp/poolminer.conf ./
 [[ ! -f log.conf ]] && cp /snowblossom/log.conf ./
 [[ ! -d logs ]] && mkdir logs
 
