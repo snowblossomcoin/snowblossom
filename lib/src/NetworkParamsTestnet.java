@@ -62,7 +62,7 @@ public class NetworkParamsTestnet extends NetworkParams
   public ByteString getBlockZeroRemark() { return ByteString.copyFrom(new String("testnet2-20180516").getBytes()); }
 
   @Override
-  public int getMaxBlockSize(){ return 3800000; }
+  public int getMaxBlockSize(){ return 8000000; }
 
   @Override
   public int getActivationHeightTxOutRequirements() { return 16000; }
@@ -72,5 +72,12 @@ public class NetworkParamsTestnet extends NetworkParams
   
   @Override
   public int getActivationHeightTxInValue() { return 131000; }
+
+  @Override
+  public int getMaxShardId() {return 512; } //allows 256 shards
+
+  @Override
+  public int getActivationHeightShards() { return 170000; }
+
 
 }
