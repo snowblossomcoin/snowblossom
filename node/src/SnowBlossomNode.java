@@ -268,7 +268,7 @@ public class SnowBlossomNode
     new TimeWatcher().start();
     tx_broadcaster.start();
 
-    new Ender(this).start();
+    //new Ender(this).start();
   }
 
   private void startServices()
