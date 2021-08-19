@@ -260,7 +260,7 @@ public class PeerLink implements StreamObserver<PeerMessage>
           node.openShard(blk.getHeader().getShardId());
           if (node.getBlockIngestor(blk.getHeader().getShardId()).ingestBlock(blk))
           { // we could eat it, think about getting more blocks
-            scanForBlocksToRequest();
+            scanForBlocksToRequest(new ChainHash(blk.getHeader().getSnowHash()));
 
             // Think about getting more blocks from desire map
           }
@@ -517,11 +517,12 @@ public class PeerLink implements StreamObserver<PeerMessage>
   /**
    * This might be pretty slow - maybe not use this so much
    */
-  private void scanForBlocksToRequest()
+  private void scanForBlocksToRequest(ChainHash start)
   {
     synchronized(desire_block_map)
     {
-      for(ChainHash parent : desire_block_map.keySet())
+      ChainHash parent = start;
+      //for(ChainHash parent : desire_block_map.keySet())
       {
         if (node.getDB().getBlockSummaryMap().get(parent.getBytes())!=null)
         {
