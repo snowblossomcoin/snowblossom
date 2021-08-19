@@ -65,6 +65,9 @@ java_binary(
   name = "ShackletonExplorer",
   main_class = "snowblossom.shackleton.Shackleton",
   resources = [ "//shackleton:webstatic" ],
+  jvm_flags = [ 
+    "-Xms1g -Xmx1g",
+  ],
   runtime_deps = [
     "//shackleton:shackleton",
   ]
