@@ -480,6 +480,8 @@ public class WebServer implements WebHandler
 
     out.println(String.format("difficulty (avg): %s (%s)", df.format(target_diff), df.format(avg_diff)));
     out.println(String.format("estimated network hash rate: %s Mh/s", df.format(estimated_hash)));
+    long tx_size_average = summary.getTxSizeAverage();
+    out.println("Size average of transactions: " + tx_size_average);
  
     out.println("</pre>");
   }
@@ -685,7 +687,7 @@ public class WebServer implements WebHandler
     System.out.println("Shard heads: " + shards + " " + bs_map.keySet());
 
     HashSet<ChainHash> included_blocks = new HashSet<>();
-    out.println("<table class='table table-hover' id='blocktable'>");
+    out.println("<table class='table table-hover' id='braidtable'>");
     out.println("<thead><tr><th>Shard</th><th>Height</th><th>Hash</th><th>Tx</th><th>Size</th><th>Imp</th><th>Miner</th><th>Remark</th><th>Timestamp</th></tr></thead>");
 
     
