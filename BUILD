@@ -2,7 +2,7 @@ java_binary(
   name = "SnowBlossomNode",
   main_class = "snowblossom.node.SnowBlossomNode",
   jvm_flags = [ 
-    "-Xms2g -Xmx2g",
+    "-Xms4g -Xmx4g",
   ],
   runtime_deps = [
     "//node",
@@ -45,7 +45,7 @@ java_binary(
   name = "MrPlow",
   main_class = "snowblossom.miner.plow.MrPlow",
   jvm_flags = [ 
-    "-Xms2g -Xmx2g",
+    "-Xms4g -Xmx4g",
   ],
   runtime_deps = [
     "//miner:miner",

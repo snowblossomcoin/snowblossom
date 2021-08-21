@@ -414,11 +414,16 @@ public class SnowBlossomNode
       return false;
     }
 
-    // TODO - be shard aware
-    if (getBlockIngestor(0).getHead() != null)
+    for(int shard : getActiveShards())
     {
-      height = getBlockIngestor(0).getHead().getHeader().getBlockHeight();
+      if (getBlockIngestor(shard).getHead() != null)
+      {
+        height = Math.max( 
+          height,
+          getBlockIngestor(shard).getHead().getHeader().getBlockHeight());
+      }
     }
+    
     if (peerage.getHighestSeenHeader() != null)
     {
       seen_height = getPeerage().getHighestSeenHeader().getBlockHeight();
