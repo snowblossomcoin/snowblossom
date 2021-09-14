@@ -62,7 +62,7 @@ public class NetworkParamsTestShard extends NetworkParams
   @Override
   public List<String> getSeedNodes()
   {
-    return ImmutableList.of("seed.st.1209k.com");
+    return ImmutableList.of("snow-testshard.1209k.com", "hippo.1209k.com");
   }
   @Override
   public int getDefaultPort() { return 2361; }
