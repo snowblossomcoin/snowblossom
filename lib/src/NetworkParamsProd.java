@@ -103,4 +103,13 @@ public class NetworkParamsProd extends NetworkParams
   // SIP4 - roughly 2021.03.25
   @Override
   public int getActivationHeightTxInValue() { return 151680; }
+
+
+  // SIP5 - if approved
+  //@Override
+  //public int getActivationHeightShards() { return 211500; }
+
+  //@Override
+  //public int getMaxShardId() {return 62; } // allows 32 shards
+
 }
