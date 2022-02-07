@@ -109,7 +109,7 @@ public class NetworkParamsProd extends NetworkParams
   //@Override
   //public int getActivationHeightShards() { return 211500; }
 
-  //@Override
-  //public int getMaxShardId() {return 62; } // allows 32 shards
+  @Override
+  public int getMaxShardId() {return 62; } // allows 32 shards
 
 }
