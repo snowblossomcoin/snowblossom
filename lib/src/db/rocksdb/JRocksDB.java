@@ -63,6 +63,7 @@ public class JRocksDB extends DBProvider
     else
     {
       shared_db = openRocksDB(path);
+      shared_db.compactRange();
     }
 
   }
