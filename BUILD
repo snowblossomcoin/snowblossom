@@ -2,7 +2,7 @@ java_binary(
   name = "SnowBlossomNode",
   main_class = "snowblossom.node.SnowBlossomNode",
   jvm_flags = [ 
-    "-Xmx500M",
+    "-Xms4g -Xmx4g",
   ],
   runtime_deps = [
     "//node",
@@ -44,6 +44,9 @@ java_binary(
 java_binary(
   name = "MrPlow",
   main_class = "snowblossom.miner.plow.MrPlow",
+  jvm_flags = [ 
+    "-Xms4g -Xmx4g",
+  ],
   runtime_deps = [
     "//miner:miner",
   ]
@@ -61,6 +64,10 @@ java_binary(
 java_binary(
   name = "ShackletonExplorer",
   main_class = "snowblossom.shackleton.Shackleton",
+  resources = [ "//shackleton:webstatic" ],
+  jvm_flags = [ 
+    "-Xms1g -Xmx1g",
+  ],
   runtime_deps = [
     "//shackleton:shackleton",
   ]
@@ -102,7 +109,7 @@ java_binary(
 java_binary(
   name = "Everything",
   main_class = "snowblossom.iceleaf.IceLeaf",
-  resources = [ "//iceleaf-ui:resources" ],
+  resources = [ "//iceleaf-ui:resources", "//shackleton:webstatic" ],
   runtime_deps = [
     "//lib:lib",
     "//node:node",

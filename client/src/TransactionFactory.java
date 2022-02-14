@@ -8,6 +8,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.LinkedList;
 import java.util.Random;
 import java.util.TreeMap;
 import snowblossom.lib.*;
@@ -17,8 +18,153 @@ import snowblossom.util.proto.*;
 public class TransactionFactory
 {
 
-
   public static TransactionFactoryResult createTransaction(TransactionFactoryConfig config, WalletDatabase db, SnowBlossomClient client)
+    throws Exception
+  {
+	  TreeMap<Integer, List<UTXOEntry> > usable_inputs = new TreeMap<>();
+    TreeMap<Integer, Long> shard_funds = new TreeMap<>();
+    Random rnd = new Random();
+    DecimalFormat df = new DecimalFormat("0.000000");
+    
+    ArrayList<TransactionOutput> outputs = new ArrayList<>();
+    long output_sum = 0;
+    long input_sum = 0;
+    for(TransactionOutput out : config.getOutputsList())
+    {
+      outputs.add(out);
+      output_sum += out.getValue();
+    }
+
+    if (config.getSendAll())
+    {
+      if (config.getOutputsCount() != 1)
+      {
+        throw new ValidationException("For send_all, there must be exactly one output");
+      }
+      if (outputs.get(0).getValue() != 0L)
+      {
+        throw new ValidationException("For send_all, the one output must have 0 value initially");
+      }
+    }
+
+    if (config.getInputSpecificList())
+    {
+      return createTransactionSingle(config, db, client);
+    }
+    else if (config.getInputConfirmedThenPending() || config.getInputConfirmedOnly())
+    {
+      boolean use_pending=false;
+      if (config.getInputConfirmedThenPending()) use_pending=true;
+
+      for(TransactionBridge br : client.getAllSpendable())
+      {
+        boolean confirmed = !br.unconfirmed;
+        if (!br.spent)
+        if (use_pending || confirmed)
+        {
+          UTXOEntry e = br.toUTXOEntry();
+          double priority = rnd.nextDouble();
+          if (confirmed) priority += 1e3;
+          if (!usable_inputs.containsKey(br.shard_id))
+          {
+            usable_inputs.put(br.shard_id, new LinkedList<UTXOEntry>());
+            shard_funds.put(br.shard_id, 0L);
+          }
+          usable_inputs.get(br.shard_id).add(e);
+          shard_funds.put(br.shard_id, shard_funds.get(br.shard_id) + e.getValue());
+          input_sum += e.getValue();
+
+        }
+      }
+    } 
+    else
+    {
+      throw new ValidationException("No input mode specified");
+   	}
+
+    
+
+    TransactionFactoryResult.Builder res = TransactionFactoryResult.newBuilder();
+    res.setAllSigned(true);
+
+    if (config.getSendAll())
+    {
+
+      for(int s : usable_inputs.keySet())
+      {
+        TransactionFactoryConfig.Builder sub_config = TransactionFactoryConfig.newBuilder();
+        sub_config.mergeFrom(config);
+        sub_config.setInputSpecificList(true);
+        sub_config.addAllInputs(usable_inputs.get(s));
+
+        TransactionFactoryResult fr = createTransactionSingle(sub_config.build(), db, client);
+        if (!fr.getAllSigned()) res.setAllSigned(false);
+
+        res.addAllTxs(fr.getTxsList());
+        res.setFee( res.getFee() + fr.getFee() );
+        res.setSignaturesAdded( res.getSignaturesAdded() + fr.getSignaturesAdded() );
+      }
+      return res.build();
+    }
+    if (output_sum > input_sum)
+    {
+      double short_d = (0.0 + output_sum - input_sum)  / Globals.SNOW_VALUE_D;
+      throw new ValidationException(String.format("Insufficent funds.  Short: %s SNOW", df.format(short_d)));
+    }
+
+    // Ok, now we are in a normal case, there are specified outputs
+    List<Integer> shard_order = new LinkedList<>();
+    shard_order.addAll(shard_funds.keySet());
+    Collections.shuffle(shard_order);
+
+
+    // Try to satisfy entire order from one shard
+    for(int s : shard_order)
+    {
+      long funds = shard_funds.get(s);
+      if (funds >= output_sum)
+      {
+        try
+        {
+          TransactionFactoryConfig.Builder sub_config = TransactionFactoryConfig.newBuilder();
+          sub_config.mergeFrom(config);
+          sub_config.setInputSpecificList(true);
+          sub_config.addAllInputs(usable_inputs.get(s));
+
+          TransactionFactoryResult fr = createTransactionSingle(sub_config.build(), db, client);
+          if (!fr.getAllSigned()) res.setAllSigned(false);
+
+          res.addAllTxs(fr.getTxsList());
+          res.setFee( res.getFee() + fr.getFee() );
+          res.setSignaturesAdded( res.getSignaturesAdded() + fr.getSignaturesAdded() );
+
+          return res.build();
+
+        }
+        catch(ValidationException e)
+        {
+
+        }
+
+      }
+
+    }
+
+    if (!config.getAllowSplitSend())
+    {
+      throw new ValidationException("Split spend required and not set");
+    }
+
+    throw new ValidationException("Split outputs required but not implemented");
+
+    // Now we have to split outputs
+
+		//return null;
+
+  }
+
+  
+  public static TransactionFactoryResult createTransactionSingle(TransactionFactoryConfig config, WalletDatabase db, SnowBlossomClient client)
     throws Exception
   {
     TransactionInner.Builder inner = TransactionInner.newBuilder();
@@ -80,7 +226,7 @@ public class TransactionFactory
         usable_inputs.put(rnd.nextDouble(), e);
       }
     }
-    else if (config.getInputConfirmedThenPending() || config.getInputConfirmedOnly())
+    /*else if (config.getInputConfirmedThenPending() || config.getInputConfirmedOnly())
     {
       boolean use_pending=false;
       if (config.getInputConfirmedThenPending()) use_pending=true;
@@ -98,7 +244,7 @@ public class TransactionFactory
           usable_inputs.put(-priority, e);
         }
       }
-    } 
+    }*/
     else
     {
       throw new ValidationException("No input mode specified");
@@ -198,10 +344,9 @@ public class TransactionFactory
         TransactionOutput.newBuilder()
           .setRecipientSpecHash( change_addr.getBytes() )
           .setValue(value)
+          .setTargetShard(config.getChangeShardId())
           .build());
-
     }
-
 
     Collections.shuffle(outputs);
     Collections.shuffle(inputs);
@@ -218,10 +363,17 @@ public class TransactionFactory
 
     if (config.getSign())
     {
-      return signTransaction(tx.build(), db);
+      TransactionSignResult tsr = signTransaction(tx.build(), db);
+
+      return TransactionFactoryResult.newBuilder()
+        .addTxs(tsr.getTx())
+        .setFee(fee)
+        .setAllSigned(tsr.getAllSigned())
+        .build();
+
     }
     return TransactionFactoryResult.newBuilder()
-      .setTx(tx.build())
+      .addTxs(tx.build())
       .setFee(fee)
       .setAllSigned(false)
       .build();
@@ -259,7 +411,7 @@ public class TransactionFactory
   }
 
 
-  public static TransactionFactoryResult signTransaction(Transaction input, WalletDatabase db)
+  public static TransactionSignResult signTransaction(Transaction input, WalletDatabase db)
     throws ValidationException
   {
     TransactionInner inner = TransactionUtil.getInner(input);
@@ -327,7 +479,7 @@ public class TransactionFactory
       if (needed_sigs[i] > 0) all_signed=false;
     }
            
-     return TransactionFactoryResult.newBuilder()
+     return TransactionSignResult.newBuilder()
       .setTx(tx.build())
       .setFee(inner.getFee())
       .setAllSigned(all_signed)

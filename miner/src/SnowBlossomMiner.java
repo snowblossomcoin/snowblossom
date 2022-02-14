@@ -6,6 +6,7 @@ import duckutil.ConfigFile;
 import duckutil.MultiAtomicLong;
 import duckutil.TimeRecord;
 import duckutil.TimeRecordAuto;
+import duckutil.RateLimit;
 import io.grpc.ManagedChannel;
 import io.grpc.stub.StreamObserver;
 import java.io.File;
@@ -50,7 +51,7 @@ public class SnowBlossomMiner
 
     while (true)
     {
-      Thread.sleep(15000);
+      Thread.sleep(45000);
       miner.printStats();
     }
   }
@@ -66,6 +67,7 @@ public class SnowBlossomMiner
   private MultiAtomicLong op_count = new MultiAtomicLong();
   private long last_stats_time = System.currentTimeMillis();
   private Config config;
+  private RateLimit rate_limit = null;
 
   private File snow_path;
 
@@ -96,6 +98,16 @@ public class SnowBlossomMiner
       time_record = new TimeRecord();
       TimeRecord.setSharedRecord(time_record);
     }
+
+    if (config.isSet("rate_limit"))
+    {
+      double limit = config.getDouble("rate_limit");
+      rate_limit = new RateLimit( limit, 1.0);
+
+      logger.info("APPLYING RATE LIMIT: " + limit + " hashes per second");
+
+    }
+
 
     int threads = config.getIntWithDefault("threads", 8);
     logger.info("Starting " + threads + " threads");
@@ -213,7 +225,8 @@ public class SnowBlossomMiner
 
       double block_time_sec = Math.pow(2.0, diff) / rate;
       double hours = block_time_sec / 3600.0;
-      block_time_report = String.format("- at this rate %s hours per block", df.format(hours));
+      double min = hours * 60.0;
+      block_time_report = String.format("- at this rate %s hours or %s minutes per block", df.format(hours), df.format(min));
     }
 
 
@@ -268,6 +281,13 @@ public class SnowBlossomMiner
     int proof_field;
     byte[] nonce = new byte[Globals.NONCE_LENGTH];
 
+    /**
+     * If using rate limiting, this is how much
+     * remaining quota this thread has already allocated
+     */
+    int rate_limit_quota;
+
+
     public MinerThread()
     {
       setName("MinerThread");
@@ -278,6 +298,17 @@ public class SnowBlossomMiner
 
     private void runPass() throws Exception
     {
+      if (rate_limit != null)
+      {
+        if (rate_limit_quota <= 0)
+        {
+          rate_limit.waitForRate(1000.0);
+          rate_limit_quota = 1000;
+        }
+
+        rate_limit_quota--;
+      }
+ 
       Block b = last_block_template;
       if (b == null)
       {
@@ -390,6 +421,7 @@ public class SnowBlossomMiner
         {
           err = true;
           logger.warning("Error: " + t);
+          t.printStackTrace();
         }
 
         if (err)
@@ -415,11 +447,19 @@ public class SnowBlossomMiner
 
     public void onNext(Block b)
     {
-      logger.finer("Got block template: height:" + b.getHeader().getBlockHeight() + " transactions:" + b.getTransactionsCount());
+      if (b.getHeader().getTarget().size() == 0)
+      {
+        logger.info("Got null template, clearing block template");
+        last_block_template = null;
+        return;
 
+      }
+      logger.info(String.format("Got block template: shard:%d height:%d transactions:%d",
+        b.getHeader().getShardId(),
+        b.getHeader().getBlockHeight(),
+        b.getTransactionsCount()));
 
       int min_field = b.getHeader().getSnowField();
-
 
       logger.finer("Required field: " + min_field + " - " + params.getSnowFieldInfo(min_field).getName());
 

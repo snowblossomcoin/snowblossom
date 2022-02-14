@@ -399,7 +399,14 @@ public class TransactionUtil
       String address =  AddressUtil.getAddressString(params.getAddressPrefix(), new AddressSpecHash( o.getRecipientSpecHash()));
       double value = o.getValue() / Globals.SNOW_VALUE_D;
 
-      out.println(String.format("  Output: %s %s", address, df.format(value)));
+      if (o.getTargetShard() == 0)
+      {
+        out.println(String.format("  Output: %s %s", address, df.format(value)));
+      }
+      else
+      {
+        out.println(String.format("  Output: %s s:%d %s", address, o.getTargetShard(), df.format(value)));
+      }
       if (o.getRequirements().getRequiredBlockHeight() > 0) out.println("    Required block height: " + o.getRequirements().getRequiredBlockHeight());
       if (o.getRequirements().getRequiredTime() > 0) out.println("    Required time: " + o.getRequirements().getRequiredTime());
       if (o.getForBenefitOfSpecHash().size() > 0)
@@ -446,7 +453,7 @@ public class TransactionUtil
 
   /* Outputs transaction with HTML
    * inValues - The snow amounts for the transaction inputs in question so they can be displayed */
-  public static void prettyDisplayTxHTML(Transaction tx, PrintStream out, NetworkParams params, LinkedList<Double> inValues)
+  public static void prettyDisplayTxHTML(Transaction tx, PrintStream out, NetworkParams params)
     throws ValidationException
   {
     out.println("<table class='table' style='max-width: 1400px;'><tr><th colspan=2>");
@@ -502,17 +509,27 @@ public class TransactionUtil
       String address = AddressUtil.getAddressString(params.getAddressPrefix(), new AddressSpecHash( in.getSpecHash()));
       ChainHash src_tx = new ChainHash(in.getSrcTxId());
       int idx = in.getSrcTxOutIdx();
-      double amount = inValues.get(0);
-      inValues.removeFirst();
-      out.println(String.format("<a href='/?search=%s'>%s</a> <b>%s</b><br />", address, address, df.format(amount)));
+      if (in.getValue() > 0)
+      {
+        double amount = in.getValue() / Globals.SNOW_VALUE_D;
+        out.println(String.format("<a href='/?search=%s'>%s</a> <b>%s</b><br />", address, address, df.format(amount)));
+      }
+      else
+      {
+        out.println(String.format("<a href='/?search=%s'>%s</a><br />", address, address));
+
+      }
+      //inValues.removeFirst();
     }
     out.println("</td><td style='width: 50%;'>");
     for(TransactionOutput o : inner.getOutputsList())
     {
       String address =  AddressUtil.getAddressString(params.getAddressPrefix(), new AddressSpecHash( o.getRecipientSpecHash()));
       double value = o.getValue() / Globals.SNOW_VALUE_D;
+      int dest_shard = o.getTargetShard();
 
-      out.println(String.format("<a href='/?search=%s'>%s</a> <b>%s</b><br />", address, address, df.format(value)));
+      out.println(String.format("<a href='/?search=%s'>%s</a> s:%d <b>%s</b><br />",
+        address, address, dest_shard, df.format(value)));
       //TODO - add requirements data
       if (o.getIds().getUsername().size() > 0)
       { 

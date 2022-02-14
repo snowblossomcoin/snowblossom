@@ -19,6 +19,7 @@ import snowblossom.util.proto.*;
 public class SpoonTestFbo extends SpoonTest
 {
 
+
   @Test
   public void fboTest() throws Exception
   {
@@ -28,7 +29,7 @@ public class SpoonTestFbo extends SpoonTest
     int port = 20000 + rnd.nextInt(30000);
     SnowBlossomNode node = startNode(port);
     Thread.sleep(100);
-    
+
     SnowBlossomClient client = startClientWithWallet(port);
     SnowBlossomClient client_lock = startClientWithWallet(port);
 
@@ -40,12 +41,12 @@ public class SpoonTestFbo extends SpoonTest
 
     AddressSpecHash social_addr = AddressUtil.getHashForSpec( social_db.getAddresses(0) );
 
-    
+
     SnowBlossomMiner miner = startMiner(port, mine_to_addr, snow_path);
 
     testMinedBlocks(node);
 
-    
+
     LinkedList<Transaction> tx_list = new LinkedList<>();
     LinkedList<Transaction> tx_list_jumbo = new LinkedList<>();
     LinkedList<Transaction> tx_list_swoopo = new LinkedList<>();
@@ -84,12 +85,15 @@ public class SpoonTestFbo extends SpoonTest
 
       TransactionFactoryResult tr = TransactionFactory.createTransaction(config.build(), client.getPurse().getDB(), client);
 
-      SubmitReply submit = client.getStub().submitTransaction(tr.getTx());
-      System.out.println(submit);
+      for(Transaction tx : tr.getTxsList())
+      {
+        SubmitReply submit = client.getStub().submitTransaction(tx);
+        System.out.println(submit);
 
-      Assert.assertTrue(submit.getErrorMessage(), submit.getSuccess());
+        Assert.assertTrue(submit.getErrorMessage(), submit.getSuccess());
+      }
 
-      tx_list.add(tr.getTx());
+      tx_list.addAll(tr.getTxsList());
 
       waitForMoreBlocks(node, 1);
 
@@ -97,21 +101,21 @@ public class SpoonTestFbo extends SpoonTest
 
 
     // TODO - test FBO
-    TxOutList fbo_out_list = ForBenefitOfUtil.getFBOList(social_addr, 
-      node.getDB(), 
+    TxOutList fbo_out_list = ForBenefitOfUtil.getFBOList(social_addr,
+      node.getDB(),
       node.getBlockIngestor().getHead());
-    
+
     Assert.assertEquals( 40, fbo_out_list.getOutListCount());
 
     // TODO - test user name
-    TxOutList jumbo_list = ForBenefitOfUtil.getIdListUser(ByteString.copyFrom("jumbo".getBytes()), 
-      node.getDB(), 
+    TxOutList jumbo_list = ForBenefitOfUtil.getIdListUser(ByteString.copyFrom("jumbo".getBytes()),
+      node.getDB(),
       node.getBlockIngestor().getHead());
     Assert.assertEquals( 10, jumbo_list.getOutListCount());
 
     // TODO - test channel name
-    TxOutList swoopo_list = ForBenefitOfUtil.getIdListChannel(ByteString.copyFrom("swoopo".getBytes()), 
-      node.getDB(), 
+    TxOutList swoopo_list = ForBenefitOfUtil.getIdListChannel(ByteString.copyFrom("swoopo".getBytes()),
+      node.getDB(),
       node.getBlockIngestor().getHead());
     Assert.assertEquals( 10, swoopo_list.getOutListCount());
 
@@ -129,7 +133,7 @@ public class SpoonTestFbo extends SpoonTest
         node.getBlockIngestor().getHead()).getOutListCount());
 
     }
-    
+
     { // Send back - spend all
       TransactionFactoryConfig.Builder config = TransactionFactoryConfig.newBuilder();
 
@@ -145,32 +149,33 @@ public class SpoonTestFbo extends SpoonTest
 
       TransactionFactoryResult tr = TransactionFactory.createTransaction(config.build(), client_lock.getPurse().getDB(), client_lock);
 
-      SubmitReply submit = client_lock.getStub().submitTransaction(tr.getTx());
-      System.out.println(submit);
+      for(Transaction tx : tr.getTxsList())
+      {
+        SubmitReply submit = client_lock.getStub().submitTransaction(tx);
+        System.out.println(submit);
 
-      Assert.assertTrue(submit.getErrorMessage(), submit.getSuccess());
+        Assert.assertTrue(submit.getErrorMessage(), submit.getSuccess());
+      }
 
       waitForMoreBlocks(node, 1);
 
-
-
     }
-    
+
     // TODO - test FBO
-    TxOutList fbo_out_list_a = ForBenefitOfUtil.getFBOList(social_addr, 
-      node.getDB(), 
+    TxOutList fbo_out_list_a = ForBenefitOfUtil.getFBOList(social_addr,
+      node.getDB(),
       node.getBlockIngestor().getHead());
     Assert.assertEquals( 0, fbo_out_list_a.getOutListCount());
 
     // TODO - test user name
-    TxOutList jumbo_list_a = ForBenefitOfUtil.getIdListUser(ByteString.copyFrom("jumbo".getBytes()), 
-      node.getDB(), 
+    TxOutList jumbo_list_a = ForBenefitOfUtil.getIdListUser(ByteString.copyFrom("jumbo".getBytes()),
+      node.getDB(),
       node.getBlockIngestor().getHead());
     Assert.assertEquals( 0, jumbo_list_a.getOutListCount());
 
     // TODO - test channel name
-    TxOutList swoopo_list_a = ForBenefitOfUtil.getIdListChannel(ByteString.copyFrom("swoopo".getBytes()), 
-      node.getDB(), 
+    TxOutList swoopo_list_a = ForBenefitOfUtil.getIdListChannel(ByteString.copyFrom("swoopo".getBytes()),
+      node.getDB(),
       node.getBlockIngestor().getHead());
     Assert.assertEquals( 0, swoopo_list_a.getOutListCount());
 

@@ -21,6 +21,7 @@ java_library(
     "@duckutil//:lobstack_lib",
     "@duckutil//:duckutil_jsonrpc_lib",
     "@build_stack_rules_proto//java:grpc_netty",
+    "@maven//:org_slf4j_slf4j_nop",
     ],
 )
 
@@ -159,6 +160,19 @@ java_test(
     ]
 )
 
+java_test(
+    name = "lib.test.ShardUtilTest",
+    test_class = "lib.test.ShardUtilTest",
+    srcs = glob(["test/ShardUtilTest.java"]),
+    deps = [
+        "//lib:lib",
+        "//lib:rocksdb",
+        "//protolib:protogrpc",
+        "@maven//:commons_codec_commons_codec",
+        "@maven//:org_bouncycastle_bcprov_jdk15on",
+    ]
+)
+
 
 java_test(
     name = "lib.test.PRNGStreamTest",
@@ -214,5 +228,19 @@ java_test(
         "@maven//:org_bouncycastle_bcprov_jdk15on",
     ]
 )
+
+java_test(
+    name = "lib.test.OverlayMapTest",
+    test_class = "lib.test.OverlayMapTest",
+    srcs = glob(["test/OverlayMapTest.java"]),
+    deps = [
+        "//lib:lib",
+        "//lib:rocksdb",
+        "//protolib:protogrpc",
+        "@maven//:commons_codec_commons_codec",
+        "@maven//:org_bouncycastle_bcprov_jdk15on",
+    ]
+)
+
 
 

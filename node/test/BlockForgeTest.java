@@ -31,7 +31,7 @@ public class BlockForgeTest
 
     List<TransactionOutput> lst = BlockForge.makeCoinbaseOutputs(params, reward, 
       SubscribeBlockTemplateRequest.newBuilder()
-        .setPayRewardToSpecHash( ByteString.copyFrom(addr) ).build());
+        .setPayRewardToSpecHash( ByteString.copyFrom(addr) ).build(), 0);
 
     Assert.assertEquals(1, lst.size());
     Assert.assertEquals(reward, lst.get(0).getValue());
@@ -67,7 +67,7 @@ public class BlockForgeTest
       // Making sure that reward is greater than count.
       long reward = (2+ rnd.nextInt(5000)) * count;
 
-      List<TransactionOutput> lst = BlockForge.makeCoinbaseOutputs(params, reward, req.build());
+      List<TransactionOutput> lst = BlockForge.makeCoinbaseOutputs(params, reward, req.build(), 0);
       Assert.assertEquals(count, lst.size());
       long expected = reward / count;
       long total = 0;
@@ -108,7 +108,7 @@ public class BlockForgeTest
 
       long reward = (1+ rnd.nextInt(5000)) * count;
       reward += rnd.nextInt(count - 1) + 1;
-      List<TransactionOutput> lst = BlockForge.makeCoinbaseOutputs(params, reward, req.build());
+      List<TransactionOutput> lst = BlockForge.makeCoinbaseOutputs(params, reward, req.build(), 0);
       Assert.assertEquals(count, lst.size());
 
       long total = 0;
@@ -148,7 +148,7 @@ public class BlockForgeTest
       }
 
       long reward = 50000000 + rnd.nextInt(1000000);
-      List<TransactionOutput> lst = BlockForge.makeCoinbaseOutputs(params, reward, req.build());
+      List<TransactionOutput> lst = BlockForge.makeCoinbaseOutputs(params, reward, req.build(), 0);
 
       long total = 0;
 
@@ -162,6 +162,15 @@ public class BlockForgeTest
     }
   }
 
+  @Test
+  public void testProtoNullBlock()
+  {
+    Block block = Block.newBuilder().build();
+    BlockTemplate bt = BlockTemplate.newBuilder()
+      .setBlock(block)
+      .build();
 
+
+  }
 
 }

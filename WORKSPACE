@@ -17,7 +17,7 @@ git_repository(
   name = "build_stack_rules_proto",
   remote = "https://github.com/fireduck64/rules_proto",
   commit = "3e0b10c45c5e15b3ee17b3aa8a7ffe6e16b018cc",
-  shallow_since = "1579204983 -0800"
+  shallow_since = "1614632955 -0800"
 )
 
 load("@build_stack_rules_proto//:deps.bzl", "io_grpc_grpc_java")
@@ -37,14 +37,14 @@ java_grpc_library()
 git_repository(
   name = "duckutil",
   remote = "https://github.com/fireduck64/duckutil",
-  commit = "bf1f4e4ba46a814c6e40b53de4921ebea950d84c",
-  shallow_since = "1605330022 -0800",
+  commit = "61ed88b7f2dc5618fdb964e891500a08d49d6b2a",
+  shallow_since = "1625642124 -0700"
 )
 
 maven_install(
     artifacts = [
 				"com.google.protobuf:protobuf-java:3.5.1",
-				"org.rocksdb:rocksdbjni:6.11.4",
+				"org.rocksdb:rocksdbjni:6.20.3",
         "junit:junit:4.12",
 				"commons-codec:commons-codec:1.11",
         "org.apache.commons:commons-math3:3.6.1",
@@ -53,7 +53,7 @@ maven_install(
         "org.bouncycastle:bcpkix-jdk15on:1.69",
         "org.bouncycastle:bcprov-jdk15to18:1.69",
 				"com.thetransactioncompany:jsonrpc2-server:1.11",
-				"net.minidev:json-smart:2.3",
+				"net.minidev:json-smart:2.4.7",
 				"com.lambdaworks:scrypt:1.4.0",
 				"com.google.zxing:javase:3.4.0",
 				"org.slf4j:slf4j-nop:1.7.25",

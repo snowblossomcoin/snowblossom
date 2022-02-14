@@ -25,7 +25,7 @@ public class SpoonTestPool extends SpoonTest
     Random rnd = new Random();
     int port = 20000 + rnd.nextInt(30000);
     SnowBlossomNode node = startNode(port);
-    Thread.sleep(100);
+    Thread.sleep(2000);
 
     KeyPair key_pair = KeyUtil.generateECCompressedKey();
     AddressSpec claim = AddressUtil.getSimpleSpecForKey(key_pair.getPublic(), SignatureUtil.SIG_TYPE_ECDSA_COMPRESSED);
@@ -42,8 +42,10 @@ public class SpoonTestPool extends SpoonTest
     SnowBlossomClient client = startClient(port);
 
     MrPlow plow = startMrPlow(port, to_addr2);
+    Thread.sleep(4000);
 
-    PoolMiner miner = startPoolMiner(port+1, to_addr, snow_path);
+    PoolMiner miner = startPoolMiner(plow.getGrpcPort(), to_addr, snow_path);
+    Thread.sleep(25000);
 
     waitForMoreBlocks(node, 10);
 
@@ -56,11 +58,11 @@ public class SpoonTestPool extends SpoonTest
     // Miner getting paid
     waitForFunds(client, to_addr, 30);
 
-    PoolMiner miner2 = startPoolMiner(port+1, to_addr3, snow_path);
+    PoolMiner miner2 = startPoolMiner(plow.getGrpcPort(), to_addr3, snow_path);
 
     // Second miner getting paid
     waitForFunds(client, to_addr3, 30);
-    
+
     miner.stop();
     miner2.stop();
     Thread.sleep(500);

@@ -45,6 +45,45 @@ public class SpoonTest
     Globals.addCryptoProvider();
   }
 
+  /**
+   * Override this to print state before a failure
+   */
+  public void preFailReport()
+    throws Exception
+  {
+
+  }
+
+  /**
+   * Print a bunch of information about what a node knows about the shards
+   */
+  protected void printNodeShardStatus(SnowBlossomNode node, String label)
+  {
+    System.out.println("-------------- Node Shard Report ----------------------");
+    System.out.println("NODE: " + label);
+
+    System.out.println("Interest shards: " + node.getInterestShards());
+    System.out.println("Active shards: " + node.getActiveShards());
+    System.out.println("Building shards: " + node.getCurrentBuildingShards());
+
+    for(int shard = 0; shard <= node.getParams().getMaxShardId(); shard++)
+    {
+      for(BlockHeader bh : node.getForgeInfo().getShardHeads(shard))
+      {
+        ChainHash hash = new ChainHash(bh.getSnowHash());
+        boolean has_summary = (node.getForgeInfo().getSummary(hash) != null);
+        boolean has_export = (node.getShardUtxoImport().getImportBlock(hash) != null);
+
+        System.out.println(String.format("Shard head %d sum:%b exp:%b - %s",
+          shard, has_summary, has_export, node.getForgeInfo().getHeaderString(bh)));
+      }
+
+    }
+
+
+    System.out.println("-------------- Node Shard Report End ------------------");
+  }
+
   protected void testMinedBlocks(SnowBlossomNode node) throws Exception
   {
     waitForMoreBlocks(node, 3);
@@ -52,23 +91,85 @@ public class SpoonTest
 
   protected void waitForMoreBlocks(SnowBlossomNode node, int wait_for) throws Exception
   {
+    waitForMoreBlocks(node, 0, wait_for);
+  }
+  protected void waitForMoreBlocks(SnowBlossomNode node, int shard_id, int wait_for) throws Exception
+  {
     int start = -1;
-    if (node.getBlockIngestor().getHead()!=null)
+    if (node.getBlockIngestor(shard_id).getHead()!=null)
     {
-      start = node.getBlockIngestor().getHead().getHeader().getBlockHeight();
+      start = node.getBlockIngestor(shard_id).getHead().getHeader().getBlockHeight();
     }
     int target = start + wait_for;
 
     int height = start;
-    for (int i = 0; i < 15; i++)
+    for (int i = 0; i < 25; i++)
     {
       Thread.sleep(1000);
-      height = node.getBlockIngestor().getHead().getHeader().getBlockHeight();
+      if (node.getBlockIngestor(shard_id) != null)
+      if (node.getBlockIngestor(shard_id).getHead() != null)
+      {
+        height = node.getBlockIngestor(shard_id).getHead().getHeader().getBlockHeight();
+      }
       if (height >= target) return;
     }
+    preFailReport();
     Assert.fail(String.format("Waiting for %d blocks, only got %d", wait_for, height - start));
 
   }
+
+  protected void waitForHeight(SnowBlossomNode node, int shard_id, int target) throws Exception
+  {
+    waitForHeight(node, shard_id, target, 25);
+  }
+  protected void waitForHeight(SnowBlossomNode node, int shard_id, int target, int max_wait) throws Exception
+  {
+
+    int height=-1;
+    for (int i = 0; i < max_wait; i++)
+    {
+      Thread.sleep(1000);
+      if (node.getBlockIngestor(shard_id) != null)
+      if (node.getBlockIngestor(shard_id).getHead() != null)
+      {
+        height = node.getBlockIngestor(shard_id).getHead().getHeader().getBlockHeight();
+        if (height >= target) return;
+      }
+    }
+    preFailReport();
+    Assert.fail(String.format("Waiting for %d blocks, only got %d", target, height));
+
+  }
+
+
+  protected void waitForShardOpen(SnowBlossomNode node, int shard_id) throws Exception
+  {
+    for(int i=0; i<25; i++)
+    {
+      if (node.getActiveShards().contains(shard_id)) return;
+      Thread.sleep(1000);
+    }
+    preFailReport();
+    Assert.fail(String.format("Shard %d did not become active", shard_id));
+
+  }
+  protected void waitForShardHead(SnowBlossomNode node, int shard_id) throws Exception
+  {
+    for(int i=0; i<25; i++)
+    {
+      if (node.getActiveShards().contains(shard_id))
+      if (node.getBlockIngestor(shard_id).getHead() != null)
+      {
+        return;
+      }
+      Thread.sleep(1000);
+    }
+    preFailReport();
+    Assert.fail(String.format("Shard %d did not become active", shard_id));
+
+  }
+
+
 
   protected void waitForFunds(SnowBlossomClient client, AddressSpecHash addr, int max_seconds)
     throws Exception
@@ -80,6 +181,7 @@ public class SpoonTest
 
     }
 
+    preFailReport();
     Assert.fail(String.format("Waiting for funds.  Didn't get any after %d seconds", max_seconds));
 
   }
@@ -88,7 +190,7 @@ public class SpoonTest
   protected void testConsolidateFunds(SnowBlossomNode node, SnowBlossomClient client, KeyPair key_pair, AddressSpecHash from_addr) throws Exception
   {
     List<TransactionBridge> funds = client.getSpendable(from_addr);
-    
+
     System.out.println("Funds: " + funds.size());
     Assert.assertTrue(funds.size() > 3);
 
@@ -122,9 +224,9 @@ public class SpoonTest
 
     Assert.assertNotNull(node.getDB());
 
-    TransactionStatus status = TransactionMapUtil.getTxStatus( 
-      new ChainHash(tx.getTxHash()), 
-      node.getDB(), 
+    TransactionStatus status = TransactionMapUtil.getTxStatus(
+      new ChainHash(tx.getTxHash()),
+      node.getDB(),
       node.getBlockIngestor().getHead());
 
     System.out.println(status);
@@ -146,18 +248,24 @@ public class SpoonTest
 
   protected File setupSnow() throws Exception
   {
-    NetworkParams params = new NetworkParamsRegtest();
+    return setupSnow("spoon");
+  }
+  protected File setupSnow(String network) throws Exception
+  {
+    TreeMap<String, String> config_map = new TreeMap<>();
+    config_map.put("network", network);
+
+    NetworkParams params = NetworkParams.loadFromConfig(new ConfigMem(config_map));
 
     String test_folder_base = test_folder.newFolder().getPath();
 
     File snow_path = new File(test_folder.newFolder(), "snow");
 
-
     for (int i = 0; i < 4; i++)
     {
       SnowFieldInfo info = params.getSnowFieldInfo(i);
 
-      String name = "spoon." + i;
+      String name = network + "." + i;
 
       File field_path = new File(snow_path, name);
       field_path.mkdirs();
@@ -174,6 +282,14 @@ public class SpoonTest
 
   protected SnowBlossomNode startNode(int port) throws Exception
   {
+    return startNode(port, "spoon");
+  }
+  protected SnowBlossomNode startNode(int port, String network) throws Exception
+  {
+    return startNode(port, network, null);
+  }
+  protected SnowBlossomNode startNode(int port, String network, Map<String, String> extra) throws Exception
+  {
 
     String test_folder_base = test_folder.newFolder().getPath();
 
@@ -181,9 +297,15 @@ public class SpoonTest
     config_map.put("db_path", test_folder_base + "/db");
     config_map.put("db_type", "rocksdb");
     config_map.put("service_port", "" + port);
-    config_map.put("network", "spoon");
+    config_map.put("network", network);
     config_map.put("tx_index", "true");
     config_map.put("addr_index", "true");
+    config_map.put("peer_count", "64");
+
+    if (extra!=null)
+    {
+      config_map.putAll(extra);
+    }
 
     return new SnowBlossomNode(new ConfigMem(config_map));
 
@@ -191,17 +313,36 @@ public class SpoonTest
 
   protected MrPlow startMrPlow(int node_port, AddressSpecHash pool_addr) throws Exception
   {
+    return startMrPlow(node_port, pool_addr, "spoon");
+  }
+  protected MrPlow startMrPlow(int node_port, AddressSpecHash pool_addr, String network) throws Exception
+  {
+    return startMrPlow( ImmutableList.of(node_port), pool_addr, network);
+  }
+  protected MrPlow startMrPlow(List<Integer> node_ports, AddressSpecHash pool_addr, String network) throws Exception
+  {
+    NetworkParams params = NetworkParams.loadFromName(network);
+
     String plow_db_path = test_folder.newFolder().getPath();
     Map<String, String> config_map = new TreeMap<>();
-    config_map.put("node_host", "localhost");
-    config_map.put("node_port", "" + node_port);
+
+    StringBuilder uris=new StringBuilder();
+    boolean first=true;
+    for(int port : node_ports)
+    {
+      if (!first) uris.append(",");
+      uris.append("grpc://localhost:"+port+"/");
+      first=false;
+    }
+
+    config_map.put("node_uri", uris.toString());
     config_map.put("db_type", "rocksdb");
     config_map.put("db_type", "atomic_file");
     config_map.put("db_path", plow_db_path +"/plowdb");
     config_map.put("pool_fee", "0.01");
-    config_map.put("pool_address", pool_addr.toAddressString(new NetworkParamsRegtest()));
-    config_map.put("mining_pool_port", "" +(node_port+1));
-    config_map.put("network", "spoon");
+    config_map.put("pool_address", pool_addr.toAddressString(params));
+    config_map.put("mining_pool_port", "0");
+    config_map.put("network", network);
     config_map.put("min_diff", "11");
 
     return new MrPlow(new ConfigMem(config_map));
@@ -211,13 +352,19 @@ public class SpoonTest
 
   protected SnowBlossomMiner startMiner(int port, AddressSpecHash mine_to, File snow_path) throws Exception
   {
+    return startMiner(port, mine_to, snow_path, "spoon");
+  }
+  protected SnowBlossomMiner startMiner(int port, AddressSpecHash mine_to, File snow_path, String network) throws Exception
+  {
     Map<String, String> config_map = new TreeMap<>();
     config_map.put("node_host", "localhost");
     config_map.put("node_port", "" + port);
     config_map.put("threads", "1");
-    config_map.put("mine_to_address", mine_to.toAddressString(new NetworkParamsRegtest()));
     config_map.put("snow_path", snow_path.getPath());
-    config_map.put("network", "spoon");
+    config_map.put("network", network);
+    NetworkParams params = NetworkParams.loadFromConfig(new ConfigMem(config_map));
+    config_map.put("mine_to_address", mine_to.toAddressString(params));
+    config_map.put("rate_limit","10000.0");
     if (port % 2 == 1)
     {
       config_map.put("memfield", "true");
@@ -229,9 +376,13 @@ public class SpoonTest
 
   protected PoolMiner startPoolMiner(int port, AddressSpecHash mine_to, File snow_path) throws Exception
   {
+    return startPoolMiner(port, mine_to, snow_path, "spoon");
+  }
+  protected PoolMiner startPoolMiner(int port, AddressSpecHash mine_to, File snow_path, String network) throws Exception
+  {
+    NetworkParams params = NetworkParams.loadFromName(network);
 
-    
-    String addr = mine_to.toAddressString(new NetworkParamsRegtest());
+    String addr = mine_to.toAddressString(params);
     System.out.println("Starting miner with " + addr);
 
     Map<String, String> config_map = new TreeMap<>();
@@ -240,7 +391,8 @@ public class SpoonTest
     config_map.put("threads", "1");
     config_map.put("mine_to_address", addr);
     config_map.put("snow_path", snow_path.getPath());
-    config_map.put("network", "spoon");
+    config_map.put("network", network);
+    config_map.put("rate_limit","10000.0");
     if (port % 2 == 1)
     {
       config_map.put("memfield", "true");
@@ -263,7 +415,7 @@ public class SpoonTest
     return new SnowBlossomClient(new ConfigMem(config_map));
   }
 
- 
+
 
   protected SnowBlossomClient startClient(int port) throws Exception
   {

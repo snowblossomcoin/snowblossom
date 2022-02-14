@@ -9,6 +9,7 @@ import java.util.LinkedList;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Logger;
+
 import snowblossom.lib.*;
 import snowblossom.mining.proto.*;
 import snowblossom.proto.*;
@@ -22,6 +23,8 @@ public class MiningPoolServiceAgent extends MiningPoolServiceGrpc.MiningPoolServ
   private AtomicInteger next_work_id = new AtomicInteger(new Random().nextInt());
   private LinkedList<MinerInfo> miner_list=new LinkedList<>();
   private Block last_block;
+
+  // TODO - handle pending work in shard world
   private HashMap<Integer, WorkInfo> pending_work = new HashMap<>();
 
   public MiningPoolServiceAgent(MrPlow plow)
@@ -115,14 +118,23 @@ public class MiningPoolServiceAgent extends MiningPoolServiceGrpc.MiningPoolServ
 
       if (PowUtil.lessThanTarget(formed_header.getSnowHash().toByteArray(), formed_header.getTarget()))
       {
+        logger.info("SUBMITTING REAL BLOCK");
         //submit real block
         Block real_block = Block.newBuilder()
           .mergeFrom(wi.blk)
           .setHeader(formed_header)
           .build();
 
-        SubmitReply reply = plow.getBlockingStub().submitBlock(real_block);
-        logger.info("REAL BLOCK SUBMIT: " + reply);
+
+        io.grpc.Context ctx = io.grpc.Context.current().fork();
+        ctx.run(new Runnable()
+          {
+            public void run()
+            {
+              plow.submitBlock(real_block);
+            }
+          }
+        );
         if (plow.getDB().getSpecialMapSet() != null)
         {
           plow.getDB().getSpecialMapSet().add(MrPlow.BLOCK_KEY, formed_header.toByteString());

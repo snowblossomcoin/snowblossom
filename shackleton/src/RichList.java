@@ -78,7 +78,8 @@ public class RichList
 
     out.println("Highest block: " + node_status.getHeadSummary().getHeader().getBlockHeight());
 
-    List<TransactionBridge> bridge_list = GetUTXOUtil.getSpendableValidatedStatic( ByteString.EMPTY, stub, node_status.getHeadSummary().getHeader().getUtxoRootHash());
+    // TODO - cover all shards
+    List<TransactionBridge> bridge_list = GetUTXOUtil.getSpendableValidatedStatic( ByteString.EMPTY, stub, node_status.getHeadSummary().getHeader().getUtxoRootHash(), 0);
 
 
     //getAllBlocks(node_status.getHeadSummary().getHeader());

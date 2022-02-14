@@ -1,5 +1,4 @@
 syntax = "proto3";
-
 option java_multiple_files = true;
 option java_package = "snowblossom.proto";
 option java_outer_classname = "SnowBlossomProto";
@@ -16,7 +15,32 @@ package snowblossom;
 message Block {
   BlockHeader header = 1;
   repeated Transaction transactions = 2;
+
+  // Must be in order of asc(shard_id, block height)
+  repeated ImportedBlock imported_blocks = 3;
 }
+
+message ImportedBlock {
+  BlockHeader header = 1;
+
+  // As we might be including inherited parent blocks
+  // we might be bring in more than one list of outputs
+  // Map of shard id (that we are importing) to list of outputs
+  map<int32, ImportedOutputList> import_outputs = 2;
+}
+
+message ImportedOutputList {
+  // Might need to send these as ByteStrings
+  // for encoding reasons
+  repeated ImportedOutput tx_outs = 2;
+}
+
+message ImportedOutput {
+  bytes raw_output = 1;
+  bytes tx_id = 2;
+  int32 out_idx = 3;
+}
+
 
 message SnowPowProof {
   int64 word_idx = 1; //Index of word in snow field
@@ -40,6 +64,30 @@ message BlockHeader {
   int32 snow_field = 9; // Number of which snow field is in use
   bytes snow_hash = 10; // From POW function, becomes block hash
   repeated SnowPowProof pow_proof = 11;
+
+  // Things below here added for shards
+  // Version 2 things
+
+  int32 shard_id = 12;
+
+  // UTXO roots of all outputs we are mapping to other shards
+  map<int32, bytes> shard_export_root_hash = 13;
+
+  // Shard -> list of blocks
+  map<int32, BlockImportList > shard_import = 14;
+
+  // Might need to add the transaction data size sum if we want 
+  // to have light validation of shard splits
+  int32 tx_data_size_sum = 15;
+
+  int32 tx_count = 16;
+
+}
+
+message BlockImportList
+{
+  // Height -> Block Hash
+  map<int32, bytes> height_map = 1;
 }
 
 // TX Hash is hmac(sha256(inner_data), sha256(signature_data))
@@ -79,6 +127,7 @@ message CoinbaseExtras {
   bytes remarks = 2; //remarks from the miner for the good of the blockchain
   repeated int32 motions_approved = 3;
   repeated int32 motions_rejected = 4;
+  int32 shard_id = 5; // Same idea as the block height
 }
 
 // If any of these are defined then
@@ -122,6 +171,7 @@ message TransactionOutput {
   // by other things.  Usually to be used in conjunction with a fbo hash
   // spec (above).
   ClaimedIdentifiers ids = 5;
+  int32 target_shard = 6;
 }
 
 message ClaimedIdentifiers {
@@ -163,14 +213,18 @@ service UserService {
   /* Subscribe to getting block templates to mine with, 
    * but can use an RPC stream to update the template request */
   rpc SubscribeBlockTemplateStream( stream SubscribeBlockTemplateRequest ) returns (stream Block) {}
+  rpc SubscribeBlockTemplateStreamExtended( stream SubscribeBlockTemplateRequest ) returns (stream BlockTemplate) {}
   rpc SubmitBlock ( Block ) returns ( SubmitReply ) {}
   rpc SubmitTransaction ( Transaction ) returns ( SubmitReply ) {}
   rpc GetUTXONode( GetUTXONodeRequest ) returns ( GetUTXONodeReply ) {}
+  rpc GetUTXONodeMulti( GetUTXONodeRequest ) returns ( GetUTXOReplyList ) {}
   rpc GetMempoolTransactionList ( RequestAddress ) returns ( TransactionHashList ) {}
+  rpc GetMempoolTransactionMap ( RequestAddress ) returns ( TransactionShardMap ) {}
   rpc GetAddressHistory ( RequestAddress ) returns ( HistoryList ) {} 
 
   rpc GetNodeStatus ( NullRequest ) returns ( NodeStatus ) {}
   rpc GetBlock ( RequestBlock ) returns ( Block ) {}
+  rpc getBlockSummary ( RequestBlockSummary ) returns ( BlockSummary ) {}
   rpc GetTransaction ( RequestTransaction ) returns ( Transaction ) {}
   rpc GetTransactionStatus ( RequestTransaction ) returns ( TransactionStatus ) {}
   rpc GetBlockHeader ( RequestBlockHeader ) returns ( BlockHeader ) {}
@@ -179,6 +233,11 @@ service UserService {
   rpc GetIDList ( RequestNameID ) returns ( TxOutList ) {} 
 
   rpc SubscribeAddressUpdates ( RequestAddress ) returns ( stream AddressUpdate ) {} 
+}
+
+message BlockTemplate {
+  Block block = 1;
+  int32 advances_shard = 2;
 }
 
 
@@ -194,7 +253,15 @@ message PeerMessage {
     BlockHeader header = 6;
 
     RequestTransaction req_cluster = 7;
+
+    RequestImportedBlock req_import_block = 8;
+    ImportedBlock import_block = 9;
+
+    RequestPreviewChain req_preview_chain = 10;
+    PreviewChain preview_chain = 11;
   }
+
+  int32 req_header_shard_id = 50;
 }
 
 message PeerChainTip {
@@ -202,8 +269,29 @@ message PeerChainTip {
   BlockHeader header = 2;
   repeated PeerInfo peers = 3;
   string version = 4;
+  SignedMessage signed_head = 5;
 }
 
+message PeerTipInfo {
+  repeated BlockPreview previews = 1;
+  BlockPreview coord_head = 2; // Best known coordinator head
+}
+
+message BlockPreview {
+  int32 block_height = 1;
+  bytes prev_block_hash = 2;
+  bytes snow_hash = 3; // block hash
+  int32 shard_id = 4;
+}
+
+message RequestPreviewChain {
+  bytes start_block_hash = 1;
+  int32 requested_blocks_back = 2;
+}
+
+message PreviewChain {
+  repeated BlockPreview previews = 1;
+}
 
 
 message PeerInfo {
@@ -214,13 +302,18 @@ message PeerInfo {
   int64 learned = 5;
   string version = 6;
   bytes node_id = 7;
-  bool tls = 8; // bad idea, using enum - DEPRECATED
+  //bool tls = 8; bad idea, using enum - DEPRECATED
   bytes node_snow_address = 9; //Used for TLS
   enum ConnectionType {
     GRPC_TCP = 0;
     GRPC_TLS = 1;
   }
   ConnectionType connection_type = 10;
+  repeated int32 shard_id_set = 11; // The set of shards I am configured for
+  bytes trustnet_address = 12; // should switch this entire peer info into a signed object
+                               // since otherwise, someone should fake a trustnet address and get
+                               // a node to waste its peer pool connecting to nodes that are not 
+                               // actually part of its trust network
 }
 
 message TransactionStatus {
@@ -238,15 +331,25 @@ message RequestBlock {
     bytes block_hash = 2;
     int32 block_height = 3;
   }
+  int32 shard_id = 4; // only does anything with block_height
 }
+
+message RequestBlockSummary {
+  bytes block_hash = 1;
+}
+message RequestImportedBlock {
+  bytes block_hash = 1;
+}
+
 message RequestTransaction {
   bytes tx_hash = 1;
 }
 message RequestBlockHeader {
   oneof z {
     int32 block_height = 1;
-    bytes block_hash = 2;
+    bytes block_hash = 2; // only works by height in PeerMessage
   }
+  int32 shard_id = 3; // only does anything with block_height
 }
 
 message AddressUpdate {
@@ -258,10 +361,12 @@ message AddressUpdate {
 message SubmitReply {
   bool success = 1;
   string error_message = 2;
+  int32 shard_accepted = 3;
 }
 
 message FeeEstimate {
   double fee_per_byte = 1; //flakes per byte of tx
+  map<int32, double> shard_map = 2; // map of shard id to fee in flakes per byte of tx
 }
 
 message SubscribeBlockTemplateRequest {
@@ -276,10 +381,14 @@ message GetUTXONodeRequest {
   bool include_proof = 2;
   int32 max_results = 3;
 
-  // If specified, answer will use this specific utxo root as basis rather than current.
+  // If root hash specified, answer will use this specific utxo root as basis rather than current.
   // Can be used to ask about about previous block or get a consistent view regardless of new
   // blocks for a series of queries. Also, Series of Queries will be my new anti-folk acapella band.
-  bytes utxo_root_hash = 4;
+  oneof utxo_type {
+    bytes utxo_root_hash = 4; // If set, use only this root hash
+    int32 shard_id = 5; // if set, use current head of this shard
+    bool all_shards = 6; // if set, return results for all shards
+  }
 }
 
 message GetUTXONodeReply {
@@ -299,9 +408,19 @@ message GetUTXONodeReply {
   repeated TrieNode proof = 3;
 }
 
+message GetUTXOReplyList {
+  // Maps shard id to GetUTXONodeReply
+  map<int32, GetUTXONodeReply> reply_map = 1;
+}
+
 message RequestAddress {
   bytes address_spec_hash = 1;
 }
+
+message TransactionShardMap {
+  map<int32, TransactionHashList> shard_map = 1;
+}
+
 message TransactionHashList {
   repeated bytes tx_hashes = 1;
 }
@@ -350,7 +469,12 @@ message NodeStatus {
   string node_version = 5;
   map<string, int32> version_map = 6;
   string network = 7;
+  repeated int32 network_active_shards = 10;
+  map<int32, bytes> shard_head_map = 11;
+  map<int32, bytes> net_shard_head_map = 12;
+  repeated int32 interest_shards = 13;
 }
+
 
 // -----------------------------------------------------------------------
 // LOCAL DATABASE THINGS - NOT PART OF PROTOCOL, NOT SENT OVER P2P NETWORK
@@ -365,12 +489,27 @@ message BlockSummary {
   int64 total_transactions = 6;
   bytes chain_index_trie_hash = 7;
   int32 summary_version = 8;
+ 
+  // Current highest imported blocks from other shards
+  map<int32, BlockHeader> imported_shards = 9;
+  int64 tx_size_average = 10;
+  int32 shard_length = 11; // Number of blocks in this shard so far
+
+  // Maps shard id to shard history
+  // longer history, but just has heights and hashes, not full headers
+  map<int32, BlockImportList> shard_history_map = 12;
+
+  int64 block_tx_count = 13;
 }
 
 message PeerList {
   repeated PeerInfo peers = 1;
 }
 
+message ExternalHeadList {
+  int32 block_height = 1;
+  repeated bytes head_hashes =2;
+}
 
 // If anything is added or changed here, it is vital to update
 // WalletUtil.mergeDatabase as needed and increase WalletUtil.WALLET_DB_VERSION
@@ -432,9 +571,9 @@ message SignedMessage {
 message SignedMessagePayload {
   AddressSpec claim = 1;
   int64 timestamp = 2;
-  bytes snow_block_hash = 3;
   oneof z {
     bytes tls_public_key = 5;
+    //bytes blockhash = 6;
+    PeerTipInfo peer_tip_info = 7;
   }
 }
-

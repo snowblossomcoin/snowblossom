@@ -9,8 +9,16 @@ import java.security.MessageDigest;
 import java.util.*;
 import org.junit.Assert;
 import snowblossom.lib.trie.HashedTrie;
+import snowblossom.lib.trie.TrieDBMem;
 import snowblossom.proto.*;
 
+/**
+ * This is the heart of a cryptocurrency.  The block validation.
+ * The network peers can all scream lies at each other.
+ * The miners could be tricksters running elaborate scams.
+ * Here is where the truth comes out.
+ * As long as this is correct, nothing else can be that bad.
+ */
 public class Validation
 {
   public static void checkBlockHeaderBasics(NetworkParams params, BlockHeader header, boolean ignore_target)
@@ -33,10 +41,26 @@ public class Validation
       BlockHeader header = blk.getHeader();
       if (header == null) throw new ValidationException("Header missing");
 
-      if (header.getVersion() != 1)
+      if ((header.getVersion() != 1) && (header.getVersion() != 2))
       {
         throw new ValidationException(String.format("Unknown block version: %d", header.getVersion()));
       }
+      if (header.getBlockHeight() < params.getActivationHeightShards())
+      {
+        if (header.getVersion() != 1)
+        {
+          throw new ValidationException(String.format("Block version must be 1 before shard activation"));
+        }
+      }
+      else
+      {
+        if (header.getVersion() != 2)
+        {
+          throw new ValidationException("Block version must be 2 after shard activation");
+
+        }
+      }
+
       if (header.getTimestamp() > System.currentTimeMillis() + params.getMaxClockSkewMs())
       {
         throw new ValidationException("Block too far into future");
@@ -97,6 +121,58 @@ public class Validation
         throw new ValidationException("POW Hash does not match");
       }
 
+      if (header.getVersion() == 1)
+      {
+        if (header.getShardId() != 0)
+        {
+          throw new ValidationException("Header version 1 must not have shard id");
+        }
+        if (header.getShardExportRootHashMap().size() != 0)
+        {
+          throw new ValidationException("Header version 1 must not have export map");
+        }
+        if (header.getShardImportMap().size() != 0)
+        {
+          throw new ValidationException("Header version 1 must not have shard import map");
+        }   
+
+      }
+      else if (header.getVersion() == 2)
+      {
+
+        int my_shard_id = header.getShardId();
+        Set<Integer> my_cover_set = ShardUtil.getCoverSet(my_shard_id, params);
+
+        for(Map.Entry<Integer, ByteString> me : header.getShardExportRootHashMap().entrySet())
+        {
+          int export_shard_id = me.getKey();
+          if (my_cover_set.contains(export_shard_id))
+          {
+            throw new ValidationException("Has shard_export_root_hash for self");
+          }
+          validateChainHash( me.getValue(), "shard_export_root_hash utxo for " + export_shard_id); 
+        }
+
+        for(int import_shard_id : header.getShardImportMap().keySet())
+        {
+          if (my_cover_set.contains(import_shard_id))
+          {
+            throw new ValidationException(String.format("Import for shard from cover set.  Importing %d into %d",import_shard_id, my_shard_id));
+          }
+
+          BlockImportList bil = header.getShardImportMap().get(import_shard_id);
+          for(int import_height : bil.getHeightMap().keySet())
+          {
+            validateNonNegValue(import_shard_id, "import_shard_id");
+            validateNonNegValue(import_height, "import_height");
+            validateChainHash( bil.getHeightMap().get(import_height), "shard_import_blocks");
+          }
+        }
+
+        validatePositiveValue(header.getTxDataSizeSum(), "tx_data_size_sum");
+        validatePositiveValue(header.getTxCount(), "tx_count");
+      }
+
       if (!ignore_target)
       {
         if (!PowUtil.lessThanTarget(context, header.getTarget()))
@@ -131,7 +207,6 @@ public class Validation
             merkle_root.toString(),
             new ChainHash(header.getMerkleRootHash()).toString()));
         }
-
       }
     }
 
@@ -210,6 +285,7 @@ public class Validation
   {
     try(TimeRecordAuto tra_blk = TimeRecord.openAuto("Validation.deepBlockValidation"))
     {
+
       //Check expected target
       BigInteger expected_target = PowUtil.calcNextTarget(prev_summary, params, blk.getHeader().getTimestamp());
       ByteString expected_target_bytes = BlockchainUtil.targetBigIntegerToBytes(expected_target);
@@ -277,6 +353,10 @@ public class Validation
       {
         throw new ValidationException("Block height in block header does not match block height in coinbase");
       }
+      if (coinbase_inner.getCoinbaseExtras().getShardId() != blk.getHeader().getShardId())
+      {
+        throw new ValidationException("Block shard_id in block header does not match shard_id in coinbase");
+      }
       if (blk.getHeader().getBlockHeight() == 0)
       {
         if (!coinbase_inner.getCoinbaseExtras().getRemarks().startsWith( params.getBlockZeroRemark()))
@@ -287,14 +367,67 @@ public class Validation
 
       UtxoUpdateBuffer utxo_buffer = new UtxoUpdateBuffer(utxo_hashed_trie, 
         new ChainHash(prev_summary.getHeader().getUtxoRootHash()));
+
+      if (blk.getHeader().getVersion() == 2)
+      {
+        checkShardBasics(blk, prev_summary, params);
+
+        if (shouldResetUtxo(blk, prev_summary, params))
+        {
+          utxo_buffer = new UtxoUpdateBuffer( utxo_hashed_trie, UtxoUpdateBuffer.EMPTY );
+        }
+
+        // Add in imported outputs
+        for(ImportedBlock ib : blk.getImportedBlocksList())
+        {
+          validateShardImport(params, ib, blk.getHeader().getShardId(), utxo_buffer);
+        }
+      }
+
       long fee_sum = 0L;
+      long tx_size_sum = 0L;
+      int tx_count = 0;
+
+      Set<Integer> cover_set = ShardUtil.getCoverSet( blk.getHeader().getShardId(), params );
+      Map<Integer, UtxoUpdateBuffer> export_utxo_buffer = new TreeMap<>();
 
       for(Transaction tx : blk.getTransactionsList())
       {
-        fee_sum += deepTransactionCheck(tx, utxo_buffer, blk.getHeader(), params);
+        fee_sum += deepTransactionCheck(tx, utxo_buffer, blk.getHeader(), params, cover_set, export_utxo_buffer);
+        tx_size_sum += tx.getInnerData().size() + tx.getTxHash().size();
+        tx_count++;
       }
 
-      long reward = PowUtil.getBlockReward(params, blk.getHeader().getBlockHeight());
+      // Check export set
+      if (!export_utxo_buffer.keySet().equals( blk.getHeader().getShardExportRootHashMap().keySet()))
+      {
+        throw new ValidationException("Export set mismatch");
+      }
+      for(int export_shard : export_utxo_buffer.keySet())
+      {
+        ChainHash tx_export_hash = export_utxo_buffer.get(export_shard).simulateUpdates();
+        ChainHash header_export_hash = new ChainHash(
+          blk.getHeader().getShardExportRootHashMap().get(export_shard));
+        if (!tx_export_hash.equals(header_export_hash))
+        {
+          throw new ValidationException("Export set utxo hash mismatch");
+        }
+      }
+
+      if (blk.getHeader().getVersion() == 2)
+      {
+        if (blk.getHeader().getTxDataSizeSum() != tx_size_sum)
+        {
+          throw new ValidationException("tx_data_size_sum mismatch");
+        }
+        if (blk.getHeader().getTxCount() != tx_count)
+        {
+          throw new ValidationException("tx_count mismatch");
+
+        }
+      }
+
+      long reward = ShardUtil.getBlockReward(params, blk.getHeader());
       long coinbase_sum = fee_sum + reward;
 
       long coinbase_spent = 0L;
@@ -312,12 +445,276 @@ public class Validation
   
   }
 
+
+  public static boolean shouldResetUtxo(Block blk, BlockSummary prev_summary, NetworkParams params)
+  {
+    return (ShardUtil.getShardChildIdRight(prev_summary.getHeader().getShardId()) == blk.getHeader().getShardId());
+  }
+
+
+  public static void checkShardBasics(Block blk, BlockSummary prev_summary, NetworkParams params)
+    throws ValidationException
+  {
+
+    BlockHeader header = blk.getHeader();
+
+    // shard id is same as prev block unless it was a split
+    boolean shard_split=false;
+
+    if ((prev_summary == null) || (prev_summary.getHeader().getSnowHash().size() == 0))
+    {
+      throw new ValidationException("No prev summary for block");
+    }
+    if (ShardUtil.shardSplit(prev_summary, params))
+    {
+      if (header.getShardId() == prev_summary.getHeader().getShardId())
+      {
+        throw new ValidationException("Must split");
+      }
+      if (ShardUtil.getShardParentId(header.getShardId()) != prev_summary.getHeader().getShardId())
+      {
+        throw new ValidationException("Shard split with wrong child");
+      }
+      shard_split=true;
+    }
+    else
+    {
+      if(prev_summary.getHeader().getShardId() != header.getShardId())
+      {
+        throw new ValidationException("Shard id should have been same as parent block");
+      }
+    }
+
+    // Check block basics of imported blocks
+    for(ImportedBlock ib : blk.getImportedBlocksList())
+    {
+      checkBlockHeaderBasics(params, ib.getHeader(), false);
+    }
+    
+    // Check block import order
+    ArrayList<String> expected_list = new ArrayList<>();
+
+    for(int import_shard_id : PowUtil.inOrder(header.getShardImportMap().keySet()))
+    {
+      BlockImportList bil = header.getShardImportMap().get(import_shard_id);
+      for(int import_height : PowUtil.inOrder(bil.getHeightMap().keySet()))
+      {
+        ChainHash hash = new ChainHash(bil.getHeightMap().get(import_height));
+        expected_list.add("" + import_shard_id + "," + import_height + "," + hash.toString());
+      }
+    }
+
+    if (blk.getImportedBlocksList().size() != expected_list.size())
+    {
+      throw new ValidationException("Mismatch of imported block list and header import list size");
+    }
+    for(int i=0; i<expected_list.size(); i++)
+    {
+      String expected = expected_list.get(i);
+      ImportedBlock ib = blk.getImportedBlocks(i);
+      String key = "" + ib.getHeader().getShardId() + "," + ib.getHeader().getBlockHeight() 
+        + "," + new ChainHash(ib.getHeader().getSnowHash()).toString();
+      if (!expected.equals(key))
+      {
+        throw new ValidationException("Mismatch of imported block list and header import list");
+      }
+    }
+
+    // Model these blocks into our view of the chains
+    TreeMap<Integer, BlockHeader> shard_friends = new TreeMap<>();
+
+    // Put all previous heads on the friends map
+    shard_friends.putAll( prev_summary.getImportedShardsMap() );
+
+    // put ourself in
+    shard_friends.put( header.getShardId(), header );
+
+    for(ImportedBlock ib : blk.getImportedBlocksList())
+    {
+      BlockHeader h = ib.getHeader();
+      int s = h.getShardId();
+      BlockHeader parent = null;
+      if (shard_friends.containsKey(s))
+      {
+        parent = shard_friends.get(s);
+      }
+      else
+      {
+        int p = ShardUtil.getShardParentId(s);
+        parent = shard_friends.get(p);
+      }
+      if (parent == null)
+      {
+        throw new ValidationException("Unable to find parent for imported block");
+      }
+      ChainHash prev_hash = new ChainHash(h.getPrevBlockHash());
+      if (!prev_hash.equals(parent.getSnowHash()))
+      {
+        throw new ValidationException("Parent hash mismatch for imported block");
+      }
+      if (parent.getBlockHeight() + 1 != h.getBlockHeight())
+      {
+        throw new ValidationException("Parent height mismatch for imported block");
+      }
+
+      for(int c : ShardUtil.getShardChildIds(s))
+      {
+        if (shard_friends.containsKey(c))
+        {
+          throw new ValidationException("Must not load shard while child shard is present");
+        }
+      }
+      shard_friends.put(s, h);
+    }
+
+    // Check ages of our shard friends - make sure we are getting the full braid
+    // The proof for this is kinda fun.  Base case is shard 0.  We need to have it and recent
+    // or we need to have both children.
+    // If we have both children, those will be checked.
+
+
+    if (!checkBraidCompleteness(header.getBlockHeight(), params, shard_friends, 0))
+    {
+      {
+        // map shard to block height
+        TreeMap<Integer, Integer> sh_map = new TreeMap<>();
+        for(Map.Entry<Integer, BlockHeader> me : shard_friends.entrySet())
+        {
+          sh_map.put(me.getKey(), me.getValue().getBlockHeight());
+        }
+        //System.out.println(String.format("Braid check fail: shard:%d h:%d friends:%s",header.getShardId(),header.getBlockHeight(), sh_map.toString()));
+      }
+      throw new ValidationException("Incomplete or old braid");
+    }
+
+    
+    // check imported headers reference only valid hashes for shards in this chain
+    // put another way, make sure all the shards are using each other and not
+    // some other nonsense
+    LinkedList<BlockHeader> all_headers = new LinkedList<>();
+    all_headers.add(header);
+
+    for(ImportedBlock ib : blk.getImportedBlocksList())
+    {
+      BlockHeader h = ib.getHeader();
+      all_headers.add(h);
+    }
+    TreeMap<String, ChainHash> known_map=new TreeMap<>();
+    checkCollisions(known_map, prev_summary.getShardHistoryMap());
+    for(BlockHeader h : all_headers)
+    {
+      checkCollisions(known_map, h.getShardId(), h.getBlockHeight(), new ChainHash(h.getSnowHash()));
+      checkCollisions(known_map, h.getShardImportMap());
+    }
+  }
+
+  
+  public static boolean checkBraidCompleteness(int build_height, NetworkParams params, Map<Integer, BlockHeader> shard_friends, int shard)
+  {
+
+    if (shard > params.getMaxShardId())
+    {
+      return false;
+    }
+    int good_children = 0;
+    for(int c : ShardUtil.getShardChildIds(shard))
+    {
+      if (checkBraidCompleteness(build_height, params, shard_friends, c)) good_children++;
+    }
+    if (good_children == 2) return true;
+
+    if (!shard_friends.containsKey(shard)) return false;
+
+    int h_delta = build_height - shard_friends.get(shard).getBlockHeight();
+    if (h_delta > params.getMaxShardSkewHeight())
+    {
+      return false;
+    }
+    return true;
+
+  }
+
+  public static void checkCollisions(Map<String, ChainHash> known_map, int shard, int height, ChainHash hash)
+    throws ValidationException
+  {
+    String key = "s" + shard + "h" + height;
+    if (known_map.containsKey(key))
+    {
+      if (!hash.equals(known_map.get(key)))
+      {
+        throw new ValidationException("Block collision on: " + key + " {" + hash + " " + known_map.get(key) + "}");
+      }
+    }
+    else
+    {
+      known_map.put(key, hash);
+    }
+  }
+
+  /**
+   * Make sure very block referenced matches from all blocks.
+   * checking by shard id and height to see if hashes match
+   */
+  public static void checkCollisions(Map<String, ChainHash> known_map, Map<Integer, BlockImportList> map)
+    throws ValidationException
+  {
+    for(int shard : map.keySet())
+    {
+      for(Map.Entry<Integer, ByteString> me : map.get(shard).getHeightMap().entrySet())
+      {
+        int height = me.getKey();
+        ChainHash hash = new ChainHash(me.getValue());
+        checkCollisions(known_map, shard, height, hash);
+      }
+    }
+  }
+
+  public static boolean checkCollisionsNT(Map<String, ChainHash> known_map, int shard, int height, ChainHash hash)
+  {
+    String key = "s" + shard + "h" + height;
+    if (known_map.containsKey(key))
+    {
+      if (!hash.equals(known_map.get(key)))
+      {
+        //System.out.println("Collision on " + key);
+        //System.out.println("Map has: " + known_map.get(key));
+        //System.out.println("We have: " + hash);
+        return false;
+      }
+    }
+    else
+    {
+      known_map.put(key, hash);
+    }
+    return true;
+  }
+
+  /**
+   * Make sure very block referenced matches from all blocks.
+   * checking by shard id and height to see if hashes match
+   */
+  public static boolean checkCollisionsNT(Map<String, ChainHash> known_map, Map<Integer, BlockImportList> map)
+  {
+    for(int shard : map.keySet())
+    {
+      for(Map.Entry<Integer, ByteString> me : map.get(shard).getHeightMap().entrySet())
+      {
+        int height = me.getKey();
+        ChainHash hash = new ChainHash(me.getValue());
+        if (!checkCollisionsNT(known_map, shard, height, hash)) return false;
+      }
+    }
+    return true;
+  }
+
+
   /**
    * The block header need not be complete or real
    * It only needs block height and timestamp set for the purpose of this check
    * @return the fee amount in flakes if tx is good
    */
-  public static long deepTransactionCheck(Transaction tx, UtxoUpdateBuffer utxo_buffer, BlockHeader block_header, NetworkParams params)
+  public static long deepTransactionCheck(Transaction tx, UtxoUpdateBuffer utxo_buffer, BlockHeader block_header, 
+    NetworkParams params, Set<Integer> shard_cover_set, Map<Integer, UtxoUpdateBuffer> export_buffers)
     throws ValidationException
   {
     try(TimeRecordAuto tra_blk = TimeRecord.openAuto("Validation.deepTransactionCheck"))
@@ -368,7 +765,23 @@ public class Validation
       {
         validateTransactionOutput(out, block_header, params);
         spent+=out.getValue();
-        utxo_buffer.addOutput(raw_output_list, out, new ChainHash(tx.getTxHash()), out_idx);
+        if (shard_cover_set.contains(out.getTargetShard()))
+        {
+          utxo_buffer.addOutput(raw_output_list, out, new ChainHash(tx.getTxHash()), out_idx);
+        }
+        else
+        {
+          int target_shard = out.getTargetShard();
+          if (!export_buffers.containsKey(target_shard))
+          {
+            HashedTrie hashed_trie_mem = new HashedTrie(new TrieDBMem(), true, false);
+            UtxoUpdateBuffer export_txo_buffer = new UtxoUpdateBuffer( hashed_trie_mem, UtxoUpdateBuffer.EMPTY );
+            export_buffers.put(target_shard, export_txo_buffer);
+          }
+
+          export_buffers.get(target_shard).addOutput(raw_output_list, out, new ChainHash(tx.getTxHash()), out_idx);
+
+        }
         out_idx++;
 
       }
@@ -436,7 +849,6 @@ public class Validation
     }
     if (header.getBlockHeight() < params.getActivationHeightTxOutExtras())
     {
-      
       if (out.getForBenefitOfSpecHash().size() > 0)
       {
         throw new ValidationException("TxOut extras not enabled yet");
@@ -453,6 +865,25 @@ public class Validation
     if (out.getForBenefitOfSpecHash().size() > 0)
     {
       validateAddressSpecHash(out.getForBenefitOfSpecHash(), "TxOut for_benefit_of_spec_hash");
+    }
+
+    if (header.getVersion() == 1)
+    {
+      int target_shard = out.getTargetShard();
+      if (target_shard != 0)
+      {
+        throw new ValidationException("Target shard must be zero for version 1 block");
+      }
+    }
+    if (header.getVersion() == 2)
+    {
+      int target_shard = out.getTargetShard();
+      validateNonNegValue(target_shard,"target_shard");
+      if (target_shard > params.getMaxShardId())
+      {
+        throw new ValidationException("Target shard must be less than or equal max shard id");
+      }
+
     }
 
 
@@ -679,6 +1110,126 @@ public class Validation
         throw new ValidationException("Extra string too long");
       }
     }
+
+  }
+
+
+  /**
+   * Validates an ImportedBlock on its own.  Validates that:
+   * - the utxo of the imported outputs matches the ones in the shard_export_root_hash
+   *    of the header. 
+   * - all the export shards are in the import_outputs list
+   * - the basics of the header itself make sense
+   *
+   * However: this does *not* check the transactions in the block (we don't have them)
+   *  so without some outside cooboration, something completely made up could pass this check.
+   */
+  public static void validateImportedBlock(NetworkParams params, ImportedBlock import_blk)
+    throws ValidationException
+  {
+    checkBlockHeaderBasics(params, import_blk.getHeader(), false);
+    TreeSet<Integer> header_set = new TreeSet<>();
+    TreeSet<Integer> import_set = new TreeSet<>();
+
+    header_set.addAll( import_blk.getHeader().getShardExportRootHashMap().keySet() );
+    import_set.addAll( import_blk.getImportOutputsMap().keySet() );
+
+    if (!header_set.equals(import_set))
+    {
+      throw new ValidationException("Set mismatch between header shard export list and import outputs map");
+    }
+
+    for(int s : import_blk.getImportOutputsMap().keySet())
+    {
+      ChainHash found_utxo = getUtxoHashOfImportedOutputList( import_blk.getImportOutputsMap().get(s), s);
+      ChainHash header_utxo = new ChainHash(import_blk.getHeader().getShardExportRootHashMap().get(s));
+
+      if (!header_utxo.equals(found_utxo))
+      {
+        throw new ValidationException("Import list utxo mismatch");
+      }
+    }
+  }
+
+  /**
+   * Validates that 
+   *  - the transaction output lists match the 
+   *    shard_export_root_hash from the source block
+   *  - all the output lists that should be imported (and only those)
+   *    have been
+   */
+  public static void validateShardImport(NetworkParams params, ImportedBlock import_blk, int my_shard_id, UtxoUpdateBuffer utxo_buff)
+    throws ValidationException
+  {
+
+    checkBlockHeaderBasics(params, import_blk.getHeader(), false);
+
+    Set<Integer> cover_set = ShardUtil.getCoverSet(my_shard_id, params);
+    TreeSet<Integer> expected_set = new TreeSet<>();
+ 
+    // Make sure we are importing all the shards we should from source header
+    for(int s : cover_set)
+    {
+      if (import_blk.getHeader().getShardExportRootHashMap().containsKey(s))
+      {
+        expected_set.add(s);
+        if (!import_blk.getImportOutputsMap().containsKey(s))
+        {
+          throw new ValidationException("Expected block to import outputs for shard " + s);
+        }
+      }
+    }
+
+    // Make sure the shards we import are in our expected set
+    for(int s : import_blk.getImportOutputsMap().keySet())
+    {
+      if (!expected_set.contains(s))
+      {
+        throw new ValidationException("Unexpected shard in import: " + s);
+      }
+      ChainHash found_utxo = getUtxoHashOfImportedOutputList( import_blk.getImportOutputsMap().get(s), s);
+      ChainHash header_utxo = new ChainHash(import_blk.getHeader().getShardExportRootHashMap().get(s));
+
+      if (!header_utxo.equals(found_utxo))
+      {
+        throw new ValidationException("Import list utxo mismatch");
+      }
+      utxo_buff.addOutputs(import_blk.getImportOutputsMap().get(s) );
+    }
+
+  }
+
+  public static ChainHash getUtxoHashOfImportedOutputList(ImportedOutputList lst, int expected_shard)
+    throws ValidationException
+  {
+    HashedTrie hashed_trie = new HashedTrie(new TrieDBMem(), true, false);
+
+    UtxoUpdateBuffer utxo_buffer = new UtxoUpdateBuffer( hashed_trie, UtxoUpdateBuffer.EMPTY );
+
+    for(ImportedOutput io : lst.getTxOutsList())
+    {
+      try
+      {
+        TransactionOutput out = TransactionOutput.parseFrom(io.getRawOutput());
+        if (out.getTargetShard()!=expected_shard)
+        {
+          throw new ValidationException("Import for unexpected shard");
+        }
+      }
+      catch(com.google.protobuf.InvalidProtocolBufferException e)
+      {
+        throw new ValidationException(e);
+      }
+
+      validateChainHash( io.getTxId(), "import tx_id");
+      validateNonNegValue( io.getOutIdx(), "import out_idx");
+
+    }
+
+    utxo_buffer.addOutputs(lst);
+
+    return utxo_buffer.simulateUpdates();
+
 
   }
 

@@ -1,4 +1,4 @@
-FROM debian:bullseye-slim as prepared-build-image
+FROM debian:testing as prepared-build-image
 ARG DEBIAN_FRONTEND=noninteractive
 # mkdir line debian/openjdk bug https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=863199#23
 RUN \
@@ -13,13 +13,13 @@ cd /snowblossom && \
 bazel build :Everything_deploy.jar
 
 
-FROM debian:bullseye-slim as prepared-run-image
+FROM debian:testing as prepared-run-image
 ARG DEBIAN_FRONTEND=noninteractive
 RUN \
 mkdir -p /usr/share/man/man1 && \
 apt-get update -q && \
 apt-get install -yqq apt-utils 2>&1 && \
-apt-get install -qq --no-install-suggests --no-install-recommends openjdk-11-jre-headless && \
+apt-get install -qq --no-install-suggests --no-install-recommends openjdk-17-jre-headless && \
 apt-get -yqq install sudo libxext6 libxrender1 libxtst6 libfreetype6 fontconfig && \
 apt-get clean
 

@@ -128,7 +128,7 @@ public class RpcServerHandler
       String tx_data = (String)params.get("tx_data");
       Transaction tx = Transaction.parseFrom( HexUtil.hexStringToBytes(tx_data) );
 
-      TransactionFactoryResult factory_result = TransactionFactory.signTransaction(tx, client.getPurse().getDB());
+      TransactionSignResult factory_result = TransactionFactory.signTransaction(tx, client.getPurse().getDB());
       
       tx = factory_result.getTx();
       TransactionInner inner = TransactionUtil.getInner(tx);
@@ -680,17 +680,19 @@ public class RpcServerHandler
         client.getPurse().getDB(),
         client);
 
-      Transaction tx = factory_result.getTx();
-      TransactionInner inner = TransactionUtil.getInner(tx);
-
-      reply.put("tx_hash", HexUtil.getHexString(tx.getTxHash()));
-      reply.put("tx_data", HexUtil.getHexString(tx.toByteString()));
-      reply.put("fee", inner.getFee());
-      reply.put("signatures_added", factory_result.getSignaturesAdded());
-      reply.put("all_signed", factory_result.getAllSigned());
-      if (broadcast)
+      for(Transaction tx : factory_result.getTxsList())
       {
-        client.sendOrException(tx);
+        TransactionInner inner = TransactionUtil.getInner(tx);
+
+        reply.put("tx_hash", HexUtil.getHexString(tx.getTxHash()));
+        reply.put("tx_data", HexUtil.getHexString(tx.toByteString()));
+        reply.put("fee", inner.getFee());
+        reply.put("signatures_added", factory_result.getSignaturesAdded());
+        reply.put("all_signed", factory_result.getAllSigned());
+        if (broadcast)
+        {
+          client.sendOrException(tx);
+        }
       }
 
       return reply;
