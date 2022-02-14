@@ -1,4 +1,10 @@
-## master
+## 2.0
+
+* Added support for Snowblossom Braid (SIP-5)
+* New peering block sync mechanism
+* Support for multiple shards
+
+## 1.8.0+
 
 * Update to bouncy-castle 1.68
 * Added database type "atomic_file" for use with MrPlow
