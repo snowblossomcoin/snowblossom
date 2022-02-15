@@ -60,6 +60,11 @@ public class DB implements DBFace
 
   }
 
+  public void interactiveMaint()
+    throws Exception
+  {
+    prov.interactiveMaint();
+  }
 
   public void close()
   {

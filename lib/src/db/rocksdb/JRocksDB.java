@@ -1,9 +1,11 @@
 package snowblossom.lib.db.rocksdb;
 
+import com.google.common.collect.ImmutableList;
 import duckutil.Config;
 import duckutil.PeriodicThread;
 import java.io.File;
 import java.util.TreeMap;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.rocksdb.FlushOptions;
@@ -65,7 +67,6 @@ public class JRocksDB extends DBProvider
     {
       shared_db = openRocksDB(path);
     }
-    new CompactThread().start();
 
   }
 
@@ -135,6 +136,15 @@ public class JRocksDB extends DBProvider
     return new RocksDBMap(this, db, name);
   }
 
+  private synchronized List<RocksDB> getDBList()
+  {
+    if (!use_separate_dbs)
+    {
+      return ImmutableList.of(shared_db);
+    }
+    return ImmutableList.copyOf(separate_db_map.values());
+  }
+
 
   @Override
   public void close()
@@ -167,35 +177,18 @@ public class JRocksDB extends DBProvider
 
   }
 
-  public class CompactThread extends PeriodicThread
+  @Override
+  public void interactiveMaint() throws Exception
   {
-    public CompactThread()
+    logger.info("Compaction started");
+    long t1 = System.currentTimeMillis();
+    for(RocksDB db : getDBList())
     {
-      super(120000L);
-
+      db.compactRange();
     }
-
-    @Override
-    public void runPass()
-      throws Exception
-    {
-      if (!use_separate_dbs)
-      {
-        logger.info("Compaction started");
-        long t1 = System.currentTimeMillis();
-        shared_db.compactRange();
-        long t2 = System.currentTimeMillis();
-        double sec = (t2 - t1) / 1000.0;
-        logger.info("Compaction run in " + sec + " seconds");
-
-      }
-      else
-      {
-
-      }
-
-    }
-
+    long t2 = System.currentTimeMillis();
+    double sec = (t2 - t1) / 1000.0;
+    logger.info("Compaction run in " + sec + " seconds");
   }
 
 }
