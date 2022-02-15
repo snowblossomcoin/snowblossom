@@ -1,6 +1,7 @@
 package snowblossom.lib.db.rocksdb;
 
 import duckutil.Config;
+import duckutil.PeriodicThread;
 import java.io.File;
 import java.util.TreeMap;
 import java.util.logging.Level;
@@ -65,6 +66,7 @@ public class JRocksDB extends DBProvider
       shared_db = openRocksDB(path);
       shared_db.compactRange();
     }
+    new CompactThread().start();
 
   }
 
@@ -162,6 +164,22 @@ public class JRocksDB extends DBProvider
     }
 
     logger.info("RocksDB flush completed");
+
+  }
+
+  public class CompactThread extends PeriodicThread
+  {
+    public CompactThread()
+    {
+      super(120000L);
+
+    }
+
+    @Override
+    public void runPass()
+    {
+
+    }
 
   }
 
