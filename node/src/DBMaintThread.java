@@ -4,10 +4,12 @@ import duckutil.PeriodicThread;
 import com.google.protobuf.ByteString;
 import snowblossom.proto.BlockHeader;
 import java.util.Random;
+import java.util.logging.Logger;
 
 public class DBMaintThread extends PeriodicThread
 {
   private SnowBlossomNode node;
+  private static final Logger logger = Logger.getLogger("snowblossom.node");
 
   private final int maint_gap;
   public DBMaintThread(SnowBlossomNode node)
@@ -29,6 +31,7 @@ public class DBMaintThread extends PeriodicThread
   }
 
 
+  @Override
   public void runPass() 
     throws Exception
   {
@@ -45,19 +48,13 @@ public class DBMaintThread extends PeriodicThread
     {
       curr_height = high.getBlockHeight();
     }
+    logger.info(String.format("last maint: %d curr: %d", maint_height, curr_height));
     if (curr_height >= maint_height + maint_gap)
     {
       node.getDB().interactiveMaint();
       String curr_str = "" + curr_height;
-
-
       node.getDB().getSpecialMap().put("db_maint_height", ByteString.copyFrom(curr_str.getBytes()));
     }
-    
-
   }
-
-
-
 
 }
