@@ -64,7 +64,6 @@ public class JRocksDB extends DBProvider
     else
     {
       shared_db = openRocksDB(path);
-      shared_db.compactRange();
     }
     new CompactThread().start();
 
@@ -136,6 +135,7 @@ public class JRocksDB extends DBProvider
     return new RocksDBMap(this, db, name);
   }
 
+
   @Override
   public void close()
   {
@@ -177,7 +177,21 @@ public class JRocksDB extends DBProvider
 
     @Override
     public void runPass()
+      throws Exception
     {
+      if (!use_separate_dbs)
+      {
+        long t1 = System.currentTimeMillis();
+        shared_db.compactRange();
+        long t2 = System.currentTimeMillis();
+        double sec = (t2 - t1) / 1000.0;
+        logger.info("Compaction run in " + sec + " seconds");
+
+      }
+      else
+      {
+
+      }
 
     }
 
