@@ -181,6 +181,7 @@ public class JRocksDB extends DBProvider
     {
       if (!use_separate_dbs)
       {
+        logger.info("Compaction started");
         long t1 = System.currentTimeMillis();
         shared_db.compactRange();
         long t2 = System.currentTimeMillis();
