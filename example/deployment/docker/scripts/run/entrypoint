@@ -5,4 +5,4 @@ set -eu
 printenv
 
 sh /snowblossom/scripts/ownership
-sudo -E -g\#${UID:-0} -u\#${UID:-0} exec /snowblossom/scripts/entrypoints/$@
+exec sudo -E -g\#${UID:-0} -u\#${UID:-0} bash /snowblossom/scripts/entrypoints/$@

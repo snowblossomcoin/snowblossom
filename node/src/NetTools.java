@@ -31,7 +31,7 @@ public class NetTools
   public static void doUPNP(int port)
     throws Exception
   {
-    logger.info("Attemping UPNP");
+    logger.info("Attemping UPNP for port " + port);
 
     GatewayDiscover discover = new GatewayDiscover();
     discover.discover();
