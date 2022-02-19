@@ -72,6 +72,7 @@ public class SnowBlossomNode
   private MetaMemPool meta_mem_pool;
   private WalletDatabase trustnet_wallet_db;
   private TxBroadcaster tx_broadcaster;
+  private DBMaintThread db_maint_thread;
 
   private ImmutableList<Integer> service_ports;
   private ImmutableList<Integer> tls_service_ports;
@@ -110,8 +111,6 @@ public class SnowBlossomNode
     loadDB();
     loadWidgets();
     openShards();
-
-
 
     startServices();
 
@@ -196,6 +195,7 @@ public class SnowBlossomNode
     shard_utxo_import = new ShardUtxoImport(this);
     shard_blockforge = new ShardBlockForge(this);
     meta_mem_pool = new MetaMemPool(this);
+    db_maint_thread = new DBMaintThread(this);
 
   }
 
@@ -324,6 +324,7 @@ public class SnowBlossomNode
     logger.info("Ports: " + service_ports + " " + tls_service_ports);
 
     user_service.start();
+    db_maint_thread.start();
   }
 
 
