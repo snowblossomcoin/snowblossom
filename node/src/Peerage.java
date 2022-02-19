@@ -551,7 +551,7 @@ public class Peerage
       // Have at least peer_count links
       ConnectionReport cr = getConnectionReport();
 
-      logger.info(cr.toString());
+      logger.fine(cr.toString());
 
       int connected = getLinkList().size();
       int desired = node.getConfig().getIntWithDefault("peer_count", 8);
