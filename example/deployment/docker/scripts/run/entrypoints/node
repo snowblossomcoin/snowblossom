@@ -22,4 +22,4 @@ cp /tmp/node.conf ./
 [[ ! -f log.conf ]] && cp /snowblossom/log.conf ./
 [[ ! -d logs ]] && mkdir logs
 
-exec bash /snowblossom/scripts/snowblossom snowblossom.node.SnowBlossomNode node.conf
+bash /snowblossom/scripts/snowblossom snowblossom.node.SnowBlossomNode node.conf
