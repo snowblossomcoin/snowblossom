@@ -48,9 +48,10 @@ public class DBMaintThread extends PeriodicThread
     {
       curr_height = high.getBlockHeight();
     }
-    logger.info(String.format("last maint: %d curr: %d", maint_height, curr_height));
+    logger.fine(String.format("last maint: %d curr: %d", maint_height, curr_height));
     if (curr_height >= maint_height + maint_gap)
     {
+      logger.info(String.format("Running db maint - last maint: %d curr: %d", maint_height, curr_height));
       node.getDB().interactiveMaint();
       String curr_str = "" + curr_height;
       node.getDB().getSpecialMap().put("db_maint_height", ByteString.copyFrom(curr_str.getBytes()));

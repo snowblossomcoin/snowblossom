@@ -1087,14 +1087,14 @@ public class ShardBlockForge
       mlog.set("shards", node.getCurrentBuildingShards().toString());
 
 
-      System.out.println("ZZZ Possible blocks: " + possible_set.size() + " on " + node.getCurrentBuildingShards());
+      logger.info("Possible blocks: " + possible_set.size() + " on " + node.getCurrentBuildingShards());
       int printed = 0;
       ArrayList<BlockConcept> good_concepts = new ArrayList<>();
       for(BlockConcept c : possible_set)
       {
         if (printed < 10)
         {
-          System.out.println("ZZZ " + c.toString());
+          logger.info("  Block Concept: " + c.toString());
         }
         printed++;
         good_concepts.add(c);

@@ -499,9 +499,9 @@ public class Peerage
       throws Exception
     {
 
-      logger.info("Prune Links");
+      logger.fine("Prune Links");
       pruneLinks();
-      logger.info("Connect to peers");
+      logger.fine("Connect to peers");
       connectToPeers();
       Random rnd = new Random();
       // TODO - don't send all tips all the time
@@ -607,7 +607,7 @@ public class Peerage
       }
 
       HashSet<ByteString> connect_start = new HashSet<>();
-      logger.info("Map of possible connections: " + util_map.size());
+      logger.fine("Map of possible connections: " + util_map.size());
 
       int max_add=4;
       for(int att = 0; att < max_add; att++)
