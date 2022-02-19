@@ -1,4 +1,4 @@
-FROM debian:testing as prepared-build-image
+FROM debian:stable as prepared-build-image
 ARG DEBIAN_FRONTEND=noninteractive
 # mkdir line debian/openjdk bug https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=863199#23
 RUN mkdir -p /usr/share/man/man1 
@@ -15,7 +15,7 @@ RUN cd /snowblossom && \
 bazel build :Everything_deploy.jar
 
 
-FROM debian:testing as prepared-run-image
+FROM debian:stable as prepared-run-image
 ARG DEBIAN_FRONTEND=noninteractive
 RUN \
 mkdir -p /usr/share/man/man1 && \
