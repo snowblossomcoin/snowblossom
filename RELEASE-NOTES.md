@@ -3,6 +3,8 @@
 * Added support for Snowblossom Braid (SIP-5)
 * New peering block sync mechanism
 * Support for multiple shards
+* Automatic database compaction (on rocksdb)
+
 
 ## 1.8.0+
 
