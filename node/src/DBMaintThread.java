@@ -1,10 +1,10 @@
 package snowblossom.node;
 
-import duckutil.PeriodicThread;
 import com.google.protobuf.ByteString;
-import snowblossom.proto.BlockHeader;
+import duckutil.PeriodicThread;
 import java.util.Random;
 import java.util.logging.Logger;
+import snowblossom.proto.BlockHeader;
 
 public class DBMaintThread extends PeriodicThread
 {
@@ -32,7 +32,7 @@ public class DBMaintThread extends PeriodicThread
 
 
   @Override
-  public void runPass() 
+  public void runPass()
     throws Exception
   {
     int maint_height = 0;
@@ -42,7 +42,7 @@ public class DBMaintThread extends PeriodicThread
       maint_height = Integer.parseInt( new String( db_maint_data.toByteArray()));
     }
     int curr_height = 0;
-    
+
     BlockHeader high = node.getPeerage().getHighestSeenHeader();
     if (high != null)
     {

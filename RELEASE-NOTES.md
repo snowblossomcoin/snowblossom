@@ -4,7 +4,8 @@
 * New peering block sync mechanism
 * Support for multiple shards
 * Automatic database compaction (on rocksdb)
-
+* Updated rocksdb to 6.28.2
+* Added UPNP support for handling incoming connections better
 
 ## 1.8.0+
 

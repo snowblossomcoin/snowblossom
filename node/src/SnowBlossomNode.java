@@ -278,6 +278,7 @@ public class SnowBlossomNode
     peer_service = new SnowPeerService(this);
     LinkedList<Integer> ports = new LinkedList<>();
     LinkedList<Integer> tls_ports = new LinkedList<>();
+    LinkedList<Integer> all_ports = new LinkedList<>();
 
     if (config.isSet("service_port"))
     {
@@ -321,7 +322,13 @@ public class SnowBlossomNode
 
     service_ports = ImmutableList.copyOf(ports);
     tls_service_ports = ImmutableList.copyOf(tls_ports);
+
+    all_ports.addAll(service_ports);
+    all_ports.addAll(tls_service_ports);
+
     logger.info("Ports: " + service_ports + " " + tls_service_ports);
+
+    NetTools.tryUPNP(all_ports);
 
     user_service.start();
     db_maint_thread.start();
