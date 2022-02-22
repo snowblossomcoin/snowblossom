@@ -1,4 +1,4 @@
-## 2.0.0 
+## 2.0.0 - Wee Big Shards 
 
 ### Node
 
@@ -6,6 +6,10 @@ This version includes some database changes, so on first start the BlockSummary 
 This will take some time (maybe an hour) and do a lot of IO.  After this, the database compaction will be run
 and the size will return to normal.  If you run out of storage during this process, the easy thing to
 do is either remove the database directory (pointed to by db_path) and resync or increase the volume size.
+
+For sharding, if not specified each node will follow shard 0 and all shards under shard 0, which is all shards.
+So for now, no configuration changes need to be made.
+
 
 ### MrPlow - Mining Pool
 
