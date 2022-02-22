@@ -10,6 +10,8 @@ do is either remove the database directory (pointed to by db_path) and resync or
 For sharding, if not specified each node will follow shard 0 and all shards under shard 0, which is all shards.
 So for now, no configuration changes need to be made.
 
+Nodes need to be updated to 2.0.0 by block 211600 which is estimated to be mid May 2022.
+
 
 ### MrPlow - Mining Pool
 
@@ -26,3 +28,4 @@ to build a block template and will use the most profitable (in terms of SNOW per
 there are different nodes tracking different shards MrPlow can aggregate the options to allow miners to mine on any
 shard.
 
+Mining pools need to be updated to 2.0.0 by block 211600 which is estimated to be mid May 2022.
