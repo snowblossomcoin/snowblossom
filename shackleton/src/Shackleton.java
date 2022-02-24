@@ -3,6 +3,7 @@ package snowblossom.shackleton;
 import duckutil.Config;
 import duckutil.ConfigFile;
 import duckutil.PeriodicThread;
+import duckutil.TimeRecord;
 import io.grpc.ManagedChannel;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
@@ -114,8 +115,10 @@ public class Shackleton
 
     public void runPass() throws Exception
     {
-      logger.info("Started rich list update");
       sleep(5000L);
+      logger.info("Started rich list update");
+      //TimeRecord tr = new TimeRecord();
+      //TimeRecord.setSharedRecord(tr);
 
       ByteArrayOutputStream b_out = new ByteArrayOutputStream();
       PrintStream p_out = new PrintStream(b_out);
@@ -126,6 +129,9 @@ public class Shackleton
       rich_list_report = new String(b_out.toByteArray());
       
       logger.info("Completed rich list update");
+      //TimeRecord.setSharedRecord(null);
+      //tr.printReport(System.out);
+
 
     }
 

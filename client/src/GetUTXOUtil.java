@@ -13,6 +13,7 @@ import java.util.Map;
 import java.util.TreeMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.Collection;
 import snowblossom.lib.*;
 import snowblossom.lib.trie.HashUtils;
 import snowblossom.proto.*;
@@ -270,8 +271,16 @@ public class GetUTXOUtil
     UserServiceBlockingStub stub, ByteString utxo_root, int shard_id )
     throws ValidationException
   {
-    HashMap<ByteString, TrieNode> node_map = new HashMap<>(10000,0.5f);
     LinkedList<TransactionBridge> bridges = new LinkedList<>();
+    getSpendableValidatedStatic(bridges, prefix, stub, utxo_root, shard_id);
+    return bridges;
+  }
+
+  public static void getSpendableValidatedStatic(Collection<TransactionBridge> bridges, ByteString prefix, 
+    UserServiceBlockingStub stub, ByteString utxo_root, int shard_id )
+    throws ValidationException
+  {
+    HashMap<ByteString, TrieNode> node_map = new HashMap<>(10000,0.5f);
 
     for(TrieNode n : getNodesByPrefix(prefix, stub, true, utxo_root))
     {
@@ -282,15 +291,13 @@ public class GetUTXOUtil
     
     logger.log(Level.FINE, String.format("Get Spendable: %d nodes, %d bridges", node_map.size(), bridges.size()));
 
-    return bridges;
-
   }
 
   private static void descend(
     ByteString prefix, 
     ByteString search, 
     UserServiceBlockingStub stub,
-    List<TransactionBridge> bridges,
+    Collection<TransactionBridge> bridges,
     Map<ByteString, TrieNode> node_map,
     ByteString expected_hash,
     ByteString utxo_root,

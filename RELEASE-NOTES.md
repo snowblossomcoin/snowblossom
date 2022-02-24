@@ -1,3 +1,8 @@
+## master
+
+* Fix Shackleton rich list to use less memory during computation (#213)
+
+
 ## 2.0
 
 * Added support for Snowblossom Braid (SIP-5)
