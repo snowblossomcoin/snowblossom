@@ -75,7 +75,7 @@ public class Peerage
         logger.info(String.format("Peer database size: %d bytes, %d entries", peer_data.size(), db_peer_list.getPeersCount()));
         for(PeerInfo info : db_peer_list.getPeersList())
         {
-          if (PeerUtil.isSane(info))
+          if (PeerUtil.isSane(info, node.getParams()))
           {
             learnPeer(info, true);
           }
@@ -452,7 +452,7 @@ public class Peerage
     {
       if (info.getLearned() + PEER_EXPIRE_TIME < System.currentTimeMillis()) return;
     }
-    if (!PeerUtil.isSane(info)) return;
+    if (!PeerUtil.isSane(info, node.getParams())) return;
 
     synchronized(peer_rumor_list)
     {
