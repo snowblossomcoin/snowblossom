@@ -314,6 +314,8 @@ message PeerInfo {
                                // since otherwise, someone should fake a trustnet address and get
                                // a node to waste its peer pool connecting to nodes that are not 
                                // actually part of its trust network
+
+  SignedMessage trustnet_signed_peer_info = 13;
 }
 
 message TransactionStatus {
@@ -575,5 +577,6 @@ message SignedMessagePayload {
     bytes tls_public_key = 5;
     //bytes blockhash = 6;
     PeerTipInfo peer_tip_info = 7;
+    PeerInfo peer_info = 8;
   }
 }

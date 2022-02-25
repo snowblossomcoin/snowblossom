@@ -9,7 +9,6 @@ import duckutil.AtomicFileOutputStream;
 import duckutil.ExpiringLRUCache;
 import duckutil.NetUtil;
 import duckutil.PeriodicThread;
-import duckutil.TimeRecord;
 import java.io.PrintStream;
 import java.net.InetAddress;
 import java.text.DecimalFormat;
@@ -739,12 +738,13 @@ public class Peerage
             .setConnectionType(PeerInfo.ConnectionType.GRPC_TCP)
             .addAllShardIdSet( node.getInterestShards() );
 
+
           if (node.getTrustnetAddress() != null)
           {
             pi.setTrustnetAddress(node.getTrustnetAddress().getBytes());
+            addTrustnetSigned(pi);
           }
-
-          self_peers.add(pi.build());
+         self_peers.add(pi.build());
         }
       }
     }
@@ -769,6 +769,7 @@ public class Peerage
           if (node.getTrustnetAddress() != null)
           {
             pi.setTrustnetAddress(node.getTrustnetAddress().getBytes());
+            addTrustnetSigned(pi);
           }
           self_peers.add(pi.build());
         }
@@ -779,6 +780,22 @@ public class Peerage
 
     return self_peers;
 
+  }
+
+  private void addTrustnetSigned(PeerInfo.Builder pi)
+  {
+    SignedMessagePayload sign_payload = SignedMessagePayload.newBuilder().setPeerInfo(pi.build()).build();
+
+    WalletKeyPair wkp = node.getTrustnetWalletDb().getKeys(0);
+    AddressSpec claim = node.getTrustnetWalletDb().getAddresses(0);
+    try
+    {
+      pi.setTrustnetSignedPeerInfo( MsgSigUtil.signMessage(claim, wkp, sign_payload));
+    }
+    catch(ValidationException e)
+    {
+      throw new RuntimeException(e);
+    }
   }
 
   public ConnectionReport getConnectionReport()
