@@ -1,7 +1,9 @@
 ## master
 
 * Fix Shackleton rich list to use less memory during computation (#213)
-
+* Add signed trustnet information to PeerInfo messages
+* Add gRPC call for get Peer Info for light clients
+* Add TLS support on MrPlow so MrPlow can use TLS to communicate with miners
 
 ## 2.0
 
