@@ -118,6 +118,12 @@ public class SnowUserService extends UserServiceGrpc.UserServiceImplBase impleme
   }
 
   @Override
+  public void getPeerList(PeerListRequest req, StreamObserver<PeerList> ob)
+  {
+    ob.onNext(node.getPeerage().getPeerList(req));
+  }
+
+  @Override
   public void tickleMemPool(Transaction tx, Collection<AddressSpecHash> involved)
   {
     // TODO - shards

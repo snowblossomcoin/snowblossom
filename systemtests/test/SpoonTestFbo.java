@@ -95,7 +95,7 @@ public class SpoonTestFbo extends SpoonTest
 
       tx_list.addAll(tr.getTxsList());
 
-      waitForMoreBlocks(node, 1);
+      waitForMoreBlocks(node, 2);
 
     }
 

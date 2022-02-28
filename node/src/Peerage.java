@@ -469,6 +469,56 @@ public class Peerage
     }
   }
 
+  /**
+   * Called from remote clients that want to get peers
+   * but aren't interested in drinking from the block tip hose.
+   * Well, maybe they will later but whatever.
+   */
+  public PeerList getPeerList(PeerListRequest req)
+  {
+    // TODO - optimze this for when we have thousands of peers
+    // but really, all of the peer data might need a rethink at that point
+    LinkedList<PeerInfo> peer_list = new LinkedList<>();
+    synchronized(peer_rumor_list)
+    {
+      peer_list.addAll(peer_rumor_list.values());
+    }
+    Collections.shuffle(peer_list);
+    HashSet<AddressSpecHash> search_set = new HashSet<AddressSpecHash>();
+    for(ByteString bs : req.getTrustnetIdsList())
+    {
+      search_set.add(new AddressSpecHash(bs));
+    }
+
+    PeerList.Builder ret = PeerList.newBuilder();
+    int added=0;
+    int output = Math.min(100, req.getDesiredResults());
+    for(PeerInfo peer : peer_list)
+    {
+      if (added >= output) break;
+
+      if (search_set.size() == 0)
+      {
+        ret.addPeers(peer); added++;
+      }
+      else
+      {
+        if (peer.getTrustnetAddress().size() > 0)
+        {
+          AddressSpecHash id = new AddressSpecHash(peer.getTrustnetAddress());
+          if (search_set.contains(id))
+          {
+            ret.addPeers(peer); added++;
+          }
+
+        }
+      }
+    }
+
+    return ret.build();
+
+  }
+
   private volatile boolean gotFirstTip=false;
   public void reportTip()
   {

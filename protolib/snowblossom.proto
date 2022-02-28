@@ -231,6 +231,7 @@ service UserService {
   rpc GetFeeEstimate ( NullRequest ) returns ( FeeEstimate ) {}
   rpc GetFBOList ( RequestAddress ) returns ( TxOutList ) {}
   rpc GetIDList ( RequestNameID ) returns ( TxOutList ) {} 
+  rpc GetPeerList ( PeerListRequest ) returns ( PeerList ) {} 
 
   rpc SubscribeAddressUpdates ( RequestAddress ) returns ( stream AddressUpdate ) {} 
 }
@@ -477,6 +478,15 @@ message NodeStatus {
   repeated int32 interest_shards = 13;
 }
 
+message PeerListRequest {
+  int32 desired_results = 1;
+  // If set, try to return peers that are members at least one of the specified trustnets
+  repeated bytes trustnet_ids = 2;
+}
+
+message PeerList {
+  repeated PeerInfo peers = 1;
+}
 
 // -----------------------------------------------------------------------
 // LOCAL DATABASE THINGS - NOT PART OF PROTOCOL, NOT SENT OVER P2P NETWORK
@@ -502,10 +512,6 @@ message BlockSummary {
   map<int32, BlockImportList> shard_history_map = 12;
 
   int64 block_tx_count = 13;
-}
-
-message PeerList {
-  repeated PeerInfo peers = 1;
 }
 
 message ExternalHeadList {
