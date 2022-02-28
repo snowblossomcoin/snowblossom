@@ -31,6 +31,10 @@ import snowblossom.proto.UserServiceGrpc.UserServiceBlockingStub;
 import snowblossom.proto.UserServiceGrpc.UserServiceStub;
 import com.google.common.collect.ImmutableList;
 import java.util.TreeSet;
+import snowblossom.client.WalletUtil;
+import io.netty.handler.ssl.SslContext;
+import snowblossom.lib.tls.CertGen;
+import io.grpc.netty.NettyServerBuilder;
 
 public class MrPlow
 {
@@ -86,6 +90,7 @@ public class MrPlow
   private final PlowLoop loop;
   private List<NodeConnection> connections;
   private final Server grpc_server;
+  private final Server grpc_server_tls;
 
   public MrPlow(Config config) throws Exception
   {
@@ -142,6 +147,29 @@ public class MrPlow
       .addService(agent)
       .build();
     grpc_server.start();
+
+    if (config.isSet("tls_mining_pool_port"))
+    {
+      int tls_port = config.getInt("tls_mining_pool_port");
+      config.require("tls_key_path");
+			WalletDatabase wallet_db = WalletUtil.loadNodeWalletFromConfig(params, config, "tls_key_path");
+
+      AddressSpecHash node_tls_address = AddressUtil.getHashForSpec(wallet_db.getAddresses(0));
+      logger.info("My TLS address: " + AddressUtil.getAddressString(Globals.NODE_ADDRESS_STRING, node_tls_address));
+
+      SslContext ssl_ctx = CertGen.getServerSSLContext(wallet_db);
+			grpc_server_tls = NettyServerBuilder
+				.forPort(tls_port)
+				.addService(agent)
+				.sslContext(ssl_ctx)
+				.build();
+      grpc_server_tls.start();
+
+    }
+		else
+		{
+			grpc_server_tls = null;
+		}
 
     if (config.isSet("rpc_port"))
     {

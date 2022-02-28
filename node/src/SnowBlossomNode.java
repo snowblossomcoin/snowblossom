@@ -182,7 +182,7 @@ public class SnowBlossomNode
   private void loadWidgets()
     throws Exception
   {
-    trustnet_wallet_db = loadWalletFromConfig("trustnet_key_path");
+    trustnet_wallet_db = WalletUtil.loadNodeWalletFromConfig(params, config, "trustnet_key_path");
     if (trustnet_wallet_db != null)
     {
       AddressSpecHash trust_addr = getTrustnetAddress();
@@ -299,7 +299,7 @@ public class SnowBlossomNode
     if (config.isSet("tls_service_port"))
     {
       config.require("tls_key_path");
-      WalletDatabase wallet_db = loadWalletFromConfig("tls_key_path");
+      WalletDatabase wallet_db = WalletUtil.loadNodeWalletFromConfig(params, config, "tls_key_path");
 
       node_tls_address = AddressUtil.getHashForSpec(wallet_db.getAddresses(0));
       logger.info("My TLS address: " + AddressUtil.getAddressString(Globals.NODE_ADDRESS_STRING, node_tls_address));
@@ -334,45 +334,6 @@ public class SnowBlossomNode
     db_maint_thread.start();
   }
 
-
-  /**
-   * Loads or creates a single key wallet based on the config param name pointing
-   * to a path.
-   */
-  private WalletDatabase loadWalletFromConfig(String param_name)
-    throws Exception
-  {
-    if (!config.isSet(param_name)) return null;
-
-    config.require(param_name);
-
-    TreeMap<String, String> wallet_config_map = new TreeMap<>();
-    wallet_config_map.put("wallet_path", config.get(param_name));
-    wallet_config_map.put("key_count", "1");
-    wallet_config_map.put("key_mode", WalletUtil.MODE_STANDARD);
-    ConfigMem config_wallet = new ConfigMem(wallet_config_map);
-    File wallet_path = new File(config_wallet.get("wallet_path"));
-
-    WalletDatabase wallet_db = WalletUtil.loadWallet(wallet_path, true, params);
-    if (wallet_db == null)
-    {
-      logger.log(Level.WARNING, String.format("Directory %s does not contain keys, creating new keys", wallet_path.getPath()));
-      wallet_db = WalletUtil.makeNewDatabase(config_wallet, params);
-      WalletUtil.saveWallet(wallet_db, wallet_path);
-
-      AddressSpecHash spec = AddressUtil.getHashForSpec(wallet_db.getAddresses(0));
-      String addr = AddressUtil.getAddressString("node", spec);
-
-      File dir = new File(config.get(param_name));
-      PrintStream out = new PrintStream(new FileOutputStream( new File(dir, "address.txt"), false));
-      out.println(addr);
-      out.close();
-
-    }
-
-    return wallet_db;
-
-  }
 
 
   private void loadDB()

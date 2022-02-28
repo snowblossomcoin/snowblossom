@@ -5,6 +5,7 @@ import com.google.common.collect.TreeMultimap;
 import com.google.protobuf.ByteString;
 import duckutil.AtomicFileOutputStream;
 import duckutil.Config;
+import duckutil.ConfigMem;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -770,6 +771,46 @@ public class WalletUtil
   public static boolean isXpub(String s)
   {
     return (s.startsWith("xpub"));
+  }
+
+
+  /**
+   * Loads or creates a single key wallet based on the config param name pointing
+   * to a path.
+   */
+  public static WalletDatabase loadNodeWalletFromConfig(NetworkParams params, Config config, String param_name)
+    throws Exception
+  {
+    if (!config.isSet(param_name)) return null;
+
+    config.require(param_name);
+
+    TreeMap<String, String> wallet_config_map = new TreeMap<>();
+    wallet_config_map.put("wallet_path", config.get(param_name));
+    wallet_config_map.put("key_count", "1");
+    wallet_config_map.put("key_mode", WalletUtil.MODE_STANDARD);
+    ConfigMem config_wallet = new ConfigMem(wallet_config_map);
+    File wallet_path = new File(config_wallet.get("wallet_path"));
+
+    WalletDatabase wallet_db = WalletUtil.loadWallet(wallet_path, true, params);
+    if (wallet_db == null)
+    {
+      logger.log(Level.WARNING, String.format("Directory %s does not contain keys, creating new keys", wallet_path.getPath()));
+      wallet_db = WalletUtil.makeNewDatabase(config_wallet, params);
+      WalletUtil.saveWallet(wallet_db, wallet_path);
+
+      AddressSpecHash spec = AddressUtil.getHashForSpec(wallet_db.getAddresses(0));
+      String addr = AddressUtil.getAddressString("node", spec);
+
+      File dir = new File(config.get(param_name));
+      PrintStream out = new PrintStream(new FileOutputStream( new File(dir, "address.txt"), false));
+      out.println(addr);
+      out.close();
+
+    }
+
+    return wallet_db;
+
   }
 
 }

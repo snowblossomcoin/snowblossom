@@ -10,6 +10,8 @@ java_library(
       "//lib:atomicfiledb",
       "//client",
       "@io_grpc_grpc_java//context",
+      "@io_netty_netty_handler//:io_netty_netty_handler",
+      "@io_grpc_grpc_java//netty",
       "@duckutil//:duckutil_jsonrpc_lib",
       "@duckutil//:duckutil_lib",
       "@maven//:com_thetransactioncompany_jsonrpc2_base",
