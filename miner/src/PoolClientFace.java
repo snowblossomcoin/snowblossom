@@ -13,6 +13,4 @@ public interface PoolClientFace
 
   public SubmitReply submitWork(WorkUnit wu, BlockHeader header);
   
-
-
 }

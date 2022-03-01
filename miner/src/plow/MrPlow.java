@@ -54,6 +54,7 @@ public class MrPlow
   public static ByteString BLOCK_KEY = ByteString.copyFrom(new String("blocks_found").getBytes());
   public static String PPLNS_STATE_KEY = "pplns_state";
 
+
   public static void main(String args[]) throws Exception
   {
     Globals.addCryptoProvider();
@@ -91,6 +92,7 @@ public class MrPlow
   private List<NodeConnection> connections;
   private final Server grpc_server;
   private final Server grpc_server_tls;
+  private AddressSpecHash tls_key_id;
 
   public MrPlow(Config config) throws Exception
   {
@@ -155,6 +157,7 @@ public class MrPlow
 			WalletDatabase wallet_db = WalletUtil.loadNodeWalletFromConfig(params, config, "tls_key_path");
 
       AddressSpecHash node_tls_address = AddressUtil.getHashForSpec(wallet_db.getAddresses(0));
+      tls_key_id = node_tls_address;
       logger.info("My TLS address: " + AddressUtil.getAddressString(Globals.NODE_ADDRESS_STRING, node_tls_address));
 
       SslContext ssl_ctx = CertGen.getServerSSLContext(wallet_db);
@@ -180,11 +183,23 @@ public class MrPlow
     loop = new PlowLoop();
     loop.start();
   }
+  
+  public String getTlsKeyId()
+  {
+    return AddressUtil.getAddressString(Globals.NODE_ADDRESS_STRING, tls_key_id);
+  }
+
 
   public int getGrpcPort()
   {
     return grpc_server.getPort();
   }
+
+  public int getGrpcTlsPort()
+  {
+    return grpc_server_tls.getPort();
+  }
+
 
   public int getMinDiff()
   {

@@ -97,15 +97,8 @@ public class Arktika implements PoolClientOperator
     selected_field = config.getInt("selected_field");
 
     params = NetworkParams.loadFromConfig(config);
-
-    if (config.isSet("pool_host_list"))
-    {
-      pool_client = new PoolClientFailover(config, this);
-    }
-    else
-    {
-      pool_client = new PoolClient(config, this);
-    }
+    
+    pool_client = PoolClient.openClient(config, this);
 
     // this is a bad idea, don't use this.  It eats all the cpu doing
     // record keeping

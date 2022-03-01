@@ -55,6 +55,25 @@ java_test(
 )
 
 java_test(
+    name = "systemtests.test.SpoonTestPoolTls",
+    test_class = "systemtests.test.SpoonTestPoolTls",
+    srcs = ["test/SpoonTest.java", "test/SpoonTestPoolTls.java"],
+    deps = [
+        "//lib:lib",
+        "//lib:rocksdb",
+        "//protolib:protogrpc",
+        "//miner:miner",
+        "//node",
+        "//client:client",
+        "//shackleton:shackleton",
+        "@duckutil//:duckutil_lib",
+        "@build_stack_rules_proto//java:grpc_netty",
+    ],
+    size = "medium",
+)
+
+
+java_test(
     name = "systemtests.test.SpoonTestReconsile",
     test_class = "systemtests.test.SpoonTestReconsile",
     srcs = ["test/SpoonTest.java", "test/SpoonTestReconsile.java"],

@@ -37,7 +37,8 @@ public class Globals
   public static final long SNOW_VALUE = 1000000L;
   public static final double SNOW_VALUE_D = SNOW_VALUE;
 
-
+  public static final int DEFAULT_POOL_TCP_PORT = 23380;
+  public static final int DEFAULT_POOL_TLS_PORT = 23382;
 
   public static final int MAX_TX_SIZE    =       1000000;
   public static final int LOW_FEE_SIZE_IN_BLOCK = 100000;

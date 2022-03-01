@@ -342,6 +342,8 @@ public class SpoonTest
     config_map.put("pool_fee", "0.01");
     config_map.put("pool_address", pool_addr.toAddressString(params));
     config_map.put("mining_pool_port", "0");
+    config_map.put("tls_mining_pool_port", "0");
+    config_map.put("tls_key_path", plow_db_path+"/plow_tls");
     config_map.put("network", network);
     config_map.put("min_diff", "11");
 
@@ -401,6 +403,26 @@ public class SpoonTest
     return new PoolMiner(new ConfigMem(config_map));
 
   }
+
+  protected PoolMiner startPoolMinerUri(String uri, AddressSpecHash mine_to, File snow_path, String network) throws Exception
+  {
+    NetworkParams params = NetworkParams.loadFromName(network);
+
+    String addr = mine_to.toAddressString(params);
+    System.out.println("Starting miner with " + addr);
+
+    Map<String, String> config_map = new TreeMap<>();
+    config_map.put("pool_uri", uri);
+    config_map.put("threads", "1");
+    config_map.put("mine_to_address", addr);
+    config_map.put("snow_path", snow_path.getPath());
+    config_map.put("network", network);
+    config_map.put("rate_limit","10000.0");
+
+    return new PoolMiner(new ConfigMem(config_map));
+
+  }
+
 
   protected SnowBlossomClient startClientWithWallet(int port) throws Exception
   {

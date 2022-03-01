@@ -4,6 +4,7 @@
 * Add signed trustnet information to PeerInfo messages
 * Add gRPC call for get Peer Info for light clients
 * Add TLS support on MrPlow so MrPlow can use TLS to communicate with miners
+* Add node_uri param for miners that supports TLS
 
 ## 2.0
 

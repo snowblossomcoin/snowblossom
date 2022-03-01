@@ -128,14 +128,7 @@ public class SurfMiner implements PoolClientOperator
 
     params = NetworkParams.loadFromConfig(config);
 
-    if (config.isSet("pool_host_list"))
-    {
-      pool_client = new PoolClientFailover(config, this);
-    }
-    else
-    {
-      pool_client = new PoolClient(config, this);
-    }
+    pool_client = PoolClient.openClient(config, this);
 
     snow_path = new File(config.get("snow_path"));
     
