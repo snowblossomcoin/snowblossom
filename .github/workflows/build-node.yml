@@ -1,10 +1,8 @@
 # To use, configure github repo settings -> Secrets:
-#   * DOCKER_REGISTRY   eg. docker.io:port/ (optional, leave unset for dockerhub, trailing slash REQUIRED)
+#   * DOCKER_REGISTRY   eg. docker.io:port/ (optional, leave unset for dockerhub, trailing slash required)
 #   * DOCKER_ORGANIZATION
 #   * DOCKER_USERNAME
 #   * DOCKER_PASSWORD
-#   * GIT_REPO
-
 
 name: Build Docker Node
 on: [push, pull_request, workflow_dispatch]
@@ -14,6 +12,18 @@ jobs:
     name: Build Docker Node
     runs-on: ubuntu-20.04
     steps:
+      # Prepares a list of tags for this docker image build.
+      # CONDITION, TEMPLATE  , EXAMPLE
+      # always   , commit_sha, 273a2c414ba39a4a1d6668515c9d880dc6b5b8793f93d34fb7f4eb12cb686ac6
+      # tag      , tag       , tag
+      # branch   , branch    , master
+      # pr       , pr-#      , pr-37
+      #
+      # So a docker image would be built for commit hash 273a2c414ba39a4a1d6668515c9d880dc6b5b8793f93d34fb7f4eb12cb686ac6
+      # and would be tagged like:
+      #    snowblossomcoin/node:273a2c414ba39a4a1d6668515c9d880dc6b5b8793f93d34fb7f4eb12cb686ac6
+      #    snowblossomcoin/node:2.0.0
+      #    snowblossomcoin/node:master  (until the next master build replaces this)
       - name: Determine Meta
         id: meta
         uses: docker/metadata-action@v3
@@ -40,4 +50,5 @@ jobs:
           build-args: |
             GIT_REPO=${{ secrets.GIT_REPO }}
             GIT_REF=${{ github.sha }}
+          # applies the tags determined earlier.
           tags: ${{ steps.meta.outputs.tags }}
