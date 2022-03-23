@@ -40,7 +40,7 @@ public class SnowBlossomClient
       System.exit(-1);
     }
 
-    ConfigFile config = new ConfigFile(args[0]);
+    ConfigFile config = new ConfigFile(args[0], "snowblossom_");
     
     config.require("wallet_path");
 

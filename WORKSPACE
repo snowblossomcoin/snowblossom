@@ -37,8 +37,8 @@ java_grpc_library()
 git_repository(
   name = "duckutil",
   remote = "https://github.com/fireduck64/duckutil",
-  commit = "61ed88b7f2dc5618fdb964e891500a08d49d6b2a",
-  shallow_since = "1625642124 -0700"
+  commit = "b721d945278dc2069bb9f5c1556161b37d6b4ee8",
+  shallow_since = "1648055343 -0700"
 )
 
 maven_install(

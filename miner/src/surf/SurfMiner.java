@@ -48,7 +48,7 @@ public class SurfMiner implements PoolClientOperator
       System.exit(-1);
     }
 
-    ConfigFile config = new ConfigFile(args[0]);
+    ConfigFile config = new ConfigFile(args[0],"snowblossom_");
 
     LogSetup.setup(config);
 
