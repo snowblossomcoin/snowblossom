@@ -1,5 +1,3 @@
-ARG ENVIRONMENT_IMAGE=debian
-ARG ENVIRONMENT_TAG=bullseye-slim
 ARG GIT_REPO=https://github.com/snowblossomcoin/snowblossom.git
 ARG GIT_REF=master
 
@@ -39,19 +37,13 @@ RUN \
     default-jre-headless \
     && \
   apt-get clean && \
-  rm -rf /vra/lib/apt/lists/*
-
+  rm -rf /var/lib/apt/lists/*
 
 COPY --from=build /snowblossom/bazel-bin/SnowBlossomNode_deploy.jar /snowblossom/
+
 WORKDIR /data
 COPY --from=build /snowblossom/example/configs/logging.properties log.conf
 COPY --from=build /snowblossom/example/configs/node.conf .
 
-CMD ["/bin/bash", "-c", "\
-cp /data/node.conf /tmp/node.conf; \
-if ! grep -q 'env_override_prefix' /tmp/node.conf; then \
-    echo 'env_override_prefix=SNOWBLOSSOM_\r\n' >> /tmp/node.conf; \
-fi; \
-cat /tmp/node.conf; \
-/usr/bin/java ${SNOWBLOSSOM_JAVA_OPTIONS} -jar /snowblossom/SnowBlossomNode_deploy.jar /tmp/node.conf; \
-"]
+VOLUME /data
+CMD /usr/bin/java ${SNOWBLOSSOM_JAVA_OPTIONS} -jar /snowblossom/SnowBlossomNode_deploy.jar /data/node.conf
