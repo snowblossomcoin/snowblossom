@@ -29,6 +29,7 @@ import snowblossom.proto.*;
 public class Arktika implements PoolClientOperator
 {
   private static final Logger logger = Logger.getLogger("snowblossom.miner");
+  public static final int DEFAULT_PORT=2311;
 
   public static void main(String args[]) throws Exception
   {
@@ -126,9 +127,10 @@ public class Arktika implements PoolClientOperator
 
     if (!config.getBoolean("nolisten"))
     {
+      int port = config.getIntWithDefault("listen_port", DEFAULT_PORT);
 
       Server s = ServerBuilder
-        .forPort(2311)
+        .forPort(port)
         .addService(stubo)
         .build();
       s.start();

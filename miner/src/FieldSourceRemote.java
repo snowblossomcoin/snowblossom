@@ -48,7 +48,7 @@ public class FieldSourceRemote extends FieldSource implements BatchSource
     holding_set = ImmutableSet.copyOf(holding);
 
     stub_host = config.get("layer_" + layer + "_host");
-    stub_port = 2311;
+    stub_port = config.getIntWithDefault("layer_" + layer + "_port", Arktika.DEFAULT_PORT);
 
     // In cloud testing, using stub per thread got 611kh/s vs 575kh/s with a single stub
     // otherwise same setup
