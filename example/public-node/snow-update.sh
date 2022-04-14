@@ -1,9 +1,10 @@
 #!/bin/bash
 
-image=snowblossom/snowblossom:latest
-#image=snowlocal
+node_image=snowblossom/node:latest
+explorer_image=snowblossom/snowblossom:latest
 
-docker pull $image
+docker pull $node_image
+docker pull $explorer_image
 
 docker container stop snowblossom.explorer
 docker container rm snowblossom.explorer
@@ -15,9 +16,9 @@ docker volume create snownode
 docker volume create snowexplore
 
 docker run -d --restart always --name snowblossom.node --network host \
-  -v snownode:/data $image
+  -v snownode:/data $node_image
 
 docker run -d --restart always --name snowblossom.explorer --network host \
-  -v snowexplore:/data $image explorer
+  -v snowexplore:/data $explorer_image explorer
 
 
