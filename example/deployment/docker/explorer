@@ -25,7 +25,7 @@ WORKDIR /snowblossom
 RUN \
 git clone ${GIT_REPO} . && \
 git checkout ${GIT_REF}
-RUN bazel build :SnowBlossomExplorer_deploy.jar 2>&1
+RUN bazel build :ShackletonExplorer_deploy.jar 2>&1
 RUN ls -ahl /snowblossom/bazel-bin
 
 
@@ -39,7 +39,7 @@ RUN \
   apt-get clean && \
   rm -rf /var/lib/apt/lists/*
 
-COPY --from=build /snowblossom/bazel-bin/SnowBlossomExplorer_deploy.jar /snowblossom/
+COPY --from=build /snowblossom/bazel-bin/ShackletonExplorer_deploy.jar /snowblossom/
 
 WORKDIR /data
 COPY --from=build /snowblossom/example/configs/logging.properties log.conf
