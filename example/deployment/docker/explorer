@@ -46,4 +46,4 @@ COPY --from=build /snowblossom/example/configs/logging.properties log.conf
 COPY --from=build /snowblossom/example/configs/explorer.conf .
 
 VOLUME /data
-CMD exec /usr/bin/java ${SNOWBLOSSOM_JAVA_OPTIONS} -jar /snowblossom/SnowBlossomExplorer_deploy.jar /data/explorer.conf
+CMD exec /usr/bin/java ${SNOWBLOSSOM_JAVA_OPTIONS} -jar /snowblossom/ShackletonExplorer_deploy.jar /data/explorer.conf
