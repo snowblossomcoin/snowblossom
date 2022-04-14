@@ -93,7 +93,12 @@ public class GraphOutput
   public static String getName(BlockHeader bh)
   {
     ChainHash hash = new ChainHash(bh.getSnowHash());
-    String hash_str = hash.toString().substring(0,12);
+    String hash_str = hash.toString();
+    while((hash_str.length() > 12) && hash_str.charAt(0) == '0')
+    {
+      hash_str = hash_str.substring(1);
+    }
+    hash_str = hash_str.substring(0,12);
     return String.format("s%dh%d-%s", bh.getShardId(), bh.getBlockHeight(), hash_str);
 
   }

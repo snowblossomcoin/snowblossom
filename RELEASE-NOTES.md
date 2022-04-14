@@ -5,6 +5,7 @@
 * Add gRPC call for get Peer Info for light clients
 * Add TLS support on MrPlow so MrPlow can use TLS to communicate with miners
 * Add node_uri param for miners that supports TLS
+* Add exploder api block_info_by_height
 
 ## 2.0
 

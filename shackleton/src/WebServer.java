@@ -105,6 +105,7 @@ public class WebServer implements WebHandler
       t.out().println("<li><a href='/api/total_coins_json'>total_coins_json</a></li>");
       t.out().println("<li><a href='/api/recent_json_graph'>recent_json_graph</a></li>");
       t.out().println("<li><a href='/api/health_stats'>health_stats</a></li>");
+      t.out().println("<li><a href='/api/block_info_by_height/S/N'>block_info for block height N in shard S</a></li>");
       addFooter(t.out());
       t.setHttpCode(200);
       return;
@@ -144,6 +145,38 @@ public class WebServer implements WebHandler
       t.out().println(obj);
       t.setHttpCode(200);
       return;
+    }
+    if (path.startsWith("/api/block_info_by_height/"))
+    {
+      t.setContentType("application/json");
+
+      int shard = Integer.parseInt(path.split("/")[3]);
+      int height = Integer.parseInt(path.split("/")[4]);
+      JSONObject obj = new JSONObject();
+
+      BlockHeader blk_head = shackleton.getStub().getBlockHeader(
+        RequestBlockHeader.newBuilder()
+          .setBlockHeight(height)
+          .setShardId(shard)
+          .build()
+        );
+
+      if (blk_head == null)
+      {
+        throw new Exception("Unable to find a block for shard " + shard + " height " + height);
+      }
+      BlockSummary blk_summary = shackleton.getStub().getBlockSummary(
+        RequestBlockSummary.newBuilder()
+          .setBlockHash(blk_head.getSnowHash())
+          .build()
+        );
+
+      obj.put("block_info", getBlockJson(blk_summary, blk_head));
+
+      t.out().println(obj);
+      t.setHttpCode(200);
+      return;
+
     }
 
     t.setHttpCode(404);
@@ -484,6 +517,45 @@ public class WebServer implements WebHandler
     out.println("Size average of transactions: " + tx_size_average);
  
     out.println("</pre>");
+  }
+
+  public JSONObject getBlockJson(BlockSummary summary, BlockHeader bh)
+  {
+    JSONObject info = new JSONObject();
+
+    SnowFieldInfo sf = shackleton.getParams().getSnowFieldInfo(summary.getActivatedField());
+    double previous_diff = PowUtil.getDiffForTarget(sf.getActivationTarget());
+    double avg_diff = PowUtil.getDiffForTarget(BlockchainUtil.readInteger(summary.getTargetAverage()));
+    double block_diff = PowUtil.getDiffForTarget(BlockchainUtil.targetBytesToBigInteger(bh.getSnowHash()));
+    double target_diff = PowUtil.getDiffForTarget(BlockchainUtil.targetBytesToBigInteger(bh.getTarget()));
+    double block_time_sec = summary.getBlocktimeAverageMs() / 1000.0 ;
+    double estimated_hash = Math.pow(2.0, target_diff) / block_time_sec;
+
+
+    ChainHash hash = new ChainHash(bh.getSnowHash());
+    info.put("hash", hash.toString());
+    info.put("shard", bh.getShardId());
+    info.put("timestamp", bh.getTimestamp());
+    info.put("height", bh.getBlockHeight());
+    info.put("snow_field", bh.getSnowField());
+    info.put("version", bh.getVersion());
+    info.put("avg_diff", avg_diff);
+    info.put("block_diff", block_diff);
+    info.put("target_diff", target_diff);
+    info.put("estimated_hash", estimated_hash);
+
+    
+    if (bh.getVersion() >= 2)
+    {
+      info.put("tx_count",bh.getTxCount());
+      info.put("tx_data", bh.getTxDataSizeSum());
+
+    }
+    info.put("blocktime_average_ms", summary.getBlocktimeAverageMs());
+
+
+    return info;
+
   }
 
   private String getBlockSummaryLine(ChainHash hash)
