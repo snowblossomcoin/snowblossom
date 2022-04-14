@@ -18,6 +18,7 @@ import snowblossom.lib.Globals;
 import snowblossom.lib.TransactionUtil;
 import snowblossom.proto.SubmitReply;
 import snowblossom.proto.TransactionOutput;
+import snowblossom.proto.Transaction;
 import snowblossom.util.proto.*;
 
 public class SendPanel extends BasePanel implements OfferPayInterface
@@ -135,9 +136,17 @@ public class SendPanel extends BasePanel implements OfferPayInterface
             {
               throw new Exception("Parameters changed before second send press");
             }
-            SubmitReply reply = ice_leaf.getStubHolder().getBlockingStub().submitTransaction(tx_result.getTx());
-            ChainHash tx_hash = new ChainHash(tx_result.getTx().getTxHash());
-            setMessageBox(String.format("%s\n%s", tx_hash.toString(), reply.toString()));
+            StringBuilder message_sb = new StringBuilder();
+
+            for(Transaction tx : tx_result.getTxsList())
+            {
+              SubmitReply reply = ice_leaf.getStubHolder().getBlockingStub().submitTransaction(tx);
+              ChainHash tx_hash = new ChainHash(tx.getTxHash());
+              message_sb.append(String.format("%s\n%s", tx_hash.toString(), reply.toString()));
+              message_sb.append('\n');
+
+            }
+            setMessageBox(message_sb.toString());
             setStatusBox("");
 
             send_state = 0;
@@ -237,9 +246,18 @@ public class SendPanel extends BasePanel implements OfferPayInterface
 
     tx_result = TransactionFactory.createTransaction(config.build(), client.getPurse().getDB(), client);
 
+    StringBuilder tx_sb = new StringBuilder();
+
+    for(Transaction tx : tx_result.getTxsList())
+    {
+      tx_sb.append(TransactionUtil.prettyDisplayTx(tx, ice_leaf.getParams()));
+      tx_sb.append("\n");
+
+    }
+
     setMessageBox(String.format("Press Send again to when progress bar is full to send:\n%s",
-      TransactionUtil.prettyDisplayTx(tx_result.getTx(), ice_leaf.getParams())));
-    
+      tx_sb.toString()));
+
   }
 
   public void setProgressBar(int curr, int net)

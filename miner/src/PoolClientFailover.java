@@ -4,7 +4,9 @@ import duckutil.Config;
 import duckutil.LRUCache;
 import duckutil.PeriodicThread;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.logging.Logger;
+import java.net.URI;
 import snowblossom.mining.proto.*;
 import snowblossom.proto.*;
 
@@ -33,6 +35,20 @@ public class PoolClientFailover implements PoolClientFace
     }
   }
 
+  public PoolClientFailover(List<String> uris, Config config, PoolClientOperator op)
+    throws Exception
+  {
+    this.op = op;
+    this.config = config;
+    pools = new ArrayList<>();
+
+    for(String uri : uris)
+    {
+      pools.add(new PoolOp(new URI(uri)));
+    }
+  }
+
+
 
   @Override
   public void stop()
@@ -57,7 +73,7 @@ public class PoolClientFailover implements PoolClientFace
       }
       catch(Exception e)
       {
-        logger.warning("Error in pool: " + p.host + " " + e);
+        logger.warning("Error in pool: " + p.id + " " + e);
       }
     }
     if (!started)
@@ -104,15 +120,22 @@ public class PoolClientFailover implements PoolClientFace
   
   public class PoolOp implements PoolClientOperator
   {
-    protected String host;
+    protected String id;
     protected PoolClient pool_client;
     protected volatile boolean is_active=false;
 
     public PoolOp(String hostname)
       throws Exception
     {
-      this.host = hostname;
-      this.pool_client = new PoolClient(host, config, this);
+      this.id = hostname;
+      this.pool_client = new PoolClient(hostname, config, this);
+    }
+
+    public PoolOp(URI uri)
+      throws Exception
+    {
+      this.id = uri.toString();
+      this.pool_client = new PoolClient(uri, config, this);
     }
 
     @Override
@@ -189,7 +212,7 @@ public class PoolClientFailover implements PoolClientFace
           p.is_active=false;
           status="error";
         }
-        sb.append(p.host + ": " + status);
+        sb.append(p.id + ": " + status);
         sb.append('\n');
         
       }

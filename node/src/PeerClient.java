@@ -21,7 +21,12 @@ public class PeerClient
     ManagedChannel channel;
     if (info.getConnectionType().equals(PeerInfo.ConnectionType.GRPC_TLS))
     {
-      AddressSpecHash node_address = new AddressSpecHash(info.getNodeSnowAddress());
+      AddressSpecHash node_address = null;
+      if (info.getNodeSnowAddress().size() > 0)
+      {
+        node_address = new AddressSpecHash(info.getNodeSnowAddress());
+      }
+
       SslContext ssl_ctx = GrpcSslContexts.forClient()
         .trustManager(SnowTrustManagerFactorySpi.getFactory(node_address, node.getParams()))
         .build();
@@ -30,6 +35,7 @@ public class PeerClient
         .forAddress(info.getHost(), info.getPort())
         .useTransportSecurity()
         .sslContext(ssl_ctx)
+        .maxInboundMessageSize(node.getParams().getGrpcMaxMessageSize())
         .build();
     }
     else if (info.getConnectionType().equals(PeerInfo.ConnectionType.GRPC_TCP))
@@ -37,6 +43,7 @@ public class PeerClient
       channel = ManagedChannelBuilder
         .forAddress(info.getHost(), info.getPort())
         .usePlaintext()
+        .maxInboundMessageSize(node.getParams().getGrpcMaxMessageSize())
         .build();
     }
     else

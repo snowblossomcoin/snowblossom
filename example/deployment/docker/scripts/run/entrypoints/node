@@ -6,6 +6,7 @@ set -eu
 cd /data
 
 cat <<EOF > /tmp/node.conf
+env_override_prefix=snow_node_
 log_config_file=${SNOWBLOSSOM_LOG_CONF:-log.conf}
 network=${SNOWBLOSSOM_NETWORK:-mainnet}
 db_type=${SNOWBLOSSOM_NODE_DB_TYPE:-rocksdb}
@@ -15,6 +16,7 @@ tx_index=${SNOWBLOSSOM_NODE_TRANSACTION_INDEX:-true}
 service_port=${SNOWBLOSSOM_NODE_PORT:-2338}
 tls_service_port=${SNOWBLOSSOM_TLS_SERVICE_PORT:-2348}
 tls_key_path=${SNOWBLOSSOM_NODE_TLS_PATH:-node_db/tls_mainnet}
+trustnet_key_path=node_db/trustnet_key
 EOF
 
 cp /tmp/node.conf ./

@@ -48,7 +48,7 @@ public class SurfMiner implements PoolClientOperator
       System.exit(-1);
     }
 
-    ConfigFile config = new ConfigFile(args[0]);
+    ConfigFile config = new ConfigFile(args[0],"snowblossom_");
 
     LogSetup.setup(config);
 
@@ -128,14 +128,7 @@ public class SurfMiner implements PoolClientOperator
 
     params = NetworkParams.loadFromConfig(config);
 
-    if (config.isSet("pool_host_list"))
-    {
-      pool_client = new PoolClientFailover(config, this);
-    }
-    else
-    {
-      pool_client = new PoolClient(config, this);
-    }
+    pool_client = PoolClient.openClient(config, this);
 
     snow_path = new File(config.get("snow_path"));
     
@@ -154,7 +147,7 @@ public class SurfMiner implements PoolClientOperator
     logger.info("Total blocks: " + total_blocks);
     logger.info("In memory target: " + units_in_flight_target);
 
-    magic_queue = new MagicQueue(config.getIntWithDefault("buffer_size", getRecordSize()*100), total_blocks);
+    magic_queue = new MagicQueue(config.getIntWithDefault("buffer_size", getRecordSize()*5000), total_blocks);
     pool_client.subscribe();
 
     // Waiting for pool client to settle
@@ -641,7 +634,6 @@ public class SurfMiner implements PoolClientOperator
       work_count++;
       work_units += b.remaining() / getRecordSize();
       hash_thread_pool.execute( new Runnable(){
-
         public void run()
         {
           processBuffer(block_data, block_number, bb, work_sem);

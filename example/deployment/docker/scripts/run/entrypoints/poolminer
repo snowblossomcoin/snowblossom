@@ -1,0 +1,25 @@
+#!/bin/bash
+# solominer entrypoint
+
+set -eu
+
+cd /data
+mkdir -p /data/snowfields
+
+
+cat <<EOF > /tmp/poolminer.conf
+env_override_prefix=snow_miner_
+log_config_file=${SNOWBLOSSOM_LOG_CONF:-log.conf}
+network=${SNOWBLOSSOM_NETWORK:-mainnet}
+rate_limit=10000
+threads=1
+auto_snow=true
+snow_path=/data/snowfields
+EOF
+
+cp /tmp/poolminer.conf ./
+[[ ! -f log.conf ]] && cp /snowblossom/log.conf ./
+[[ ! -d logs ]] && mkdir logs
+
+bash /snowblossom/scripts/snowblossom snowblossom.miner.PoolMiner poolminer.conf
+

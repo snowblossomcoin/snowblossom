@@ -36,7 +36,7 @@ public class PoolMiner implements PoolClientOperator
       System.exit(-1);
     }
 
-    ConfigFile config = new ConfigFile(args[0]);
+    ConfigFile config = new ConfigFile(args[0],"snowblossom_");
 
     LogSetup.setup(config);
 
@@ -79,14 +79,7 @@ public class PoolMiner implements PoolClientOperator
 
     params = NetworkParams.loadFromConfig(config);
 
-    if (config.isSet("pool_host_list"))
-    {
-      pool_client = new PoolClientFailover(config, this);
-    }
-    else
-    {
-      pool_client = new PoolClient(config, this);
-    }
+    pool_client = PoolClient.openClient(config, this);
 
     snow_path = new File(config.get("snow_path"));
     

@@ -37,9 +37,12 @@ public class AuditLog
 
     TransactionFactoryResult res = TransactionFactory.createTransaction(tx_config.build(), client.getPurse().getDB(), client);
 
-    client.getStub().submitTransaction(res.getTx());
+    for(Transaction tx : res.getTxsList())
+    {
+      client.getStub().submitTransaction(tx);
+    }
 
-    return new ChainHash(res.getTx().getTxHash()).toString();
+    return new ChainHash(res.getTxs(0).getTxHash()).toString();
 
 
   }
@@ -72,23 +75,34 @@ public class AuditLog
 
     TransactionFactoryResult res = TransactionFactory.createTransaction(tx_config.build(), client.getPurse().getDB(), client);
 
-    Transaction tx = res.getTx();
-    TransactionInner tx_inner = TransactionUtil.getInner(tx);
-
     boolean includes_source = false;
-    for(AddressSpec claim : tx_inner.getClaimsList())
+    ChainHash continue_tx = null;
+    for(Transaction tx : res.getTxsList())
     {
-      AddressSpecHash addr = AddressUtil.getHashForSpec(claim);
-      if (addr.equals(audit_log_hash)) includes_source=true;
+      TransactionInner tx_inner = TransactionUtil.getInner(tx);
+
+      for(AddressSpec claim : tx_inner.getClaimsList())
+      {
+        AddressSpecHash addr = AddressUtil.getHashForSpec(claim);
+        if (addr.equals(audit_log_hash))
+        {
+          includes_source=true;
+          continue_tx = new ChainHash(tx.getTxHash());
+        }
+        
+      }
     }
     if (!includes_source)
     {
       throw new Exception("The built transaction does not include the audit_log_source.");
     }
 
-    client.getStub().submitTransaction(res.getTx());
+    for(Transaction tx : res.getTxsList())
+    {
+      client.getStub().submitTransaction(tx);
+    }
 
-    return new ChainHash(res.getTx().getTxHash()).toString();
+    return continue_tx.toString();
 
   }
 

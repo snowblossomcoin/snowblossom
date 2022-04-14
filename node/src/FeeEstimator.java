@@ -13,10 +13,12 @@ public class FeeEstimator
   public static final long FEE_RECALC_TIME = 30000L;
 
   private SnowBlossomNode node;
+  private final int shard_id;
 
-  public FeeEstimator(SnowBlossomNode node)
+  public FeeEstimator(SnowBlossomNode node, int shard_id)
   {
     this.node = node;
+    this.shard_id = shard_id;
   }
 
   private long last_calc_time = 0L;
@@ -28,19 +30,19 @@ public class FeeEstimator
     if (last_calc_time + FEE_RECALC_TIME < System.currentTimeMillis())
     {
       recalcFee();
-      logger.info("New fee estimate: " + last_fee);
+      logger.fine(String.format("New fee estimate shard %d: %f ", shard_id, last_fee));
     }
     return last_fee;
   }
 
   private void recalcFee()
   {
-    BlockSummary head = node.getBlockIngestor().getHead();
+    BlockSummary head = node.getBlockIngestor(shard_id).getHead();
     ChainHash utxo_root = new ChainHash(head.getHeader().getUtxoRootHash());
 
-    long test_size = Globals.MAX_BLOCK_SIZE*2/3;
+    long test_size =  node.getParams().getMaxBlockSize()*2/3;
 
-    List<Transaction> tx_list = node.getMemPool().getTransactionsForBlock(utxo_root, Globals.MAX_BLOCK_SIZE*2/3);
+    List<Transaction> tx_list = node.getMemPool(shard_id).getTransactionsForBlock(utxo_root, (int)test_size);
     long total_size = 0L;
     long total_fee = 0L;
 
@@ -65,7 +67,7 @@ public class FeeEstimator
     tx_list_arr.addAll(tx_list);
 
     long end_size = 0L;
-    long end_fee = 0L; 
+    long end_fee = 0L;
 
     for(int i = tx_list_arr.size() / 2; i<tx_list_arr.size(); i++)
     {
@@ -79,12 +81,10 @@ public class FeeEstimator
 
     last_fee = Math.max(Globals.BASIC_FEE, average_fee * 1.01);
 
-    
-
     last_calc_time = System.currentTimeMillis();
   }
 
-  
+
 
 
 }

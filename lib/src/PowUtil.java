@@ -12,6 +12,10 @@ import snowblossom.lib.trie.ByteStringComparator;
 import snowblossom.lib.trie.HashUtils;
 import snowblossom.proto.BlockHeader;
 import snowblossom.proto.BlockSummary;
+import snowblossom.proto.BlockImportList;
+import java.util.Map;
+import java.util.TreeSet;
+import java.util.Set;
 
 public class PowUtil
 {
@@ -43,7 +47,53 @@ public class PowUtil
       md.update(header.getUtxoRootHash().toByteArray());
       md.update(header.getTarget().toByteArray());
 
+      if (header.getVersion() == 2)
+      {
+        {
+          byte[] shard_id = new byte[12];
+          ByteBuffer bb_s = ByteBuffer.wrap(shard_id);
+          bb_s.putInt(header.getShardId());
+          bb_s.putInt(header.getTxDataSizeSum());
+          bb_s.putInt(header.getTxCount());
+
+          md.update(shard_id);
+        }
+        for(Map.Entry<Integer, ByteString> me : header.getShardExportRootHashMap().entrySet())
+        {
+          int id = me.getKey();
+          byte[] shard_id = new byte[4];
+          ByteBuffer bb_s = ByteBuffer.wrap(shard_id);
+          bb_s.putInt(id);
+          md.update(shard_id);
+          md.update(me.getValue().toByteArray());
+        }
+
+        for(int import_shard_id : inOrder(header.getShardImportMap().keySet()))
+        {
+          BlockImportList bil = header.getShardImportMap().get(import_shard_id);
+          for(int import_height : inOrder(bil.getHeightMap().keySet()))
+          {
+            byte[] shard_id = new byte[8];
+            ByteBuffer bb_s = ByteBuffer.wrap(shard_id);
+            bb_s.putInt(import_shard_id);
+            bb_s.putInt(import_height);
+            md.update(shard_id);
+
+            md.update(bil.getHeightMap().get(import_height).toByteArray());
+          }
+        }
+
+      }
+
       return md.digest();
+  }
+
+  public static TreeSet<Integer> inOrder(Set<Integer> in)
+  {
+    TreeSet<Integer> sort = new TreeSet<>();
+    sort.addAll(in);
+    return sort;
+
   }
 
   public static long getNextSnowFieldIndex(byte[] context, long word_count)
@@ -133,7 +183,6 @@ public class PowUtil
   {
     if (prev_summary.getHeader().getTimestamp() == 0) return params.getMaxTarget();
 
-
     long weight = params.getAvgWeight();
     long decay = 1000L - weight;
 
@@ -165,7 +214,6 @@ public class PowUtil
     BigInteger scale_bi = BigInteger.valueOf(scale);
     BigInteger thousand = BigInteger.valueOf(1000L);
 
-
     BigInteger new_target = prev_target_average.add( 
       prev_target_average.multiply(scale_bi).divide(thousand) );
     //long new_target = prev_summary.getTargetAverage() + prev_summary.getTargetAverage() * scale / 1000;
@@ -173,6 +221,13 @@ public class PowUtil
     logger.log(Level.FINE, String.format("Delta_t: %d (%d) scale: %d",averaged_delta_t, target_delta_t, scale));
 
     ByteBuffer bb = ByteBuffer.allocate(8);
+    
+    // account for shard split
+    if (ShardUtil.shardSplit(prev_summary, params))
+    {
+      // new shards should have half the difficulty
+      new_target = new_target.multiply( BigInteger.valueOf(2L) );
+    }
 
     new_target = new_target.min(params.getMaxTarget());
 
@@ -185,6 +240,7 @@ public class PowUtil
       HashUtils.getHexString(new_target_display), 
       df.format(diff),
       df.format(avg_diff)));
+
 
     return new_target;
 

@@ -1,9 +1,28 @@
 ## master
 
+* Fix Shackleton rich list to use less memory during computation (#213)
+* Add signed trustnet information to PeerInfo messages
+* Add gRPC call for get Peer Info for light clients
+* Add TLS support on MrPlow so MrPlow can use TLS to communicate with miners
+* Add node_uri param for miners that supports TLS
+
+## 2.0
+
+* Added support for Snowblossom Braid (SIP-5)
+* New peering block sync mechanism
+* Support for multiple shards
+* Automatic database compaction (on rocksdb)
+* Updated rocksdb to 6.28.2
+* Added UPNP support for handling incoming connections better
+
+## 1.8.0+
+
 * Update to bouncy-castle 1.68
 * Added database type "atomic_file" for use with MrPlow
 * Added data migration tool for MrPlow data
 * On non-64-bit JVM default to use non-TLS seeds (Issue #179)
+* Add total_coins_json api
+* Update to bouncy-castle 1.69
 
 ## 1.8.0
 

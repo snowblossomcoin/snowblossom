@@ -1,10 +1,12 @@
 package node.test;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import duckutil.TimeRecord;
 import java.security.KeyPair;
 import java.util.Random;
 import java.util.TreeMap;
+import java.util.Set;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -54,7 +56,7 @@ public class MemPoolTest
     // Pool starts empty
     Assert.assertEquals(0, mem_pool.getTransactionsForBlock(utxo_root, 1048576).size());
 
-    mem_pool.addTransaction(tx);
+    mem_pool.addTransaction(tx, false);
 
     // Then has our transaction
     Assert.assertEquals(1, mem_pool.getTransactionsForBlock(utxo_root, 1048576).size());
@@ -84,7 +86,7 @@ public class MemPoolTest
 
     Assert.assertNotEquals(tx.getTxHash(), tx2.getTxHash());
 
-    mem_pool.addTransaction(tx2);
+    mem_pool.addTransaction(tx2, false);
    
     // And the outputs are freed up
     Assert.assertEquals(1, mem_pool.getTransactionsForBlock(utxo_root, 1048576).size());
@@ -119,7 +121,7 @@ public class MemPoolTest
 
     try
     {
-      mem_pool.addTransaction(tx);
+      mem_pool.addTransaction(tx, false);
       Assert.fail();
     }
     catch(ValidationException e)
@@ -156,7 +158,7 @@ public class MemPoolTest
     // Pool starts empty
     Assert.assertEquals(0, mem_pool.getTransactionsForBlock(utxo_root, 1048576).size());
 
-    mem_pool.addTransaction(tx);
+    mem_pool.addTransaction(tx, false);
     TransactionOutput out_a = TransactionOutput.newBuilder()
       .setRecipientSpecHash(in.getSpecHash())
       .setValue(50000L)
@@ -168,7 +170,7 @@ public class MemPoolTest
 
     try
     {
-      mem_pool.addTransaction(tx2);
+      mem_pool.addTransaction(tx2, false);
       Assert.fail();
     }
     catch(ValidationException e){System.out.println(e);}
@@ -205,7 +207,7 @@ public class MemPoolTest
 
     try
     {
-      mem_pool.addTransaction(tx);
+      mem_pool.addTransaction(tx, false);
       Assert.fail();
     }
     catch(ValidationException e){System.out.println(e);}
@@ -238,7 +240,7 @@ public class MemPoolTest
 
     Assert.assertEquals(0, mem_pool.getTransactionsForBlock(utxo_root, 1048576).size());
 
-    mem_pool.addTransaction(tx_a);
+    mem_pool.addTransaction(tx_a, false);
 
     Assert.assertEquals(1, mem_pool.getTransactionsForBlock(utxo_root, 1048576).size());
 
@@ -255,7 +257,7 @@ public class MemPoolTest
 
     Transaction tx_b = TransactionUtil.createTransaction(ImmutableList.of(in_b), ImmutableList.of(out_b), keys);
 
-    mem_pool.addTransaction(tx_b);
+    mem_pool.addTransaction(tx_b, false);
     
     Assert.assertEquals(2, mem_pool.getTransactionsForBlock(utxo_root, 1048576).size());
     
@@ -272,7 +274,7 @@ public class MemPoolTest
 
     Transaction tx_c = TransactionUtil.createTransaction(ImmutableList.of(in_c), ImmutableList.of(out_c), keys);
 
-    mem_pool.addTransaction(tx_c);
+    mem_pool.addTransaction(tx_c, false);
     
     Assert.assertEquals(3, mem_pool.getTransactionsForBlock(utxo_root, 1048576).size());
   }
@@ -332,7 +334,7 @@ public class MemPoolTest
       System.out.println("Intermediate transaction: " + new ChainHash(tx.getTxHash()));
 
       long t2=System.nanoTime();
-      mem_pool.addTransaction(tx);
+      mem_pool.addTransaction(tx, false);
       TimeRecord.record(t2, "mem_pool");
     
 
@@ -420,9 +422,18 @@ public class MemPoolTest
 
     @Override
     public int getHeight() {return height; }
+
+    @Override
+    public int getShardId() {return 0;}
     
     @Override
     public NetworkParams getParams() {return new NetworkParamsRegtest(); }
+
+    @Override
+    public Set<Integer> getShardCoverSet()
+    {
+      return ImmutableSet.of(0);
+    }
     
   }
 

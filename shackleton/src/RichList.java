@@ -10,6 +10,10 @@ import java.text.DecimalFormat;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Iterator;
+import java.util.Queue;
+import java.util.AbstractCollection;
+
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import snowblossom.client.GetUTXOUtil;
@@ -34,7 +38,7 @@ public class RichList
       System.exit(-1);
     }
 
-    ConfigFile config = new ConfigFile(args[0]);
+    ConfigFile config = new ConfigFile(args[0],"snowblossom_");
 
     LogSetup.setup(config);
 
@@ -71,6 +75,41 @@ public class RichList
     this.get_utxo_util = get_utxo_util;
   }
 
+  public class BridgeMapper extends AbstractCollection<TransactionBridge>
+  {
+    HashMap<String, Long> balance_map = new HashMap<>();
+    long total = 0L;
+
+    @Override
+    public boolean add(TransactionBridge br)
+    {
+      AddressSpecHash spec = new AddressSpecHash( br.out.getRecipientSpecHash());
+      String addr = AddressUtil.getAddressString(params.getAddressPrefix(), spec);
+      long val = 0;
+      if (balance_map.containsKey(addr)) val = balance_map.get(addr);
+
+      val += br.value;
+      total += br.value;
+      balance_map.put(addr, val);
+
+      return true;
+    }
+    @Override
+    public int size()
+    {
+      return 0;
+    }
+
+    @Override
+    public Iterator<TransactionBridge> iterator()
+    {
+      return null;
+
+    }
+ 
+ 
+  }
+
   public void print(PrintStream out)
     throws Exception
   {
@@ -78,14 +117,18 @@ public class RichList
 
     out.println("Highest block: " + node_status.getHeadSummary().getHeader().getBlockHeight());
 
-    List<TransactionBridge> bridge_list = GetUTXOUtil.getSpendableValidatedStatic( ByteString.EMPTY, stub, node_status.getHeadSummary().getHeader().getUtxoRootHash());
+    // TODO - cover all shards
+
+    BridgeMapper bm = new BridgeMapper();
+
+    GetUTXOUtil.getSpendableValidatedStatic(bm, ByteString.EMPTY, stub, node_status.getHeadSummary().getHeader().getUtxoRootHash(), 0);
 
 
     //getAllBlocks(node_status.getHeadSummary().getHeader());
     DecimalFormat df = new DecimalFormat("0.000000");
 
-    HashMap<String, Long> balance_map = new HashMap<>();
-    long total_value = getAddressBalances(bridge_list, balance_map);
+    HashMap<String, Long> balance_map = bm.balance_map;
+    long total_value = bm.total;
     last_total_value = total_value;
     out.println("Total value: " + df.format(total_value / 1e6));
 
@@ -110,25 +153,6 @@ public class RichList
       
     }
   } 
-
-  private long getAddressBalances(List<TransactionBridge> br_lst, Map<String, Long> balance_map)
-  {
-    long total = 0;
-    for(TransactionBridge br : br_lst)
-    {
-      AddressSpecHash spec = new AddressSpecHash( br.out.getRecipientSpecHash());
-      String addr = AddressUtil.getAddressString(params.getAddressPrefix(), spec);
-      long val = 0;
-      if (balance_map.containsKey(addr)) val = balance_map.get(addr);
-
-      val += br.value;
-      total += br.value;
-      balance_map.put(addr, val);
-    }
-    return total;
-
-  }
-
 
   public long getTotalValue()
     throws Exception

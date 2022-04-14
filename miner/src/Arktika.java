@@ -29,6 +29,7 @@ import snowblossom.proto.*;
 public class Arktika implements PoolClientOperator
 {
   private static final Logger logger = Logger.getLogger("snowblossom.miner");
+  public static final int DEFAULT_PORT=2311;
 
   public static void main(String args[]) throws Exception
   {
@@ -39,7 +40,7 @@ public class Arktika implements PoolClientOperator
       System.exit(-1);
     }
 
-    ConfigFile config = new ConfigFile(args[0]);
+    ConfigFile config = new ConfigFile(args[0],"snowblossom_");
 
     LogSetup.setup(config);
 
@@ -97,15 +98,8 @@ public class Arktika implements PoolClientOperator
     selected_field = config.getInt("selected_field");
 
     params = NetworkParams.loadFromConfig(config);
-
-    if (config.isSet("pool_host_list"))
-    {
-      pool_client = new PoolClientFailover(config, this);
-    }
-    else
-    {
-      pool_client = new PoolClient(config, this);
-    }
+    
+    pool_client = PoolClient.openClient(config, this);
 
     // this is a bad idea, don't use this.  It eats all the cpu doing
     // record keeping
@@ -133,9 +127,10 @@ public class Arktika implements PoolClientOperator
 
     if (!config.getBoolean("nolisten"))
     {
+      int port = config.getIntWithDefault("listen_port", DEFAULT_PORT);
 
       Server s = ServerBuilder
-        .forPort(2311)
+        .forPort(port)
         .addService(stubo)
         .build();
       s.start();

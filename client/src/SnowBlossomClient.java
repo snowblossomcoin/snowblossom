@@ -40,7 +40,7 @@ public class SnowBlossomClient
       System.exit(-1);
     }
 
-    ConfigFile config = new ConfigFile(args[0]);
+    ConfigFile config = new ConfigFile(args[0], "snowblossom_");
     
     config.require("wallet_path");
 
@@ -174,11 +174,9 @@ public class SnowBlossomClient
         MonitorTool mu = new MonitorTool(client.getParams(), client.getStubHolder(), new MonitorInterfaceSystemOut());
         for(AddressSpec claim : client.getPurse().getDB().getAddressesList())
         {
-          
           AddressSpecHash hash = AddressUtil.getHashForSpec(claim);
           mu.addAddress(hash);
         }
-
 
         while(true)
         {
@@ -308,8 +306,13 @@ public class SnowBlossomClient
       }
       else if (command.equals("loadtest"))
       {
-        client.maintainKeys();
+        //client.maintainKeys();
         new LoadTest(client).runLoadTest();
+      }
+      else if (command.equals("loadtest_shard"))
+      {
+        //client.maintainKeys();
+        new LoadTestShard(client).runLoadTest();
       }
       else if (command.equals("nodestatus"))
       {
@@ -451,7 +454,7 @@ public class SnowBlossomClient
     
     if (exec==null)
     {
-      exec = TaskMaster.getBasicExecutor(64,"client_lookup");
+      exec = TaskMaster.getBasicExecutor(256,"client_lookup");
     }
 
     get_utxo_util = new GetUTXOUtil(this.stub_holder, params);
@@ -472,9 +475,27 @@ public class SnowBlossomClient
   public UserServiceBlockingStub getStub(){ return stub_holder.getBlockingStub(); }
   public UserServiceStub getAsyncStub(){ return stub_holder.getAsyncStub(); }
 
+  private FeeEstimate cached_fee_estimate;
+  private long cached_fee_estimate_time = 0;
+  public static final long FEE_ESTIMATE_CACHE_TIME = 30000L;
+  private Object fee_estimate_cache_lock = new Object();
+
   public FeeEstimate getFeeEstimate()
   {
-    return getStub().getFeeEstimate(NullRequest.newBuilder().build());
+    synchronized(fee_estimate_cache_lock)
+    {
+      if ((cached_fee_estimate != null) && (System.currentTimeMillis() < cached_fee_estimate_time + FEE_ESTIMATE_CACHE_TIME))
+      {
+        return cached_fee_estimate;
+      }
+      else
+      {
+        cached_fee_estimate = getStub().getFeeEstimate(NullRequest.newBuilder().build());
+        cached_fee_estimate_time = System.currentTimeMillis();
+        return cached_fee_estimate;
+      }
+
+    }
   }
   
   public void send(long value, String to, boolean send_all)
@@ -493,16 +514,17 @@ public class SnowBlossomClient
 
     TransactionFactoryResult res = TransactionFactory.createTransaction(tx_config.build(), purse.getDB(), this);
 
-    Transaction tx = res.getTx();
+    for(Transaction tx :  res.getTxsList())
+    {
 
+      logger.info("Transaction: " + new ChainHash(tx.getTxHash()) + " - " + tx.toByteString().size());
 
-    logger.info("Transaction: " + new ChainHash(tx.getTxHash()) + " - " + tx.toByteString().size());
+      TransactionUtil.prettyDisplayTx(tx, System.out, params);
 
-    TransactionUtil.prettyDisplayTx(tx, System.out, params);
+      //logger.info(tx.toString());
 
-    //logger.info(tx.toString());
-
-    System.out.println(stub_holder.getBlockingStub().submitTransaction(tx));
+      System.out.println(stub_holder.getBlockingStub().submitTransaction(tx));
+    }
 
   }
   public void sendLocked(long value, String to, String fbo, int block, String nametype, String name)
@@ -538,15 +560,17 @@ public class SnowBlossomClient
 
     TransactionFactoryResult res = TransactionFactory.createTransaction(tx_config.build(), purse.getDB(), this);
 
-    Transaction tx = res.getTx();
+    for(Transaction tx : res.getTxsList())
+    {
 
-    logger.info("Transaction: " + new ChainHash(tx.getTxHash()) + " - " + tx.toByteString().size());
+      logger.info("Transaction: " + new ChainHash(tx.getTxHash()) + " - " + tx.toByteString().size());
 
-    TransactionUtil.prettyDisplayTx(tx, System.out, params);
+      TransactionUtil.prettyDisplayTx(tx, System.out, params);
 
-    //logger.info(tx.toString());
+      //logger.info(tx.toString());
 
-    System.out.println(stub_holder.getBlockingStub().submitTransaction(tx));
+      System.out.println(stub_holder.getBlockingStub().submitTransaction(tx));
+    }
 
   }
 
@@ -782,12 +806,16 @@ public class SnowBlossomClient
   {
     return stub_holder.getBlockingStub().getNodeStatus( NullRequest.newBuilder().build() );
   }
+  public GetUTXOUtil getUTXOUtil()
+  {
+    return get_utxo_util;
+  }
 
   public List<TransactionBridge> getSpendable(AddressSpecHash addr)
     throws ValidationException
   {
 
-    Map<String, TransactionBridge> bridge_map= get_utxo_util.getSpendableWithMempool(addr);
+    Map<String, TransactionBridge> bridge_map = get_utxo_util.getSpendableWithMempool(addr);
 
     LinkedList<TransactionBridge> lst = new LinkedList<>();
     lst.addAll(bridge_map.values());

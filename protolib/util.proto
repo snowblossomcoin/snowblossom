@@ -36,6 +36,19 @@ message TransactionFactoryConfig {
 
   bytes extra = 14;
   bool send_all = 15;
+
+  //bool restrict_shard = 16; // Only use inputs from a specific shard
+  //int32 restrict_shard_id = 17; // Specific shard id to use inputs from
+
+  bool allow_split_send = 18; // If needed, form multiple send transactions 
+                              // from different shards to complete the outputs
+  int32 change_shard_id = 19;
+
+  /*oneof output_shard_mode
+  {
+    bool output_shard_as_set = 20; // use the shard outputs set in the TransactionOutputs
+    bool output_shard_follow_tx = 21; // Put outputs on the same shard as the transaction
+  }*/
 }
 
 message UTXOEntry {
@@ -45,11 +58,21 @@ message UTXOEntry {
   int64 value = 4;
 }
 
-message TransactionFactoryResult {
-  Transaction tx = 1;
+message TransactionSignResult {
+  Transaction tx= 1;
   bool all_signed = 2;
   int64 fee = 3;
   int32 signatures_added = 4;
+}
+
+
+message TransactionFactoryResult {
+  Transaction tx_deprecated = 1; // deprecated
+  bool all_signed = 2;
+  int64 fee = 3;
+  int32 signatures_added = 4;
+
+  repeated Transaction txs = 5;
 }
 
 message AuditLogReport {

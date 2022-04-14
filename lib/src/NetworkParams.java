@@ -68,12 +68,39 @@ public abstract class NetworkParams
   public int getDefaultPort() { return 2338; }
   public int getDefaultTlsPort() { return 2348; }
 
+  // Used only for single machine test networks
+  public boolean allowSingleHost() {return false; }
+
   public int getActivationHeightTxOutRequirements() { return Integer.MAX_VALUE; }
   public int getActivationHeightTxOutExtras() { return Integer.MAX_VALUE; }
 
   // SIP-4
   public int getActivationHeightTxInValue() { return Integer.MAX_VALUE; }
+
+  public int getActivationHeightShards() { return Integer.MAX_VALUE; }
+
+  /**
+   * Minimum number of blocks in a shard before considering forking it to
+   * additiional shards.
+   */
+  public int getMinShardLength() { return 144; }
+  public int getMaxShardId() {return 1022; } //allows 512 shards
+
+  /** 
+   * max number of shards old we allow the other shards to be
+   *
+   * example: if we are validating height 1000, all other shards must be at least
+   * on 994.
+   */
+  public int getMaxShardSkewHeight() {return 6; } 
+
+  // When a shard is over the min shard length and the running average
+  // for block transaction data is over this, then split this shard
+  public int getShardForkThreshold() { return getMaxBlockSize() / 2; }
   
+  public int getGrpcMaxMessageSize(){return getMaxBlockSize() + 1000000;}
+
+  public abstract int getMaxBlockSize();
 
   /**
    * Returns a mapping of field seeds, which also
@@ -98,44 +125,60 @@ public abstract class NetworkParams
     if (config.isSet("network"))
     {
       String network = config.get("network");
+      return loadFromName(network);
+    }
+    return new NetworkParamsProd();
 
-      if (network.equals("snowblossom"))
-      {
-        return new NetworkParamsProd();
-      }
-      else if (network.equals("mainnet"))
-      {
-        return new NetworkParamsProd();
-      }
-      else if (network.equals("testnet"))
-      {
-        logger.info("Using network teapot - testnet");
-        return new NetworkParamsTestnet();
-      }
-      else if (network.equals("teapot"))
-      {
-        logger.info("Using network teapot - testnet");
-        return new NetworkParamsTestnet();
-      }
-      else if (network.equals("spoon"))
-      {
-        logger.info("Using network spoon - regtest");
-        return new NetworkParamsRegtest();
-      }
-      else if (network.equals("regtest"))
-      {
-        logger.info("Using network spoon - regtest");
-        return new NetworkParamsRegtest();
-      }
-      else
-      {
-        logger.log(Level.SEVERE, String.format("Unknown network: %s", network));
-        return null;
-      }
+  }
+  public static NetworkParams loadFromName(String network)
+  {
+    if (network.equals("snowblossom"))
+    {
+      return new NetworkParamsProd();
+    }
+    else if (network.equals("mainnet"))
+    {
+      return new NetworkParamsProd();
+    }
+    else if (network.equals("testnet"))
+    {
+      logger.info("Using network teapot - testnet");
+      return new NetworkParamsTestnet();
+    }
+    else if (network.equals("teapot"))
+    {
+      logger.info("Using network teapot - testnet");
+      return new NetworkParamsTestnet();
+    }
+    else if (network.equals("spoon"))
+    {
+      logger.info("Using network spoon - regtest");
+      return new NetworkParamsRegtest();
+    }
+    else if (network.equals("regtest"))
+    {
+      logger.info("Using network spoon - regtest");
+      return new NetworkParamsRegtest();
+    }
+    else if (network.equals("regshard"))
+    {
+      logger.info("Using network regshard");
+      return new NetworkParamsRegShard();
+    }
+    else if (network.equals("testshard"))
+    {
+      logger.info("Using network test shard");
+      return new NetworkParamsTestShard();
+    }
+    else if (network.equals("demoshard"))
+    {
+      logger.info("Using network demo shard");
+      return new NetworkParamsDemoShard();
     }
     else
     {
-      return new NetworkParamsProd();
+      logger.log(Level.SEVERE, String.format("Unknown network: %s", network));
+      return null;
     }
 
   }

@@ -17,7 +17,7 @@ git_repository(
   name = "build_stack_rules_proto",
   remote = "https://github.com/fireduck64/rules_proto",
   commit = "3e0b10c45c5e15b3ee17b3aa8a7ffe6e16b018cc",
-  shallow_since = "1579204983 -0800"
+  shallow_since = "1614632955 -0800"
 )
 
 load("@build_stack_rules_proto//:deps.bzl", "io_grpc_grpc_java")
@@ -37,26 +37,28 @@ java_grpc_library()
 git_repository(
   name = "duckutil",
   remote = "https://github.com/fireduck64/duckutil",
-  commit = "bf1f4e4ba46a814c6e40b53de4921ebea950d84c",
-  shallow_since = "1605330022 -0800",
+  commit = "b721d945278dc2069bb9f5c1556161b37d6b4ee8",
+  shallow_since = "1648055343 -0700"
 )
 
 maven_install(
     artifacts = [
 				"com.google.protobuf:protobuf-java:3.5.1",
-				"org.rocksdb:rocksdbjni:6.11.4",
+				"org.rocksdb:rocksdbjni:6.28.2",
         "junit:junit:4.12",
 				"commons-codec:commons-codec:1.11",
         "org.apache.commons:commons-math3:3.6.1",
 				"io.netty:netty-tcnative-boringssl-static:2.0.25.Final",
-				"org.bouncycastle:bcprov-jdk15on:1.68",
-        "org.bouncycastle:bcpkix-jdk15on:1.68",
+				"org.bouncycastle:bcprov-jdk15on:1.69",
+        "org.bouncycastle:bcpkix-jdk15on:1.69",
+        "org.bouncycastle:bcprov-jdk15to18:1.69",
 				"com.thetransactioncompany:jsonrpc2-server:1.11",
-				"net.minidev:json-smart:2.3",
+				"net.minidev:json-smart:2.4.7",
 				"com.lambdaworks:scrypt:1.4.0",
 				"com.google.zxing:javase:3.4.0",
 				"org.slf4j:slf4j-nop:1.7.25",
-				"org.bitcoinj:bitcoinj-core:0.14.7",
+				"org.bitcoinj:bitcoinj-core:0.15.10",
+        "org.bitlet:weupnp:0.1.4",
     ],
     repositories = [
         "https://repo1.maven.org/maven2",

@@ -10,6 +10,7 @@ java_library(
       "@duckutil//:duckutil_lib",
       "@duckutil//:webserver_lib",
       "@com_google_protobuf//:protobuf_java_util",
+      "@maven//:net_minidev_json_smart",
     ],
 )
 
@@ -23,3 +24,9 @@ java_test(
       "//protolib:protogrpc",
     ]
 )
+
+filegroup(
+  name = "webstatic",
+  srcs = glob(["webstatic/**"]),
+)
+

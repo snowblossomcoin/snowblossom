@@ -4,28 +4,38 @@ import com.google.protobuf.ByteString;
 import com.google.protobuf.util.JsonFormat;
 import duckutil.Config;
 import duckutil.LRUCache;
+import duckutil.SoftLRUCache;
 import duckutil.webserver.DuckWebServer;
 import duckutil.webserver.WebContext;
 import duckutil.webserver.WebHandler;
 import java.io.PrintStream;
+import java.io.InputStream;
+import java.net.URLConnection;
 import java.math.RoundingMode;
 import java.net.URLDecoder;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
+import java.util.HashSet;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.Map;
+import java.util.TreeMap;
+import java.util.TreeSet;
 import java.util.TimeZone;
 import java.util.logging.Logger;
+import net.minidev.json.JSONObject;
 import snowblossom.lib.*;
 import snowblossom.proto.*;
+import net.minidev.json.JSONObject;
+
 
 public class WebServer implements WebHandler
 {
   private static final Logger logger = Logger.getLogger("snowblossom.shackleton");
   private Shackleton shackleton;
 
-  private LRUCache<ChainHash, String> block_summary_lines = new LRUCache<>(500);
+  private LRUCache<ChainHash, String> block_summary_lines = new LRUCache<>(10000);
+  private SoftLRUCache<ChainHash, BlockSummary> block_summary_cache = new SoftLRUCache<>(256 * 50);
 
   public WebServer(Config config, Shackleton shackleton)
     throws Exception
@@ -41,6 +51,45 @@ public class WebServer implements WebHandler
 
   }
 
+  public void staticHandle(WebContext t)
+    throws Exception
+  {
+    String path = t.getURI().getPath();
+
+    path = path.substring(8); // remove the "/static/" 
+    
+    InputStream in = Shackleton.class.getResourceAsStream( "/shackleton/webstatic/" + path );
+    if (in == null)
+    {
+      t.setContentType("text/plain");
+      t.out().println("No resource: " + path);
+      return;
+    }
+    else
+    {
+      String mime_type = Mimer.guessContentType(path);
+      if (mime_type != null)
+      {
+        t.setContentType(mime_type);
+      }
+      
+      byte[] buff = new byte[8192];
+
+      while(true)
+      {
+        int r = in.read(buff);
+        if (r < 0) break;
+        t.out().write(buff,0,r);
+      }
+      in.close();
+      t.out().flush();
+      
+      t.setHttpCode(200);
+
+
+    }
+  }
+
   public void apiHandle(WebContext t)
     throws Exception
   {
@@ -52,7 +101,10 @@ public class WebServer implements WebHandler
       t.getExchange().getResponseHeaders().add("Content-Language", "en-US");
       addHeader(t.out());
       t.out().println("<H2>APIs</H2>");
-      t.out().println("<a href='/api/total_coins'>total_coins</a>");
+      t.out().println("<li><a href='/api/total_coins'>total_coins</a></li>");
+      t.out().println("<li><a href='/api/total_coins_json'>total_coins_json</a></li>");
+      t.out().println("<li><a href='/api/recent_json_graph'>recent_json_graph</a></li>");
+      t.out().println("<li><a href='/api/health_stats'>health_stats</a></li>");
       addFooter(t.out());
       t.setHttpCode(200);
       return;
@@ -66,11 +118,78 @@ public class WebServer implements WebHandler
       t.out().println(df.format(total_value / 1e6));
       t.setHttpCode(200);
       return;
+    }
+    if (path.equals("/api/recent_json_graph"))
+    {
+      t.setContentType("application/json");
+      t.setHttpCode(200);
+      t.out().println(getNetworkGraph(10));
 
+      return;
+    }
+    if (path.equals("/api/health_stats"))
+    {
+      t.setContentType("application/json");
+      t.setHttpCode(200);
+      t.out().println( shackleton.getHealthStats().getHealthStats() );
+      return;
+    }
+    if (path.equals("/api/total_coins_json"))
+    {
+      t.setContentType("application/json");
+      long total_value = shackleton.getTotalValue();
+      double coins = total_value / 1e6;
+      JSONObject obj = new JSONObject();
+      obj.put("total_coins", coins);
+      t.out().println(obj);
+      t.setHttpCode(200);
+      return;
     }
 
     t.setHttpCode(404);
 
+  }
+
+  public JSONObject getNetworkGraph(int blocks_back)
+  {
+    NodeStatus node_status = shackleton.getStub().getNodeStatus(QueryUtil.nr());
+    Map<Integer, BlockHeader> head_map = shackleton.getStuffCache().getNetShardHeaderMap(node_status);
+
+    TreeSet<Integer> shards = new TreeSet<>();
+    shards.addAll(head_map.keySet());
+
+    HashSet<ChainHash> included_blocks = new HashSet<>();
+    LinkedList<BlockHeader> block_list = new LinkedList<>();
+
+
+    for(int shard : shards)
+    {
+      int count_in_shard = 0;
+      BlockHeader head = head_map.get(shard);
+      while(
+        (head != null) && 
+        (head.getSnowHash().size() > 0) && 
+        (count_in_shard < blocks_back) &&
+        (!included_blocks.contains(new ChainHash(head.getSnowHash())))
+        )
+      {
+        ChainHash hash = new ChainHash(head.getSnowHash());
+        included_blocks.add(hash);
+        block_list.add(head);
+
+        if (head.getBlockHeight() == 0) head = null;
+        else
+        {
+          head = shackleton.getStuffCache().getBlockHeader( new ChainHash(head.getPrevBlockHash()));
+        }
+        count_in_shard++;
+
+      }
+
+    }
+
+    return GraphOutput.getGraph(block_list);
+ 
   }
 
     public void innerHandle(WebContext t, PrintStream out)
@@ -92,7 +211,7 @@ public class WebServer implements WebHandler
           displayStatus(out);
           return;
         }
-        
+
 
         if (search.startsWith("load-"))
         {
@@ -136,7 +255,7 @@ public class WebServer implements WebHandler
             return;
           }
         }
-        
+
         AddressSpecHash address = null;
         try
         {
@@ -213,8 +332,8 @@ public class WebServer implements WebHandler
         displayTransaction(out, tx);
       }
     }
-    
-    return true; 
+
+    return true;
 
 
   }
@@ -237,6 +356,12 @@ public class WebServer implements WebHandler
 
     BlockSummary summary = node_status.getHeadSummary();
     BlockHeader header = summary.getHeader();
+    out.println("<h2>Braid Status</h2>");
+
+    printBraidHeads(out, node_status);
+    printBraidSummary(out, node_status);
+    //printBraidStatus(out, node_status);
+
     out.println("<h2>Chain Status</h2>");
     out.println("<pre>");
 
@@ -281,7 +406,7 @@ public class WebServer implements WebHandler
     out.println("<tr><td>Per Month</td><td><input type='text' id='hash3' value='0' size=12 disabled> Snow</td></tr>");
     out.println("</table>");
     out.println("<script>window.avgdiff=" + df.format(avg_diff) + ";</script>");
-    
+
     out.println("<h2>Vote Status</h2>");
     out.println("<pre>");
     shackleton.getVoteTracker().getVotingReport(node_status, out);
@@ -289,6 +414,9 @@ public class WebServer implements WebHandler
 
     out.println("<h2>Rich List</h2>");
     out.println("<pre><a href='?search=richlist'>Rich List Report</a></pre>");
+    
+    out.println("<h2>Visualization</h2>");
+    out.println("<pre><a href='/static/shard-visual.html'>Shard Visualization</a></pre>");
 
     out.println("<h2>APIs</h2>");
     out.println("<pre><a href='/api'>APIs</a></pre>");
@@ -297,7 +425,7 @@ public class WebServer implements WebHandler
     int min = Math.max(0, header.getBlockHeight()-75);
 
     out.println("<table class='table table-hover' id='blocktable'>");
-    out.println("<thead><tr><th>Height</th><th>Hash</th><th>Tx</th><th>Size</th><th>Miner</th><th>Remark</th><th>Timestamp</th></tr></thead>");
+    out.println("<thead><tr><th>Shard</th><th>Height</th><th>Hash</th><th>Tx</th><th>Size</th><th>Imp</th><th>Miner</th><th>Remark</th><th>Timestamp</th></tr></thead>");
 
     for(int h=header.getBlockHeight(); h>=min; h--)
     {
@@ -316,9 +444,46 @@ public class WebServer implements WebHandler
     for(int h=endblock; h > min; h--)
     {
       BlockHeader blk_head = shackleton.getStub().getBlockHeader(RequestBlockHeader.newBuilder().setBlockHeight(h).build());
+      if (blk_head == null) break;
+      if (blk_head.getSnowHash().size() == 0) break;
       ChainHash hash = new ChainHash(blk_head.getSnowHash());
       out.println(getBlockSummaryLine(hash));
     }
+  }
+
+  private void printChainSummary(BlockSummary summary, PrintStream out)
+  {
+    NetworkParams params = shackleton.getParams();
+
+    BlockHeader header = summary.getHeader();
+    out.println(String.format("<h3>Shard: %d</h3>", header.getShardId()));
+    out.println("<pre>");
+
+    SnowFieldInfo sf = params.getSnowFieldInfo(summary.getActivatedField());
+    SnowFieldInfo next_sf = params.getSnowFieldInfo(summary.getActivatedField() + 1);
+    double previous_diff = PowUtil.getDiffForTarget(sf.getActivationTarget());
+    double avg_diff = PowUtil.getDiffForTarget(BlockchainUtil.readInteger(summary.getTargetAverage()));
+    double next_diff = PowUtil.getDiffForTarget(next_sf.getActivationTarget());
+    int percent_to_next_field = (int)Math.max(0, Math.round(100 * (avg_diff-previous_diff) / (next_diff-previous_diff)));
+
+    out.println("work_sum: " + summary.getWorkSum());
+    out.println("blocktime_average_ms: " + summary.getBlocktimeAverageMs());
+    out.println("activated_field: " + summary.getActivatedField() + " " + sf.getName() + " (" + percent_to_next_field + "% to " + Math.round(next_diff) + ")");
+    out.println("total_transactions: " + summary.getTotalTransactions());
+
+
+    double target_diff = PowUtil.getDiffForTarget(BlockchainUtil.targetBytesToBigInteger(header.getTarget()));
+    double block_time_sec = summary.getBlocktimeAverageMs() / 1000.0 ;
+    double estimated_hash = Math.pow(2.0, target_diff) / block_time_sec / 1e6;
+    DecimalFormat df =new DecimalFormat("0.000");
+    df.setRoundingMode(RoundingMode.FLOOR);
+
+    out.println(String.format("difficulty (avg): %s (%s)", df.format(target_diff), df.format(avg_diff)));
+    out.println(String.format("estimated network hash rate: %s Mh/s", df.format(estimated_hash)));
+    long tx_size_average = summary.getTxSizeAverage();
+    out.println("Size average of transactions: " + tx_size_average);
+ 
+    out.println("</pre>");
   }
 
   private String getBlockSummaryLine(ChainHash hash)
@@ -355,11 +520,20 @@ public class WebServer implements WebHandler
     sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
 
     Date resultdate = new Date(blk.getHeader().getTimestamp());
+    int import_count = 0;
+    for(BlockImportList bil : blk.getHeader().getShardImportMap().values())
+    {
+      import_count += bil.getHeightMap().size();
 
-    String s = String.format("<tr><td>%d</td><td>%s</td><td>%d</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>",
+    }
+
+    String s = String.format("<tr><td>%d</td><td>%d</td><td>%s</td><td>%d</td><td>%s</td><td>%d</td><td>%s</td><td>%s</td><td>%s</td></tr>",
+        blk.getHeader().getShardId(),
         blk.getHeader().getBlockHeight(),
         link,
-        tx_count, ((int)(size / 1024)) + "kB", "<a href='/?search=" + miner + "'>" + miner + "</a>", remark, sdf.format(resultdate) + " UTC");
+        tx_count, ((int)(size / 1024)) + "kB",
+        import_count,
+        "<a href='/?search=" + miner + "'>" + miner + "</a>", remark, sdf.format(resultdate) + " UTC");
 
     synchronized(block_summary_lines)
     {
@@ -419,67 +593,224 @@ public class WebServer implements WebHandler
   private void displayBlock(PrintStream out, Block blk)
     throws ValidationException
   {
-      BlockHeader header = blk.getHeader();
-      out.println("<pre>");
-      out.println("hash: " + new ChainHash(header.getSnowHash()));
-      out.println("height: " + header.getBlockHeight());
-      out.println("prev_block_hash: " + new ChainHash(header.getPrevBlockHash()));
-      out.println("utxo_root_hash: " + new ChainHash(header.getUtxoRootHash()));
+    BlockHeader header = blk.getHeader();
+    out.println("<pre>");
+    out.println("shard: "+ header.getShardId());
+    out.println("hash: " + new ChainHash(header.getSnowHash()));
+    out.println("height: " + header.getBlockHeight());
+    out.println("prev_block_hash: " + new ChainHash(header.getPrevBlockHash()));
+    out.println("utxo_root_hash: " + new ChainHash(header.getUtxoRootHash()));
 
-      SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm");
-      sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
-      Date resultdate = new Date(header.getTimestamp());
-      out.println("timestamp: " + header.getTimestamp() + " :: " + sdf.format(resultdate) + " UTC");
-      out.println("snow_field: " + header.getSnowField());
-      out.println("size: " + blk.toByteString().size());
-      out.println();
+    SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm");
+    sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
+    Date resultdate = new Date(header.getTimestamp());
+    out.println("timestamp: " + header.getTimestamp() + " :: " + sdf.format(resultdate) + " UTC");
+    out.println("snow_field: " + header.getSnowField());
+    out.println("size: " + blk.toByteString().size());
+    out.println("</pre>");
+    out.println();
 
-      out.flush();
-
-      for(Transaction tx : blk.getTransactionsList()) 
-      {
-            LinkedList<Double> inValues = new LinkedList<Double>();
-            try 
-      {
-                for(TransactionInput in : TransactionUtil.getInner(tx).getInputsList()) 
+    if (header.getShardImportMap().size() > 0)
     {
-                  int idx = in.getSrcTxOutIdx();
-                  Transaction txo = shackleton.getStub().getTransaction( RequestTransaction.newBuilder().setTxHash(in.getSrcTxId()).build());
-                  TransactionInner innero = TransactionUtil.getInner(txo);
-                  TransactionOutput outo = innero.getOutputs(idx);
-                  double value = outo.getValue() / Globals.SNOW_VALUE_D;
-                  inValues.addLast(value);
-                }
-            } catch(Exception e) 
-      {
-                out.println(e);
-            }
+    out.println("<h3>Block Imports</h3>");
 
-            TransactionUtil.prettyDisplayTxHTML(tx, out, shackleton.getParams(), inValues);
-            out.println();
+    for(Map.Entry<Integer, BlockImportList> bil : header.getShardImportMap().entrySet())
+    {
+      int imp_shard = bil.getKey();
+      for(Map.Entry<Integer, ByteString> me : bil.getValue().getHeightMap().entrySet())
+      {
+        int imp_height = me.getKey();
+        ChainHash imp_hash = new ChainHash(me.getValue());
+    
+        String link = String.format("<a href='/?search=%s'> %s </a>", imp_hash, imp_hash.toString());
+
+        out.println(String.format("<li>s:%d h:%d %s</li>",
+          imp_shard,
+          imp_height,
+          link));
       }
+
+    }
+    }
+
+    out.flush();
+
+    for(Transaction tx : blk.getTransactionsList()) 
+    {
+      TransactionUtil.prettyDisplayTxHTML(tx, out, shackleton.getParams());
+      out.println();
+    }
   }
+
+
+  private void printBraidSummary(PrintStream out, NodeStatus ns)
+  {
+    TreeSet<Integer> shards = new TreeSet<>();
+    Map<Integer, BlockSummary> bs_map = getShardSummaryMap(ns);
+    shards.addAll(ns.getShardHeadMap().keySet());
+    for(int shard : shards)
+    {
+      BlockSummary bs_shard_head = bs_map.get(shard);
+      if (bs_shard_head != null)
+      {
+        printChainSummary(bs_shard_head, out);
+      }
+
+    }
+
+  }
+
+  private Map<Integer, BlockSummary> getShardSummaryMap(NodeStatus ns)
+  {
+    TreeMap<Integer, BlockSummary> out = new TreeMap<>();
+    for(Map.Entry<Integer, ByteString> me : ns.getShardHeadMap().entrySet())
+    {
+      int shard = me.getKey();
+      ChainHash hash = new ChainHash(me.getValue());
+      BlockSummary bs = getBlockSummary(hash);
+      if (bs != null)
+      {
+        out.put(shard,bs);
+      }
+
+    }
+    return out;
+
+  }
+
+  private void printBraidHeads(PrintStream out, NodeStatus ns)
+  {
+
+    Map<Integer, BlockSummary> bs_map = getShardSummaryMap(ns);
+    TreeSet<Integer> shards = new TreeSet<>();
+    shards.addAll(bs_map.keySet());
+    System.out.println("Shard heads: " + shards + " " + bs_map.keySet());
+
+    HashSet<ChainHash> included_blocks = new HashSet<>();
+    out.println("<table class='table table-hover' id='braidtable'>");
+    out.println("<thead><tr><th>Shard</th><th>Height</th><th>Hash</th><th>Tx</th><th>Size</th><th>Imp</th><th>Miner</th><th>Remark</th><th>Timestamp</th></tr></thead>");
+
+    
+
+    for(int shard : shards)
+    {
+      BlockSummary bs_shard_head = bs_map.get(shard);
+
+      BlockSummary bs = bs_shard_head;
+      if (bs != null)
+      {
+        ChainHash hash = new ChainHash(bs.getHeader().getSnowHash());
+        included_blocks.add(hash);
+        out.println(getBlockSummaryLine(hash));
+
+        if (bs.getHeader().getBlockHeight() == 0) bs = null;
+        else
+        {
+          bs = getBlockSummary( new ChainHash(bs.getHeader().getPrevBlockHash()));
+        }
+
+      }
+
+    }
+    out.println("</table>");
+
+  }
+
+
+  private void printBraidStatus(PrintStream out, NodeStatus ns)
+  {
+    long tx_count_1h = 0;
+    long look_back_time_1h = 1L * 3600L * 1000L;
+    long start_time_1h = System.currentTimeMillis() - look_back_time_1h;
+
+    Map<Integer, BlockSummary> bs_map = getShardSummaryMap(ns);
+    TreeSet<Integer> shards = new TreeSet<>();
+    shards.addAll(bs_map.keySet());
+    System.out.println("Shard list: " + shards);
+
+    HashSet<ChainHash> included_blocks = new HashSet<>();
+    out.println("<table class='table table-hover' id='blocktable'>");
+    out.println("<thead><tr><th>Shard</th><th>Height</th><th>Hash</th><th>Tx</th><th>Size</th><th>Imp</th><th>Miner</th><th>Remark</th><th>Timestamp</th></tr></thead>");
+
+
+    for(int shard : shards)
+    {
+      BlockSummary bs_shard_head = bs_map.get(shard);
+
+      BlockSummary bs = bs_shard_head;
+      while(
+        (bs != null) && 
+        (bs.getHeader().getTimestamp() >= start_time_1h) &&
+        (!included_blocks.contains(new ChainHash(bs.getHeader().getSnowHash())))
+        )
+      {
+        ChainHash hash = new ChainHash(bs.getHeader().getSnowHash());
+        included_blocks.add(hash);
+        tx_count_1h += bs.getBlockTxCount();
+        out.println(getBlockSummaryLine(hash));
+
+
+        if (bs.getHeader().getBlockHeight() == 0) bs = null;
+        else
+        {
+          bs = getBlockSummary( new ChainHash(bs.getHeader().getPrevBlockHash()));
+        }
+
+      }
+
+    }
+    out.println("</table>");
+
+    DecimalFormat df = new DecimalFormat("0.00");
+    out.println("<pre>");
+
+    out.println("Transactions in last hour: " + tx_count_1h);
+    double rate = (tx_count_1h + 0.0) / (look_back_time_1h / 1000.0);
+    out.println("Transaction per second last hour: " + df.format(rate));
+
+
+    out.println("</pre>");
+
+  }
+
+  public BlockSummary getBlockSummary(ChainHash hash)
+  {
+    synchronized(block_summary_cache)
+    {
+      if (block_summary_cache.containsKey(hash)) return block_summary_cache.get(hash);
+    }
+
+    try
+    {
+      BlockSummary bs = shackleton.getStub().getBlockSummary( 
+        RequestBlockSummary.newBuilder().setBlockHash(hash.getBytes()).build());
+      if (bs != null)
+      {
+        synchronized(block_summary_cache)
+        {
+          block_summary_cache.put(hash, bs);
+        }
+      }
+
+      return bs;
+
+
+    }
+    catch(Exception e)
+    {
+      e.printStackTrace();
+      return null;
+    }
+  }
+
 
   private void displayTransaction(PrintStream out, Transaction tx)
     throws ValidationException
   {
   out.println("<pre>");
   out.println("Found transaction");
-  LinkedList<Double> inValues = new LinkedList<Double>();
-  try {
-    for(TransactionInput in : TransactionUtil.getInner(tx).getInputsList()) {
-      int idx = in.getSrcTxOutIdx();
-      Transaction txo = shackleton.getStub().getTransaction( RequestTransaction.newBuilder().setTxHash(in.getSrcTxId()).build());
-      TransactionInner innero = TransactionUtil.getInner(txo);
-      TransactionOutput outo = innero.getOutputs(idx);
-      double value = outo.getValue() / Globals.SNOW_VALUE_D;
-      inValues.addLast(value);
-    }
-  } catch(Exception e) {
-    out.println(e);
-  }
 
-  TransactionUtil.prettyDisplayTxHTML(tx, out, shackleton.getParams(), inValues);
+  TransactionUtil.prettyDisplayTxHTML(tx, out, shackleton.getParams());
   out.println("");
   out.println("Transaction status:");
 
@@ -496,7 +827,7 @@ public class WebServer implements WebHandler
 
   out.println("</pre>");
 
-      
+
   }
 
 
@@ -505,10 +836,14 @@ public class WebServer implements WebHandler
   {
     if (t.getURI().getPath().startsWith("/api"))
     {
-      // TODO API
       t.setHttpCode(404);
       apiHandle(t);
 
+    }
+    else if (t.getURI().getPath().startsWith("/static"))
+    {
+      t.setHttpCode(404);
+      staticHandle(t);
     }
     else
     {

@@ -22,12 +22,22 @@ public class TransactionBridge implements Comparable<TransactionBridge>
   public final TransactionOutput out;
   public final TransactionInput in;
   public final long value;
+  
+  // might not be the same shard id as the output is encoded to
+  // but the shard this output is currently on
+  public int shard_id; 
+  
 
   public boolean spent;
   public boolean unconfirmed;
 
   public TransactionBridge(TrieNode node)
   {
+    this(node, 0);
+  }
+  public TransactionBridge(TrieNode node, int shard_id)
+  {
+    this.shard_id = shard_id;
     Assert.assertTrue(node.getIsLeaf());
 
     try
@@ -60,6 +70,11 @@ public class TransactionBridge implements Comparable<TransactionBridge>
 
   public TransactionBridge(TransactionOutput out, int out_idx, ChainHash txid)
   {
+    this(out, out_idx, txid, 0);
+  }
+  public TransactionBridge(TransactionOutput out, int out_idx, ChainHash txid, int shard_id)
+  {
+    this.shard_id = shard_id;
     this.out = out;
     value = out.getValue();
       in = TransactionInput.newBuilder()
@@ -71,6 +86,11 @@ public class TransactionBridge implements Comparable<TransactionBridge>
 
   public TransactionBridge(TransactionInput in)
   {
+    this(in, 0);
+  }
+  public TransactionBridge(TransactionInput in, int shard_id)
+  {
+    this.shard_id = shard_id;
     spent=true;
     this.in = in;
 
@@ -96,6 +116,11 @@ public class TransactionBridge implements Comparable<TransactionBridge>
     }
 
     return lst;
+  }
+
+  public boolean isConfirmed()
+  {
+    return !unconfirmed;
   }
 
   /**

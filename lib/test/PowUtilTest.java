@@ -11,6 +11,7 @@ import snowblossom.lib.NetworkParams;
 import snowblossom.lib.NetworkParamsProd;
 import snowblossom.lib.NetworkParamsRegtest;
 import snowblossom.lib.PowUtil;
+import java.util.LinkedList;
 import snowblossom.proto.*;
 
 public class PowUtilTest
@@ -135,7 +136,7 @@ public class PowUtilTest
         .setTimestamp(time)
         .build();
 
-      bs = BlockchainUtil.getNewSummary(header, bs, params, 1L);
+      bs = BlockchainUtil.getNewSummary(header, bs, params, 1L, 600L, new LinkedList());
 
       Assert.assertEquals(time, bs.getHeader().getTimestamp());
 
@@ -167,7 +168,7 @@ public class PowUtilTest
         .setTimestamp(time)
         .build();
 
-      bs = BlockchainUtil.getNewSummary(header, bs, params, 1L);
+      bs = BlockchainUtil.getNewSummary(header, bs, params, 1L, 600L, new LinkedList());
 
       Assert.assertEquals(time, bs.getHeader().getTimestamp());
 

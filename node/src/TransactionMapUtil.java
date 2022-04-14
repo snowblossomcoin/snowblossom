@@ -16,12 +16,12 @@ public class TransactionMapUtil
   public static void saveTransactionMap(Block blk, Map<ByteString, ByteString> update_map)
   {
     ByteString value = getShortValue(blk);
-    
+
     for(Transaction tx : blk.getTransactionsList())
     {
       update_map.put(MAP_PREFIX.concat(tx.getTxHash()),value);
     }
-   
+
   }
 
   public static ByteString getShortValue(Block blk)
@@ -57,6 +57,6 @@ public class TransactionMapUtil
       }
     }
     return status.build();
-    
+
   }
 }

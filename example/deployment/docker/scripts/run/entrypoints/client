@@ -6,10 +6,10 @@ set -eu
 cd /data
 
 cat <<EOF > /tmp/client.conf
+env_override_prefix=snow_client_
 log_config_file=${SNOWBLOSSOM_LOG_CONF:-log.conf}
 network=${SNOWBLOSSOM_NETWORK:-mainnet}
-node_host=${SNOWBLOSSOM_NODE_HOST:-localhost}
-node_port=${SNOWBLOSSOM_NODE_PORT:-2338}
+node_uri=${SNOWBLOSSOM_NODE_HOST:-grpc://localhost/}
 wallet_path=${SNOWBLOSSOM_CLIENT_WALLET_PATH:-wallet}
 EOF
 
@@ -17,4 +17,4 @@ EOF
 [[ ! -f log.conf ]] && cp /snowblossom/log.conf ./
 [[ ! -d logs ]] && mkdir logs
 
-bash snowblossom/scripts/snowblossom snowblossom.client.SnowBlossomClient client.conf "${@}"
+bash /snowblossom/scripts/snowblossom snowblossom.client.SnowBlossomClient client.conf "${@}"

@@ -42,12 +42,18 @@ public class NetworkParamsRegtest extends NetworkParams
 
   @Override
   public String getNetworkName() { return "spoon"; }
+  
+  @Override
+  public boolean allowSingleHost() {return true; }
 
   @Override
   public int getBIP44CoinNumber() { return 2339; }
 
   @Override
   public long getBlockTimeTarget() { return 1000L; } //1 second
+
+  @Override
+  public int getMaxBlockSize(){ return 3800000; }
 
   @Override
   public List<String> getSeedNodes()

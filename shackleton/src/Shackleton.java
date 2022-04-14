@@ -3,6 +3,7 @@ package snowblossom.shackleton;
 import duckutil.Config;
 import duckutil.ConfigFile;
 import duckutil.PeriodicThread;
+import duckutil.TimeRecord;
 import io.grpc.ManagedChannel;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
@@ -33,7 +34,7 @@ public class Shackleton
       System.exit(-1);
     }
 
-    ConfigFile config = new ConfigFile(args[0]);
+    ConfigFile config = new ConfigFile(args[0],"snowblossom_");
 
     LogSetup.setup(config);
 
@@ -47,6 +48,8 @@ public class Shackleton
   private UserServiceBlockingStub blockingStub;
   private GetUTXOUtil get_utxo_util;
   private NetworkParams params;
+  private HealthStats health_stats;
+  private StuffCache stuff_cache;
 
   private VoteTracker vote_tracker;
   private RichList rich_list;
@@ -67,11 +70,15 @@ public class Shackleton
     blockingStub = UserServiceGrpc.newBlockingStub(channel);
     get_utxo_util = new GetUTXOUtil(new StubHolder(channel), params);
 
+    stuff_cache = new StuffCache(this);
+
     rich_list = new RichList(params, blockingStub, get_utxo_util);
-    
+
     vote_tracker=new VoteTracker(this);
     vote_tracker.start();
-    
+
+    health_stats = new HealthStats(this);
+
     web_server = new WebServer(config, this);
 
     new RichListUpdateThread().start();
@@ -89,6 +96,8 @@ public class Shackleton
   }
   public VoteTracker getVoteTracker(){return vote_tracker;}
   public GetUTXOUtil getUtxoUtil(){ return get_utxo_util;}
+  public HealthStats getHealthStats() {return health_stats;}
+  public StuffCache getStuffCache(){ return stuff_cache;}
 
   public String getRichListReport(){return rich_list_report;}
 
@@ -106,8 +115,10 @@ public class Shackleton
 
     public void runPass() throws Exception
     {
-      logger.info("Started rich list update");
       sleep(5000L);
+      logger.info("Started rich list update");
+      //TimeRecord tr = new TimeRecord();
+      //TimeRecord.setSharedRecord(tr);
 
       ByteArrayOutputStream b_out = new ByteArrayOutputStream();
       PrintStream p_out = new PrintStream(b_out);
@@ -116,8 +127,11 @@ public class Shackleton
       p_out.close();
 
       rich_list_report = new String(b_out.toByteArray());
-      
+
       logger.info("Completed rich list update");
+      //TimeRecord.setSharedRecord(null);
+      //tr.printReport(System.out);
+
 
     }
 
