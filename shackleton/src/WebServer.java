@@ -171,7 +171,9 @@ public class WebServer implements WebHandler
           .build()
         );
 
-      obj.put("block_info", getBlockJson(blk_summary, blk_head));
+      Block blk = shackleton.getStub().getBlock(RequestBlock.newBuilder().setBlockHash(blk_head.getSnowHash()).build());
+
+      obj.put("block_info", getBlockJson(blk_summary, blk_head, blk));
 
       t.out().println(obj);
       t.setHttpCode(200);
@@ -519,7 +521,7 @@ public class WebServer implements WebHandler
     out.println("</pre>");
   }
 
-  public JSONObject getBlockJson(BlockSummary summary, BlockHeader bh)
+  public JSONObject getBlockJson(BlockSummary summary, BlockHeader bh, Block blk)
   {
     JSONObject info = new JSONObject();
 
@@ -544,6 +546,9 @@ public class WebServer implements WebHandler
     info.put("target_diff", target_diff);
     info.put("estimated_hash", estimated_hash);
 
+    TransactionInner inner = TransactionUtil.getInner(blk.getTransactions(0));
+    String remark = HexUtil.getSafeString(inner.getCoinbaseExtras().getRemarks());
+    info.put("remark", remark);
     
     if (bh.getVersion() >= 2)
     {
