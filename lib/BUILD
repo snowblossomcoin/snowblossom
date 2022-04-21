@@ -118,6 +118,20 @@ java_test(
     ]
 )
 
+java_test(
+    name = "lib.test.Cve2022_21449Test",
+    test_class = "lib.test.Cve2022_21449Test",
+    srcs = glob(["test/Cve2022_21449Test.java"]),
+    deps = [
+        "//lib:lib",
+        "//lib:rocksdb",
+        "//protolib:protogrpc",
+        "@maven//:commons_codec_commons_codec",
+        "@maven//:org_bouncycastle_bcprov_jdk15on",
+    ]
+)
+
+
 
 java_test(
     name = "lib.test.DigestUtilTest",
