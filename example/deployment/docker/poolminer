@@ -1,0 +1,49 @@
+ARG GIT_REPO=https://github.com/snowblossomcoin/snowblossom.git
+ARG GIT_REF=master
+
+
+
+FROM debian:bullseye-slim as base
+ENV DEBIAN_FRONTEND=noninteractive
+# https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=863199#23
+RUN mkdir -p /usr/share/man/man1
+
+
+FROM base as build-image
+RUN \
+  apt-get -qq update && \
+  apt-get -qq upgrade && \
+  apt-get -qq install --no-install-suggests --no-install-recommends \
+    git \
+    bazel-bootstrap
+
+
+FROM build-image as build
+ARG GIT_REPO
+ARG GIT_REF
+WORKDIR /snowblossom
+RUN \
+git clone ${GIT_REPO} . && \
+git checkout ${GIT_REF}
+RUN bazel build :PoolMiner_deploy.jar 2>&1
+RUN ls -ahl /snowblossom/bazel-bin
+
+
+FROM base as runtime-image
+RUN \
+  apt-get -qq update && \
+  apt-get -qq upgrade && \
+  apt-get -qq install --no-install-suggests --no-install-recommends \
+    default-jre-headless \
+    && \
+  apt-get clean && \
+  rm -rf /var/lib/apt/lists/*
+
+COPY --from=build /snowblossom/bazel-bin/PoolMiner_deploy.jar /snowblossom/
+
+WORKDIR /data
+COPY --from=build /snowblossom/example/configs/logging.properties log.conf
+COPY --from=build /snowblossom/example/configs/pool-miner.conf .
+
+VOLUME /data
+CMD exec /usr/bin/java ${SNOWBLOSSOM_JAVA_OPTIONS} -jar /snowblossom/PoolMiner_deploy.jar /data/pool-miner.conf
