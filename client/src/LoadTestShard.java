@@ -159,8 +159,6 @@ public class LoadTestShard implements StreamObserver<SubmitReply>
         tx_config.addInputs(br.toUTXOEntry());
         needed_funds -= br.value;
       }
-      
-
 
       tx_config.setSign(true);
 
@@ -177,8 +175,6 @@ public class LoadTestShard implements StreamObserver<SubmitReply>
         {
           tx_config.setChangeShardId(preferred_shards.get(rnd.nextInt(preferred_shards.size())));
         }
-
-
       }
       else
       {
@@ -239,22 +235,28 @@ public class LoadTestShard implements StreamObserver<SubmitReply>
       TreeMap<Integer, LinkedList<TransactionBridge>> spendable_map = new TreeMap<>();
       long usable_count = 0;
 
-      for(TransactionBridge br : client.getAllSpendable())
+      try(TimeRecordAuto tra_ns = TimeRecord.openAuto("LoadTestShard.getAllSpendable"))
       {
-        if (!br.spent)
-        if ((use_pending) || (br.isConfirmed()))
+        for(TransactionBridge br : client.getAllSpendable())
         {
-          if (!spendable_map.containsKey(br.shard_id))
+          if (!br.spent)
+          if ((use_pending) || (br.isConfirmed()))
           {
-            spendable_map.put(br.shard_id, new LinkedList<TransactionBridge>());
+            if (!spendable_map.containsKey(br.shard_id))
+            {
+              spendable_map.put(br.shard_id, new LinkedList<TransactionBridge>());
+            }
+            spendable_map.get(br.shard_id).add(br);
+            usable_count++;
           }
-          spendable_map.get(br.shard_id).add(br);
-          usable_count++;
         }
       }
 
       //Shuffle
-      for(LinkedList<TransactionBridge> lst : spendable_map.values()) Collections.shuffle(lst);
+      try(TimeRecordAuto tra_ns = TimeRecord.openAuto("LoadTestShard.shuffle"))
+      {
+        for(LinkedList<TransactionBridge> lst : spendable_map.values()) Collections.shuffle(lst);
+      }
       logger.info(String.format("  Usable outputs to spend: %d", usable_count));
 
       int max_out = 10;
