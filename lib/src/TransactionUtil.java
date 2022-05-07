@@ -4,6 +4,8 @@ import com.google.common.collect.ImmutableList;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.CodedInputStream;
 import com.google.protobuf.CodedOutputStream;
+import duckutil.TimeRecord;
+import duckutil.TimeRecordAuto;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.security.KeyPair;
@@ -45,7 +47,7 @@ public class TransactionUtil
       {
         int tag = code_in.readTag();
         if (tag == 0) break;
-        
+
         // The least signficiate 3 bits are the proto field type
         // so shift to get out field number, which is 5 for TranasctionOutput
         if (tag >> 3 == 5)
@@ -100,7 +102,7 @@ public class TransactionUtil
     List<TransactionOutput> dests,
     KeyPair key_pair)
   {
-    try
+    try(TimeRecordAuto tra_blk = TimeRecord.openAuto("TransactionUtil.createTransaction"))
     {
       MessageDigest md_bc = DigestUtil.getMD();
       Transaction.Builder tx = Transaction.newBuilder();
@@ -112,7 +114,7 @@ public class TransactionUtil
       inner.addAllInputs(sources);
 
       AddressSpec claim = AddressUtil.getSimpleSpecForKey(key_pair.getPublic(), SignatureUtil.SIG_TYPE_ECDSA_COMPRESSED);
-      
+
       AddressSpecHash addr_spec = AddressUtil.getHashForSpec(claim, DigestUtil.getMDAddressSpec());
 
 
@@ -162,7 +164,7 @@ public class TransactionUtil
     return makeTransaction(wallet, spendable, ImmutableList.of(out), fee, null);
 
   }
- 
+
   @Deprecated
   public static Transaction makeTransaction(WalletDatabase wallet,
     Collection<TransactionBridge> spendable,
@@ -178,12 +180,12 @@ public class TransactionUtil
     return makeTransaction(wallet, spendable, ImmutableList.of(out), fee, change_address);
 
   }
-  
+
   @Deprecated
   public static Transaction makeTransaction(
-    WalletDatabase wallet, 
-    Collection<TransactionBridge> spendable, 
-    List<TransactionOutput> output_list, 
+    WalletDatabase wallet,
+    Collection<TransactionBridge> spendable,
+    List<TransactionOutput> output_list,
     long fee,
     AddressSpecHash change_address)
     throws ValidationException
@@ -197,7 +199,7 @@ public class TransactionUtil
 
 
     long needed_input = fee;
-    
+
     for(TransactionOutput tx_out : output_list)
     {
       needed_input += tx_out.getValue();
@@ -316,7 +318,7 @@ public class TransactionUtil
     }
 
     return tx.build();
-    
+
   }
 
   public static AddressSpecHash getRandomChangeAddress(WalletDatabase wallet)
@@ -439,7 +441,7 @@ public class TransactionUtil
     double fee_flakes = inner.getFee();
     double fee_flakes_per_byte = fee_flakes / tx.toByteString().size();
 
-    out.println(String.format("  Fee: %s (%s flakes per byte)", 
+    out.println(String.format("  Fee: %s (%s flakes per byte)",
       df.format( inner.getFee() / Globals.SNOW_VALUE_D),
       df_short.format( fee_flakes_per_byte )
       ));
@@ -447,8 +449,8 @@ public class TransactionUtil
     {
       out.println("  Extra: " + HexUtil.getSafeString(inner.getExtra()));
     }
-    
-    
+
+
   }
 
   /* Outputs transaction with HTML
@@ -532,12 +534,12 @@ public class TransactionUtil
         address, address, dest_shard, df.format(value)));
       //TODO - add requirements data
       if (o.getIds().getUsername().size() > 0)
-      { 
+      {
         String name =  HexUtil.getSafeString(o.getIds().getUsername());
         out.println(String.format("<li>Username: <a href='/?search=%s'>%s</a></li><br />", name, name));
       }
       if (o.getIds().getChannelname().size() > 0)
-      { 
+      {
         String name =  HexUtil.getSafeString(o.getIds().getChannelname());
         out.println(String.format("<li>Channel: <a href='/?search=%s'>%s</a></li><br />", name, name));
       }
