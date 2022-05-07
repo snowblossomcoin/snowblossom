@@ -320,11 +320,14 @@ public class TransactionUtil
 
   public static AddressSpecHash getRandomChangeAddress(WalletDatabase wallet)
   {
-    LinkedList<AddressSpec> lst = new LinkedList<>();
-    lst.addAll(wallet.getAddressesList());
-    Collections.shuffle(lst);
+    try(TimeRecordAuto tra_blk = TimeRecord.openAuto("TransactionUtil.getRandomChangeAddress"))
+    {
+      LinkedList<AddressSpec> lst = new LinkedList<>();
+      lst.addAll(wallet.getAddressesList());
+      Collections.shuffle(lst);
 
-    return AddressUtil.getHashForSpec(lst.pop());
+      return AddressUtil.getHashForSpec(lst.pop());
+    }
   }
 
   public static String prettyDisplayTx(Transaction tx, NetworkParams params)
