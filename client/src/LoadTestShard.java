@@ -233,6 +233,7 @@ public class LoadTestShard implements StreamObserver<SubmitReply>
       SplittableRandom rnd = new SplittableRandom();
 
       TreeMap<Integer, LinkedList<TransactionBridge>> spendable_map = new TreeMap<>();
+      long usable_count = 0;
 
       for(TransactionBridge br : client.getAllSpendable())
       {
@@ -244,11 +245,13 @@ public class LoadTestShard implements StreamObserver<SubmitReply>
             spendable_map.put(br.shard_id, new LinkedList<TransactionBridge>());
           }
           spendable_map.get(br.shard_id).add(br);
+          usable_count++;
         }
       }
 
       //Shuffle
       for(LinkedList<TransactionBridge> lst : spendable_map.values()) Collections.shuffle(lst);
+      logger.info(String.format("  Usable outputs to spend: %d", usable_count));
 
 
       int sent = 0;
