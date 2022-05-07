@@ -36,6 +36,7 @@ public class LoadTestShard implements StreamObserver<SubmitReply>
   private ArrayList<Integer> preferred_shards = new ArrayList<>();
 
   private RateLimit rate_limit = new RateLimit(15.0, 15.0);
+  private final long target_utxo_count = 10000;
 
 	private RateReporter rate_sent = new RateReporter();
 	private RateReporter rate_accepted = new RateReporter();
@@ -89,7 +90,7 @@ public class LoadTestShard implements StreamObserver<SubmitReply>
     }
   }
 
-  private boolean trySend(TreeMap<Integer, LinkedList<TransactionBridge>> spendable_map, SplittableRandom rnd )
+  private boolean trySend(TreeMap<Integer, LinkedList<TransactionBridge>> spendable_map, SplittableRandom rnd, int max_output_count )
     throws Exception
   {
     try(TimeRecordAuto tra_rate = TimeRecord.openAuto("LoadTestShard.rate_limit"))
@@ -106,11 +107,14 @@ public class LoadTestShard implements StreamObserver<SubmitReply>
       long fee = 12500;
       while (rnd.nextDouble() < 0.5) output_count++;
 
+      output_count = Math.min(output_count, max_output_count);
+
       LinkedList<TransactionOutput> out_list = new LinkedList<>();
       long total_out = fee;
       for(int i=0; i< output_count; i++)
       {
         long value = min_send + rnd.nextLong(send_delta);
+        if (max_output_count == 1) value=value*10; // When trying to prune utxo, send bigger outputs
 
         int dst_shard = active_shards.get( rnd.nextInt(active_shards.size() ) );
         if (preferred_shard >= 0)
@@ -253,13 +257,15 @@ public class LoadTestShard implements StreamObserver<SubmitReply>
       for(LinkedList<TransactionBridge> lst : spendable_map.values()) Collections.shuffle(lst);
       logger.info(String.format("  Usable outputs to spend: %d", usable_count));
 
+      int max_out = 10;
+      if (usable_count > target_utxo_count) max_out=1;
 
       int sent = 0;
       long start_send_time = System.currentTimeMillis();
       long end_send_time = start_send_time + 600L * 1000L;
       while(spendable_map.size() > 0)
       {
-        if (trySend(spendable_map, rnd)) sent++;
+        if (trySend(spendable_map, rnd, max_out)) sent++;
         if (sent >= 5000) break;
         if (System.currentTimeMillis() > end_send_time) break;
       }
