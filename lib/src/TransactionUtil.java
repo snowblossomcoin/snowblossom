@@ -115,9 +115,6 @@ public class TransactionUtil
 
       AddressSpec claim = AddressUtil.getSimpleSpecForKey(key_pair.getPublic(), SignatureUtil.SIG_TYPE_ECDSA_COMPRESSED);
 
-      AddressSpecHash addr_spec = AddressUtil.getHashForSpec(claim, DigestUtil.getMDAddressSpec());
-
-
       inner.addClaims(claim);
 
       ByteString inner_data= inner.build().toByteString();
