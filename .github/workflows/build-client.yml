@@ -1,0 +1,55 @@
+# To use, configure github repo settings -> Secrets:
+#   * DOCKER_REGISTRY   eg. docker.io:port/ (optional, leave unset for dockerhub, trailing slash required)
+#   * DOCKER_ORGANIZATION
+#   * DOCKER_USERNAME
+#   * DOCKER_PASSWORD
+
+name: Build Docker Client
+on: [push, pull_request, workflow_dispatch]
+
+jobs:
+  job0:
+    name: Build Docker Client
+    runs-on: ubuntu-20.04
+    steps:
+      # Prepares a list of tags for this docker image build.
+      # CONDITION, TEMPLATE  , EXAMPLE
+      # always   , commit_sha, 273a2c414ba39a4a1d6668515c9d880dc6b5b8793f93d34fb7f4eb12cb686ac6
+      # tag      , tag       , tag
+      # branch   , branch    , master
+      # pr       , pr-#      , pr-37
+      #
+      # So a docker image would be built for commit hash 273a2c414ba39a4a1d6668515c9d880dc6b5b8793f93d34fb7f4eb12cb686ac6
+      # and would be tagged like:
+      #    snowblossomcoin/client:273a2c414ba39a4a1d6668515c9d880dc6b5b8793f93d34fb7f4eb12cb686ac6
+      #    snowblossomcoin/client:2.0.0
+      #    snowblossomcoin/client:master  (until the next master build replaces this)
+      - name: Determine Meta
+        id: meta
+        uses: docker/metadata-action@v3
+        with:
+          images: ${{ secrets.DOCKER_REGISTRY }}${{ secrets.DOCKER_ORGANIZATION }}/client
+          tags: |
+            type=sha,format=long,prefix=
+            type=ref,event=tag
+            type=ref,event=branch
+            type=ref,event=pr
+            type=raw,value=latest,enable=${{ github.ref == format('refs/heads/{0}', github.event.repository.default_branch) }}
+
+      - name: Login to DockerHub
+        uses: docker/login-action@v1
+        with:
+          registry: ${{ secrets.DOCKER_REGISTRY }}
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Build and Push
+        uses: docker/build-push-action@v2
+        with:
+          push: true
+          file: example/deployment/docker/client
+          build-args: |
+            GIT_REPO=${{ secrets.GIT_REPO }}
+            GIT_REF=${{ github.sha }}
+          # applies the tags determined earlier.
+          tags: ${{ steps.meta.outputs.tags }}
