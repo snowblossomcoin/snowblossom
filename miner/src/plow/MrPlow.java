@@ -1,5 +1,6 @@
 package snowblossom.miner.plow;
 
+import com.google.common.collect.ImmutableList;
 import com.google.protobuf.ByteString;
 import duckutil.Config;
 import duckutil.ConfigFile;
@@ -9,37 +10,33 @@ import duckutil.jsonrpc.JsonRpcServer;
 import io.grpc.ManagedChannel;
 import io.grpc.Server;
 import io.grpc.ServerBuilder;
+import io.grpc.netty.NettyServerBuilder;
 import io.grpc.stub.StreamObserver;
+import io.netty.handler.ssl.SslContext;
 import java.math.BigInteger;
 import java.text.DecimalFormat;
-import java.util.List;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.TreeSet;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import snowblossom.client.StubUtil;
+import snowblossom.client.WalletUtil;
 import snowblossom.lib.*;
 import snowblossom.lib.db.DB;
+import snowblossom.lib.db.atomicfile.AtomicFileDB;
 import snowblossom.lib.db.lobstack.LobstackDB;
 import snowblossom.lib.db.rocksdb.JRocksDB;
-import snowblossom.lib.db.atomicfile.AtomicFileDB;
+import snowblossom.lib.tls.CertGen;
 import snowblossom.mining.proto.*;
 import snowblossom.proto.*;
-import snowblossom.proto.UserServiceGrpc.UserServiceBlockingStub;
-import snowblossom.proto.UserServiceGrpc.UserServiceStub;
-import com.google.common.collect.ImmutableList;
-import java.util.TreeSet;
-import snowblossom.client.WalletUtil;
-import io.netty.handler.ssl.SslContext;
-import snowblossom.lib.tls.CertGen;
-import io.grpc.netty.NettyServerBuilder;
 
 public class MrPlow
 {
   private static final Logger logger = Logger.getLogger("snowblossom.miner");
-  
+
   public static final int BACK_BLOCKS=5; // Roughly how many blocks back to keep shares for PPLNS
 
   // Basically read this as if there are SHARES_IN_VIEW_FOR_RETARGET
@@ -104,7 +101,7 @@ public class MrPlow
     config.require("db_type");
     config.require("db_path");
     min_diff = config.getIntWithDefault("min_diff", 22);
-    
+
     params = NetworkParams.loadFromConfig(config);
 
     if (config.getBoolean("display_timerecord"))
@@ -154,25 +151,25 @@ public class MrPlow
     {
       int tls_port = config.getInt("tls_mining_pool_port");
       config.require("tls_key_path");
-			WalletDatabase wallet_db = WalletUtil.loadNodeWalletFromConfig(params, config, "tls_key_path");
+      WalletDatabase wallet_db = WalletUtil.loadNodeWalletFromConfig(params, config, "tls_key_path");
 
       AddressSpecHash node_tls_address = AddressUtil.getHashForSpec(wallet_db.getAddresses(0));
       tls_key_id = node_tls_address;
       logger.info("My TLS address: " + AddressUtil.getAddressString(Globals.NODE_ADDRESS_STRING, node_tls_address));
 
       SslContext ssl_ctx = CertGen.getServerSSLContext(wallet_db);
-			grpc_server_tls = NettyServerBuilder
-				.forPort(tls_port)
-				.addService(agent)
-				.sslContext(ssl_ctx)
-				.build();
+      grpc_server_tls = NettyServerBuilder
+        .forPort(tls_port)
+        .addService(agent)
+        .sslContext(ssl_ctx)
+        .build();
       grpc_server_tls.start();
 
     }
-		else
-		{
-			grpc_server_tls = null;
-		}
+    else
+    {
+      grpc_server_tls = null;
+    }
 
     if (config.isSet("rpc_port"))
     {
@@ -183,7 +180,7 @@ public class MrPlow
     loop = new PlowLoop();
     loop.start();
   }
-  
+
   public String getTlsKeyId()
   {
     return AddressUtil.getAddressString(Globals.NODE_ADDRESS_STRING, tls_key_id);
@@ -270,7 +267,7 @@ public class MrPlow
           last_report = System.currentTimeMillis();
         }
       }
-     
+
     }
   }
 
@@ -348,7 +345,7 @@ public class MrPlow
 
     Map<String, Double> rates = share_manager.getPayRatios();
 
-    SubscribeBlockTemplateRequest req = 
+    SubscribeBlockTemplateRequest req =
       SubscribeBlockTemplateRequest.newBuilder()
         .putAllPayRatios( rates )
         .setExtras(extras.build())
@@ -458,8 +455,8 @@ public class MrPlow
         DecimalFormat df = new DecimalFormat("0.00000000");
 
         last_block_template = potential_blocks.first().getBlockTemplate().getBlock();
-        logger.info(String.format("Selected block: s:%d h:%d %s", 
-          last_block_template.getHeader().getShardId(), 
+        logger.info(String.format("Selected block: s:%d h:%d %s",
+          last_block_template.getHeader().getShardId(),
           last_block_template.getHeader().getBlockHeight(),
           df.format(potential_blocks.first().getRewardPerHash())));
         agent.updateBlockTemplate(last_block_template);
@@ -483,7 +480,7 @@ public class MrPlow
     {
 
     }
-    
+
     @Override
     public void onError(Throwable t)
     {
@@ -495,7 +492,7 @@ public class MrPlow
     {
       logger.info("Block submit reply: " + reply);
     }
-   
+
 
   }
 }

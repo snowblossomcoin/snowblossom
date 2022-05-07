@@ -9,7 +9,6 @@ import java.util.LinkedList;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Logger;
-
 import snowblossom.lib.*;
 import snowblossom.mining.proto.*;
 import snowblossom.proto.*;
@@ -196,7 +195,7 @@ public class MiningPoolServiceAgent extends MiningPoolServiceGrpc.MiningPoolServ
       }
 
     }
-    
+
     last_block = blk;
 
     synchronized(miner_list)
@@ -218,7 +217,7 @@ public class MiningPoolServiceAgent extends MiningPoolServiceGrpc.MiningPoolServ
         {
           drop_count++;
           //logger.info("Error in send work: " + t);
-        } 
+        }
 
       }
 
@@ -268,7 +267,7 @@ public class MiningPoolServiceAgent extends MiningPoolServiceGrpc.MiningPoolServ
         {
           if (last_shift + MrPlow.SHARE_VIEW_WINDOW < System.currentTimeMillis())
           {
-            // Intentionally not clearing the share_times here to avoid 
+            // Intentionally not clearing the share_times here to avoid
             // this being run again on the next share coming in
             working_diff = Math.max(working_diff - 1, plow.getMinDiff());
             last_shift = System.currentTimeMillis();

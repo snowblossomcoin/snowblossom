@@ -9,8 +9,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
-import net.minidev.json.JSONObject;
 import net.minidev.json.JSONArray;
+import net.minidev.json.JSONObject;
 import snowblossom.lib.*;
 import snowblossom.proto.*;
 
@@ -31,17 +31,17 @@ public class MrPlowJsonHandler
 
   }
   public class GetFoundBlockHandler extends JsonRequestHandler
-  { 
+  {
     @Override
     public String[] handledRequests()
-    { 
+    {
       return new String[]{"getfoundblocks"};
     }
 
     @Override
     protected JSONObject processRequest(JSONRPC2Request req, MessageContext ctx)
       throws Exception
-    { 
+    {
 
       List<ByteString> lst = mr_plow.getDB().getSpecialMapSet().getSet(MrPlow.BLOCK_KEY, 100000);
       TreeMap<Integer, BlockHeader> map = new TreeMap<>();
@@ -56,7 +56,7 @@ public class MrPlowJsonHandler
       {
         hash_list.push(HexUtil.getHexString( me.getValue().getSnowHash()));
       }
-      
+
       JSONObject reply = new JSONObject();
       reply.put("found_blocks", map.size());
       reply.put("hashes", hash_list);
@@ -68,17 +68,17 @@ public class MrPlowJsonHandler
 
 
   public class GetStatsHandler extends JsonRequestHandler
-  { 
+  {
     @Override
     public String[] handledRequests()
-    { 
+    {
       return new String[]{"getstats"};
     }
 
     @Override
     protected JSONObject processRequest(JSONRPC2Request req, MessageContext ctx)
       throws Exception
-    { 
+    {
       JSONObject reply = new JSONObject();
 
       int found_blocks = mr_plow.getDB().getSpecialMapSet().getSet(MrPlow.BLOCK_KEY, 100000).size();
@@ -97,27 +97,30 @@ public class MrPlowJsonHandler
   }
 
   public class GetTemplateStatusHandler extends JsonRequestHandler
-  { 
+  {
     @Override
     public String[] handledRequests()
-    { 
+    {
       return new String[]{"gettemplatestatus"};
     }
 
     @Override
     protected JSONObject processRequest(JSONRPC2Request req, MessageContext ctx)
       throws Exception
-    { 
+    {
       JSONObject reply = new JSONObject();
 
       JSONArray connections = new JSONArray();
 
       reply.put("connections", connections);
+      int node_count=0;
+      int node_has_template_count=0;
 
       for(NodeConnection nc : mr_plow.getConnections())
       {
         JSONObject conn = new JSONObject();
         conn.put("uri", nc.getUri());
+        node_count++;
 
         connections.add(conn);
         BlockTemplate bt = nc.getLatestBlockTemplate();
@@ -131,6 +134,8 @@ public class MrPlowJsonHandler
         {
           BlockCompare bc = new BlockCompare(bt);
 
+          node_has_template_count++;
+
           conn.put("has_template",true);
           conn.put("advances", bt.getAdvancesShard());
           BlockHeader bh = bt.getBlock().getHeader();
@@ -143,6 +148,8 @@ public class MrPlowJsonHandler
         }
 
       }
+      reply.put("node_count", node_count);
+      reply.put("node_has_template_count", node_has_template_count);
 
 
       return reply;

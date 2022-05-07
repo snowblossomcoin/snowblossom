@@ -1,24 +1,19 @@
 package snowblossom.miner.plow;
 
+import com.google.protobuf.ByteString;
 import duckutil.Config;
 import duckutil.ConfigMem;
-import snowblossom.lib.db.DB;
-import snowblossom.lib.db.lobstack.LobstackDB;
-import snowblossom.lib.db.rocksdb.JRocksDB;
-import snowblossom.lib.db.atomicfile.AtomicFileDB;
+import java.util.List;
 import java.util.TreeMap;
-
+import java.util.logging.Logger;
+import snowblossom.lib.Globals;
+import snowblossom.lib.db.DB;
+import snowblossom.lib.db.atomicfile.AtomicFileDB;
+import snowblossom.lib.db.rocksdb.JRocksDB;
 import snowblossom.mining.proto.*;
 
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import java.util.List;
-import snowblossom.lib.Globals;
-import com.google.protobuf.ByteString;
-
-
 /**
- * This tool is to migrate data from a rocksb 
+ * This tool is to migrate data from a rocksb
  */
 public class DataMigrate
 {
@@ -31,7 +26,7 @@ public class DataMigrate
     {
       System.out.println("Expected parameters:");
       System.out.println("DataMigrate <rocksdb_path> <atomic_file_path>");
-      
+
       System.exit(1);
     }
 

@@ -17,8 +17,8 @@ public class ReportManager
 
   TreeMap<String, RateReporter> rate_map;
   RateReporter total;
-  
-  
+
+
   public ReportManager()
   {
     total = new RateReporter();
@@ -66,7 +66,7 @@ public class ReportManager
     }
 
     json.put("miners", miners);
- 
+
   }
 
   public synchronized void writeReport(String path)

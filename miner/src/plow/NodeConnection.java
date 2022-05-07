@@ -1,36 +1,14 @@
 package snowblossom.miner.plow;
 
-import com.google.protobuf.ByteString;
-import duckutil.Config;
-import duckutil.ConfigFile;
 import duckutil.PeriodicThread;
-import duckutil.TimeRecord;
-import duckutil.jsonrpc.JsonRpcServer;
-import io.grpc.ManagedChannel;
-import io.grpc.Server;
-import io.grpc.ServerBuilder;
 import io.grpc.stub.StreamObserver;
-import java.math.BigInteger;
-import java.text.DecimalFormat;
-import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
-import java.util.concurrent.atomic.AtomicLong;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import snowblossom.client.StubUtil;
-import snowblossom.client.StubHolder;
-import snowblossom.lib.*;
-import snowblossom.lib.db.DB;
-import snowblossom.lib.db.lobstack.LobstackDB;
-import snowblossom.lib.db.rocksdb.JRocksDB;
-import snowblossom.lib.db.atomicfile.AtomicFileDB;
-import snowblossom.mining.proto.*;
 import java.util.HashSet;
+import java.util.logging.Logger;
+import snowblossom.client.StubHolder;
+import snowblossom.client.StubUtil;
+import snowblossom.lib.*;
+import snowblossom.mining.proto.*;
 import snowblossom.proto.*;
-import snowblossom.proto.UserServiceGrpc.UserServiceBlockingStub;
-import snowblossom.proto.UserServiceGrpc.UserServiceStub;
-
 
 /**
  * Handles a connection to a single node for getting block templates
@@ -52,9 +30,9 @@ public class NodeConnection extends PeriodicThread implements StreamObserver<Blo
   private NodeStatus node_status;
 
   private long last_network;
-  
+
   // If we don't hear about a new block every 45s, assume link is dead
-  public final static long MAX_NETWORK_AGE = 45000L; 
+  public final static long MAX_NETWORK_AGE = 45000L;
 
 
   public NodeConnection(MrPlow mr_plow, String uri, NetworkParams params)
@@ -77,7 +55,7 @@ public class NodeConnection extends PeriodicThread implements StreamObserver<Blo
   {
     return last_network;
   }
-  
+
 
   @Override
   public void runPass()
@@ -159,39 +137,39 @@ public class NodeConnection extends PeriodicThread implements StreamObserver<Blo
     return last_template;
   }
 
-  public void onCompleted() 
+  public void onCompleted()
   {
-  	logger.info("Got onCompleted");
+    logger.info("Got onCompleted");
     last_network = 0L;
   }
 
   public void onError(Throwable t)
   {
-  	logger.info("Got error:" + t);
+    logger.info("Got error:" + t);
     last_network = 0L;
   }
 
-	public void onNext(BlockTemplate bt)
-	{
+  public void onNext(BlockTemplate bt)
+  {
     last_network = System.currentTimeMillis();
 
-		if (bt.getBlock().getHeader().getVersion() == 0)
-		{
-			last_template = null;
-			logger.info("Got null template from " + uri);
-		}
-		else
-		{
-			Block b = bt.getBlock();
+    if (bt.getBlock().getHeader().getVersion() == 0)
+    {
+      last_template = null;
+      logger.info("Got null template from " + uri);
+    }
+    else
+    {
+      Block b = bt.getBlock();
       logger.info(String.format("Got block template from %s - s:%d h:%d - tx:%d",
         uri, b.getHeader().getShardId(),
         b.getHeader().getBlockHeight(),
         b.getTransactionsCount()));
-			
-			last_template = bt;
+
+      last_template = bt;
       mr_plow.updateBlockTemplate();
-		}
-	}
+    }
+  }
 
 
 }
