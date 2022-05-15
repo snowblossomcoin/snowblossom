@@ -34,7 +34,7 @@ ARG DEBIAN_FRONTEND=noninteractive
 RUN apt-get -qq update \
   && apt-get -qq upgrade \
   && apt-get -qq install --no-install-suggests --no-install-recommends \
-    default-jre-headless \
+    openjdk-17-jre-headless \
     fontconfig \
     libfreetype6 \
     libxext6 \

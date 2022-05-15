@@ -67,7 +67,7 @@ public class MemPool
   public static int MEM_POOL_MAX = 80000;
 
   /** if the mempool has this many transactions already, reject any new low fee transactions */
-  public static int MEM_POOL_MAX_LOW = 5000;
+  public static int MEM_POOL_MAX_LOW = 25000;
 
   private final int low_fee_max;
 
