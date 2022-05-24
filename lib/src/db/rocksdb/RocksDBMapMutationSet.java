@@ -108,7 +108,7 @@ public class RocksDBMapMutationSet extends DBMapMutationSet
     try
     {
       ByteString w = getDBKey(key, value);
-      db.remove(jdb.getWriteOption(), w.toByteArray());
+      db.delete(jdb.getWriteOption(), w.toByteArray());
     }
     catch(RocksDBException e)
     {

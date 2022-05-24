@@ -78,7 +78,7 @@ public class TrieDBRocks extends TrieDB
         TrieNode node = me.getValue();
         if (node == null)
         {
-          wb.remove(key.toByteArray());
+          wb.delete(key.toByteArray());
         }
         else
         {
