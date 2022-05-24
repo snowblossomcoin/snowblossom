@@ -6,6 +6,7 @@
 * Add TLS support on MrPlow so MrPlow can use TLS to communicate with miners
 * Add node_uri param for miners that supports TLS
 * Add exploder api block_info_by_height
+* Update jrocksdb to 6.29.5
 
 ## 2.0
 
