@@ -170,7 +170,7 @@ public class RocksDBMap extends DBMap
     }
     finally
     {
-      it.dispose();
+      //it.dispose();
     }
 
     return map;
