@@ -8,7 +8,6 @@ cd /data
 printenv
 
 cat <<EOF > /tmp/explorer.conf
-env_override_prefix=snow_explorer_
 log_config_file=${SNOWBLOSSOM_LOG_CONF:-log.conf}
 network=${SNOWBLOSSOM_NETWORK:-mainnet}
 node_uri=${SNOWBLOSSOM_EXPLORER_NODE_URI:-grpc://localhost:2338}

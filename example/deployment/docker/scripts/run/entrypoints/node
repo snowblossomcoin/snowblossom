@@ -6,7 +6,6 @@ set -eu
 cd /data
 
 cat <<EOF > /tmp/node.conf
-env_override_prefix=snow_node_
 log_config_file=${SNOWBLOSSOM_LOG_CONF:-log.conf}
 network=${SNOWBLOSSOM_NETWORK:-mainnet}
 db_type=${SNOWBLOSSOM_NODE_DB_TYPE:-rocksdb}

@@ -8,7 +8,6 @@ mkdir -p /data/snowfields
 
 
 cat <<EOF > /tmp/solominer.conf
-env_override_prefix=snow_miner_
 log_config_file=${SNOWBLOSSOM_LOG_CONF:-log.conf}
 network=${SNOWBLOSSOM_NETWORK:-mainnet}
 rate_limit=10000
