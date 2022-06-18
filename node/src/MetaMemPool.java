@@ -1,6 +1,8 @@
 package snowblossom.node;
 
+import java.util.Collection;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -61,6 +63,15 @@ public class MetaMemPool
       sum += node.getMemPool(s).getMemPoolSize();
     }
     return sum;
+  }
+  public synchronized Collection<ChainHash> getPoolHashList()
+  {
+    LinkedList<ChainHash> lst = new LinkedList<>();
+    for(int s : node.getCurrentBuildingShards())
+    {
+      lst.addAll(node.getMemPool(s).getPoolHashList());
+    }
+    return lst;
   }
 
   public Map<Integer, Set<ChainHash> > getTransactionsForAddressByShard(AddressSpecHash spec_hash)
