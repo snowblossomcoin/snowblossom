@@ -1,23 +1,16 @@
 package snowblossom.shackleton;
 
-import com.google.common.collect.TreeMultimap;
-import com.google.protobuf.ByteString;
 import duckutil.Config;
 import duckutil.ConfigFile;
 import io.grpc.ManagedChannel;
 import java.io.PrintStream;
 import java.text.DecimalFormat;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
-import java.util.TreeMap;
-import java.util.Collection;
 import java.util.Random;
-import java.util.Iterator;
-import java.util.Queue;
-import java.util.AbstractCollection;
-
+import java.util.TreeMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import snowblossom.client.GetUTXOUtil;
@@ -37,7 +30,7 @@ public class MinerReport
   {
     Globals.addCryptoProvider();
     if (args.length != 1)
-    { 
+    {
       logger.log(Level.SEVERE, "Incorrect syntax. Syntax: MinerReport <config_file>");
       System.exit(-1);
     }
@@ -60,7 +53,7 @@ public class MinerReport
 
   public MinerReport(Config config)
     throws Exception
-  { 
+  {
 
     params = NetworkParams.loadFromConfig(config);
     ManagedChannel channel = StubUtil.openChannel(config, params);
@@ -121,7 +114,7 @@ public class MinerReport
 
       //System.out.println("" + b.getHeader().getShardId() + ":" +b.getHeader().getBlockHeight());
 
-      processBlock(b);   
+      processBlock(b);
 
       if (b.getHeader().getBlockHeight()==0) return;
       block_hash = new ChainHash(b.getHeader().getPrevBlockHash());
@@ -134,7 +127,7 @@ public class MinerReport
 
     TransactionInner c_inner = TransactionUtil.getInner(coinbase);
     if (!c_inner.getIsCoinbase()) throw new RuntimeException("not coinbase");
-    
+
     for(TransactionOutput out : c_inner.getOutputsList())
     {
       long val = out.getValue();
