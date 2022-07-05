@@ -958,7 +958,14 @@ public class WebServer implements WebHandler
       out.println("<script>");
       out.println("window.doscroll = false; function loadMore() { if(window.doscroll) return; window.doscroll = true; $('#lmore').hide(); $.ajax( { url: '?search=load-' + window.lastblock, success: function (data) { $('#blocktable').append(data); $('#lmore').show(); }}); window.lastblock -= 100; setTimeout(function() {window.doscroll = false;}, 2000); };");
       out.println("$(window).scroll(function() { if(window.doscroll) return; if($(window).scrollTop() + 3000 > $(document).height()) {loadMore();}}); ");
-      out.println("function updateCalc() {var hour = 50 * 3600 * parseFloat($('#hashrate').val()) / Math.pow(2,(window.avgdiff-10));$('#hash1').val(hour.toFixed(3));$('#hash2').val((hour*24).toFixed(3));$('#hash3').val((hour*24*30).toFixed(3));}");
+
+      NodeStatus node_status = shackleton.getStub().getNodeStatus(QueryUtil.nr());
+      BlockSummary summary = node_status.getHeadSummary();
+      BlockHeader header = summary.getHeader();
+      int height = header.getBlockHeight();
+      long coinsPerBlock = PowUtil.getBlockReward(shackleton.getParams(), height);
+
+      out.println("function updateCalc() {var hour = " + (coinsPerBlock / Globals.SNOW_VALUE_D) + " * 3600 * parseFloat($('#hashrate').val()) / Math.pow(2,(window.avgdiff-10));$('#hash1').val(hour.toFixed(3));$('#hash2').val((hour*24).toFixed(3));$('#hash3').val((hour*24*30).toFixed(3));}");
       out.println("");
       out.println("</script>");
       out.println("</head>");
