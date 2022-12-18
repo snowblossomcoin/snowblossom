@@ -663,8 +663,16 @@ public class RpcServerHandler
         if (out_entry.containsKey("flakes")) flakes = (long) out_entry.get("flakes");
         if (out_entry.containsKey("snow"))
         {
-          double snow = (double) out_entry.get("snow");
-          flakes = Math.round(snow * Globals.SNOW_VALUE);
+          if (out_entry.get("snow") instanceof Long)
+          {
+            long snow = (long) out_entry.get("snow");
+            flakes = Globals.SNOW_VALUE * snow;
+          }
+          else
+          {
+            double snow = (double) out_entry.get("snow");
+            flakes = Math.round(snow * Globals.SNOW_VALUE);
+          }
         }
         AddressSpecHash spec_hash = new AddressSpecHash(address, client.getParams());
         tx_out_list.add(
