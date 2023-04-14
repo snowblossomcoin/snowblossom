@@ -110,7 +110,7 @@ public class KeyUtilTest
 
       WalletKeyPair wkp = KeyUtil.generateWalletRSAKey(i);
 
-      logger.info(KeyUtil.decomposeASN1Encoded(wkp.getPublicKey()));
+      //logger.info(KeyUtil.decomposeASN1Encoded(wkp.getPublicKey()));
 
       logger.info("Testing key size: " + i);
       testKeyPair(wkp, "RSA " + i);
@@ -125,7 +125,7 @@ public class KeyUtilTest
 
       WalletKeyPair wkp = KeyUtil.generateWalletDSAKey();
 
-      logger.info(KeyUtil.decomposeASN1Encoded(wkp.getPublicKey()));
+      //logger.info(KeyUtil.decomposeASN1Encoded(wkp.getPublicKey()));
 
       testKeyPair(wkp, "DSA");
   }
@@ -139,7 +139,7 @@ public class KeyUtilTest
       logger.info("Testing DSTU key size: " + i);
       WalletKeyPair wkp = KeyUtil.generateWalletDSTU4145Key(i);
 
-      logger.info(KeyUtil.decomposeASN1Encoded(wkp.getPublicKey()));
+      //logger.info(KeyUtil.decomposeASN1Encoded(wkp.getPublicKey()));
 
       testKeyPair(wkp, "DSTU " + i);
     }

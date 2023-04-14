@@ -137,13 +137,45 @@ public class KeyUtil
     }
   }
 
+  /**
+   * The basic idea is that the string is some sort of key material
+   * encoded as ASN1.  We scan it for ASN1 Object Identifiers to see
+   * what key type this is.
+   */
   public static ArrayList<String> extractObjectIdentifiers(ByteString encoded)
     throws ValidationException
   {
     try
     {
       ArrayList<String> answers = new ArrayList<>();
-      ASN1StreamParser parser = new ASN1StreamParser(encoded.toByteArray());
+
+      ASN1InputStream parser = new ASN1InputStream(encoded.toByteArray());
+      while(true)
+      {
+        ASN1Primitive next = parser.readObject();
+        if (next == null) break;
+        //System.out.println("ASN1 type: " + next.getClass());
+
+        if (next instanceof ASN1ObjectIdentifier)
+        {
+          ASN1ObjectIdentifier id = (ASN1ObjectIdentifier) next;
+          answers.add(id.getId());
+        }
+        else if (next instanceof ASN1Sequence)
+        {
+          ASN1Sequence seq = (ASN1Sequence) next;
+          extractOIDSeq(seq, answers);
+
+        }
+        else
+        {
+          //System.out.println("ASN1 type: " + next.getClass());
+
+        }
+
+      }
+
+      /*ASN1StreamParser parser = new ASN1StreamParser(encoded.toByteArray());
 
       while(true)
       {
@@ -151,7 +183,7 @@ public class KeyUtil
         if (encodable == null) break;
 
         extractOID(encodable, answers);
-      }
+      }*/
       return answers;
     }
     catch(java.io.IOException e)
@@ -159,19 +191,36 @@ public class KeyUtil
       throw new ValidationException("OID extraction failed for key", e);
     }
   }
+  private static void extractOIDSeq(ASN1Sequence seq, ArrayList<String> answers)
+  {
+    for(ASN1Encodable e : seq)
+    {
+      //System.out.println("ASN1 seq type: " + e.getClass());
+      if (e instanceof ASN1ObjectIdentifier)
+      {
+        ASN1ObjectIdentifier id = (ASN1ObjectIdentifier) e;
+        answers.add(id.getId());
+      }
+      if (e instanceof ASN1Sequence)
+      {
+        extractOIDSeq((ASN1Sequence)e, answers);
+      }
+    }
+
+  }
 
   private static void extractOID(ASN1Encodable input, ArrayList<String> answers)
     throws java.io.IOException
   {
     if (input instanceof DLSequenceParser)
     {
-      DLSequenceParser parser = (DLSequenceParser) input;
+      /*DLSequenceParser parser = (DLSequenceParser) input;
       while(true)
       {
         ASN1Encodable encodable = parser.readObject();
         if (encodable == null) break;
         extractOID(encodable, answers);
-      }
+      }*/
 
     }
     else if (input instanceof ASN1ObjectIdentifier)
@@ -188,6 +237,10 @@ public class KeyUtil
 
     }
     else if (input instanceof ASN1Integer)
+    {
+
+    }
+    else if (input instanceof org.bouncycastle.asn1.DLBitStringParser)
     {
 
     }

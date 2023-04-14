@@ -12,6 +12,7 @@ import javax.crypto.spec.SecretKeySpec;
 import snowblossom.proto.SigSpec;
 import snowblossom.proto.WalletKeyPair;
 import snowblossom.util.proto.SymmetricKey;
+import org.bouncycastle.jce.spec.IESParameterSpec;
 
 public class CipherUtil
 {
@@ -41,7 +42,8 @@ public class CipherUtil
       if (algo.equals("ECDSA"))
       {
         c = Cipher.getInstance("ECIES","BC");
-        c.init(Cipher.ENCRYPT_MODE, pub_key);
+        IESParameterSpec spec = new IESParameterSpec(null, null, 128);
+        c.init(Cipher.ENCRYPT_MODE, pub_key, spec);
       }
       else
       {
@@ -69,7 +71,8 @@ public class CipherUtil
       if (algo.equals("ECDSA"))
       {
         c = Cipher.getInstance("ECIES","BC");
-        c.init(Cipher.DECRYPT_MODE, kp.getPrivate());
+        IESParameterSpec spec = new IESParameterSpec(null, null, 128);
+        c.init(Cipher.DECRYPT_MODE, kp.getPrivate(), spec);
       }
       else
       {

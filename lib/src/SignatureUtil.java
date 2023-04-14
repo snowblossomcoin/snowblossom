@@ -47,7 +47,7 @@ public class SignatureUtil
       if (sig_type == SIG_TYPE_ECDSA)
       {
         algo="ECDSA";
-        if (oidList.size() != 2) throw new ValidationException("Unexpected number of OIDs in public key");
+        if (oidList.size() != 2) throw new ValidationException("Unexpected number of OIDs in public key: " + oidList.size());
         if (!ALLOWED_ECDSA_CURVES.contains(oidList.get(1))) throw new ValidationException(
           String.format("OID %s not on allowed list for %s", oidList.get(1), algo)); 
       }
@@ -62,7 +62,7 @@ public class SignatureUtil
       if (sig_type == SIG_TYPE_DSTU4145)
       {
         algo="DSTU4145";
-        if (oidList.size() != 2) throw new ValidationException("Unexpected number of OIDs in public key");
+        if (oidList.size() != 2) throw new ValidationException("Unexpected number of OIDs in public key: " + oidList.size());
         if (!ALLOWED_DSTU4145_CURVES.contains(oidList.get(1))) throw new ValidationException(
           String.format("OID %s not on allowed list for %s", oidList.get(1), algo)); 
       }

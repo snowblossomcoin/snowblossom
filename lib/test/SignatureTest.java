@@ -262,7 +262,7 @@ public class SignatureTest
 
     Assert.assertArrayEquals(encoded, recoded);
 
-    System.out.println(KeyUtil.decomposeASN1Encoded(recoded));
+    //System.out.println(KeyUtil.decomposeASN1Encoded(recoded));
 
   }
 
