@@ -1,0 +1,42 @@
+name: "CI - Debian"
+on: push
+
+jobs:
+  ci-debian:
+    runs-on: ubuntu-22.04
+    strategy:
+      matrix:
+        version:
+          - "bullseye" # 11
+          - "bookworm" # 12
+          - "trixie" # 13
+      fail-fast: false
+    container:
+      image: debian:${{ matrix.version }}-slim
+    steps:
+    - name: Checkout
+      uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3.5.3
+
+    - name: Install Dependencies
+      env:
+        DEBIAN_FRONTEND: noninteractive
+      run: |
+        apt-get -qq update
+        apt-get -qq upgrade
+        apt-get -qq install --no-install-suggests --no-install-recommends \
+          default-jdk-headless \
+          bazel-bootstrap \
+          git
+
+    - name: Build
+      run: bazel build :all
+
+    - name: Test
+      run: bazel test //...
+
+    - name: Store Results
+      if: ${{ failure() }}
+      uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce # v3.1.2
+      with:
+        name: ${{ matrix.version }}-logs
+        path: /github/home/.cache/bazel/**/testlogs/**/test.log
