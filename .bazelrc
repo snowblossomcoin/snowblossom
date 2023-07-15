@@ -1,0 +1,2 @@
+build --java_toolchain=//:snowblossom_toolchain
+build --host_java_toolchain=//:snowblossom_toolchain

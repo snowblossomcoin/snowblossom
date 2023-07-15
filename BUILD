@@ -1,3 +1,14 @@
+load(
+  "@bazel_tools//tools/jdk:default_java_toolchain.bzl",
+  "default_java_toolchain",
+  "JDK9_JVM_OPTS",
+)
+
+default_java_toolchain(
+  name = "snowblossom_toolchain",
+  jvm_opts = JDK9_JVM_OPTS + [ "-XX:+IgnoreUnrecognizedVMOptions" ],
+)
+
 java_binary(
   name = "SnowBlossomNode",
   main_class = "snowblossom.node.SnowBlossomNode",
