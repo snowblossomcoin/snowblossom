@@ -9,6 +9,7 @@ import java.util.Random;
 import javax.crypto.Cipher;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
+import org.bouncycastle.jce.spec.IESParameterSpec;
 import snowblossom.proto.SigSpec;
 import snowblossom.proto.WalletKeyPair;
 import snowblossom.util.proto.SymmetricKey;
@@ -34,21 +35,39 @@ public class CipherUtil
       int sig_type = sig_spec.getSignatureType();
       ByteString encoded = sig_spec.getPublicKey();
       String algo = SignatureUtil.getAlgo(sig_type);
-      
+
       PublicKey pub_key = SignatureUtil.decodePublicKey(sig_spec);
-      
+
       Cipher c = null;
       if (algo.equals("ECDSA"))
       {
+        // DANGER - IES paremeters here copied from the internet without understanding.
+        // Are these the right/reasonable values?
+        // Are we just worried about duplicates/collisions with d and e?
+        // If so, we can probably safely reduce their sizes a bit.
+        // What about existing things using older versions of BC ECIES that didn't use
+        // params?  Will we be able to decrypt those?  What parameters were they using?
+        // Should we pass along a version number or something for future parameter changes?
+        // Basically, this shouldn't be used without further exploration.
+        Random rnd_low = new Random();
+        byte[] d = new byte[16];
+        byte[] e = new byte[16];
+
+        rnd_low.nextBytes(d);
+        rnd_low.nextBytes(e);
+
         c = Cipher.getInstance("ECIES","BC");
-        c.init(Cipher.ENCRYPT_MODE, pub_key);
+        c.init(Cipher.ENCRYPT_MODE, pub_key, new IESParameterSpec(d,e,128));
+
+        return ByteString.copyFrom(d)
+          .concat(ByteString.copyFrom(e))
+          .concat(ByteString.copyFrom(c.doFinal(plain_data.toByteArray())));
       }
       else
       {
         throw new ValidationException("Encryption not supported with " + algo);
       }
 
-      return ByteString.copyFrom(c.doFinal(plain_data.toByteArray()));
 
     }
     catch(java.security.GeneralSecurityException e)
@@ -66,17 +85,22 @@ public class CipherUtil
       KeyPair kp = KeyUtil.decodeKeypair(wkp);
       Cipher c = null;
 
+
       if (algo.equals("ECDSA"))
       {
+        ByteString d = cipher_data.substring(0,16);
+        ByteString e = cipher_data.substring(16,32);
+        ByteString ct = cipher_data.substring(32);
+
         c = Cipher.getInstance("ECIES","BC");
-        c.init(Cipher.DECRYPT_MODE, kp.getPrivate());
+        c.init(Cipher.DECRYPT_MODE, kp.getPrivate(), new IESParameterSpec(d.toByteArray(),e.toByteArray(),128));
+        return ByteString.copyFrom(c.doFinal(ct.toByteArray()));
       }
       else
       {
         throw new ValidationException("Encryption not supported with " + algo);
       }
 
-      return ByteString.copyFrom(c.doFinal(cipher_data.toByteArray()));
     }
     catch(java.security.GeneralSecurityException e)
     {
@@ -89,7 +113,7 @@ public class CipherUtil
     SecureRandom rnd = new SecureRandom();
 
     SymmetricKey.Builder key = SymmetricKey.newBuilder();
-   
+
     key.setAlgoSet(0);
 
     byte[] key_data = new byte[SYM_BLOCK_SIZE_0];
@@ -103,7 +127,7 @@ public class CipherUtil
     byte[] key_id_data = new byte[8];
     rnd_low.nextBytes(key_id_data);
     key.setKeyId( ByteString.copyFrom(key_id_data) );
-    return key.build(); 
+    return key.build();
 
   }
 
@@ -119,7 +143,7 @@ public class CipherUtil
       {
         byte[] iv_bytes = new byte[SYM_IV_SIZE_0];
         rnd.nextBytes(iv_bytes);
-    
+
         Key k_spec = new SecretKeySpec(key.getKey().toByteArray(), "AES");
         Cipher cipher = Cipher.getInstance(SYM_ENCRYPTION_MODE_0);
         cipher.init(Cipher.ENCRYPT_MODE, k_spec, new IvParameterSpec(iv_bytes));
@@ -143,7 +167,7 @@ public class CipherUtil
     {
       if (key.getAlgoSet() == 0)
       {
-    
+
         Key k_spec = new SecretKeySpec(key.getKey().toByteArray(), "AES");
         Cipher cipher = Cipher.getInstance(SYM_ENCRYPTION_MODE_0);
         cipher.init(Cipher.ENCRYPT_MODE, k_spec, new IvParameterSpec(iv.toByteArray()));
@@ -169,7 +193,7 @@ public class CipherUtil
       if (key.getAlgoSet() == 0)
       {
         byte[] iv_bytes = cipher_data.substring(0, SYM_IV_SIZE_0).toByteArray();
-    
+
         Key k_spec = new SecretKeySpec(key.getKey().toByteArray(), "AES");
         Cipher cipher = Cipher.getInstance(SYM_ENCRYPTION_MODE_0);
         cipher.init(Cipher.DECRYPT_MODE, k_spec, new IvParameterSpec(iv_bytes));

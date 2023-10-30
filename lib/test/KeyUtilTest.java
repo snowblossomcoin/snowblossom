@@ -12,9 +12,9 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import snowblossom.lib.ChainHash;
 import snowblossom.lib.Globals;
+import snowblossom.lib.HexUtil;
 import snowblossom.lib.KeyUtil;
 import snowblossom.lib.SignatureUtil;
-import snowblossom.lib.HexUtil;
 import snowblossom.proto.SigSpec;
 import snowblossom.proto.WalletKeyPair;
 
@@ -98,7 +98,7 @@ public class KeyUtilTest
       testKeyPair(wkp, curve);
     }
   }
- 
+
   @Test
   public void testRSA()
     throws Exception
@@ -110,7 +110,6 @@ public class KeyUtilTest
 
       WalletKeyPair wkp = KeyUtil.generateWalletRSAKey(i);
 
-      logger.info(KeyUtil.decomposeASN1Encoded(wkp.getPublicKey()));
 
       logger.info("Testing key size: " + i);
       testKeyPair(wkp, "RSA " + i);
@@ -125,7 +124,6 @@ public class KeyUtilTest
 
       WalletKeyPair wkp = KeyUtil.generateWalletDSAKey();
 
-      logger.info(KeyUtil.decomposeASN1Encoded(wkp.getPublicKey()));
 
       testKeyPair(wkp, "DSA");
   }
@@ -139,11 +137,9 @@ public class KeyUtilTest
       logger.info("Testing DSTU key size: " + i);
       WalletKeyPair wkp = KeyUtil.generateWalletDSTU4145Key(i);
 
-      logger.info(KeyUtil.decomposeASN1Encoded(wkp.getPublicKey()));
-
       testKeyPair(wkp, "DSTU " + i);
     }
-  } 
+  }
 
   private void testKeyPair(WalletKeyPair wkp, String name)
     throws Exception
@@ -164,7 +160,6 @@ public class KeyUtilTest
 
       logger.info(String.format("Key report %s Pub size: %d, sig %d", name, wkp.getPublicKey().size(), sig.size()));
       logger.info("Key report: " + HexUtil.getHexString( sig));
-      //logger.info("Key report: " + KeyUtil.decomposeASN1Encoded( sig ));
 
       Assert.assertTrue(SignatureUtil.checkSignature(sig_spec, hash.getBytes(), sig));
     }

@@ -1,8 +1,6 @@
 package snowblossom.lib;
 
 import com.google.protobuf.ByteString;
-import java.io.ByteArrayOutputStream;
-import java.io.PrintStream;
 import java.security.*;
 import java.security.interfaces.ECPrivateKey;
 import java.security.spec.ECGenParameterSpec;
@@ -10,7 +8,6 @@ import java.security.spec.ECParameterSpec;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.RSAKeyGenParameterSpec;
 import java.security.spec.X509EncodedKeySpec;
-import java.util.ArrayList;
 import org.bouncycastle.asn1.*;
 import org.junit.Assert;
 import snowblossom.proto.WalletKeyPair;
@@ -106,7 +103,7 @@ public class KeyUtil
       throw new RuntimeException(e);
     }
 
-  } 
+  }
 
 
   public static KeyPair generateECCompressedKey()
@@ -137,138 +134,6 @@ public class KeyUtil
     }
   }
 
-  public static ArrayList<String> extractObjectIdentifiers(ByteString encoded)
-    throws ValidationException
-  {
-    try
-    {
-      ArrayList<String> answers = new ArrayList<>();
-      ASN1StreamParser parser = new ASN1StreamParser(encoded.toByteArray());
-
-      while(true)
-      {
-        ASN1Encodable encodable = parser.readObject();
-        if (encodable == null) break;
-
-        extractOID(encodable, answers);
-      }
-      return answers;
-    }
-    catch(java.io.IOException e)
-    {
-      throw new ValidationException("OID extraction failed for key", e);
-    }
-  }
-
-  private static void extractOID(ASN1Encodable input, ArrayList<String> answers)
-    throws java.io.IOException
-  {
-    if (input instanceof DLSequenceParser)
-    {
-      DLSequenceParser parser = (DLSequenceParser) input;
-      while(true)
-      {
-        ASN1Encodable encodable = parser.readObject();
-        if (encodable == null) break;
-        extractOID(encodable, answers);
-      }
-
-    }
-    else if (input instanceof ASN1ObjectIdentifier)
-    {
-      ASN1ObjectIdentifier id = (ASN1ObjectIdentifier) input;
-      answers.add(id.getId());
-    }
-    else if (input instanceof DERBitString)
-    {
-
-    }
-    else if (input instanceof DERNull)
-    {
-
-    }
-    else if (input instanceof ASN1Integer)
-    {
-
-    }
-    else 
-    {
-      throw new java.io.IOException("Unexpected ASN1Encodable: " + input.getClass() + " - " + input);
-    }
-
-  }
-
-  public static String decomposeASN1Encoded(byte[] input)
-    throws Exception
-  {
-    return decomposeASN1Encoded(ByteString.copyFrom(input));
-  }
-  /**
-   * Produce a string that is a decomposition of the given x.509 or ASN1 encoded
-   * object.  For learning and debugging purposes.
-   */
-  public static String decomposeASN1Encoded(ByteString input)
-    throws Exception
-  {
-    ByteArrayOutputStream byte_out = new ByteArrayOutputStream();
-    PrintStream out = new PrintStream(byte_out);
-
-    ASN1StreamParser parser = new ASN1StreamParser(input.toByteArray());
-    out.println("ASN1StreamParser");
-
-    while(true)
-    {
-      ASN1Encodable encodable = parser.readObject();
-      if (encodable == null) break;
-
-      decomposeEncodable(encodable, 2, out);
-    }
-
-    out.flush();
-    return new String(byte_out.toByteArray());
-
-  }
-
-  private static void decomposeEncodable(ASN1Encodable input, int indent, PrintStream out)
-    throws Exception
-  {
-    printdent(out, indent);
-    out.println(input.getClass());
-    /*if (input instanceof DERSequenceParser)
-    {
-      DERSequenceParser parser = (DERSequenceParser) input;
-      while(true)
-      {
-        ASN1Encodable encodable = parser.readObject();
-        if (encodable == null) break;
-        decomposeEncodable(encodable, indent+2, out);
-      }
-
-    }
-    else */if (input instanceof ASN1ObjectIdentifier)
-    {
-      ASN1ObjectIdentifier id = (ASN1ObjectIdentifier) input;
-      printdent(out, indent+2);
-      out.println("ID: " + id.getId());
-    }
-    else if ((input instanceof ASN1Integer) || (input instanceof DERBitString))
-    {
-      printdent(out, indent+2);
-      out.println("Value: " + input);
-    }
-    else
-    {
-      printdent(out, indent+2);
-      out.println("Don't know what to do with this");
-    }
-
-  }
-  private static void printdent(PrintStream out, int indent)
-  {
-    for(int i=0; i<indent; i++) out.print(' ');
-  }
-
-
   public static WalletKeyPair generateWalletStandardECKey()
   {
     KeyPair key_pair = KeyUtil.generateECCompressedKey();
@@ -286,7 +151,7 @@ public class KeyUtil
   {
     try
     {
-      
+
       ECGenParameterSpec spec = new ECGenParameterSpec(curve_name);
 
       KeyPairGenerator key_gen = KeyPairGenerator.getInstance("ECDSA", Globals.getCryptoProviderName());
@@ -384,7 +249,7 @@ public class KeyUtil
       throw new RuntimeException(e);
     }
   }
- 
+
 
 
 }

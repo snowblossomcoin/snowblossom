@@ -8,6 +8,10 @@ import java.security.Signature;
 import java.util.ArrayList;
 import java.util.Set;
 import java.util.TreeSet;
+import org.bouncycastle.asn1.ASN1ObjectIdentifier;
+import org.bouncycastle.asn1.ASN1Sequence;
+import org.bouncycastle.asn1.x509.AlgorithmIdentifier;
+import org.bouncycastle.asn1.x509.SubjectPublicKeyInfo;
 import snowblossom.proto.SigSpec;
 import snowblossom.proto.WalletKeyPair;
 
@@ -42,14 +46,21 @@ public class SignatureUtil
     else
     {
       String algo = "";
-      ArrayList<String> oidList = KeyUtil.extractObjectIdentifiers(encoded);
+      //ArrayList<String> oidList = KeyUtil.extractObjectIdentifiers(encoded);
 
       if (sig_type == SIG_TYPE_ECDSA)
       {
         algo="ECDSA";
-        if (oidList.size() != 2) throw new ValidationException("Unexpected number of OIDs in public key");
-        if (!ALLOWED_ECDSA_CURVES.contains(oidList.get(1))) throw new ValidationException(
-          String.format("OID %s not on allowed list for %s", oidList.get(1), algo)); 
+
+        SubjectPublicKeyInfo spki = SubjectPublicKeyInfo.getInstance(ASN1Sequence.getInstance(encoded.toByteArray()));
+        AlgorithmIdentifier algid = spki.getAlgorithm();
+        //ASN1ObjectIdentifier oid_o = (ASN1ObjectIdentifier) algid.getParameters();
+        //String oid = oid_o.getId();
+        String oid = algid.getParameters().toString().replace("[","").replace("]","").trim();
+
+        if (!ALLOWED_ECDSA_CURVES.contains(oid))
+          throw new ValidationException(
+            String.format("OID %s not on allowed list for %s", oid.toString(), algo));
       }
       if (sig_type == SIG_TYPE_DSA)
       {
@@ -62,14 +73,21 @@ public class SignatureUtil
       if (sig_type == SIG_TYPE_DSTU4145)
       {
         algo="DSTU4145";
-        if (oidList.size() != 2) throw new ValidationException("Unexpected number of OIDs in public key");
-        if (!ALLOWED_DSTU4145_CURVES.contains(oidList.get(1))) throw new ValidationException(
-          String.format("OID %s not on allowed list for %s", oidList.get(1), algo)); 
+
+        SubjectPublicKeyInfo spki = SubjectPublicKeyInfo.getInstance(ASN1Sequence.getInstance(encoded.toByteArray()));
+        AlgorithmIdentifier algid = spki.getAlgorithm();
+        String oid = algid.getParameters().toString().replace("[","").replace("]","").trim();
+
+        if (!ALLOWED_DSTU4145_CURVES.contains(oid))
+          throw new ValidationException(
+            String.format("OID %s not on allowed list for %s", oid.toString(), algo));
       }
       if (algo == null)
       {
         throw new ValidationException(String.format("Unknown sig type %d", sig_type));
       }
+      PublicKey pub_key = KeyUtil.decodeKey(encoded, algo, sig_type);
+      System.out.println("KeyClass: " + pub_key.getClass());
       return KeyUtil.decodeKey(encoded, algo, sig_type);
     }
 
@@ -161,7 +179,7 @@ public class SignatureUtil
     }
     if (sig_type == SIG_TYPE_DSTU4145)
     {
-      return 90;  
+      return 90;
     }
     throw new ValidationException(String.format("Unknown sig type %d", sig_type));
 
@@ -175,7 +193,7 @@ public class SignatureUtil
     String algo=getAlgo(sig_type);
 
     PrivateKey priv_key = KeyUtil.decodePrivateKey(key_pair.getPrivateKey(), algo);
-    
+
     try
     {
       Signature sig_engine = Signature.getInstance(algo, Globals.getCryptoProviderName());
@@ -214,7 +232,7 @@ public class SignatureUtil
       "1.3.132.0.38", //sect571k1
       "1.3.132.0.39"  //sect571r1
       );
-    
+
   }
 
   public static ImmutableSet<String> getAllowedDSTU4145Curves()
@@ -223,7 +241,7 @@ public class SignatureUtil
     // 0 to 9 maps to DSTU 4145-163 to DSTU 4145-431.
     for(int i=0; i<=9; i++)
     {
-      s.add("1.2.804.2.1.1.1.1.3.1.1.2." + i);   
+      s.add("1.2.804.2.1.1.1.1.3.1.1.2." + i);
     }
 
     return ImmutableSet.copyOf(s);

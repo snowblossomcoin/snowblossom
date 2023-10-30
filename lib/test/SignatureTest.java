@@ -12,7 +12,7 @@ import org.junit.Test;
 import snowblossom.lib.Globals;
 import snowblossom.lib.KeyUtil;
 
-/** Might not be testing any actual snowblossom code, just making sure I understand 
+/** Might not be testing any actual snowblossom code, just making sure I understand
  * how signatures work.
  */
 public class SignatureTest
@@ -26,7 +26,7 @@ public class SignatureTest
   @Test
   public void emptyTest()
   {
-    
+
 
   }
 
@@ -34,9 +34,9 @@ public class SignatureTest
   public void testRSA()
     throws Exception
   {
-    java.security.spec.RSAKeyGenParameterSpec spec = new java.security.spec.RSAKeyGenParameterSpec(2048, 
+    java.security.spec.RSAKeyGenParameterSpec spec = new java.security.spec.RSAKeyGenParameterSpec(2048,
       java.security.spec.RSAKeyGenParameterSpec.F0);
-    
+
     // RSA should just work with any key size someone feels like making so whatever
     testAlgo("RSA", spec, "SHA256withRSA", null, 10240);
 
@@ -98,7 +98,7 @@ public class SignatureTest
   public void testDSTU4145()
     throws Exception
   {
-    // There are oids ending with 0 through 9 which seem to map to 
+    // There are oids ending with 0 through 9 which seem to map to
     // DSTU 4145-163 to DSTU 4145-431 which is not very helpful
 
     for(int i=0; i<=9; i++)
@@ -112,7 +112,7 @@ public class SignatureTest
     }
   }
 
-	@Test
+  @Test
   public void testED25519()
     throws Exception
   {
@@ -219,7 +219,7 @@ public class SignatureTest
     KeyPair pair = key_gen.genKeyPair();
     PublicKey pub = pair.getPublic();
     PrivateKey priv = pair.getPrivate();
-    
+
     System.out.println(String.format("%s pubkey %s", gen_algo, pub.toString()));
     testEncodeKey(gen_algo, pub);
 
@@ -262,7 +262,7 @@ public class SignatureTest
 
     Assert.assertArrayEquals(encoded, recoded);
 
-    System.out.println(KeyUtil.decomposeASN1Encoded(recoded));
+    //System.out.println(KeyUtil.decomposeASN1Encoded(recoded));
 
   }
 

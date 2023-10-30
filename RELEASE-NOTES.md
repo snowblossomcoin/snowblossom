@@ -8,6 +8,7 @@
 * Add exploder api block_info_by_height
 * Update jrocksdb to 7.2.2
 * Add MinerReport utility
+* Update to bouncy-castle 1.76
 
 ## 2.0
 
