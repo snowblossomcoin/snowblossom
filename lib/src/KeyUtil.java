@@ -11,6 +11,9 @@ import java.security.spec.X509EncodedKeySpec;
 import org.bouncycastle.asn1.*;
 import org.junit.Assert;
 import snowblossom.proto.WalletKeyPair;
+import org.bouncycastle.pqc.jcajce.spec.SPHINCSPlusParameterSpec;
+import org.bouncycastle.pqc.jcajce.spec.DilithiumParameterSpec;
+
 
 public class KeyUtil
 {
@@ -248,6 +251,58 @@ public class KeyUtil
     {
       throw new RuntimeException(e);
     }
+  }
+
+  public static WalletKeyPair generateWalletSphincsPlusKey()
+  {
+    try
+    {
+      
+      KeyPairGenerator key_gen = KeyPairGenerator.getInstance("SPHINCSPLUS", Globals.getCryptoProviderName());
+
+      // 128bit -> 17kb signature
+      // 256bit -> 30kb signature
+      key_gen.initialize(SPHINCSPlusParameterSpec.shake_256f_simple);
+
+      KeyPair key_pair = key_gen.genKeyPair();
+      WalletKeyPair wkp = WalletKeyPair.newBuilder()
+        .setPublicKey(ByteString.copyFrom(key_pair.getPublic().getEncoded()))
+        .setPrivateKey(ByteString.copyFrom(key_pair.getPrivate().getEncoded()))
+        .setSignatureType(SignatureUtil.SIG_TYPE_SPHINCSPLUS)
+        .build();
+      return wkp;
+
+    }
+    catch(Exception e)
+    {
+      throw new RuntimeException(e);
+    }
+
+  }
+
+  public static WalletKeyPair generateWalletDilithiumKey()
+  {
+    try
+    {
+      
+      KeyPairGenerator key_gen = KeyPairGenerator.getInstance("DILITHIUM", Globals.getCryptoProviderName());
+
+      key_gen.initialize(DilithiumParameterSpec.dilithium5);
+
+      KeyPair key_pair = key_gen.genKeyPair();
+      WalletKeyPair wkp = WalletKeyPair.newBuilder()
+        .setPublicKey(ByteString.copyFrom(key_pair.getPublic().getEncoded()))
+        .setPrivateKey(ByteString.copyFrom(key_pair.getPrivate().getEncoded()))
+        .setSignatureType(SignatureUtil.SIG_TYPE_DILITHIUM)
+        .build();
+      return wkp;
+
+    }
+    catch(Exception e)
+    {
+      throw new RuntimeException(e);
+    }
+
   }
 
 

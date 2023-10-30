@@ -140,6 +140,22 @@ public class KeyUtilTest
       testKeyPair(wkp, "DSTU " + i);
     }
   }
+  
+  @Test
+  public void testSphincsWallet()
+    throws Exception
+  {
+    WalletKeyPair wkp = KeyUtil.generateWalletSphincsPlusKey();
+    testKeyPair(wkp, "sphincs");
+  }
+
+  @Test
+  public void testDilithiumWallet()
+    throws Exception
+  {
+    WalletKeyPair wkp = KeyUtil.generateWalletDilithiumKey();
+    testKeyPair(wkp, "dilithium");
+  }
 
   private void testKeyPair(WalletKeyPair wkp, String name)
     throws Exception

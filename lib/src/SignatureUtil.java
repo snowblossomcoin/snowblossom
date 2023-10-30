@@ -32,6 +32,8 @@ public class SignatureUtil
   public static final int SIG_TYPE_DSA=3;
   public static final int SIG_TYPE_RSA=4;
   public static final int SIG_TYPE_DSTU4145=5;
+  public static final int SIG_TYPE_SPHINCSPLUS=6;
+  public static final int SIG_TYPE_DILITHIUM=7;
 
   public static PublicKey decodePublicKey(SigSpec sig_spec)
     throws ValidationException
@@ -81,6 +83,16 @@ public class SignatureUtil
         if (!ALLOWED_DSTU4145_CURVES.contains(oid))
           throw new ValidationException(
             String.format("OID %s not on allowed list for %s", oid.toString(), algo));
+      }
+      if (sig_type == SIG_TYPE_SPHINCSPLUS)
+      {
+        // TODO - restrict params?
+        algo="SPHINCSPLUS";
+      }
+      if (sig_type == SIG_TYPE_DILITHIUM)
+      {
+        // TODO - restrict params?
+        algo="DILITHIUM";
       }
       if (algo == null)
       {
@@ -147,6 +159,14 @@ public class SignatureUtil
     {
       algo="DSTU4145";
     }
+    if (sig_type == SIG_TYPE_SPHINCSPLUS)
+    {
+      algo="SPHINCSPLUS";
+    }
+    if (sig_type == SIG_TYPE_DILITHIUM)
+    {
+      algo="DILITHIUM";
+    }
     if (algo == null)
     {
       throw new ValidationException(String.format("Unknown sig type %d", sig_type));
@@ -181,6 +201,7 @@ public class SignatureUtil
     {
       return 90;
     }
+    // TODO -- add new types
     throw new ValidationException(String.format("Unknown sig type %d", sig_type));
 
   }
