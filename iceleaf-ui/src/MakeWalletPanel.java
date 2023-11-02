@@ -28,6 +28,7 @@ public class MakeWalletPanel extends BasePanel
   protected JRadioButton seed_button = new JRadioButton("HD Seed - secp256k1");
   protected JRadioButton old_std_button = new JRadioButton("Old Standard - secp256k1");
   protected JRadioButton qhard_button = new JRadioButton("QHard - secp256k1 + rsa8192 + dstu4145");
+  protected JRadioButton pqc1_button = new JRadioButton("PQC1 - secp256k1 + dstu4145 + sphincsplus + dilithium");
   protected JRadioButton import_seed_button = new JRadioButton("Import seed");
   protected JRadioButton import_xpub_button = new JRadioButton("Import xpub (watch only)");
 
@@ -67,6 +68,7 @@ public class MakeWalletPanel extends BasePanel
     main_radio_bg.add(seed_button);
     main_radio_bg.add(old_std_button);
     main_radio_bg.add(qhard_button);
+    main_radio_bg.add(pqc1_button);
     main_radio_bg.add(import_seed_button);
     main_radio_bg.add(import_xpub_button);
 
@@ -75,6 +77,7 @@ public class MakeWalletPanel extends BasePanel
     panel.add(seed_button, c);
     panel.add(old_std_button, c);
     panel.add(qhard_button, c);
+    panel.add(pqc1_button, c);
 
     c.gridwidth=1;
     panel.add(import_seed_button, c);
@@ -153,6 +156,12 @@ public class MakeWalletPanel extends BasePanel
         {
           config_out.println("key_mode=qhard");
           config_map.put("key_mode", "qhard");
+          config_map.put("key_count", "1");
+        }
+        else if (pqc1_button.isSelected())
+        {
+          config_out.println("key_mode=pqc1");
+          config_map.put("key_mode", "pqc1");
           config_map.put("key_count", "1");
         }
         else if (import_seed_button.isSelected())

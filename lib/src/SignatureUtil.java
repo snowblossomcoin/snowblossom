@@ -12,6 +12,10 @@ import org.bouncycastle.asn1.ASN1ObjectIdentifier;
 import org.bouncycastle.asn1.ASN1Sequence;
 import org.bouncycastle.asn1.x509.AlgorithmIdentifier;
 import org.bouncycastle.asn1.x509.SubjectPublicKeyInfo;
+import org.bouncycastle.pqc.jcajce.provider.dilithium.BCDilithiumPublicKey;
+import org.bouncycastle.pqc.jcajce.provider.sphincsplus.BCSPHINCSPlusPublicKey;
+import org.bouncycastle.pqc.jcajce.spec.DilithiumParameterSpec;
+import org.bouncycastle.pqc.jcajce.spec.SPHINCSPlusParameterSpec;
 import snowblossom.proto.SigSpec;
 import snowblossom.proto.WalletKeyPair;
 
@@ -86,13 +90,26 @@ public class SignatureUtil
       }
       if (sig_type == SIG_TYPE_SPHINCSPLUS)
       {
-        // TODO - restrict params?
         algo="SPHINCSPLUS";
+        PublicKey pub_key = KeyUtil.decodeKey(encoded, algo, sig_type);
+        BCSPHINCSPlusPublicKey s_key = (BCSPHINCSPlusPublicKey) pub_key;
+
+        if (! s_key.getParameterSpec().equals(SPHINCSPlusParameterSpec.haraka_128s))
+        {
+          throw new ValidationException("Only haraka_128s allows for SphincsPlus keys");
+        }
       }
       if (sig_type == SIG_TYPE_DILITHIUM)
       {
-        // TODO - restrict params?
         algo="DILITHIUM";
+        PublicKey pub_key = KeyUtil.decodeKey(encoded, algo, sig_type);
+        BCDilithiumPublicKey d_key = (BCDilithiumPublicKey) pub_key;
+
+        if (! d_key.getParameterSpec().equals(DilithiumParameterSpec.dilithium5))
+        {
+          throw new ValidationException("Only dilithium5 allowed for DILITHIUM keys");
+        }
+
       }
       if (algo == null)
       {
@@ -201,7 +218,14 @@ public class SignatureUtil
     {
       return 90;
     }
-    // TODO -- add new types
+    if (sig_type == SIG_TYPE_SPHINCSPLUS)
+    {
+      return 7856;
+    }
+    if (sig_type == SIG_TYPE_DILITHIUM)
+    {
+      return 4595;
+    }
     throw new ValidationException(String.format("Unknown sig type %d", sig_type));
 
   }
@@ -266,6 +290,15 @@ public class SignatureUtil
     }
 
     return ImmutableSet.copyOf(s);
+  }
+
+  public static ImmutableSet<String> getAllowedDilithiumOIDs()
+  {
+    Set<String> s= new TreeSet<String>();
+
+    return ImmutableSet.copyOf(s);
+
+
   }
 
 }

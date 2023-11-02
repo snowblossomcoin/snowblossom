@@ -45,6 +45,9 @@ public class WalletTest
     builder.addKeys(KeyUtil.generateWalletDSTU4145Key(1));
     builder.addKeys(KeyUtil.generateWalletDSTU4145Key(7));
     builder.addKeys(KeyUtil.generateWalletDSTU4145Key(9));
+    builder.addKeys(KeyUtil.generateWalletDilithiumKey());
+    builder.addKeys(KeyUtil.generateWalletSphincsPlusKey());
+
 
     AddressSpec.Builder spec = AddressSpec.newBuilder();
 
@@ -68,8 +71,6 @@ public class WalletTest
     TransactionBridge a = new TransactionBridge(address_hash, 50000);
     TransactionBridge b = new TransactionBridge(address_hash, 50000);
     TransactionBridge c = new TransactionBridge(address_hash, 50000);
-
-
 
     Transaction tx = TransactionUtil.makeTransaction(wallet, ImmutableList.of(a, b, c), address_hash, 150000, 0L);
 

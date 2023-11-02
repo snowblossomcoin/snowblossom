@@ -4,6 +4,7 @@ import com.google.protobuf.ByteString;
 import java.security.KeyPair;
 import java.security.PrivateKey;
 import java.security.PublicKey;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Random;
 import java.util.logging.Logger;
@@ -140,7 +141,7 @@ public class KeyUtilTest
       testKeyPair(wkp, "DSTU " + i);
     }
   }
-  
+
   @Test
   public void testSphincsWallet()
     throws Exception
@@ -168,16 +169,32 @@ public class KeyUtilTest
 
       ChainHash hash = new ChainHash(b);
 
+      long t1,t2;
+
+      t1 = System.nanoTime();
       ByteString sig = SignatureUtil.sign(wkp, hash);
+      t2 = System.nanoTime() - t1;
+      double sign_time = t2;
+
       SigSpec sig_spec = SigSpec.newBuilder()
         .setSignatureType(wkp.getSignatureType())
         .setPublicKey(wkp.getPublicKey())
         .build();
 
-      logger.info(String.format("Key report %s Pub size: %d, sig %d", name, wkp.getPublicKey().size(), sig.size()));
-      logger.info("Key report: " + HexUtil.getHexString( sig));
 
+      t1 = System.nanoTime();
       Assert.assertTrue(SignatureUtil.checkSignature(sig_spec, hash.getBytes(), sig));
+      t2 = System.nanoTime() - t1;
+      double check_time = t2;
+
+      DecimalFormat df = new DecimalFormat("0.000000");
+
+
+      logger.info(String.format("Key report %s Pub size: %d, sig %d, sign time: %s ms, check time: %s ms",
+        name, wkp.getPublicKey().size(), sig.size(),
+        df.format(sign_time/1e6), df.format(check_time/1e6)
+        ));
+      logger.info("Key report: " + HexUtil.getHexString( sig));
     }
 
 

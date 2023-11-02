@@ -753,8 +753,28 @@ public class Validation
             }
           }
         }
+
         utxo_buffer.useOutput(matching_out, new ChainHash(in.getSrcTxId()), in.getSrcTxOutIdx());
       }
+
+      // SIP-6 check - PQC
+      if (block_header.getBlockHeight() < params.getActivationHeightPQC())
+      {
+        for(SignatureEntry sig : tx.getSignaturesList())
+        {
+          int sig_type = inner.getClaims(sig.getClaimIdx()).getSigSpecs(sig.getKeyIdx()).getSignatureType();
+          if (sig_type == SignatureUtil.SIG_TYPE_SPHINCSPLUS)
+          {
+            throw new ValidationException("SphincsPlus keys only allowed after SIP-6 activation");
+          }
+          if (sig_type == SignatureUtil.SIG_TYPE_DILITHIUM)
+          {
+            throw new ValidationException("Dilithium keys only allowed after SIP-6 activation");
+          }
+
+        }
+      }
+
 
       long spent = 0L;
       // Sum up all outputs

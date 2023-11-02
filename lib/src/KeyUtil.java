@@ -260,9 +260,8 @@ public class KeyUtil
       
       KeyPairGenerator key_gen = KeyPairGenerator.getInstance("SPHINCSPLUS", Globals.getCryptoProviderName());
 
-      // 128bit -> 17kb signature
-      // 256bit -> 30kb signature
-      key_gen.initialize(SPHINCSPlusParameterSpec.shake_256f_simple);
+      // Seems to create the smallest signatures
+      key_gen.initialize(SPHINCSPlusParameterSpec.haraka_128s);
 
       KeyPair key_pair = key_gen.genKeyPair();
       WalletKeyPair wkp = WalletKeyPair.newBuilder()

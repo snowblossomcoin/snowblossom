@@ -36,6 +36,7 @@ public class WalletUtil
   
   public static final String MODE_STANDARD = "standard";
   public static final String MODE_QHARD = "qhard";
+  public static final String MODE_PQC1 = "pqc1";
   public static final String MODE_SEED = "seed";
 
   private static final Logger logger = Logger.getLogger("snowblossom.client");
@@ -201,6 +202,24 @@ public class WalletUtil
       wallet_builder.addAddresses(claim);
       
     }
+    else if (key_mode.equals(MODE_PQC1))
+    {
+      logger.info("Creating PQC1 key set. This takes a while.");
+      WalletKeyPair k_ec = KeyUtil.generateWalletStandardECKey();
+      WalletKeyPair k_dstu = KeyUtil.generateWalletDSTU4145Key(9);
+      WalletKeyPair k_dilithium = KeyUtil.generateWalletDilithiumKey();
+      WalletKeyPair k_sphincs = KeyUtil.generateWalletSphincsPlusKey();
+
+      wallet_builder.addKeys(k_ec);
+      wallet_builder.addKeys(k_dstu);
+      wallet_builder.addKeys(k_dilithium);
+      wallet_builder.addKeys(k_sphincs);
+
+      claim = AddressUtil.getMultiSig(4, ImmutableList.of(k_ec, k_dstu, k_dilithium, k_sphincs));
+      wallet_builder.addAddresses(claim);
+      
+    }
+
     else
     {
       throw new RuntimeException("Unknown key_mode: " + key_mode);
