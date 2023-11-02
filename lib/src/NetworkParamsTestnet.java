@@ -79,5 +79,7 @@ public class NetworkParamsTestnet extends NetworkParams
   @Override
   public int getActivationHeightShards() { return 170000; }
 
+  @Override
+  public int getActivationHeightPQC() {return 280890; }
 
 }
