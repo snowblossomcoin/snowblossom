@@ -158,6 +158,15 @@ public class KeyUtilTest
     testKeyPair(wkp, "dilithium");
   }
 
+  @Test
+  public void testFalconWallet()
+    throws Exception
+  {
+    WalletKeyPair wkp = KeyUtil.generateWalletFalconKey();
+    testKeyPair(wkp, "falcon");
+  }
+
+
   private void testKeyPair(WalletKeyPair wkp, String name)
     throws Exception
   {

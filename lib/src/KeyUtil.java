@@ -13,6 +13,7 @@ import org.junit.Assert;
 import snowblossom.proto.WalletKeyPair;
 import org.bouncycastle.pqc.jcajce.spec.SPHINCSPlusParameterSpec;
 import org.bouncycastle.pqc.jcajce.spec.DilithiumParameterSpec;
+import org.bouncycastle.pqc.jcajce.spec.FalconParameterSpec;
 
 
 public class KeyUtil
@@ -304,6 +305,32 @@ public class KeyUtil
 
   }
 
+
+
+  public static WalletKeyPair generateWalletFalconKey()
+  {
+    try
+    {
+      
+      KeyPairGenerator key_gen = KeyPairGenerator.getInstance("FALCON", Globals.getCryptoProviderName());
+
+      key_gen.initialize(FalconParameterSpec.falcon_512);
+
+      KeyPair key_pair = key_gen.genKeyPair();
+      WalletKeyPair wkp = WalletKeyPair.newBuilder()
+        .setPublicKey(ByteString.copyFrom(key_pair.getPublic().getEncoded()))
+        .setPrivateKey(ByteString.copyFrom(key_pair.getPrivate().getEncoded()))
+        .setSignatureType(SignatureUtil.SIG_TYPE_FALCON)
+        .build();
+      return wkp;
+
+    }
+    catch(Exception e)
+    {
+      throw new RuntimeException(e);
+    }
+
+  }
 
 
 }

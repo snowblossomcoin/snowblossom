@@ -9,6 +9,8 @@
 * Update jrocksdb to 7.2.2
 * Add MinerReport utility
 * Update to bouncy-castle 1.76
+* Update to bouncy-castle 1.77
+* Add Sphinx+, Falcon and Dilithium keys and signing
 
 ## 2.0
 

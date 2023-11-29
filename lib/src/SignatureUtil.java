@@ -13,8 +13,10 @@ import org.bouncycastle.asn1.ASN1Sequence;
 import org.bouncycastle.asn1.x509.AlgorithmIdentifier;
 import org.bouncycastle.asn1.x509.SubjectPublicKeyInfo;
 import org.bouncycastle.pqc.jcajce.provider.dilithium.BCDilithiumPublicKey;
+import org.bouncycastle.pqc.jcajce.provider.falcon.BCFalconPublicKey;
 import org.bouncycastle.pqc.jcajce.provider.sphincsplus.BCSPHINCSPlusPublicKey;
 import org.bouncycastle.pqc.jcajce.spec.DilithiumParameterSpec;
+import org.bouncycastle.pqc.jcajce.spec.FalconParameterSpec;
 import org.bouncycastle.pqc.jcajce.spec.SPHINCSPlusParameterSpec;
 import snowblossom.proto.SigSpec;
 import snowblossom.proto.WalletKeyPair;
@@ -38,6 +40,7 @@ public class SignatureUtil
   public static final int SIG_TYPE_DSTU4145=5;
   public static final int SIG_TYPE_SPHINCSPLUS=6;
   public static final int SIG_TYPE_DILITHIUM=7;
+  public static final int SIG_TYPE_FALCON=8;
 
   public static PublicKey decodePublicKey(SigSpec sig_spec)
     throws ValidationException
@@ -109,7 +112,17 @@ public class SignatureUtil
         {
           throw new ValidationException("Only dilithium5 allowed for DILITHIUM keys");
         }
+      }
+      if (sig_type == SIG_TYPE_FALCON)
+      {
+        algo="FALCON";
+        PublicKey pub_key = KeyUtil.decodeKey(encoded, algo, sig_type);
+        BCFalconPublicKey d_key = (BCFalconPublicKey) pub_key;
 
+        if (! d_key.getParameterSpec().equals(FalconParameterSpec.falcon_512))
+        {
+          throw new ValidationException("Only falcon_512 allowed for FALCON keys");
+        }
       }
       if (algo == null)
       {
@@ -184,6 +197,11 @@ public class SignatureUtil
     {
       algo="DILITHIUM";
     }
+    if (sig_type == SIG_TYPE_FALCON)
+    {
+      algo="FALCON";
+    }
+
     if (algo == null)
     {
       throw new ValidationException(String.format("Unknown sig type %d", sig_type));
@@ -226,6 +244,11 @@ public class SignatureUtil
     {
       return 4595;
     }
+    if (sig_type == SIG_TYPE_FALCON)
+    {
+      return 1274;
+    }
+
     throw new ValidationException(String.format("Unknown sig type %d", sig_type));
 
   }
