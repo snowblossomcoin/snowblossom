@@ -37,6 +37,7 @@ public class WalletUtil
   public static final String MODE_STANDARD = "standard";
   public static final String MODE_QHARD = "qhard";
   public static final String MODE_PQC1 = "pqc1";
+  public static final String MODE_PQC_LITE = "pqc_lite";
   public static final String MODE_SEED = "seed";
 
   private static final Logger logger = Logger.getLogger("snowblossom.client");
@@ -219,7 +220,17 @@ public class WalletUtil
       wallet_builder.addAddresses(claim);
       
     }
+    else if (key_mode.equals(MODE_PQC_LITE))
+    {
+      logger.info("Creating PQC_LITE key set. This takes a while.");
+      WalletKeyPair k_falcon = KeyUtil.generateWalletFalconKey();
 
+      wallet_builder.addKeys(k_falcon);
+
+      claim = AddressUtil.getMultiSig(1, ImmutableList.of(k_falcon));
+      wallet_builder.addAddresses(claim);
+      
+    }
     else
     {
       throw new RuntimeException("Unknown key_mode: " + key_mode);
