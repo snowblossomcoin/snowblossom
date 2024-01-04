@@ -6,7 +6,7 @@
 * Add TLS support on MrPlow so MrPlow can use TLS to communicate with miners
 * Add node_uri param for miners that supports TLS
 * Add exploder api block_info_by_height
-* Update jrocksdb to 7.2.2
+* Update jrocksdb to 8.9.1
 * Add MinerReport utility
 * Update to bouncy-castle 1.76
 * Update to bouncy-castle 1.77
