@@ -77,8 +77,10 @@ public abstract class NetworkParams
   // SIP-4
   public int getActivationHeightTxInValue() { return Integer.MAX_VALUE; }
 
+  // SIP-5
   public int getActivationHeightShards() { return Integer.MAX_VALUE; }
 
+  // SIP-6
   public int getActivationHeightPQC() { return Integer.MAX_VALUE; }
 
   /**

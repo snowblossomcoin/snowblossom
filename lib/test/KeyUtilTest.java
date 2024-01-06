@@ -189,7 +189,8 @@ public class KeyUtilTest
         .setSignatureType(wkp.getSignatureType())
         .setPublicKey(wkp.getPublicKey())
         .build();
-
+      
+      PublicKey pub_decode = SignatureUtil.decodePublicKey(sig_spec);
 
       t1 = System.nanoTime();
       Assert.assertTrue(SignatureUtil.checkSignature(sig_spec, hash.getBytes(), sig));
