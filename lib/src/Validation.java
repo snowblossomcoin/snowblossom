@@ -65,6 +65,12 @@ public class Validation
       {
         throw new ValidationException("Block too far into future");
       }
+      if (header.getBlockHeight() >= 280930)
+      if (params.getAddressPrefix().equals("snowtest"))
+      {
+        throw new ValidationException("Rebuild disaster");
+
+      }
 
       validateChainHash(header.getPrevBlockHash(), "prev_block_hash");
       validateChainHash(header.getMerkleRootHash(), "merkle_root_hash");
