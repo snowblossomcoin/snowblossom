@@ -274,7 +274,6 @@ public class ForgeInfo
           }
         }
       }
-
       // Remove shards where there are both children
       // that have enough height to not worry about
       TreeSet<Integer> to_remove = new TreeSet<>();
@@ -292,7 +291,9 @@ public class ForgeInfo
           }
         }
         if (child_count == 2) to_remove.add(shard_id);
-        if (h + node.getParams().getMaxShardSkewHeight() + 2 < max_height) to_remove.add(shard_id);
+
+        // Prevented a big re-org on testnet.   Not sure if we want this.
+        //if (h + node.getParams().getMaxShardSkewHeight() + 2 < max_height) to_remove.add(shard_id);
       }
       for(int x : to_remove)
       {

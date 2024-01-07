@@ -376,6 +376,11 @@ public class SnowBlossomNode
     // Regtest network doesn't have this check for single instance networks
     if (params.allowSingleHost()) return true;
 
+    if (config.getBoolean("bypass_sync_check"))
+    {
+      return true;
+    }
+
     int height = 0;
     int seen_height = 0;
     if (peerage.getConnectedPeerCount() == 0)

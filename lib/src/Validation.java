@@ -324,12 +324,12 @@ public class Validation
         }
       }
 
-      if (blk.getHeader().getBlockHeight() >= 280930)
+      /*if (blk.getHeader().getBlockHeight() >= 280930)
       if (params.getAddressPrefix().equals("snowtest"))
       {
         throw new ValidationException("Rebuild disaster");
 
-      }
+      }*/
 
 
       // At this point, we have a block with a reasonable header that matches everything

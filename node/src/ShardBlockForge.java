@@ -1069,8 +1069,10 @@ public class ShardBlockForge
           highest_coord = Math.max(highest_coord, coord);
         }
       }
+      mlog.set("active_shards", node.getForgeInfo().getNetworkActiveShards().keySet().toString());
 
       possible_set.addAll( exploreCoordinator(highest_coord, mlog) );
+      //possible_set.addAll( exploreCoordinator(1, mlog) );
 
       /*for(int src_shard : node.getCurrentBuildingShards())
       {
@@ -1082,6 +1084,7 @@ public class ShardBlockForge
  
       // TODO put back
       possible_set.addAll(exploreFromCoordinatorHead(highest_coord, mlog));
+      //possible_set.addAll(exploreFromCoordinatorHead(1, mlog));
 
       mlog.set("possible_set_size", possible_set.size());
       mlog.set("shards", node.getCurrentBuildingShards().toString());
