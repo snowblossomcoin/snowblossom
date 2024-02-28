@@ -2,10 +2,9 @@ package snowblossom.lib.db.rocksdb;
 
 import com.google.common.collect.ImmutableList;
 import duckutil.Config;
-import duckutil.PeriodicThread;
 import java.io.File;
-import java.util.TreeMap;
 import java.util.List;
+import java.util.TreeMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.rocksdb.FlushOptions;
@@ -36,9 +35,9 @@ public class JRocksDB extends DBProvider
     super(config);
 
     use_separate_dbs=config.getBoolean("db_separate");
-    
+
     config.require("db_path");
-    
+
     String path = config.get("db_path");
 
     base_path = new File(path);
@@ -56,7 +55,7 @@ public class JRocksDB extends DBProvider
     // Separate DBs should only be used when you don't care about syncing between
     // the databases,  If you are fine with writes to them being preserved out of order
     // relative to each other it should be fine.
-    // For example, in combined DBs if you write a to A then b to B, you will either get {}, {a}, or {a,b} 
+    // For example, in combined DBs if you write a to A then b to B, you will either get {}, {a}, or {a,b}
     // on a bad shutdown.  If you use separate, you could very well get {b}.
 
     if (use_separate_dbs)

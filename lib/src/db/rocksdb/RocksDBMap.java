@@ -106,7 +106,7 @@ public class RocksDBMap extends DBMap
     try(RocksIterator it = db.newIterator())
     {
       it.seek(key_str.toByteArray());
-      
+
       // Empty set, doomed
       if (!it.isValid()) return lst;
 
@@ -114,9 +114,9 @@ public class RocksDBMap extends DBMap
       {
         lst.add(ByteString.copyFrom(it.key()).substring(prefix.size()));
         it.next();
-        if (it.isValid()) it.seekToFirst(); //wrap around
+        if (!it.isValid()) it.seekToFirst(); //wrap around
       }
-      
+
       it.seek(key_str.toByteArray());
       for(int i=0; i<count; i++)
       {
@@ -155,7 +155,7 @@ public class RocksDBMap extends DBMap
         if (!curr_key.startsWith(key_str)) break;
 
         ByteString k = curr_key.substring(prefix.size());
-        
+
          map.put(k, ByteString.copyFrom(it.value()));
         count++;
 

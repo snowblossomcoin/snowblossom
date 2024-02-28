@@ -34,7 +34,7 @@ public class RocksDBMapMutationSet extends DBMapMutationSet
       ByteString.Output out = ByteString.newOutput(100);
       out.write(name_bytes);
       out.write(key.toByteArray());
-      out.write(sep);  
+      out.write(sep);
       out.write(value.toByteArray());
       ByteString w = out.toByteString();
       return w;
@@ -68,7 +68,7 @@ public class RocksDBMapMutationSet extends DBMapMutationSet
     byte b[]=new byte[0];
 
     ByteString w = getDBKey(key, value);
-  
+
     try
     {
       db.put(jdb.getWriteOption(), w.toByteArray(), b);

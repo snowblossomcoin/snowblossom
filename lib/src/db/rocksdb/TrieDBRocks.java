@@ -45,7 +45,7 @@ public class TrieDBRocks extends TrieDB
     {
       throw new RuntimeException(e);
     }
-    
+
   }
   public TrieNode load(ByteString key)
   {
@@ -71,7 +71,7 @@ public class TrieDBRocks extends TrieDB
     try
     {
       WriteBatch wb = new WriteBatch();
-      
+
       for(Map.Entry<ByteString, TrieNode> me : updates.entrySet())
       {
         ByteString key = me.getKey();
