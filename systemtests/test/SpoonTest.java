@@ -233,11 +233,11 @@ public class SpoonTest
     Assert.assertTrue(status.getConfirmed());
 
     {
-      HistoryList hl = AddressHistoryUtil.getHistory(to_addr, node.getDB(), node.getBlockIngestor().getHead());
+      HistoryList hl = AddressHistoryUtil.getHistory(to_addr, node.getDB(), node.getBlockIngestor().getHead(), 0);
       Assert.assertEquals(1, hl.getEntriesCount());
     }
     {
-      HistoryList hl = AddressHistoryUtil.getHistory(from_addr, node.getDB(), node.getBlockIngestor().getHead());
+      HistoryList hl = AddressHistoryUtil.getHistory(from_addr, node.getDB(), node.getBlockIngestor().getHead(), 0);
       Assert.assertTrue(hl.getEntriesCount()>5);
     }
 

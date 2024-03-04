@@ -53,7 +53,7 @@ public class AddressHistoryUtil
     return ByteString.copyFrom(buff);
   }
 
-  public static HistoryList getHistory(AddressSpecHash spec_hash, DB db, BlockSummary summary)
+  public static HistoryList getHistory(AddressSpecHash spec_hash, DB db, BlockSummary summary, int shard)
     throws ValidationException
   {
 
@@ -96,6 +96,7 @@ public class AddressHistoryUtil
             .setBlockHeight(height)
             .setTxHash(tx_hash.getBytes())
             .setBlockHash(blk_hash.getBytes())
+            .setShard(shard)
             .build());
         }
       }

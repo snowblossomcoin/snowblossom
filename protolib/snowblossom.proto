@@ -224,7 +224,7 @@ service UserService {
 
   rpc GetNodeStatus ( NullRequest ) returns ( NodeStatus ) {}
   rpc GetBlock ( RequestBlock ) returns ( Block ) {}
-  rpc getBlockSummary ( RequestBlockSummary ) returns ( BlockSummary ) {}
+  rpc GetBlockSummary ( RequestBlockSummary ) returns ( BlockSummary ) {}
   rpc GetTransaction ( RequestTransaction ) returns ( Transaction ) {}
   rpc GetTransactionStatus ( RequestTransaction ) returns ( TransactionStatus ) {}
   rpc GetBlockHeader ( RequestBlockHeader ) returns ( BlockHeader ) {}
@@ -436,6 +436,8 @@ message HistoryEntry {
   int32 block_height = 1;
   bytes tx_hash = 2;
   bytes block_hash = 3;
+  int32 shard = 4;
+
 }
 
 // A list of outputs

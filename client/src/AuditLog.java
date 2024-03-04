@@ -114,12 +114,11 @@ public class AuditLog
 
     if (history_list.getNotEnabled()) throw new RuntimeException("Node does not support history.  Unable to log.");
 
-    HashMap<ChainHash, Integer> tx_height_map = new HashMap<>();
+    HashMap<ChainHash, HistoryEntry> tx_history_map = new HashMap<>();
     LinkedList<ByteString> addr_list = new LinkedList<>();
     for( HistoryEntry he : history_list.getEntriesList())
     {
-      
-      tx_height_map.put(new ChainHash(he.getTxHash()), he.getBlockHeight());
+      tx_history_map.put(new ChainHash(he.getTxHash()), he);
       addr_list.add(he.getTxHash());
     }
     for (ByteString tx_hash : mempool_list.getTxHashesList())
@@ -151,7 +150,7 @@ public class AuditLog
     {
       if (!spent_tx.contains(tx_hash))
       {
-        AuditLogChain chain = getAuditChain(audit_log_hash, tx_hash, tx_map, tx_height_map);
+        AuditLogChain chain = getAuditChain(audit_log_hash, tx_hash, tx_map, tx_history_map);
         if (chain != null)
         {
           report.addChains(chain);
@@ -163,7 +162,7 @@ public class AuditLog
   }
 
   public static AuditLogChain getAuditChain(AddressSpecHash audit_log_hash, ChainHash head, 
-    HashMap<ChainHash, Transaction> tx_map, HashMap<ChainHash, Integer> tx_height_map)
+    HashMap<ChainHash, Transaction> tx_map, HashMap<ChainHash, HistoryEntry> tx_history_map)
   {
     AuditLogChain.Builder chain = AuditLogChain.newBuilder();
     int chain_len = 0;
@@ -178,9 +177,13 @@ public class AuditLog
         AuditLogItem.Builder item = AuditLogItem.newBuilder();
         item.setTxHash(curr.getBytes());
         item.setLogMsg( inner.getExtra() );
-        if (tx_height_map.containsKey(curr))
+        
+        if (tx_history_map.containsKey(curr))
         {
-          item.setConfirmedHeight(tx_height_map.get(curr));
+          HistoryEntry he = tx_history_map.get(curr);
+          item.setConfirmedHeight(he.getBlockHeight());
+          item.setShard(he.getShard());
+          item.setBlockHash(he.getBlockHash());
         }
         chain.addItems(item.build());
 

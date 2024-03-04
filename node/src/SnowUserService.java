@@ -634,7 +634,14 @@ public class SnowUserService extends UserServiceGrpc.UserServiceImplBase impleme
       AddressSpecHash spec_hash = new AddressSpecHash(req.getAddressSpecHash());
       try
       {
-        observer.onNext( AddressHistoryUtil.getHistory(spec_hash, node.getDB(), node.getBlockIngestor().getHead()) );
+        HistoryList.Builder hl = HistoryList.newBuilder();
+        for(int shard : node.getActiveShards())
+        {
+          hl.addAllEntries( 
+            AddressHistoryUtil.getHistory(spec_hash, node.getDB(), node.getBlockIngestor(shard).getHead(), shard).getEntriesList() 
+            );
+        }
+        observer.onNext( hl.build());
         observer.onCompleted();
       }
       catch(ValidationException e)

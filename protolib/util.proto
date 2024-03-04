@@ -87,6 +87,9 @@ message AuditLogItem {
   bytes tx_hash = 1;
   int32 confirmed_height = 2;
   bytes log_msg = 3;
+  int32 shard = 4;
+  bytes block_hash = 5;
+
 }
 
 message SymmetricKey {
