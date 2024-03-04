@@ -27,6 +27,74 @@ public class PowUtil
     return hashHeaderBits(header, nonce, md);
 
   }
+
+  // Get the header bits that need to be hashed but don't hash them
+  public static ByteString getHeaderBits(BlockHeader header)
+  {
+      byte[] int_data = new byte[3*4 + 1*8];
+      ByteBuffer bb = ByteBuffer.wrap(int_data);
+
+      bb.putInt(header.getVersion());
+      bb.putInt(header.getBlockHeight());
+      bb.putLong(header.getTimestamp());
+      bb.putInt(header.getSnowField());
+
+      Assert.assertEquals(0, bb.remaining());
+
+      ByteString bits = ByteString.EMPTY;
+
+      bits = bits.concat( header.getNonce() );
+      bits = bits.concat( ByteString.copyFrom(int_data) );
+
+      bits = bits.concat(header.getPrevBlockHash());
+      bits = bits.concat(header.getMerkleRootHash());
+      bits = bits.concat(header.getUtxoRootHash());
+      bits = bits.concat(header.getTarget());
+      
+      if (header.getVersion() == 2)
+      {
+        {
+          byte[] shard_id = new byte[12];
+          ByteBuffer bb_s = ByteBuffer.wrap(shard_id);
+          bb_s.putInt(header.getShardId());
+          bb_s.putInt(header.getTxDataSizeSum());
+          bb_s.putInt(header.getTxCount());
+
+          bits = bits.concat( ByteString.copyFrom(shard_id) );
+
+        }
+        for(Map.Entry<Integer, ByteString> me : header.getShardExportRootHashMap().entrySet())
+        {
+          int id = me.getKey();
+          byte[] shard_id = new byte[4];
+          ByteBuffer bb_s = ByteBuffer.wrap(shard_id);
+          bb_s.putInt(id);
+          
+          bits = bits.concat( ByteString.copyFrom(shard_id) );
+          bits = bits.concat( me.getValue() );
+        }
+
+        for(int import_shard_id : inOrder(header.getShardImportMap().keySet()))
+        {
+          BlockImportList bil = header.getShardImportMap().get(import_shard_id);
+          for(int import_height : inOrder(bil.getHeightMap().keySet()))
+          {
+            byte[] shard_id = new byte[8];
+            ByteBuffer bb_s = ByteBuffer.wrap(shard_id);
+            bb_s.putInt(import_shard_id);
+            bb_s.putInt(import_height);
+          
+            bits = bits.concat( ByteString.copyFrom(shard_id) );
+
+            bits = bits.concat( bil.getHeightMap().get(import_height) );
+
+          }
+        }
+
+      }
+
+      return bits;
+  }
   public static byte[] hashHeaderBits(BlockHeader header, byte[] nonce, MessageDigest md)
   {
 
