@@ -47,7 +47,7 @@ public class AuditLog
 
   }
 
-  public static String recordLog(SnowBlossomClient client, String msg)
+  public static ChainHash recordLog(SnowBlossomClient client, String msg)
     throws Exception
   {
     return recordLog(client, ByteString.copyFrom(msg.getBytes()));
@@ -57,7 +57,7 @@ public class AuditLog
   /**
    * Send the next audit log record in a chaing of records
    */
-  public static String recordLog(SnowBlossomClient client, ByteString msg)
+  public static ChainHash recordLog(SnowBlossomClient client, ByteString msg)
     throws Exception
   {
     client.getConfig().require("audit_log_source");
@@ -102,7 +102,7 @@ public class AuditLog
       client.getStub().submitTransaction(tx);
     }
 
-    return continue_tx.toString();
+    return continue_tx;
 
   }
 
