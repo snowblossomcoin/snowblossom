@@ -159,7 +159,7 @@ public class SignatureUtil
         throw new ValidationException(String.format("Unknown sig type %d", sig_type));
       }
       PublicKey pub_key = KeyUtil.decodeKey(encoded, algo, sig_type);
-      System.out.println("KeyClass: " + pub_key.getClass());
+      //System.out.println("KeyClass: " + pub_key.getClass());
       return KeyUtil.decodeKey(encoded, algo, sig_type);
     }
 
