@@ -97,13 +97,11 @@ public class SignatureUtil
         PublicKey pub_key = KeyUtil.decodeKey(encoded, algo, sig_type);
         BCSPHINCSPlusPublicKey s_key = (BCSPHINCSPlusPublicKey) pub_key;
 
-        /*SubjectPublicKeyInfo spki = SubjectPublicKeyInfo.getInstance(ASN1Sequence.getInstance(encoded.toByteArray()));
-        AlgorithmIdentifier algid = spki.getAlgorithm();
-        System.out.println("Sphincs OID: " + algid.toASN1Primitive());
-        System.out.println("Sphincs OID: " + algid.getAlgorithm());*/
-
         SubjectPublicKeyInfo spki = SubjectPublicKeyInfo.getInstance(ASN1Sequence.getInstance(encoded.toByteArray()));
         AlgorithmIdentifier algid = spki.getAlgorithm();
+        System.out.println("Sphincs OID: " + algid.toASN1Primitive());
+        System.out.println("Sphincs OID: " + algid.getAlgorithm());
+
         String oid = algid.getAlgorithm().toString();
         if (!oid.equals("1.3.6.1.4.1.22554.2.5.5"))
         {
@@ -121,12 +119,10 @@ public class SignatureUtil
         PublicKey pub_key = KeyUtil.decodeKey(encoded, algo, sig_type);
         BCDilithiumPublicKey d_key = (BCDilithiumPublicKey) pub_key;
 
-        /*SubjectPublicKeyInfo spki = SubjectPublicKeyInfo.getInstance(ASN1Sequence.getInstance(encoded.toByteArray()));
-        AlgorithmIdentifier algid = spki.getAlgorithm();
-        System.out.println("Dilithium OID: " + algid.toASN1Primitive());
-        System.out.println("Dilithium OID: " + algid.getAlgorithm());*/
         SubjectPublicKeyInfo spki = SubjectPublicKeyInfo.getInstance(ASN1Sequence.getInstance(encoded.toByteArray()));
         AlgorithmIdentifier algid = spki.getAlgorithm();
+        System.out.println("Dilithium OID: " + algid.toASN1Primitive());
+        System.out.println("Dilithium OID: " + algid.getAlgorithm());
         String oid = algid.getAlgorithm().toString();
         if (!oid.equals("1.3.6.1.4.1.2.267.12.8.7"))
         {

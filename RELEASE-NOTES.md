@@ -11,6 +11,7 @@
 * Update to bouncy-castle 1.76
 * Update to bouncy-castle 1.77
 * Update to bouncy-castle 1.78
+* Update to bouncy-castle 1.80
 * Add Sphinx+, Falcon and Dilithium keys and signing
 
 ## 2.0
