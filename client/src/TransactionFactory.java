@@ -143,6 +143,7 @@ public class TransactionFactory
         }
         catch(ValidationException e)
         {
+          e.printStackTrace();
 
         }
 
