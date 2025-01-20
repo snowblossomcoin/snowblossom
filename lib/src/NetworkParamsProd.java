@@ -108,6 +108,9 @@ public class NetworkParamsProd extends NetworkParams
   // SIP5 - approved 2022.02.14
   @Override
   public int getActivationHeightShards() { return 211600; }
+  
+  // SIP6 - set to activate around 2025.03.05
+  public int getActivationHeightPQC() { return 358700; }
 
   @Override
   public int getMaxShardId() {return 62; } // allows 32 shards

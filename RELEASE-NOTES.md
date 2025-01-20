@@ -1,4 +1,4 @@
-## master
+## 2.2
 
 * Fix Shackleton rich list to use less memory during computation (#213)
 * Add signed trustnet information to PeerInfo messages
