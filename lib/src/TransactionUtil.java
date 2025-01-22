@@ -416,7 +416,7 @@ public class TransactionUtil
         String for_addr = new AddressSpecHash( o.getForBenefitOfSpecHash() ).toAddressString(params);
         out.println("    For benefit of: " + for_addr);
       }
-      if (o.getIds() != null)
+      if (o.hasIds())
       {
         if (o.getIds().getUsername().size() > 0)
         {

@@ -9,14 +9,13 @@ java_library(
     "@duckutil//:duckutil_lib",
     "@duckutil//:lobstack_lib",
     "@duckutil//:duckutil_jsonrpc_lib",
-    "@com_google_protobuf//:protobuf_java_util",
-    "@io_grpc_grpc_java//netty",
-    "@io_netty_netty_handler//:io_netty_netty_handler",
     "@maven//:com_thetransactioncompany_jsonrpc2_base",
     "@maven//:com_thetransactioncompany_jsonrpc2_server",
     "@maven//:net_minidev_json_smart",
     "@maven//:org_bitcoinj_bitcoinj_core",
     "@maven//:com_lambdaworks_scrypt",
+    "@maven//:io_grpc_grpc_netty",
+    "@maven//:io_netty_netty_handler",
     ],
 )
 

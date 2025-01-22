@@ -1,0 +1,49 @@
+###############################################################################
+# Bazel now uses Bzlmod by default to manage external dependencies.
+# Please consider migrating your external dependencies from WORKSPACE to MODULE.bazel.
+#
+# For more details, please check https://github.com/bazelbuild/bazel/issues/18958
+###############################################################################
+
+bazel_dep(name = "rules_proto_grpc_java", version = "5.0.1")
+bazel_dep(name = "rules_proto_grpc", version = "5.0.1")
+bazel_dep(name = "rules_jvm_external", version = "6.2")
+git_repository = use_repo_rule("@bazel_tools//tools/build_defs/repo:git.bzl", "git_repository")
+
+git_repository(
+  name = "duckutil",
+  remote = "https://github.com/fireduck64/duckutil",
+  commit = "b721d945278dc2069bb9f5c1556161b37d6b4ee8",
+  shallow_since = "1648055343 -0700"
+)
+
+# When in doublt, check the versions of things from https://registry.bazel.build/modules/rules_proto_grpc_java
+# and dig into the maven includes for that at: https://github.com/bazelbuild/bazel-central-registry/blob/main/modules/rules_proto_grpc_java/5.0.1/MODULE.bazel
+# and make them match
+
+maven = use_extension("@rules_jvm_external//:extensions.bzl", "maven")
+maven.install(
+    artifacts = [
+        "io.grpc:grpc-netty:1.65.0",
+        "org.rocksdb:rocksdbjni:9.8.4",
+        "junit:junit:4.13.2",
+        "commons-codec:commons-codec:1.11",
+        "org.apache.commons:commons-math3:3.6.1",
+        "org.bouncycastle:bcprov-jdk18on:1.80",
+        "org.bouncycastle:bcpkix-jdk18on:1.80",
+        "com.thetransactioncompany:jsonrpc2-server:1.11",
+        "net.minidev:json-smart:2.4.7",
+        "com.lambdaworks:scrypt:1.4.0",
+        "com.google.zxing:javase:3.4.0",
+        "org.slf4j:slf4j-nop:1.7.25",
+        "org.bitcoinj:bitcoinj-core:0.15.10",
+        "org.bitlet:weupnp:0.1.4",
+    ],
+    repositories = [
+        "https://repo1.maven.org/maven2",
+        "https://maven.google.com",
+    ],
+
+)
+
+use_repo(maven, "maven")

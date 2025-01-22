@@ -28,7 +28,7 @@ public class BlockIngestorTest
 
     BlockSummary s = BlockchainUtil.getNewSummary(header, prev_summary, params, 1L, 600L, new LinkedList());
 
-    Assert.assertNotNull(s.getHeader());
+    Assert.assertTrue(s.hasHeader());
     Assert.assertEquals("1024", s.getWorkSum());
     Assert.assertEquals(params.getMaxTarget().toString(), s.getTargetAverage());
     Assert.assertEquals(params.getBlockTimeTarget(), s.getBlocktimeAverageMs());
@@ -68,7 +68,7 @@ public class BlockIngestorTest
     BigInteger expected_target = params.getMaxTarget().multiply(BigInteger.valueOf(990L)).add(using_target.multiply(BigInteger.valueOf(10L))).divide(BigInteger.valueOf(1000L));
     long expected_time = (params.getBlockTimeTarget() * 990L + using_time * 10L) / 1000L;
 
-    Assert.assertNotNull(s.getHeader());
+    Assert.assertTrue(s.hasHeader());
     int work = 1000 + 1024 * 2;
     Assert.assertEquals("" + work, s.getWorkSum());
     Assert.assertEquals(expected_target.toString(), s.getTargetAverage());

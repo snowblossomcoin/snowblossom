@@ -501,7 +501,7 @@ public class PeerLink implements StreamObserver<PeerMessage>
     throws ValidationException
   {
     if (tip.getHeader().getSnowHash().size() == 0) return;
-    if (tip.getSignedHead() == null) return;
+    if (!tip.hasSignedHead()) return;
     if (tip.getSignedHead().getPayload().size() == 0) return;
 
     // We are not checking signature is by someone we care about

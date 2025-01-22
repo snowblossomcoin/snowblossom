@@ -207,7 +207,7 @@ public class ShardUtxoImport
     // We trust no one
     if (trusted_signers.size() == 0) return null;
 
-    if (tip.getSignedHead() == null) return null;
+    if (!tip.hasSignedHead()) return null;
     if (tip.getSignedHead().getPayload().size() == 0) return null;
 
     SignedMessagePayload payload = MsgSigUtil.validateSignedMessage(tip.getSignedHead(), node.getParams());

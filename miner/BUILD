@@ -9,15 +9,14 @@ java_library(
       "//lib:rocksdb",
       "//lib:atomicfiledb",
       "//client",
-      "@io_grpc_grpc_java//context",
-      "@io_netty_netty_handler//:io_netty_netty_handler",
-      "@io_grpc_grpc_java//netty",
       "@duckutil//:duckutil_jsonrpc_lib",
       "@duckutil//:duckutil_lib",
       "@maven//:com_thetransactioncompany_jsonrpc2_base",
       "@maven//:com_thetransactioncompany_jsonrpc2_server",
       "@maven//:junit_junit",
       "@maven//:net_minidev_json_smart",
+      "@maven//:io_grpc_grpc_netty",
+      "@maven//:io_netty_netty_handler",
     ],
 )
 

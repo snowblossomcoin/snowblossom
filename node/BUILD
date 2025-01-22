@@ -11,10 +11,10 @@ java_library(
       "//lib:rocksdb",
       "//lib:atomicfiledb",
       "//client:client",
-      "@io_netty_netty_handler//:io_netty_netty_handler",
-      "@io_grpc_grpc_java//netty",
       "@maven//:org_bitlet_weupnp",
       "@maven//:junit_junit",
+      "@maven//:io_grpc_grpc_netty",
+      "@maven//:io_netty_netty_handler",
     ],
 )
 

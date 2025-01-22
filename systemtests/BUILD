@@ -13,7 +13,8 @@ java_test(
         "//client:client",
         "//shackleton:shackleton",
         "@duckutil//:duckutil_lib",
-        "@build_stack_rules_proto//java:grpc_netty",
+        "@maven//:io_grpc_grpc_netty",
+        "@maven//:io_netty_netty_handler",
     ],
     size = "medium",
 )
@@ -31,7 +32,8 @@ java_test(
         "//client:client",
         "//shackleton:shackleton",
         "@duckutil//:duckutil_lib",
-        "@build_stack_rules_proto//java:grpc_netty",
+        "@maven//:io_grpc_grpc_netty",
+        "@maven//:io_netty_netty_handler",
     ],
     size = "medium",
 )
@@ -49,7 +51,8 @@ java_test(
         "//client:client",
         "//shackleton:shackleton",
         "@duckutil//:duckutil_lib",
-        "@build_stack_rules_proto//java:grpc_netty",
+        "@maven//:io_grpc_grpc_netty",
+        "@maven//:io_netty_netty_handler",
     ],
     size = "medium",
 )
@@ -67,7 +70,8 @@ java_test(
         "//client:client",
         "//shackleton:shackleton",
         "@duckutil//:duckutil_lib",
-        "@build_stack_rules_proto//java:grpc_netty",
+        "@maven//:io_grpc_grpc_netty",
+        "@maven//:io_netty_netty_handler",
     ],
     size = "medium",
 )
@@ -86,7 +90,8 @@ java_test(
         "//client:client",
         "//shackleton:shackleton",
         "@duckutil//:duckutil_lib",
-        "@build_stack_rules_proto//java:grpc_netty",
+        "@maven//:io_grpc_grpc_netty",
+        "@maven//:io_netty_netty_handler",
     ],
     size = "medium",
 )
@@ -104,7 +109,8 @@ java_test(
         "//client:client",
         "//shackleton:shackleton",
         "@duckutil//:duckutil_lib",
-        "@build_stack_rules_proto//java:grpc_netty",
+        "@maven//:io_grpc_grpc_netty",
+        "@maven//:io_netty_netty_handler",
     ],
     size = "medium",
 )
@@ -121,8 +127,9 @@ java_test(
         "//node",
         "//client:client",
         "//shackleton:shackleton",
+        "@maven//:io_grpc_grpc_netty",
+        "@maven//:io_netty_netty_handler",
         "@duckutil//:duckutil_lib",
-        "@build_stack_rules_proto//java:grpc_netty",
     ],
     size = "medium",
 )
@@ -140,7 +147,8 @@ java_test(
         "//client:client",
         "//shackleton:shackleton",
         "@duckutil//:duckutil_lib",
-        "@build_stack_rules_proto//java:grpc_netty",
+        "@maven//:io_grpc_grpc_netty",
+        "@maven//:io_netty_netty_handler",
     ],
     size = "medium",
 )
@@ -158,7 +166,8 @@ java_test(
         "//client:client",
         "//shackleton:shackleton",
         "@duckutil//:duckutil_lib",
-        "@build_stack_rules_proto//java:grpc_netty",
+        "@maven//:io_grpc_grpc_netty",
+        "@maven//:io_netty_netty_handler",
     ],
     size = "medium",
 )
@@ -176,7 +185,8 @@ java_test(
         "//client:client",
         "//shackleton:shackleton",
         "@duckutil//:duckutil_lib",
-        "@build_stack_rules_proto//java:grpc_netty",
+        "@maven//:io_grpc_grpc_netty",
+        "@maven//:io_netty_netty_handler",
     ],
     size = "medium",
 )
@@ -195,7 +205,8 @@ java_test(
         "//client:client",
         "//shackleton:shackleton",
         "@duckutil//:duckutil_lib",
-        "@build_stack_rules_proto//java:grpc_netty",
+        "@maven//:io_grpc_grpc_netty",
+        "@maven//:io_netty_netty_handler",
     ],
     size = "large",
 )
@@ -213,7 +224,8 @@ java_test(
         "//client:client",
         "//shackleton:shackleton",
         "@duckutil//:duckutil_lib",
-        "@build_stack_rules_proto//java:grpc_netty",
+        "@maven//:io_grpc_grpc_netty",
+        "@maven//:io_netty_netty_handler",
     ],
     size = "large",
 )

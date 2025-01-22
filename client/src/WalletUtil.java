@@ -616,7 +616,7 @@ public class WalletUtil
     SeedStatus.Builder new_seed = SeedStatus.newBuilder();
     new_seed.setSeedId(a.getSeedId());
 
-    if ((a.getSeedXpub() != null) && (a.getSeedXpub().length() > 0)) new_seed.setSeedXpub(a.getSeedXpub());
+    if (a.getSeedXpub().length() > 0) new_seed.setSeedXpub(a.getSeedXpub());
     else new_seed.setSeedXpub(b.getSeedXpub());
 
     HashSet<Integer> change_groups = new HashSet<Integer>();

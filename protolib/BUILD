@@ -1,6 +1,8 @@
 package(default_visibility = ["//visibility:public"])
 
-load("@build_stack_rules_proto//java:java_grpc_library.bzl", "java_grpc_library")
+load("@rules_proto_grpc_java//:defs.bzl", "java_grpc_library")
+load("@rules_proto//proto:defs.bzl", "proto_library")
+
 
 proto_library(
   name = "protosrc",
@@ -12,5 +14,5 @@ proto_library(
 
 java_grpc_library(
   name = "protogrpc",
-  deps = [":protosrc"],
+  protos = [":protosrc"],
 )

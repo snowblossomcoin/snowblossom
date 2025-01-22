@@ -39,7 +39,7 @@ public class Validation
     try(TimeRecordAuto tra_blk = TimeRecord.openAuto("Validation.checkBlockBasics"))
     {
       BlockHeader header = blk.getHeader();
-      if (header == null) throw new ValidationException("Header missing");
+      if (!blk.hasHeader()) throw new ValidationException("Header missing");
 
       if ((header.getVersion() != 1) && (header.getVersion() != 2))
       {

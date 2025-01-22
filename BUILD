@@ -1,3 +1,4 @@
+
 java_binary(
   name = "SnowBlossomNode",
   main_class = "snowblossom.node.SnowBlossomNode",
