@@ -129,6 +129,39 @@ public class AddressUtil
 
   }
 
+  public static void prettyDisplayAddressSpecShort(AddressSpec spec, PrintStream out, NetworkParams params)
+    throws ValidationException
+  {
+    prettyDisplayAddressSpecShort(spec, out, params, 0, ImmutableSet.of());
+  }
+  public static void prettyDisplayAddressSpecShort(AddressSpec spec, PrintStream out, NetworkParams params, 
+    int c_idx, Set<String> signed_list)
+    throws ValidationException
+  {
+    AddressSpecHash hash = getHashForSpec(spec);
+    String address = getAddressString(params.getAddressPrefix(), hash);
+    out.print("AddressSpec " + address);
+
+    out.println(String.format(" %dof%d", spec.getRequiredSigners(), spec.getSigSpecsCount()));
+
+    for(int s = 0; s<spec.getSigSpecsCount(); s++)
+    {
+      String key = c_idx +":" + s;
+      boolean signed=false;
+      if (signed_list.contains(key)) signed=true;
+      SigSpec sig = spec.getSigSpecs(s);
+
+      String algo = SignatureUtil.getAlgo(sig.getSignatureType());
+
+      out.print(" " + algo);
+      if (signed)
+      {
+        out.print("(S)");
+      }
+    }
+
+  }
+
   public static void prettyDisplayAddressSpec(AddressSpec spec, PrintStream out, NetworkParams params)
     throws ValidationException
   {
