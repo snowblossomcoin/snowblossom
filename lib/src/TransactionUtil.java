@@ -523,6 +523,15 @@ public class TransactionUtil
       }
       //inValues.removeFirst();
     }
+    for(int c_idx = 0; c_idx < inner.getClaimsCount(); c_idx++)
+    {
+      AddressSpec claim = inner.getClaims(c_idx);
+
+      out.print("  Claim: ");
+      AddressUtil.prettyDisplayAddressSpecShort(claim, out, params, c_idx, sign_set);
+
+    }
+
     out.println("</td><td style='width: 50%;'>");
     for(TransactionOutput o : inner.getOutputsList())
     {
