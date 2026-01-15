@@ -32,7 +32,9 @@ java_test(
         "//node:node",
         "//lib:lib",
         "//protolib:protogrpc",
+        "//protolib:snow_java_proto",
         "@duckutil//:duckutil_lib",
+        "@maven//:com_google_guava_guava",
     ]
 )
 
@@ -44,6 +46,7 @@ java_test(
         "//node:node",
         "//lib:lib",
         "//protolib:protogrpc",
+        "//protolib:snow_java_proto",
         "@duckutil//:duckutil_lib",
     ]
 )
@@ -56,6 +59,8 @@ java_test(
         "//node:node",
         "//lib:lib",
         "//protolib:protogrpc",
+        "//protolib:snow_java_proto",
+        "@maven//:com_google_protobuf_protobuf_java",
         "@duckutil//:duckutil_lib",
     ]
 )

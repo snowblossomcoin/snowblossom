@@ -42,7 +42,9 @@ java_test(
     deps = [
 		    "//miner:miner",
         "//lib:lib",
+        "//protolib:snow_java_proto",
         "//protolib:protogrpc",
+        "@maven//:com_google_protobuf_protobuf_java",
     ]
 )
 java_test(

@@ -64,6 +64,8 @@ java_test(
         "//protolib:protogrpc",
         "@maven//:commons_codec_commons_codec",
         "@maven//:org_bouncycastle_bcprov_jdk18on",
+        "@maven//:com_google_protobuf_protobuf_java",
+        "@maven//:com_google_guava_guava",
     ]
 )
 
@@ -76,8 +78,10 @@ java_test(
         "//lib:lib",
         "//lib:rocksdb",
         "//protolib:protogrpc",
+        "@maven//:com_google_guava_guava",
         "@maven//:commons_codec_commons_codec",
         "@maven//:org_bouncycastle_bcprov_jdk18on",
+        "@maven//:com_google_protobuf_protobuf_java",
     ]
 )
 
@@ -90,6 +94,8 @@ java_test(
         "//lib:lib",
         "//lib:rocksdb",
         "//protolib:protogrpc",
+        "//protolib:snow_java_proto",
+        "@maven//:com_google_protobuf_protobuf_java",
         "@maven//:commons_codec_commons_codec",
         "@maven//:org_bouncycastle_bcprov_jdk18on",
     ]
@@ -104,6 +110,7 @@ java_test(
         "//lib:lib",
         "//lib:rocksdb",
         "//protolib:protogrpc",
+        "@maven//:com_google_protobuf_protobuf_java",
         "@maven//:commons_codec_commons_codec",
         "@maven//:org_bouncycastle_bcprov_jdk18on",
     ]
@@ -118,6 +125,8 @@ java_test(
         "//lib:lib",
         "//lib:rocksdb",
         "//protolib:protogrpc",
+        "//protolib:snow_java_proto",
+        "@maven//:com_google_protobuf_protobuf_java",
         "@maven//:commons_codec_commons_codec",
         "@maven//:org_bouncycastle_bcprov_jdk18on",
     ]
@@ -131,6 +140,7 @@ java_test(
         "//lib:lib",
         "//lib:rocksdb",
         "//protolib:protogrpc",
+        "@maven//:com_google_protobuf_protobuf_java",
         "@maven//:commons_codec_commons_codec",
         "@maven//:org_bouncycastle_bcprov_jdk18on",
     ]
@@ -146,6 +156,7 @@ java_test(
         "//lib:lib",
         "//lib:rocksdb",
         "//protolib:protogrpc",
+        "@maven//:com_google_guava_guava",
         "@maven//:commons_codec_commons_codec",
         "@maven//:org_bouncycastle_bcprov_jdk18on",
     ]
@@ -160,6 +171,8 @@ java_test(
         "//lib:lib",
         "//lib:rocksdb",
         "//protolib:protogrpc",
+        "//protolib:snow_java_proto",
+        "@maven//:com_google_protobuf_protobuf_java",
         "@maven//:commons_codec_commons_codec",
         "@maven//:org_bouncycastle_bcprov_jdk18on",
     ]
@@ -174,6 +187,7 @@ java_test(
         "//lib:lib",
         "//lib:rocksdb",
         "//protolib:protogrpc",
+        "//protolib:snow_java_proto",
         "@maven//:commons_codec_commons_codec",
         "@maven//:org_bouncycastle_bcprov_jdk18on",
     ]
@@ -187,8 +201,11 @@ java_test(
         "//lib:lib",
         "//lib:rocksdb",
         "//protolib:protogrpc",
+        "//protolib:snow_java_proto",
         "@maven//:commons_codec_commons_codec",
         "@maven//:org_bouncycastle_bcprov_jdk18on",
+        "@maven//:com_google_protobuf_protobuf_java",
+        "@maven//:com_google_guava_guava",
     ]
 )
 
@@ -201,6 +218,7 @@ java_test(
         "//lib:lib",
         "//lib:rocksdb",
         "//protolib:protogrpc",
+        "@maven//:com_google_protobuf_protobuf_java",
         "@maven//:commons_codec_commons_codec",
         "@maven//:org_bouncycastle_bcprov_jdk18on",
     ]
@@ -229,6 +247,7 @@ java_test(
         "//lib:lib",
         "//lib:rocksdb",
         "//protolib:protogrpc",
+        "//protolib:snow_java_proto",
         "@maven//:commons_codec_commons_codec",
         "@maven//:org_bouncycastle_bcprov_jdk18on",
     ]
@@ -243,8 +262,11 @@ java_test(
         "//lib:lib",
         "//lib:rocksdb",
         "//protolib:protogrpc",
+        "//protolib:snow_java_proto",
         "@maven//:commons_codec_commons_codec",
         "@maven//:org_bouncycastle_bcprov_jdk18on",
+        "@maven//:com_google_protobuf_protobuf_java",
+        "@maven//:com_google_guava_guava",
     ]
 )
 
@@ -256,6 +278,7 @@ java_test(
         "//lib:lib",
         "//lib:rocksdb",
         "//protolib:protogrpc",
+        "@maven//:com_google_guava_guava",
         "@maven//:commons_codec_commons_codec",
         "@maven//:org_bouncycastle_bcprov_jdk18on",
     ]

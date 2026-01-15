@@ -5,6 +5,7 @@ import java.io.File;
 import java.security.KeyPair;
 import java.util.*;
 import org.junit.Test;
+import org.junit.Ignore;
 import snowblossom.lib.AddressSpecHash;
 import snowblossom.lib.AddressUtil;
 import snowblossom.lib.KeyUtil;
@@ -29,7 +30,7 @@ public class ShardTestJambo extends SpoonTest
    * using it as an easy way to see that network status
    * and as a p2p networking gateway
    */
-  //@Test
+  @Test @Ignore
   public void shardTest() throws Exception
   {
     File snow_path = setupSnow("regshard");

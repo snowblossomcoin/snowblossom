@@ -7,7 +7,7 @@ java_test(
     deps = [
         "//lib:lib",
         "//lib:rocksdb",
-        "//protolib:protogrpc",
+        "//protolib:snow_java_proto",
         "//miner:miner",
         "//node",
         "//client:client",
@@ -15,6 +15,8 @@ java_test(
         "@duckutil//:duckutil_lib",
         "@maven//:io_grpc_grpc_netty",
         "@maven//:io_netty_netty_handler",
+        "@maven//:com_google_protobuf_protobuf_java",
+        "@maven//:com_google_guava_guava",
     ],
     size = "medium",
 )
@@ -26,7 +28,7 @@ java_test(
     deps = [
         "//lib:lib",
         "//lib:rocksdb",
-        "//protolib:protogrpc",
+        "//protolib:snow_java_proto",
         "//miner:miner",
         "//node",
         "//client:client",
@@ -34,6 +36,8 @@ java_test(
         "@duckutil//:duckutil_lib",
         "@maven//:io_grpc_grpc_netty",
         "@maven//:io_netty_netty_handler",
+        "@maven//:com_google_protobuf_protobuf_java",
+        "@maven//:com_google_guava_guava",
     ],
     size = "medium",
 )
@@ -45,7 +49,7 @@ java_test(
     deps = [
         "//lib:lib",
         "//lib:rocksdb",
-        "//protolib:protogrpc",
+        "//protolib:snow_java_proto",
         "//miner:miner",
         "//node",
         "//client:client",
@@ -53,6 +57,8 @@ java_test(
         "@duckutil//:duckutil_lib",
         "@maven//:io_grpc_grpc_netty",
         "@maven//:io_netty_netty_handler",
+        "@maven//:com_google_protobuf_protobuf_java",
+        "@maven//:com_google_guava_guava",
     ],
     size = "medium",
 )
@@ -64,7 +70,7 @@ java_test(
     deps = [
         "//lib:lib",
         "//lib:rocksdb",
-        "//protolib:protogrpc",
+        "//protolib:snow_java_proto",
         "//miner:miner",
         "//node",
         "//client:client",
@@ -72,6 +78,8 @@ java_test(
         "@duckutil//:duckutil_lib",
         "@maven//:io_grpc_grpc_netty",
         "@maven//:io_netty_netty_handler",
+        "@maven//:com_google_protobuf_protobuf_java",
+        "@maven//:com_google_guava_guava",
     ],
     size = "medium",
 )
@@ -84,7 +92,7 @@ java_test(
     deps = [
         "//lib:lib",
         "//lib:rocksdb",
-        "//protolib:protogrpc",
+        "//protolib:snow_java_proto",
         "//miner:miner",
         "//node",
         "//client:client",
@@ -92,6 +100,8 @@ java_test(
         "@duckutil//:duckutil_lib",
         "@maven//:io_grpc_grpc_netty",
         "@maven//:io_netty_netty_handler",
+        "@maven//:com_google_protobuf_protobuf_java",
+        "@maven//:com_google_guava_guava",
     ],
     size = "medium",
 )
@@ -103,7 +113,7 @@ java_test(
     deps = [
         "//lib:lib",
         "//lib:rocksdb",
-        "//protolib:protogrpc",
+        "//protolib:snow_java_proto",
         "//miner:miner",
         "//node",
         "//client:client",
@@ -111,6 +121,8 @@ java_test(
         "@duckutil//:duckutil_lib",
         "@maven//:io_grpc_grpc_netty",
         "@maven//:io_netty_netty_handler",
+        "@maven//:com_google_protobuf_protobuf_java",
+        "@maven//:com_google_guava_guava",
     ],
     size = "medium",
 )
@@ -122,7 +134,7 @@ java_test(
     deps = [
         "//lib:lib",
         "//lib:rocksdb",
-        "//protolib:protogrpc",
+        "//protolib:snow_java_proto",
         "//miner:miner",
         "//node",
         "//client:client",
@@ -130,6 +142,8 @@ java_test(
         "@maven//:io_grpc_grpc_netty",
         "@maven//:io_netty_netty_handler",
         "@duckutil//:duckutil_lib",
+        "@maven//:com_google_protobuf_protobuf_java",
+        "@maven//:com_google_guava_guava",
     ],
     size = "medium",
 )
@@ -141,7 +155,7 @@ java_test(
     deps = [
         "//lib:lib",
         "//lib:rocksdb",
-        "//protolib:protogrpc",
+        "//protolib:snow_java_proto",
         "//miner:miner",
         "//node",
         "//client:client",
@@ -149,6 +163,8 @@ java_test(
         "@duckutil//:duckutil_lib",
         "@maven//:io_grpc_grpc_netty",
         "@maven//:io_netty_netty_handler",
+        "@maven//:com_google_protobuf_protobuf_java",
+        "@maven//:com_google_guava_guava",
     ],
     size = "medium",
 )
@@ -160,7 +176,7 @@ java_test(
     deps = [
         "//lib:lib",
         "//lib:rocksdb",
-        "//protolib:protogrpc",
+        "//protolib:snow_java_proto",
         "//miner:miner",
         "//node",
         "//client:client",
@@ -168,6 +184,8 @@ java_test(
         "@duckutil//:duckutil_lib",
         "@maven//:io_grpc_grpc_netty",
         "@maven//:io_netty_netty_handler",
+        "@maven//:com_google_protobuf_protobuf_java",
+        "@maven//:com_google_guava_guava",
     ],
     size = "medium",
 )
@@ -179,7 +197,7 @@ java_test(
     deps = [
         "//lib:lib",
         "//lib:rocksdb",
-        "//protolib:protogrpc",
+        "//protolib:snow_java_proto",
         "//miner:miner",
         "//node",
         "//client:client",
@@ -187,6 +205,8 @@ java_test(
         "@duckutil//:duckutil_lib",
         "@maven//:io_grpc_grpc_netty",
         "@maven//:io_netty_netty_handler",
+        "@maven//:com_google_protobuf_protobuf_java",
+        "@maven//:com_google_guava_guava",
     ],
     size = "medium",
 )
@@ -199,7 +219,7 @@ java_test(
     deps = [
         "//lib:lib",
         "//lib:rocksdb",
-        "//protolib:protogrpc",
+        "//protolib:snow_java_proto",
         "//miner:miner",
         "//node",
         "//client:client",
@@ -207,6 +227,8 @@ java_test(
         "@duckutil//:duckutil_lib",
         "@maven//:io_grpc_grpc_netty",
         "@maven//:io_netty_netty_handler",
+        "@maven//:com_google_protobuf_protobuf_java",
+        "@maven//:com_google_guava_guava",
     ],
     size = "large",
 )
@@ -218,7 +240,7 @@ java_test(
     deps = [
         "//lib:lib",
         "//lib:rocksdb",
-        "//protolib:protogrpc",
+        "//protolib:snow_java_proto",
         "//miner:miner",
         "//node",
         "//client:client",
@@ -226,6 +248,8 @@ java_test(
         "@duckutil//:duckutil_lib",
         "@maven//:io_grpc_grpc_netty",
         "@maven//:io_netty_netty_handler",
+        "@maven//:com_google_protobuf_protobuf_java",
+        "@maven//:com_google_guava_guava",
     ],
     size = "large",
 )

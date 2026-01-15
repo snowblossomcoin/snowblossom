@@ -33,8 +33,11 @@ java_test(
         "//client:client",
         "//lib:lib",
         "//protolib:protogrpc",
+        "//protolib:snow_java_proto",
         "@duckutil//:duckutil_lib",
+        "@maven//:com_google_guava_guava",
         "@maven//:org_bitcoinj_bitcoinj_core",
+        "@maven//:com_google_protobuf_protobuf_java",
     ]
 )
 
@@ -46,6 +49,7 @@ java_test(
         "//client:client",
         "//lib:lib",
         "//protolib:protogrpc",
+        "//protolib:snow_java_proto",
         "@duckutil//:duckutil_lib",
         "@maven//:org_bitcoinj_bitcoinj_core",
     ]
@@ -59,8 +63,11 @@ java_test(
         "//client:client",
         "//lib:lib",
         "//protolib:protogrpc",
+        "//protolib:snow_java_proto",
         "@duckutil//:duckutil_lib",
         "@maven//:org_bitcoinj_bitcoinj_core",
+        "@maven//:com_google_protobuf_protobuf_java",
+        "@maven//:com_google_guava_guava",
     ]
 )
 
@@ -72,6 +79,8 @@ java_test(
         "//client:client",
         "//lib:lib",
         "//protolib:protogrpc",
+        "//protolib:snow_java_proto",
+        "@maven//:com_google_guava_guava",
         "@duckutil//:duckutil_lib",
         "@maven//:org_bitcoinj_bitcoinj_core",
     ]
@@ -82,10 +91,11 @@ java_test(
     test_class = "client.test.PasswordCryptTest",
     srcs = glob(["test/PasswordCryptTest.java"]),
     deps = [
-        "//client:client",
-        "//lib:lib",
-        "//protolib:protogrpc",
-        "@duckutil//:duckutil_lib",
-        "@maven//:org_bitcoinj_bitcoinj_core",
+      "//client:client",
+      "//lib:lib",
+      "//protolib:protogrpc",
+      "@duckutil//:duckutil_lib",
+      "@maven//:org_bitcoinj_bitcoinj_core",
+      "@maven//:com_google_protobuf_protobuf_java",
     ]
 )
