@@ -5,9 +5,12 @@ java_library(
   srcs = glob(["src/*.java", "src/tls/*.java", "src/trie/*.java", "src/db/*.java", "src/db/lobstack/*.java"]),
   deps = [
     "//protolib:protogrpc",
+    "//protolib:snow_java_proto",
     "@maven//:com_google_protobuf_protobuf_java",
+    "@maven//:com_google_protobuf_protobuf_java_util",
     "@maven//:org_apache_commons_commons_math3",
     "@maven//:commons_codec_commons_codec",
+    "@maven//:com_google_guava_guava",
     "@maven//:org_bouncycastle_bcprov_jdk18on",
     "@maven//:org_bouncycastle_bcpkix_jdk18on",
     "@maven//:com_thetransactioncompany_jsonrpc2_server",
@@ -29,6 +32,9 @@ java_library(
   deps = [
     ":lib",
     "//protolib:protogrpc",
+    "//protolib:snow_java_proto",
+    "@maven//:com_google_protobuf_protobuf_java",
+    "@maven//:com_google_guava_guava",
     "@maven//:org_rocksdb_rocksdbjni",
     "@duckutil//:duckutil_lib",
     "@maven//:junit_junit"
@@ -41,6 +47,7 @@ java_library(
   deps = [
     ":lib",
     "//protolib:protogrpc",
+    "@maven//:com_google_protobuf_protobuf_java",
     "@duckutil//:duckutil_lib",
     "@maven//:junit_junit"
     ],

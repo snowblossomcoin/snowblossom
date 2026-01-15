@@ -5,6 +5,7 @@ java_library(
   srcs = glob(["src/**/*.java", "src/*.java"]),
   deps = [
       "//protolib:protogrpc",
+      "//protolib:snow_java_proto",
       "//lib:lib",
       "//lib:rocksdb",
       "//lib:atomicfiledb",
@@ -17,6 +18,10 @@ java_library(
       "@maven//:net_minidev_json_smart",
       "@maven//:io_grpc_grpc_netty",
       "@maven//:io_netty_netty_handler",
+      "@maven//:com_google_guava_guava",
+      "@maven//:com_google_protobuf_protobuf_java",
+      "@maven//:io_grpc_grpc_api",
+      "@maven//:io_grpc_grpc_stub",
     ],
 )
 

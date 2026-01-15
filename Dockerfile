@@ -2,12 +2,12 @@ ARG DISTRO=debian
 ARG DISTRO_VERSION=bullseye-slim
 
 
-FROM $DISTRO:$DISTRO_VERSION as base
+FROM $DISTRO:$DISTRO_VERSION AS base
 # https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=863199#23
 RUN mkdir -p /usr/share/man/man1
 
 
-FROM base as build-dependencies
+FROM base AS build-dependencies
 ARG DEBIAN_FRONTEND=noninteractive
 RUN apt-get -qq update \
   && apt-get -qq upgrade \
@@ -18,7 +18,7 @@ RUN apt-get -qq update \
   && rm -rf /var/lib/apt/lists/*
 
 
-FROM build-dependencies as build
+FROM build-dependencies AS build
 WORKDIR /snowblossom/
 ARG GIT_REF=master
 RUN git init . \
@@ -29,7 +29,7 @@ RUN git init . \
 RUN bazel build :Everything_deploy.jar
 
 
-FROM base as runtime-dependencies
+FROM base AS runtime-dependencies
 ARG DEBIAN_FRONTEND=noninteractive
 RUN apt-get -qq update \
   && apt-get -qq upgrade \
@@ -45,7 +45,7 @@ RUN apt-get -qq update \
   && rm -rf /var/lib/apt/lists/*
 
 
-FROM runtime-dependencies as runtime
+FROM runtime-dependencies AS runtime
 WORKDIR /snowblossom/
 COPY --from=build /snowblossom/bazel-bin/Everything_deploy.jar .
 COPY --from=build /snowblossom/example/deployment/docker/scripts/* ./scripts/

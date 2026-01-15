@@ -1,14 +1,11 @@
-###############################################################################
-# Bazel now uses Bzlmod by default to manage external dependencies.
-# Please consider migrating your external dependencies from WORKSPACE to MODULE.bazel.
-#
-# For more details, please check https://github.com/bazelbuild/bazel/issues/18958
-###############################################################################
+bazel_dep(name = "grpc-java", version = "1.75.0", repo_name = "io_grpc_grpc_java")
+bazel_dep(name = "rules_java", version = "9.3.0")
+bazel_dep(name = "grpc-proto", version = "0.0.0-20240627-ec30f58.bcr.1", repo_name = "io_grpc_grpc_proto")
+bazel_dep(name = "protobuf", version = "33.1", repo_name = "com_google_protobuf")
+bazel_dep(name = "rules_jvm_external", version = "6.9")
 
-bazel_dep(name = "rules_proto_grpc_java", version = "5.0.1")
-bazel_dep(name = "rules_proto_grpc", version = "5.0.1")
-bazel_dep(name = "rules_jvm_external", version = "6.2")
 git_repository = use_repo_rule("@bazel_tools//tools/build_defs/repo:git.bzl", "git_repository")
+
 
 git_repository(
   name = "duckutil",
@@ -25,6 +22,8 @@ maven = use_extension("@rules_jvm_external//:extensions.bzl", "maven")
 maven.install(
     artifacts = [
         "io.grpc:grpc-netty:1.65.0",
+        "io.grpc:grpc-api:1.65.0",
+        "io.grpc:grpc-stub:1.65.0",
         "org.rocksdb:rocksdbjni:9.8.4",
         "junit:junit:4.13.2",
         "commons-codec:commons-codec:1.11",
@@ -38,6 +37,7 @@ maven.install(
         "org.slf4j:slf4j-nop:1.7.25",
         "org.bitcoinj:bitcoinj-core:0.15.10",
         "org.bitlet:weupnp:0.1.4",
+        "com.google.protobuf:protobuf-java-util:4.33.4",
     ],
     repositories = [
         "https://repo1.maven.org/maven2",
