@@ -1097,7 +1097,7 @@ public class Validation
 
         if (!SignatureUtil.checkSignature( sig_spec, tx.getTxHash(), se.getSignature()))
         {
-          throw new ValidationException("signature failed");
+          throw new ValidationException("signature failed " + tx.getTxHash());
         }
         //So we have a valid signature on a valid claim!  woot
 
