@@ -9,13 +9,16 @@ RUN mkdir -p /usr/share/man/man1
 
 FROM base AS build-dependencies
 ARG DEBIAN_FRONTEND=noninteractive
-RUN apt-get -qq update \
-  && apt-get -qq upgrade \
-  && apt-get -qq install --no-install-suggests --no-install-recommends \
-    git \
-    bazel-bootstrap \
-  && apt-get clean \
-  && rm -rf /var/lib/apt/lists/*
+RUN apt-get -qq update
+RUN apt-get -qq upgrade
+RUN apt-get -qq install --no-install-suggests --no-install-recommends \
+    gnupg git curl default-jdk-headless
+RUN curl -fsSL https://bazel.build/bazel-release.pub.gpg | gpg --dearmor >bazel-archive-keyring.gpg
+RUN mv bazel-archive-keyring.gpg /usr/share/keyrings
+RUN echo "deb [arch=amd64 signed-by=/usr/share/keyrings/bazel-archive-keyring.gpg] https://storage.googleapis.com/bazel-apt stable jdk1.8" | tee /etc/apt/sources.list.d/bazel.list
+RUN apt-get update
+RUN apt-get install -y bazel
+RUN apt-get clean 
 
 
 FROM build-dependencies AS build
