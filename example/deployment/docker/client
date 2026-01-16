@@ -3,22 +3,25 @@ ARG GIT_REF=master
 
 
 
-FROM debian:bullseye-slim as base
+FROM debian:bullseye-slim AS base
 ENV DEBIAN_FRONTEND=noninteractive
 # https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=863199#23
 RUN mkdir -p /usr/share/man/man1
 
+FROM base AS build-image
+ARG DEBIAN_FRONTEND=noninteractive
+RUN apt-get -qq update
+RUN apt-get -qq upgrade
+RUN apt-get -qq install --no-install-suggests --no-install-recommends \
+    gnupg git curl default-jdk-headless
+RUN curl -fsSL https://bazel.build/bazel-release.pub.gpg | gpg --dearmor >bazel-archive-keyring.gpg
+RUN mv bazel-archive-keyring.gpg /usr/share/keyrings
+RUN echo "deb [arch=amd64 signed-by=/usr/share/keyrings/bazel-archive-keyring.gpg] https://storage.googleapis.com/bazel-apt stable jdk1.8" | tee /etc/apt/sources.list.d/bazel.list
+RUN apt-get update
+RUN apt-get install -y bazel
+RUN apt-get clean
 
-FROM base as build-image
-RUN \
-  apt-get -qq update && \
-  apt-get -qq upgrade && \
-  apt-get -qq install --no-install-suggests --no-install-recommends \
-    git \
-    bazel-bootstrap
-
-
-FROM build-image as build
+FROM build-image AS build
 ARG GIT_REPO
 ARG GIT_REF
 WORKDIR /snowblossom
@@ -29,7 +32,7 @@ RUN bazel build :SnowBlossomClient_deploy.jar 2>&1
 RUN ls -ahl /snowblossom/bazel-bin
 
 
-FROM base as runtime-image
+FROM base AS runtime-image
 RUN \
   apt-get -qq update && \
   apt-get -qq upgrade && \
