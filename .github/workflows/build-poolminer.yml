@@ -10,7 +10,7 @@ on: [push, pull_request, workflow_dispatch]
 jobs:
   job0:
     name: Build Docker PoolMiner
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     steps:
       # Prepares a list of tags for this docker image build.
       # CONDITION, TEMPLATE  , EXAMPLE
