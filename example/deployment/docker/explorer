@@ -3,7 +3,7 @@ ARG GIT_REF=master
 
 
 
-FROM debian:bullseye-slim AS base
+FROM debian:bookworm-slim AS base
 ENV DEBIAN_FRONTEND=noninteractive
 # https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=863199#23
 RUN mkdir -p /usr/share/man/man1
