@@ -146,6 +146,12 @@ public class WebServer implements WebHandler
       t.setHttpCode(200);
       return;
     }
+    if (path.equals("/fragment/mempool"))
+    {
+      t.out().print("<div>" + MempoolPage.inner(shackleton) + "</div>");
+      t.setHttpCode(200);
+      return;
+    }
     throw new NotFoundException("Unknown fragment");
   }
 
@@ -284,6 +290,11 @@ public class WebServer implements WebHandler
     if (path.equals("/stats"))
     {
       html(t, "Statistics", "/stats", StatsPage.render(shackleton, q));
+      return;
+    }
+    if (path.equals("/mempool"))
+    {
+      html(t, "Mempool", "/mempool", MempoolPage.render(shackleton));
       return;
     }
     if (path.equals("/peers"))

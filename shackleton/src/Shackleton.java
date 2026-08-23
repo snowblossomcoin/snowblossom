@@ -50,6 +50,7 @@ public class Shackleton
   private ChainIndex index;
   private TxLocator tx_locator;
   private MiningStats mining_stats;
+  private MempoolIndex mempool_index;
   private HistoryStats history_stats;
   private RichList rich_list;
   private java.io.File richlist_cache;
@@ -75,11 +76,13 @@ public class Shackleton
     mining_stats = new MiningStats(this, config.getIntWithDefault("mining_look_back", 1000));
     history_stats = new HistoryStats(this, config.getIntWithDefault("history_days", 365));
     health_stats = new HealthStats(this);
+    mempool_index = new MempoolIndex(this);
 
     web_server = new WebServer(config, this);
 
     index.start();
     mining_stats.start();
+    mempool_index.start();
     history_stats.start();
     richlist_cache = new java.io.File(config.getWithDefault("richlist_cache_file", "shackleton-richlist.cache"));
     rich_list.load(richlist_cache);
@@ -97,6 +100,7 @@ public class Shackleton
   public ChainIndex getIndex() { return index; }
   public TxLocator getTxLocator() { return tx_locator; }
   public MiningStats getMiningStats() { return mining_stats; }
+  public MempoolIndex getMempoolIndex() { return mempool_index; }
   public HistoryStats getHistoryStats() { return history_stats; }
   public RichList getRichList() { return rich_list; }
 

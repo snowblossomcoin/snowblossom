@@ -39,6 +39,7 @@ public class ApiHandler
     {"/api/richlist?count=N", "Top N addresses by balance (default 100, max 1000) and supply statistics"},
     {"/api/mining", "Pools (coinbase remarks), miner addresses and motion votes over recent blocks"},
     {"/api/peers", "Known peers of the node"},
+    {"/api/mempool", "Unconfirmed transactions as selected for the next block template"},
     {"/api/history?range=30d", "Bucketed statistics per shard (blocks, transactions, hashrate, difficulty); range 24h, 7d, 30d, 90d or 1y, or custom days=N&bucket_hours=H"},
     {"/api/total_coins", "Circulating supply as plain text (legacy)"},
     {"/api/total_coins_json", "Circulating supply as JSON (legacy)"},
@@ -159,6 +160,11 @@ public class ApiHandler
     if (path.equals("/api/peers"))
     {
       out(t, peers());
+      return true;
+    }
+    if (path.equals("/api/mempool"))
+    {
+      out(t, mempool());
       return true;
     }
     if (path.equals("/api/history"))
@@ -627,6 +633,26 @@ public class ApiHandler
       if (n >= count) break;
     }
     o.put("entries", arr);
+    return o;
+  }
+
+  public JSONObject mempool()
+  {
+    MempoolIndex.Result r = shackleton.getMempoolIndex().getResult();
+    JSONObject o = new JSONObject();
+    o.put("generated_time", r.generated);
+    o.put("mem_pool_size", r.reported_pool_size);
+    o.put("shown", r.txs.size());
+    o.put("total_size", r.total_size);
+    o.put("total_fee", r.total_fee);
+    if (r.template_shard >= 0) o.put("template_shard", r.template_shard);
+    if (r.note != null) o.put("note", r.note);
+    JSONArray txs = new JSONArray();
+    for (TxView tv : r.txs)
+    {
+      txs.add(tv.toJson(shackleton.getParams()));
+    }
+    o.put("transactions", txs);
     return o;
   }
 
