@@ -1241,6 +1241,7 @@ public class Validation
         {
           throw new ValidationException("Import for unexpected shard");
         }
+        validatePositiveValue(out.getValue(), "import output value");
       }
       catch(com.google.protobuf.InvalidProtocolBufferException e)
       {
@@ -1263,10 +1264,12 @@ public class Validation
     throws ValidationException
   {
     if (val < 0) throw new ValidationException(String.format("%s must be non-negative - %d", field, val));
+    if (val > Globals.MAX_VALUE) throw new ValidationException(String.format("%s out of range - %d", field, val));
   }
   public static void validatePositiveValue(long val, String field)
     throws ValidationException
   {
     if (val <= 0) throw new ValidationException(String.format("%s must be positive - %d", field, val));
+    if (val > Globals.MAX_VALUE) throw new ValidationException(String.format("%s out of range - %d", field, val));
   }
 }

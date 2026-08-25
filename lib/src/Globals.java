@@ -35,6 +35,7 @@ public class Globals
 
   public static final long FLAKE_VALUE = 1L;
   public static final long SNOW_VALUE = 1000000L;
+  public static final long MAX_VALUE = 21023997L * SNOW_VALUE;
   public static final double SNOW_VALUE_D = SNOW_VALUE;
 
   public static final int DEFAULT_POOL_TCP_PORT = 23380;

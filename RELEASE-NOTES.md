@@ -1,5 +1,7 @@
 ## 2.2
 
+* Shackleton overhaul
+* Some minor bugfixes
 * Fix Shackleton rich list to use less memory during computation (#213)
 * Add signed trustnet information to PeerInfo messages
 * Add gRPC call for get Peer Info for light clients
