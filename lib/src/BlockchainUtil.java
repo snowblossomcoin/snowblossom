@@ -345,7 +345,7 @@ public class BlockchainUtil
 
     // tie breaker - oldest wins
     if (b.getHeader().getTimestamp() < a.getHeader().getTimestamp()) return true;
-    if (a.getHeader().getTimestamp() > b.getHeader().getTimestamp()) return false;
+    if (b.getHeader().getTimestamp() > a.getHeader().getTimestamp()) return false;
 
     // tie breaker - lowest hash wins
     if (ByteStringComparator.compareStatic(b.getHeader().getSnowHash(), a.getHeader().getSnowHash()) < 0) return true;

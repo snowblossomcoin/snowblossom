@@ -228,8 +228,24 @@ public class SnowUserService extends UserServiceGrpc.UserServiceImplBase impleme
         logger.info("Submit block: " + node.getForgeInfo().getHeaderString(block.getHeader()));
 
         int shard_id = block.getHeader().getShardId();
-        //TODO check to see if we are tracking that shard
-        node.getBlockIngestor(shard_id).ingestBlock(block);
+
+        // We only have an ingestor for shards we actually track.  Reject rather than let a
+        // null escape as an NPE - only ValidationException is handled below, so an NPE here
+        // would leave responseObserver never completed and the submitting miner hanging.
+        BlockIngestor ingestor = node.getBlockIngestor(shard_id);
+        if (ingestor == null)
+        {
+          logger.info("Rejecting block for untracked shard: " + shard_id);
+
+          responseObserver.onNext(SubmitReply.newBuilder()
+              .setSuccess(false)
+              .setErrorMessage("Rejecting block: not tracking shard " + shard_id)
+            .build());
+          responseObserver.onCompleted();
+          return;
+        }
+
+        ingestor.ingestBlock(block);
         logger.info("Accepted block: " + node.getForgeInfo().getBlockTextSummary(block.getHeader()));
       }
       catch(ValidationException e)
@@ -320,8 +336,17 @@ public class SnowUserService extends UserServiceGrpc.UserServiceImplBase impleme
       {
         int shard_id = request.getShardId();
 
+        // shard_id comes straight from the client, so it can name a shard we don't track,
+        // for which there is no ingestor
+        BlockIngestor ingestor = node.getBlockIngestor(shard_id);
+        if (ingestor == null)
+        {
+          responseObserver.onError(new Exception("Not tracking shard " + shard_id));
+          return;
+        }
+
         utxo_root = UtxoUpdateBuffer.EMPTY;
-        BlockSummary summary = node.getBlockIngestor(shard_id).getHead();
+        BlockSummary summary = ingestor.getHead();
         if (summary != null)
         {
           utxo_root = new ChainHash(summary.getHeader().getUtxoRootHash());

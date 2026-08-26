@@ -35,6 +35,17 @@ public class Peerage
   /** min time before trying to reconnect to a specific port:host */
   public static final long RECONNECT_TIME = 300L * 1000L; //5 min
 
+  /**
+   * A peer's claimed height is only believed up to what could have been mined
+   * since our own head - allow for the chain running this many times faster than the
+   * target block rate, plus a fixed slack for the normal case of a fresh head.
+   */
+  public static final long PLAUSIBLE_RATE_FACTOR = 10L;
+  public static final int PLAUSIBLE_HEIGHT_SLACK = 100;
+
+  /** A claimed height has to be backed by this many connected peers to be believed */
+  public static final int CLAIM_CORROBORATION = 2;
+
   private static final Logger logger = Logger.getLogger("snowblossom.peering");
 
   private SnowBlossomNode node;
@@ -43,7 +54,6 @@ public class Peerage
   private Map<String, PeerInfo> peer_rumor_list;
   private ImmutableList<PeerInfo> self_peer_info;
 
-  private volatile BlockHeader highest_seen_header;
   private long last_random_close = System.currentTimeMillis();
 
   private final int desired_peer_count;
@@ -293,8 +303,7 @@ public class Peerage
             }
           }
         }
-      }
-    }
+      } }
 
     TreeMap<String, Integer> map = new TreeMap<>();
     for(String ver : ver_map.values())
@@ -317,18 +326,84 @@ public class Peerage
     }
   }
 
-  public void setHighestHeader(BlockHeader header)
+  /**
+   * Record what a peer claims its chain tip to be.
+   * a peer can mine a junk header at minimum difficulty claiming any height it likes.
+   * So filter for plausibility and make it expire with the peer rather than lasting until the
+   * process restarts.
+   */
+  public void setHighestHeader(PeerLink link, BlockHeader header)
   {
-    if (highest_seen_header == null) highest_seen_header = header;
-
-    if (highest_seen_header.getBlockHeight() < header.getBlockHeight())
+    int limit = getPlausibleHeightLimit();
+    if (header.getBlockHeight() > limit)
     {
-      highest_seen_header = header;
+      logger.log(Level.FINE, String.format("Peer %s claims implausible height %d (limit %d), ignoring",
+        link.getLinkId(), header.getBlockHeight(), limit));
+      return;
     }
+
+    link.setHighestSeenHeader(header);
   }
+
+  /**
+   * Highest block height that could plausibly exist on any chain right now, based on our
+   * own (validated) head and the target block rate.  Returns Integer.MAX_VALUE when we have
+   * no head to anchor on.
+   */
+  private int getPlausibleHeightLimit()
+  {
+    int anchor_height = 0;
+    long anchor_time = 0L;
+
+    for(int shard : node.getActiveShards())
+    {
+      BlockSummary head = node.getBlockIngestor(shard).getHead();
+      if (head != null)
+      {
+        if ((anchor_time == 0L) || (head.getHeader().getBlockHeight() > anchor_height))
+        {
+          anchor_height = head.getHeader().getBlockHeight();
+          anchor_time = head.getHeader().getTimestamp();
+        }
+      }
+    }
+    if (anchor_time == 0L) return Integer.MAX_VALUE;
+
+    long elapsed = System.currentTimeMillis() + node.getParams().getMaxClockSkewMs() - anchor_time;
+    if (elapsed < 0L) elapsed = 0L;
+
+    long limit = anchor_height
+      + (elapsed / node.getParams().getBlockTimeTarget()) * PLAUSIBLE_RATE_FACTOR
+      + PLAUSIBLE_HEIGHT_SLACK;
+
+    return (int) Math.min(limit, (long) Integer.MAX_VALUE);
+  }
+
+  /*
+   * Highest header we believe the network to be at, or null if no peer has told us anything.
+   */
   public BlockHeader getHighestSeenHeader()
   {
-    return highest_seen_header;
+    ArrayList<BlockHeader> claims = new ArrayList<>();
+
+    for(PeerLink link : getLinkList())
+    {
+      BlockHeader h = link.getHighestSeenHeader();
+      if (h != null) claims.add(h);
+    }
+    if (claims.size() == 0) return null;
+
+    // Sort by height descending and take the CLAIM_CORROBORATION'th one - the highest height
+    // that this many peers agree we are at or below
+    Collections.sort(claims, new Comparator<BlockHeader>() {
+      public int compare(BlockHeader a, BlockHeader b)
+      {
+        return Integer.compare(b.getBlockHeight(), a.getBlockHeight());
+      }
+    });
+
+    int idx = Math.min(CLAIM_CORROBORATION, claims.size()) - 1;
+    return claims.get(idx);
   }
 
   /** Sends tips related to a particular shard_id */

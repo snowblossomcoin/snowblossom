@@ -39,6 +39,9 @@ public class PeerLink implements StreamObserver<PeerMessage>
   private boolean got_first_tip = false;
   private PeerInfo peer_info; //set immediately when we are client, set eventually otherwise
 
+  /** Highest header this particular peer claims to have.  Unverified - see Peerage.setHighestHeader(). */
+  private volatile BlockHeader highest_seen_header;
+
   private Object plan_lock = new Object();
 
   // Set of hashes that we have some sort of a plan to get already
@@ -207,7 +210,8 @@ public class PeerLink implements StreamObserver<PeerMessage>
           mlog.set("head_shard", header.getShardId());
           mlog.set("head_height", header.getBlockHeight());
           considerBlockHeader(header, header.getShardId());
-          node.getPeerage().setHighestHeader(header);
+          // Attribute the claim to this link so it goes away when the link does
+          node.getPeerage().setHighestHeader(this, header);
         }
 
         // save first peer info as opposite side
@@ -258,7 +262,19 @@ public class PeerLink implements StreamObserver<PeerMessage>
             new ChainHash(blk.getHeader().getSnowHash()).toString() ));
           // will only open if we are actually interested in this shard
           node.openShard(blk.getHeader().getShardId());
-          if (node.getBlockIngestor(blk.getHeader().getShardId()).ingestBlock(blk))
+
+          // openShard() quietly does nothing for shards outside our interest set, so the
+          // ingestor can still be null here.
+          // Peer may not know what we follow - so drop the block instead of
+          // NPEing into catch(Throwable) below, which would close the link.
+          BlockIngestor ingestor = node.getBlockIngestor(blk.getHeader().getShardId());
+          if (ingestor == null)
+          {
+            mlog.set("untracked_shard", blk.getHeader().getShardId());
+            logger.fine(String.format("Ignoring block for shard %d, which we do not track",
+              blk.getHeader().getShardId()));
+          }
+          else if (ingestor.ingestBlock(blk))
           { // we could eat it, think about getting more blocks
             scanForBlocksToRequest(new ChainHash(blk.getHeader().getSnowHash()));
 
@@ -614,6 +630,22 @@ public class PeerLink implements StreamObserver<PeerMessage>
   public String getLinkId()
   {
     return link_id;
+  }
+
+  /** Highest header claimed by this peer, or null if it hasn't made a (believable) claim yet */
+  public BlockHeader getHighestSeenHeader()
+  {
+    return highest_seen_header;
+  }
+
+  /** Only within the life of this link */
+  public void setHighestSeenHeader(BlockHeader header)
+  {
+    BlockHeader prev = highest_seen_header;
+    if ((prev == null) || (prev.getBlockHeight() < header.getBlockHeight()))
+    {
+      highest_seen_header = header;
+    }
   }
 
   /**
