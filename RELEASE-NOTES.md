@@ -1,7 +1,11 @@
+## master
+
+* Shackleton major overhaul (thanks dcct)
+* Bug fix - Closing get peer list call in user grpc service correctly
+* Bug fix - Apply a max coin value to outputs
+
 ## 2.2
 
-* Shackleton overhaul
-* Some minor bugfixes
 * Fix Shackleton rich list to use less memory during computation (#213)
 * Add signed trustnet information to PeerInfo messages
 * Add gRPC call for get Peer Info for light clients
