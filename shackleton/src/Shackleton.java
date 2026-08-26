@@ -3,10 +3,7 @@ package snowblossom.shackleton;
 import duckutil.Config;
 import duckutil.ConfigFile;
 import duckutil.PeriodicThread;
-import duckutil.TimeRecord;
 import io.grpc.ManagedChannel;
-import java.io.ByteArrayOutputStream;
-import java.io.PrintStream;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import snowblossom.client.GetUTXOUtil;
@@ -34,33 +31,35 @@ public class Shackleton
       System.exit(-1);
     }
 
-    ConfigFile config = new ConfigFile(args[0],"snowblossom_");
+    ConfigFile config = new ConfigFile(args[0], "snowblossom_");
 
     LogSetup.setup(config);
 
     new Shackleton(config);
-
   }
 
-  private Config config;
+  private final Config config;
+  private final long start_time;
   private WebServer web_server;
   private UserServiceStub asyncStub;
   private UserServiceBlockingStub blockingStub;
   private GetUTXOUtil get_utxo_util;
   private NetworkParams params;
   private HealthStats health_stats;
-  private StuffCache stuff_cache;
-
-  private VoteTracker vote_tracker;
+  private ChainCache cache;
+  private ChainIndex index;
+  private TxLocator tx_locator;
+  private MiningStats mining_stats;
+  private MempoolIndex mempool_index;
+  private HistoryStats history_stats;
   private RichList rich_list;
-
-  private volatile String rich_list_report = "not computed yet";
+  private java.io.File richlist_cache;
 
   public Shackleton(Config config)
     throws Exception
   {
     this.config = config;
-
+    this.start_time = System.currentTimeMillis();
 
     params = NetworkParams.loadFromConfig(config);
 
@@ -70,70 +69,67 @@ public class Shackleton
     blockingStub = UserServiceGrpc.newBlockingStub(channel);
     get_utxo_util = new GetUTXOUtil(new StubHolder(channel), params);
 
-    stuff_cache = new StuffCache(this);
-
+    cache = new ChainCache(this);
+    index = new ChainIndex(this, config.getIntWithDefault("index_depth", 300));
+    tx_locator = new TxLocator(this);
     rich_list = new RichList(params, blockingStub, get_utxo_util);
-
-    vote_tracker=new VoteTracker(this);
-    vote_tracker.start();
-
+    mining_stats = new MiningStats(this, config.getIntWithDefault("mining_look_back", 1000));
+    history_stats = new HistoryStats(this, config.getIntWithDefault("history_days", 365));
     health_stats = new HealthStats(this);
+    mempool_index = new MempoolIndex(this);
 
     web_server = new WebServer(config, this);
 
-    new RichListUpdateThread().start();
-
+    index.start();
+    mining_stats.start();
+    mempool_index.start();
+    history_stats.start();
+    richlist_cache = new java.io.File(config.getWithDefault("richlist_cache_file", "shackleton-richlist.cache"));
+    rich_list.load(richlist_cache);
+    new RichListUpdateThread(config.getIntWithDefault("richlist_interval_min", 45)).start();
   }
 
-  public UserServiceBlockingStub getStub()
-  {
-    return blockingStub;
-  }
+  public Config getConfig() { return config; }
+  public long getStartTime() { return start_time; }
+  public UserServiceBlockingStub getStub() { return blockingStub; }
+  public UserServiceStub getAsyncStub() { return asyncStub; }
+  public NetworkParams getParams() { return params; }
+  public GetUTXOUtil getUtxoUtil() { return get_utxo_util; }
+  public HealthStats getHealthStats() { return health_stats; }
+  public ChainCache getCache() { return cache; }
+  public ChainIndex getIndex() { return index; }
+  public TxLocator getTxLocator() { return tx_locator; }
+  public MiningStats getMiningStats() { return mining_stats; }
+  public MempoolIndex getMempoolIndex() { return mempool_index; }
+  public HistoryStats getHistoryStats() { return history_stats; }
+  public RichList getRichList() { return rich_list; }
 
-  public NetworkParams getParams()
-  {
-    return params;
-  }
-  public VoteTracker getVoteTracker(){return vote_tracker;}
-  public GetUTXOUtil getUtxoUtil(){ return get_utxo_util;}
-  public HealthStats getHealthStats() {return health_stats;}
-  public StuffCache getStuffCache(){ return stuff_cache;}
-
-  public String getRichListReport(){return rich_list_report;}
-
-  public long getTotalValue() throws Exception {return rich_list.getTotalValue();}
-
+  public long getTotalValue() throws Exception { return rich_list.getTotalValue(); }
 
   public class RichListUpdateThread extends PeriodicThread
   {
-    public RichListUpdateThread()
+    public RichListUpdateThread(int interval_min)
     {
-      super(45L * 60L * 1000L);
+      super(Math.max(5, interval_min) * 60L * 1000L);
       setName("RichListUpdateThread");
       setDaemon(true);
     }
 
     public void runPass() throws Exception
     {
-      sleep(5000L);
+      // let the chain index come up first so the first page loads are fast
+      for (int i = 0; (i < 60) && !index.isReady(); i++) sleep(1000L);
       logger.info("Started rich list update");
-      //TimeRecord tr = new TimeRecord();
-      //TimeRecord.setSharedRecord(tr);
-
-      ByteArrayOutputStream b_out = new ByteArrayOutputStream();
-      PrintStream p_out = new PrintStream(b_out);
-
-      rich_list.print(p_out);
-      p_out.close();
-
-      rich_list_report = new String(b_out.toByteArray());
-
+      try
+      {
+        RichList.Result r = rich_list.compute();
+        rich_list.save(r, richlist_cache);
+      }
+      catch (Throwable t)
+      {
+        logger.log(Level.WARNING, "Rich list update failed: " + t, t);
+      }
       logger.info("Completed rich list update");
-      //TimeRecord.setSharedRecord(null);
-      //tr.printReport(System.out);
-
-
     }
-
   }
 }

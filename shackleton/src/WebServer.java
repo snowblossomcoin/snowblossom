@@ -1,987 +1,533 @@
 package snowblossom.shackleton;
 
 import com.google.protobuf.ByteString;
-import com.google.protobuf.util.JsonFormat;
 import duckutil.Config;
-import duckutil.LRUCache;
-import duckutil.SoftLRUCache;
 import duckutil.webserver.DuckWebServer;
 import duckutil.webserver.WebContext;
 import duckutil.webserver.WebHandler;
-import java.io.PrintStream;
 import java.io.InputStream;
-import java.net.URLConnection;
-import java.math.RoundingMode;
-import java.net.URLDecoder;
-import java.text.DecimalFormat;
-import java.text.SimpleDateFormat;
 import java.util.HashSet;
-import java.util.Date;
 import java.util.LinkedList;
 import java.util.Map;
-import java.util.TreeMap;
 import java.util.TreeSet;
-import java.util.TimeZone;
+import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import net.minidev.json.JSONObject;
 import snowblossom.lib.*;
 import snowblossom.proto.*;
-import net.minidev.json.JSONObject;
-
+import snowblossom.shackleton.WebUtil.NotFoundException;
+import snowblossom.shackleton.WebUtil.RedirectException;
 
 public class WebServer implements WebHandler
 {
   private static final Logger logger = Logger.getLogger("snowblossom.shackleton");
-  private Shackleton shackleton;
+  private final Shackleton shackleton;
+  private final ApiHandler api;
 
-  private LRUCache<ChainHash, String> block_summary_lines = new LRUCache<>(10000);
-  private SoftLRUCache<ChainHash, BlockSummary> block_summary_cache = new SoftLRUCache<>(256 * 50);
+  private static final Pattern SHARD_HEIGHT = Pattern.compile("^(?:s|shard\\s*)?(\\d+)\\s*(?:[:/h]|\\s+height\\s+|\\s+h\\s*|\\s+)\\s*(\\d+)$", Pattern.CASE_INSENSITIVE);
 
   public WebServer(Config config, Shackleton shackleton)
     throws Exception
   {
     this.shackleton = shackleton;
+    this.api = new ApiHandler(shackleton);
 
     config.require("port");
     String host = null;
     int port = config.getInt("port");
-    int threads = 32;
+    int threads = config.getIntWithDefault("web_threads", 32);
 
-    new DuckWebServer(host, port, this, 32);
-
+    new DuckWebServer(host, port, this, threads);
+    logger.info("Explorer web server listening on port " + port);
   }
-
-  public void staticHandle(WebContext t)
-    throws Exception
-  {
-    String path = t.getURI().getPath();
-
-    path = path.substring(8); // remove the "/static/" 
-    
-    InputStream in = Shackleton.class.getResourceAsStream( "/shackleton/webstatic/" + path );
-    if (in == null)
-    {
-      t.setContentType("text/plain");
-      t.out().println("No resource: " + path);
-      return;
-    }
-    else
-    {
-      String mime_type = Mimer.guessContentType(path);
-      if (mime_type != null)
-      {
-        t.setContentType(mime_type);
-      }
-      
-      byte[] buff = new byte[8192];
-
-      while(true)
-      {
-        int r = in.read(buff);
-        if (r < 0) break;
-        t.out().write(buff,0,r);
-      }
-      in.close();
-      t.out().flush();
-      
-      t.setHttpCode(200);
-
-
-    }
-  }
-
-  public void apiHandle(WebContext t)
-    throws Exception
-  {
-    String path = t.getURI().getPath();
-
-    if (path.equals("/api") || path.equals("/api/"))
-    {
-      t.setContentType("text/html");
-      t.getExchange().getResponseHeaders().add("Content-Language", "en-US");
-      addHeader(t.out());
-      t.out().println("<H2>APIs</H2>");
-      t.out().println("<li><a href='/api/total_coins'>total_coins</a></li>");
-      t.out().println("<li><a href='/api/total_coins_json'>total_coins_json</a></li>");
-      t.out().println("<li><a href='/api/recent_json_graph'>recent_json_graph</a></li>");
-      t.out().println("<li><a href='/api/health_stats'>health_stats</a></li>");
-      t.out().println("<li><a href='/api/block_info_by_height/S/N'>block_info for block height N in shard S</a></li>");
-      addFooter(t.out());
-      t.setHttpCode(200);
-      return;
-    }
-
-    if (path.equals("/api/total_coins"))
-    {
-      t.setContentType("text/plain");
-      long total_value = shackleton.getTotalValue();
-      DecimalFormat df = new DecimalFormat("0.000000");
-      t.out().println(df.format(total_value / 1e6));
-      t.setHttpCode(200);
-      return;
-    }
-    if (path.equals("/api/recent_json_graph"))
-    {
-      t.setContentType("application/json");
-      t.setHttpCode(200);
-      t.out().println(getNetworkGraph(10));
-
-      return;
-    }
-    if (path.equals("/api/health_stats"))
-    {
-      t.setContentType("application/json");
-      t.setHttpCode(200);
-      t.out().println( shackleton.getHealthStats().getHealthStats() );
-      return;
-    }
-    if (path.equals("/api/total_coins_json"))
-    {
-      t.setContentType("application/json");
-      long total_value = shackleton.getTotalValue();
-      double coins = total_value / 1e6;
-      JSONObject obj = new JSONObject();
-      obj.put("total_coins", coins);
-      t.out().println(obj);
-      t.setHttpCode(200);
-      return;
-    }
-    if (path.startsWith("/api/block_info_by_height/"))
-    {
-      t.setContentType("application/json");
-
-      int shard = Integer.parseInt(path.split("/")[3]);
-      int height = Integer.parseInt(path.split("/")[4]);
-      JSONObject obj = new JSONObject();
-
-      BlockHeader blk_head = shackleton.getStub().getBlockHeader(
-        RequestBlockHeader.newBuilder()
-          .setBlockHeight(height)
-          .setShardId(shard)
-          .build()
-        );
-
-      if (blk_head == null)
-      {
-        throw new Exception("Unable to find a block for shard " + shard + " height " + height);
-      }
-      BlockSummary blk_summary = shackleton.getStub().getBlockSummary(
-        RequestBlockSummary.newBuilder()
-          .setBlockHash(blk_head.getSnowHash())
-          .build()
-        );
-
-      Block blk = shackleton.getStub().getBlock(RequestBlock.newBuilder().setBlockHash(blk_head.getSnowHash()).build());
-
-      obj.put("block_info", getBlockJson(blk_summary, blk_head, blk));
-
-      t.out().println(obj);
-      t.setHttpCode(200);
-      return;
-
-    }
-
-    t.setHttpCode(404);
-
-  }
-
-  public JSONObject getNetworkGraph(int blocks_back)
-  {
-    NodeStatus node_status = shackleton.getStub().getNodeStatus(QueryUtil.nr());
-    Map<Integer, BlockHeader> head_map = shackleton.getStuffCache().getNetShardHeaderMap(node_status);
-
-    TreeSet<Integer> shards = new TreeSet<>();
-    shards.addAll(head_map.keySet());
-
-    HashSet<ChainHash> included_blocks = new HashSet<>();
-    LinkedList<BlockHeader> block_list = new LinkedList<>();
-
-
-    for(int shard : shards)
-    {
-      int count_in_shard = 0;
-      BlockHeader head = head_map.get(shard);
-      while(
-        (head != null) && 
-        (head.getSnowHash().size() > 0) && 
-        (count_in_shard < blocks_back) &&
-        (!included_blocks.contains(new ChainHash(head.getSnowHash())))
-        )
-      {
-        ChainHash hash = new ChainHash(head.getSnowHash());
-        included_blocks.add(hash);
-        block_list.add(head);
-
-        if (head.getBlockHeight() == 0) head = null;
-        else
-        {
-          head = shackleton.getStuffCache().getBlockHeader( new ChainHash(head.getPrevBlockHash()));
-        }
-        count_in_shard++;
-
-      }
-
-    }
-
-    return GraphOutput.getGraph(block_list);
- 
-  }
-
-    public void innerHandle(WebContext t, PrintStream out)
-      throws Exception
-    {
-      NetworkParams params = shackleton.getParams();
-      String query = t.getURI().getQuery();
-      logger.info("Web request: " + t.getURI() + " from " + t.getExchange().getRemoteAddress());
-      if ((query != null) && (query.startsWith("search=")))
-      {
-        int eq = query.indexOf("=");
-        String search = query.substring(eq+1);
-
-        search = URLDecoder.decode(search.replace('+', ' '), "UTF-8").trim();
-
-        // case: main page
-        if (search.length() == 0)
-        {
-          displayStatus(out);
-          return;
-        }
-
-
-        if (search.startsWith("load-"))
-        {
-          //try
-          {
-            displayAjax(out, Integer.parseInt(search.substring(5)));
-            return;
-          }
-        }
-
-        if (search.equals("richlist"))
-        {
-          displayRichList(out);
-          return;
-        }
-
-        try
-        {
-          int block_num = Integer.parseInt(search);
-          if (block_num >= 0)
-          {
-            displayBlockByNumber(out, block_num);
-            return;
-          }
-        }
-        catch(Throwable e){}
-
-        // case: display block
-        if (search.length()== Globals.BLOCKCHAIN_HASH_LEN*2)
-        {
-          ChainHash hash = null;
-          try
-          {
-            hash = new ChainHash(search);
-
-          }
-          catch(Throwable e){}
-          if (hash != null)
-          {
-            displayHash(out, hash);
-            return;
-          }
-        }
-
-        AddressSpecHash address = null;
-        try
-        {
-          address = AddressUtil.getHashForAddress(params.getAddressPrefix(), search);
-        }
-        catch(Throwable e){}
-        if (address == null)
-        {
-          if (search.length()== Globals.ADDRESS_SPEC_HASH_LEN*2)
-          {
-            try
-            {
-              address = new AddressSpecHash(search);
-            }
-            catch(Throwable e){}
-          }
-        }
-        // case: address
-        if (address != null)
-        {
-          displayAddress(out, address);
-          return;
-        }
-
-
-        if (displayNameIdentifiers(out, search))
-        {
-          return;
-        }
-
-        // case: unknown
-        displayUnexpectedStatus(out);
-      }
-      else
-      {
-        displayStatus(out);
-      }
-
-    }
-
-  private boolean displayNameIdentifiers(PrintStream out, String search)
-    throws ValidationException
-  {
-
-    TxOutList lst_chan = shackleton.getStub().getIDList(
-      RequestNameID.newBuilder()
-        .setNameType(RequestNameID.IdType.CHANNELNAME)
-        .setName(ByteString.copyFrom(search.getBytes()))
-        .build());
-
-    TxOutList lst_user = shackleton.getStub().getIDList(
-      RequestNameID.newBuilder()
-        .setNameType(RequestNameID.IdType.USERNAME)
-        .setName(ByteString.copyFrom(search.getBytes()))
-        .build());
-
-    if (lst_chan.getOutListCount() + lst_user.getOutListCount() == 0) return false;
-
-    if (lst_chan.getOutListCount() > 0)
-    {
-      out.println("<H3>Channels</H3>");
-      for(TxOutPoint op : lst_chan.getOutListList())
-      {
-        Transaction tx = shackleton.getStub().getTransaction( RequestTransaction.newBuilder().setTxHash(op.getTxHash()).build());
-        displayTransaction(out, tx);
-      }
-    }
-    if (lst_user.getOutListCount() > 0)
-    {
-      out.println("<H3>Users</H3>");
-      for(TxOutPoint op : lst_user.getOutListList())
-      {
-        Transaction tx = shackleton.getStub().getTransaction( RequestTransaction.newBuilder().setTxHash(op.getTxHash()).build());
-        displayTransaction(out, tx);
-      }
-    }
-
-    return true;
-
-
-  }
-
-  private void displayUnexpectedStatus(PrintStream out)
-  {
-    out.println("<div>No results</div>");
-  }
-
-  private void displayStatus(PrintStream out)
-  {
-    NetworkParams params = shackleton.getParams();
-    NodeStatus node_status = shackleton.getStub().getNodeStatus(QueryUtil.nr());
-    out.println("<h2>Node Status</h2>");
-    out.println("<pre>");
-    out.println("mem_pool_size: " + node_status.getMemPoolSize());
-    out.println("connected_peers: " + node_status.getConnectedPeers());
-    out.println("estimated_nodes: " + node_status.getEstimatedNodes());
-    out.println("</pre>");
-
-    BlockSummary summary = node_status.getHeadSummary();
-    BlockHeader header = summary.getHeader();
-    out.println("<h2>Braid Status</h2>");
-
-    printBraidHeads(out, node_status);
-    printBraidSummary(out, node_status);
-    //printBraidStatus(out, node_status);
-
-    out.println("<h2>Chain Status</h2>");
-    out.println("<pre>");
-
-    SnowFieldInfo sf = params.getSnowFieldInfo(summary.getActivatedField());
-    SnowFieldInfo next_sf = params.getSnowFieldInfo(summary.getActivatedField() + 1);
-    double previous_diff = PowUtil.getDiffForTarget(sf.getActivationTarget());
-    double avg_diff = PowUtil.getDiffForTarget(BlockchainUtil.readInteger(summary.getTargetAverage()));
-    double next_diff = PowUtil.getDiffForTarget(next_sf.getActivationTarget());
-    int percent_to_next_field = (int)Math.max(0, Math.round(100 * (avg_diff-previous_diff) / (next_diff-previous_diff)));
-
-    out.println("work_sum: " + summary.getWorkSum());
-    out.println("blocktime_average_ms: " + summary.getBlocktimeAverageMs());
-    out.println("activated_field: " + summary.getActivatedField() + " " + sf.getName() + " (" + percent_to_next_field + "% to " + Math.round(next_diff) + ")");
-    out.println("block_height: " + header.getBlockHeight());
-    out.println("total_transactions: " + summary.getTotalTransactions());
-
-
-
-    double target_diff = PowUtil.getDiffForTarget(BlockchainUtil.targetBytesToBigInteger(header.getTarget()));
-    double block_time_sec = summary.getBlocktimeAverageMs() / 1000.0 ;
-    double estimated_hash = Math.pow(2.0, target_diff) / block_time_sec / 1e6;
-    DecimalFormat df =new DecimalFormat("0.000");
-    df.setRoundingMode(RoundingMode.FLOOR);
-
-    out.println(String.format("difficulty (avg): %s (%s)", df.format(target_diff), df.format(avg_diff)));
-    out.println(String.format("estimated network hash rate: %s Mh/s", df.format(estimated_hash)));
-    out.println("Node version: " + HexUtil.getSafeString(node_status.getNodeVersion()));
-    out.println("Version counts:");
-    for(Map.Entry<String, Integer> me : node_status.getVersionMap().entrySet())
-    {
-      String version = HexUtil.getSafeString(me.getKey());
-      int count = me.getValue();
-      out.println("  " + version + " - " + count);
-    }
-
-    out.println("</pre>");
-
-    out.println("<h2>Calculator</h2>");
-    out.println("<table style='width: 270px;'><tr><td>Hashrate</td><td><input type='text' id='hashrate' size=12 onChange='updateCalc();' onkeyup='updateCalc();'> kH/s</td></tr>");
-    out.println("<tr><td>Per Hour</td><td><input type='text' id='hash1' value='0' size=12 disabled> Snow</td></tr>");
-    out.println("<tr><td>Per Day</td><td><input type='text' id='hash2' value='0' size=12 disabled> Snow</td></tr>");
-    out.println("<tr><td>Per Month</td><td><input type='text' id='hash3' value='0' size=12 disabled> Snow</td></tr>");
-    out.println("</table>");
-    out.println("<script>window.avgdiff=" + df.format(avg_diff) + ";</script>");
-
-    out.println("<h2>Vote Status</h2>");
-    out.println("<pre>");
-    shackleton.getVoteTracker().getVotingReport(node_status, out);
-    out.println("</pre>");
-
-    out.println("<h2>Rich List</h2>");
-    out.println("<pre><a href='?search=richlist'>Rich List Report</a></pre>");
-    
-    out.println("<h2>Visualization</h2>");
-    out.println("<pre><a href='/static/shard-visual.html'>Shard Visualization</a></pre>");
-
-    out.println("<h2>APIs</h2>");
-    out.println("<pre><a href='/api'>APIs</a></pre>");
-
-    out.println("<h2>Recent Blocks</h2>");
-    int min = Math.max(0, header.getBlockHeight()-75);
-
-    out.println("<table class='table table-hover' id='blocktable'>");
-    out.println("<thead><tr><th>Shard</th><th>Height</th><th>Hash</th><th>Tx</th><th>Size</th><th>Imp</th><th>Miner</th><th>Remark</th><th>Timestamp</th></tr></thead>");
-
-    for(int h=header.getBlockHeight(); h>=min; h--)
-    {
-      BlockHeader blk_head = shackleton.getStub().getBlockHeader(RequestBlockHeader.newBuilder().setBlockHeight(h).build());
-      ChainHash hash = new ChainHash(blk_head.getSnowHash());
-      out.println(getBlockSummaryLine(hash));
-    }
-    out.println("</table>");
-    out.println("<a onclick='loadMore();' id='lmore'>Show more ...</a>");
-    out.println("<script> window.lastblock=" + (min - 1) + "; </script>");
-  }
-
-  private void displayAjax(PrintStream out, int endblock)
-  {
-    int min=endblock - 100;
-    for(int h=endblock; h > min; h--)
-    {
-      BlockHeader blk_head = shackleton.getStub().getBlockHeader(RequestBlockHeader.newBuilder().setBlockHeight(h).build());
-      if (blk_head == null) break;
-      if (blk_head.getSnowHash().size() == 0) break;
-      ChainHash hash = new ChainHash(blk_head.getSnowHash());
-      out.println(getBlockSummaryLine(hash));
-    }
-  }
-
-  private void printChainSummary(BlockSummary summary, PrintStream out)
-  {
-    NetworkParams params = shackleton.getParams();
-
-    BlockHeader header = summary.getHeader();
-    out.println(String.format("<h3>Shard: %d</h3>", header.getShardId()));
-    out.println("<pre>");
-
-    SnowFieldInfo sf = params.getSnowFieldInfo(summary.getActivatedField());
-    SnowFieldInfo next_sf = params.getSnowFieldInfo(summary.getActivatedField() + 1);
-    double previous_diff = PowUtil.getDiffForTarget(sf.getActivationTarget());
-    double avg_diff = PowUtil.getDiffForTarget(BlockchainUtil.readInteger(summary.getTargetAverage()));
-    double next_diff = PowUtil.getDiffForTarget(next_sf.getActivationTarget());
-    int percent_to_next_field = (int)Math.max(0, Math.round(100 * (avg_diff-previous_diff) / (next_diff-previous_diff)));
-
-    out.println("work_sum: " + summary.getWorkSum());
-    out.println("blocktime_average_ms: " + summary.getBlocktimeAverageMs());
-    out.println("activated_field: " + summary.getActivatedField() + " " + sf.getName() + " (" + percent_to_next_field + "% to " + Math.round(next_diff) + ")");
-    out.println("total_transactions: " + summary.getTotalTransactions());
-
-
-    double target_diff = PowUtil.getDiffForTarget(BlockchainUtil.targetBytesToBigInteger(header.getTarget()));
-    double block_time_sec = summary.getBlocktimeAverageMs() / 1000.0 ;
-    double estimated_hash = Math.pow(2.0, target_diff) / block_time_sec / 1e6;
-    DecimalFormat df =new DecimalFormat("0.000");
-    df.setRoundingMode(RoundingMode.FLOOR);
-
-    out.println(String.format("difficulty (avg): %s (%s)", df.format(target_diff), df.format(avg_diff)));
-    out.println(String.format("estimated network hash rate: %s Mh/s", df.format(estimated_hash)));
-    long tx_size_average = summary.getTxSizeAverage();
-    out.println("Size average of transactions: " + tx_size_average);
- 
-    out.println("</pre>");
-  }
-
-  public JSONObject getBlockJson(BlockSummary summary, BlockHeader bh, Block blk)
-  {
-    JSONObject info = new JSONObject();
-
-    SnowFieldInfo sf = shackleton.getParams().getSnowFieldInfo(summary.getActivatedField());
-    double previous_diff = PowUtil.getDiffForTarget(sf.getActivationTarget());
-    double avg_diff = PowUtil.getDiffForTarget(BlockchainUtil.readInteger(summary.getTargetAverage()));
-    double block_diff = PowUtil.getDiffForTarget(BlockchainUtil.targetBytesToBigInteger(bh.getSnowHash()));
-    double target_diff = PowUtil.getDiffForTarget(BlockchainUtil.targetBytesToBigInteger(bh.getTarget()));
-    double block_time_sec = summary.getBlocktimeAverageMs() / 1000.0 ;
-    double estimated_hash = Math.pow(2.0, target_diff) / block_time_sec;
-
-
-    ChainHash hash = new ChainHash(bh.getSnowHash());
-    info.put("hash", hash.toString());
-    info.put("shard", bh.getShardId());
-    info.put("timestamp", bh.getTimestamp());
-    info.put("height", bh.getBlockHeight());
-    info.put("snow_field", bh.getSnowField());
-    info.put("version", bh.getVersion());
-    info.put("avg_diff", avg_diff);
-    info.put("block_diff", block_diff);
-    info.put("target_diff", target_diff);
-    info.put("estimated_hash", estimated_hash);
-
-    TransactionInner inner = TransactionUtil.getInner(blk.getTransactions(0));
-    String remark = HexUtil.getSafeString(inner.getCoinbaseExtras().getRemarks());
-    info.put("remark", remark);
-    
-    if (bh.getVersion() >= 2)
-    {
-      info.put("tx_count",bh.getTxCount());
-      info.put("tx_data", bh.getTxDataSizeSum());
-
-    }
-    info.put("blocktime_average_ms", summary.getBlocktimeAverageMs());
-
-
-    return info;
-
-  }
-
-  private String getBlockSummaryLine(ChainHash hash)
-  {
-    synchronized(block_summary_lines)
-    {
-      if (block_summary_lines.containsKey(hash))
-      {
-        return block_summary_lines.get(hash);
-      }
-    }
-
-    NetworkParams params = shackleton.getParams();
-
-    int tx_count = 0;
-    int size = 0;
-    String link = String.format(" <a href='/?search=%s'> %s </a>", hash, hash.toString());
-
-    Block blk = shackleton.getStub().getBlock(RequestBlock.newBuilder().setBlockHash(hash.getBytes()).build());
-    tx_count = blk.getTransactionsCount();
-    size = blk.toByteString().size();
-
-    TransactionInner inner = TransactionUtil.getInner(blk.getTransactions(0));
-
-    String miner_addr = AddressUtil.getAddressString(params.getAddressPrefix(), new AddressSpecHash(inner.getOutputs(0).getRecipientSpecHash()));
-    String remark = HexUtil.getSafeString(inner.getCoinbaseExtras().getRemarks());
-    String miner = miner_addr;
-    if (remark.length() > 0)
-    {
-      miner = miner_addr;
-    }
-
-    SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm");
-    sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
-
-    Date resultdate = new Date(blk.getHeader().getTimestamp());
-    int import_count = 0;
-    for(BlockImportList bil : blk.getHeader().getShardImportMap().values())
-    {
-      import_count += bil.getHeightMap().size();
-
-    }
-
-    String s = String.format("<tr><td>%d</td><td>%d</td><td>%s</td><td>%d</td><td>%s</td><td>%d</td><td>%s</td><td>%s</td><td>%s</td></tr>",
-        blk.getHeader().getShardId(),
-        blk.getHeader().getBlockHeight(),
-        link,
-        tx_count, ((int)(size / 1024)) + "kB",
-        import_count,
-        "<a href='/?search=" + miner + "'>" + miner + "</a>", remark, sdf.format(resultdate) + " UTC");
-
-    synchronized(block_summary_lines)
-    {
-      block_summary_lines.put(hash, s);
-    }
-    return s;
-  }
-
-  private void displayBlockByNumber(PrintStream out, int block_number)
-    throws ValidationException
-  {
-
-    BlockHeader blk_head = shackleton.getStub().getBlockHeader(RequestBlockHeader.newBuilder().setBlockHeight(block_number).build());
-
-    ChainHash hash = new ChainHash(blk_head.getSnowHash());
-    displayHash(out, hash);
-
-  }
-
-  private void displayHash(PrintStream out, ChainHash hash)
-    throws ValidationException
-  {
-    Block blk = shackleton.getStub().getBlock( RequestBlock.newBuilder().setBlockHash(hash.getBytes()).build());
-    if ((blk!=null) && (blk.getHeader().getVersion() != 0))
-    {
-      displayBlock(out, blk);
-    }
-    else
-    {
-      Transaction tx = shackleton.getStub().getTransaction( RequestTransaction.newBuilder().setTxHash(hash.getBytes()).build());
-      if (tx.getInnerData().size() > 0)
-      {
-        displayTransaction(out, tx);
-      }
-      else
-      {
-        out.println("Found nothing for hash: " + hash);
-      }
-
-    }
-
-  }
-
-  private void displayRichList(PrintStream out)
-  {
-    out.println("<pre>");
-    out.println(shackleton.getRichListReport());
-    out.println("</pre>");
-
-  }
-  private void displayAddress(PrintStream out, AddressSpecHash address)
-  {
-    NetworkParams params = shackleton.getParams();
-    new AddressPage(out, address, params, shackleton.getStub(), true, shackleton.getUtxoUtil()).render();
-  }
-
-  private void displayBlock(PrintStream out, Block blk)
-    throws ValidationException
-  {
-    BlockHeader header = blk.getHeader();
-    out.println("<pre>");
-    out.println("shard: "+ header.getShardId());
-    out.println("hash: " + new ChainHash(header.getSnowHash()));
-    out.println("height: " + header.getBlockHeight());
-    out.println("prev_block_hash: " + new ChainHash(header.getPrevBlockHash()));
-    out.println("utxo_root_hash: " + new ChainHash(header.getUtxoRootHash()));
-
-    SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm");
-    sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
-    Date resultdate = new Date(header.getTimestamp());
-    out.println("timestamp: " + header.getTimestamp() + " :: " + sdf.format(resultdate) + " UTC");
-    out.println("snow_field: " + header.getSnowField());
-    out.println("size: " + blk.toByteString().size());
-    out.println("</pre>");
-    out.println();
-
-    if (header.getShardImportMap().size() > 0)
-    {
-    out.println("<h3>Block Imports</h3>");
-
-    for(Map.Entry<Integer, BlockImportList> bil : header.getShardImportMap().entrySet())
-    {
-      int imp_shard = bil.getKey();
-      for(Map.Entry<Integer, ByteString> me : bil.getValue().getHeightMap().entrySet())
-      {
-        int imp_height = me.getKey();
-        ChainHash imp_hash = new ChainHash(me.getValue());
-    
-        String link = String.format("<a href='/?search=%s'> %s </a>", imp_hash, imp_hash.toString());
-
-        out.println(String.format("<li>s:%d h:%d %s</li>",
-          imp_shard,
-          imp_height,
-          link));
-      }
-
-    }
-    }
-
-    out.flush();
-
-    for(Transaction tx : blk.getTransactionsList()) 
-    {
-      TransactionUtil.prettyDisplayTxHTML(tx, out, shackleton.getParams());
-      out.println();
-    }
-  }
-
-
-  private void printBraidSummary(PrintStream out, NodeStatus ns)
-  {
-    TreeSet<Integer> shards = new TreeSet<>();
-    Map<Integer, BlockSummary> bs_map = getShardSummaryMap(ns);
-    shards.addAll(ns.getShardHeadMap().keySet());
-    for(int shard : shards)
-    {
-      BlockSummary bs_shard_head = bs_map.get(shard);
-      if (bs_shard_head != null)
-      {
-        printChainSummary(bs_shard_head, out);
-      }
-
-    }
-
-  }
-
-  private Map<Integer, BlockSummary> getShardSummaryMap(NodeStatus ns)
-  {
-    TreeMap<Integer, BlockSummary> out = new TreeMap<>();
-    for(Map.Entry<Integer, ByteString> me : ns.getShardHeadMap().entrySet())
-    {
-      int shard = me.getKey();
-      ChainHash hash = new ChainHash(me.getValue());
-      BlockSummary bs = getBlockSummary(hash);
-      if (bs != null)
-      {
-        out.put(shard,bs);
-      }
-
-    }
-    return out;
-
-  }
-
-  private void printBraidHeads(PrintStream out, NodeStatus ns)
-  {
-
-    Map<Integer, BlockSummary> bs_map = getShardSummaryMap(ns);
-    TreeSet<Integer> shards = new TreeSet<>();
-    shards.addAll(bs_map.keySet());
-    System.out.println("Shard heads: " + shards + " " + bs_map.keySet());
-
-    HashSet<ChainHash> included_blocks = new HashSet<>();
-    out.println("<table class='table table-hover' id='braidtable'>");
-    out.println("<thead><tr><th>Shard</th><th>Height</th><th>Hash</th><th>Tx</th><th>Size</th><th>Imp</th><th>Miner</th><th>Remark</th><th>Timestamp</th></tr></thead>");
-
-    
-
-    for(int shard : shards)
-    {
-      BlockSummary bs_shard_head = bs_map.get(shard);
-
-      BlockSummary bs = bs_shard_head;
-      if (bs != null)
-      {
-        ChainHash hash = new ChainHash(bs.getHeader().getSnowHash());
-        included_blocks.add(hash);
-        out.println(getBlockSummaryLine(hash));
-
-        if (bs.getHeader().getBlockHeight() == 0) bs = null;
-        else
-        {
-          bs = getBlockSummary( new ChainHash(bs.getHeader().getPrevBlockHash()));
-        }
-
-      }
-
-    }
-    out.println("</table>");
-
-  }
-
-
-  private void printBraidStatus(PrintStream out, NodeStatus ns)
-  {
-    long tx_count_1h = 0;
-    long look_back_time_1h = 1L * 3600L * 1000L;
-    long start_time_1h = System.currentTimeMillis() - look_back_time_1h;
-
-    Map<Integer, BlockSummary> bs_map = getShardSummaryMap(ns);
-    TreeSet<Integer> shards = new TreeSet<>();
-    shards.addAll(bs_map.keySet());
-    System.out.println("Shard list: " + shards);
-
-    HashSet<ChainHash> included_blocks = new HashSet<>();
-    out.println("<table class='table table-hover' id='blocktable'>");
-    out.println("<thead><tr><th>Shard</th><th>Height</th><th>Hash</th><th>Tx</th><th>Size</th><th>Imp</th><th>Miner</th><th>Remark</th><th>Timestamp</th></tr></thead>");
-
-
-    for(int shard : shards)
-    {
-      BlockSummary bs_shard_head = bs_map.get(shard);
-
-      BlockSummary bs = bs_shard_head;
-      while(
-        (bs != null) && 
-        (bs.getHeader().getTimestamp() >= start_time_1h) &&
-        (!included_blocks.contains(new ChainHash(bs.getHeader().getSnowHash())))
-        )
-      {
-        ChainHash hash = new ChainHash(bs.getHeader().getSnowHash());
-        included_blocks.add(hash);
-        tx_count_1h += bs.getBlockTxCount();
-        out.println(getBlockSummaryLine(hash));
-
-
-        if (bs.getHeader().getBlockHeight() == 0) bs = null;
-        else
-        {
-          bs = getBlockSummary( new ChainHash(bs.getHeader().getPrevBlockHash()));
-        }
-
-      }
-
-    }
-    out.println("</table>");
-
-    DecimalFormat df = new DecimalFormat("0.00");
-    out.println("<pre>");
-
-    out.println("Transactions in last hour: " + tx_count_1h);
-    double rate = (tx_count_1h + 0.0) / (look_back_time_1h / 1000.0);
-    out.println("Transaction per second last hour: " + df.format(rate));
-
-
-    out.println("</pre>");
-
-  }
-
-  public BlockSummary getBlockSummary(ChainHash hash)
-  {
-    synchronized(block_summary_cache)
-    {
-      if (block_summary_cache.containsKey(hash)) return block_summary_cache.get(hash);
-    }
-
-    try
-    {
-      BlockSummary bs = shackleton.getStub().getBlockSummary( 
-        RequestBlockSummary.newBuilder().setBlockHash(hash.getBytes()).build());
-      if (bs != null)
-      {
-        synchronized(block_summary_cache)
-        {
-          block_summary_cache.put(hash, bs);
-        }
-      }
-
-      return bs;
-
-
-    }
-    catch(Exception e)
-    {
-      e.printStackTrace();
-      return null;
-    }
-  }
-
-
-  private void displayTransaction(PrintStream out, Transaction tx)
-    throws ValidationException
-  {
-  out.println("<pre>");
-  out.println("Found transaction");
-
-  TransactionUtil.prettyDisplayTxHTML(tx, out, shackleton.getParams());
-  out.println("");
-  out.println("Transaction status:");
-
-  try
-  {
-    TransactionStatus status = shackleton.getStub().getTransactionStatus(RequestTransaction.newBuilder().setTxHash(tx.getTxHash()).build());
-    JsonFormat.Printer printer = JsonFormat.printer();
-    out.println(printer.print(status));
-  }
-  catch(com.google.protobuf.InvalidProtocolBufferException e)
-  {
-    throw new ValidationException(e);
-  }
-
-  out.println("</pre>");
-
-
-  }
-
 
   @Override
   public void handle(WebContext t) throws Exception
   {
-    if (t.getURI().getPath().startsWith("/api"))
+    String path = t.getURI().getPath();
+    Map<String, String> q = WebUtil.parseQuery(t.getURI().getRawQuery());
+    t.getExchange().getResponseHeaders().add("X-Content-Type-Options", "nosniff");
+
+    try
     {
+      if (path.startsWith("/api"))
+      {
+        if (path.equals("/api") || path.equals("/api/"))
+        {
+          html(t, "API", "/api", api.docs());
+          return;
+        }
+        if (!api.handle(t, path, q))
+        {
+          t.setContentType("application/json");
+          t.out().println("{\"error\":\"unknown api endpoint\"}");
+          t.setHttpCode(404);
+        }
+        return;
+      }
+      if (path.startsWith("/static/"))
+      {
+        staticHandle(t, path.substring("/static/".length()));
+        return;
+      }
+      if (path.equals("/robots.txt"))
+      {
+        t.setContentType("text/plain");
+        t.out().println("User-agent: *\nDisallow: /api/\nDisallow: /search\nDisallow: /fragment/\n");
+        t.setHttpCode(200);
+        return;
+      }
+      if (path.startsWith("/fragment/"))
+      {
+        fragment(t, path, q);
+        return;
+      }
+      route(t, path, q);
+    }
+    catch (RedirectException r)
+    {
+      redirect(t, r.location);
+    }
+    catch (NotFoundException nf)
+    {
+      t.resetBuffer();
+      t.setContentType("text/html; charset=utf-8");
+      t.out().print(Html.page(shackleton, "Not found", "", Html.errorBody("Not found", nf.getMessage())));
       t.setHttpCode(404);
-      apiHandle(t);
-
     }
-    else if (t.getURI().getPath().startsWith("/static"))
+    catch (Throwable e)
     {
-      t.setHttpCode(404);
-      staticHandle(t);
+      logger.log(Level.WARNING, "Error handling " + t.getURI() + ": " + e, e);
+      t.resetBuffer();
+      if (path.startsWith("/api/"))
+      {
+        t.setContentType("application/json; charset=utf-8");
+        JSONObject o = new JSONObject();
+        o.put("error", e.toString());
+        t.out().println(o.toJSONString());
+        t.setHttpCode(500);
+        return;
+      }
+      t.setContentType("text/html; charset=utf-8");
+      String msg = e.toString();
+      if (msg.contains("UNAVAILABLE")) msg = "The explorer cannot reach its Snowblossom node right now. Please try again in a moment. (" + msg + ")";
+      t.out().print(Html.page(shackleton, "Error", "", Html.errorBody("Something went wrong", msg)));
+      t.setHttpCode(500);
     }
-    else
-    {
-      t.setContentType("text/html");
-      t.getExchange().getResponseHeaders().add("Content-Language", "en-US");
-      boolean useajax = t.getURI().getQuery() != null && t.getURI().getQuery().contains("load-");
-      if(!useajax) addHeader(t.out());
-      innerHandle(t, t.out());
-      if(!useajax) addFooter(t.out());
-      t.setHttpCode(200);
-    }
-
-
   }
 
-    private void addHeader(PrintStream out)
+  private void html(WebContext t, String title, String nav, String body)
+  {
+    t.setContentType("text/html; charset=utf-8");
+    t.getExchange().getResponseHeaders().add("Content-Language", "en");
+    t.out().print(Html.page(shackleton, title, nav, body));
+    t.setHttpCode(200);
+  }
+
+  private void redirect(WebContext t, String location)
+  {
+    t.resetBuffer();
+    t.setContentType("text/html; charset=utf-8");
+    t.getExchange().getResponseHeaders().add("Location", location);
+    t.out().println("<a href='" + Html.esc(location) + "'>Redirecting</a>");
+    t.setHttpCode(302);
+  }
+
+  private void fragment(WebContext t, String path, Map<String, String> q)
+    throws Exception
+  {
+    t.setContentType("text/html; charset=utf-8");
+    t.getExchange().getResponseHeaders().add("Cache-Control", "no-cache");
+    if (path.equals("/fragment/home-blocks"))
     {
-      NetworkParams params = shackleton.getParams();
-      out.println("<html>");
-      out.println("<head>");
-      out.println("<meta charset='UTF-8'>");
-      out.println("<title>" + params.getNetworkName() + " explorer</title>");
-      out.println("<link rel='stylesheet' type='text/css' href='https://snowblossom.org/style-fixed.css' />");
-      out.println("<link REL='SHORTCUT ICON' href='https://snowblossom.org/snow-icon.png' />");
+      t.out().print("<div>" + HomePage.latestBlocksInner(shackleton) + "</div>");
+      t.setHttpCode(200);
+      return;
+    }
+    if (path.equals("/fragment/mempool"))
+    {
+      t.out().print("<div>" + MempoolPage.inner(shackleton) + "</div>");
+      t.setHttpCode(200);
+      return;
+    }
+    throw new NotFoundException("Unknown fragment");
+  }
 
-      // True style comes from within
-      //out.println("<link rel='stylesheet' href='https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css' integrity='sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u' crossorigin='anonymous'>");
-      //out.println("<link rel='stylesheet' href='https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css' integrity='sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp' crossorigin='anonymous'>");
-      out.println("<script src='https://code.jquery.com/jquery-1.12.4.min.js' integrity='sha256-ZosEbRLbNQzLpnKIkEdrPv7lOy9C27hHQ+Xp8a4MxAQ=' crossorigin='anonymous'></script>");
-      out.println("<script src='https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js' integrity='sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa' crossorigin='anonymous'></script>");
+  private void route(WebContext t, String path, Map<String, String> q)
+    throws Exception
+  {
+    // strip trailing slash
+    if ((path.length() > 1) && path.endsWith("/")) path = path.substring(0, path.length() - 1);
 
-      out.println("<style type='text/css'>");
-      out.println("input {text-align: right;}");
-      out.println("</style>");
-      out.println("<script>");
-      out.println("window.doscroll = false; function loadMore() { if(window.doscroll) return; window.doscroll = true; $('#lmore').hide(); $.ajax( { url: '?search=load-' + window.lastblock, success: function (data) { $('#blocktable').append(data); $('#lmore').show(); }}); window.lastblock -= 100; setTimeout(function() {window.doscroll = false;}, 2000); };");
-      out.println("$(window).scroll(function() { if(window.doscroll) return; if($(window).scrollTop() + 3000 > $(document).height()) {loadMore();}}); ");
+    if (path.equals("") || path.equals("/"))
+    {
+      if (q.containsKey("search"))
+      {
+        legacySearch(q.get("search"));
+      }
+      html(t, "Snowblossom " + Html.networkLabel(shackleton.getParams()) + " explorer", "/", HomePage.render(shackleton));
+      return;
+    }
+    if (path.equals("/search"))
+    {
+      search(t, q.getOrDefault("q", ""));
+      return;
+    }
+    if (path.equals("/blocks"))
+    {
+      if (q.containsKey("shard"))
+      {
+        int shard = WebUtil.intParam(q, "shard", 0);
+        boolean fragment = q.containsKey("fragment");
+        String body = BlocksPage.renderShard(shackleton, shard, q, fragment);
+        if (fragment)
+        {
+          t.setContentType("text/html; charset=utf-8");
+          t.out().print(body);
+          t.setHttpCode(200);
+        }
+        else
+        {
+          html(t, "Blocks of shard " + shard, "/blocks", body);
+        }
+        return;
+      }
+      if (q.containsKey("fragment"))
+      {
+        t.setContentType("text/html; charset=utf-8");
+        t.out().print(BlocksPage.renderAll(shackleton, q, true));
+        t.setHttpCode(200);
+        return;
+      }
+      html(t, "Blocks", "/blocks", BlocksPage.renderAll(shackleton, q, false));
+      return;
+    }
+    if (path.startsWith("/block/"))
+    {
+      String rest = path.substring("/block/".length());
+      String[] parts = rest.split("/");
+      Block blk = null;
+      if ((parts.length == 2) && WebUtil.isDigits(parts[0]) && WebUtil.isDigits(parts[1]))
+      {
+        int shard = Integer.parseInt(parts[0]);
+        int height = Integer.parseInt(parts[1]);
+        blk = shackleton.getCache().getBlockAtHeight(shard, height);
+        if (blk == null) throw new NotFoundException("No block at height " + height + " in shard " + shard + ".");
+      }
+      else if ((parts.length == 1) && WebUtil.isDigits(parts[0]) && (parts[0].length() < 10))
+      {
+        blockByHeight(t, Integer.parseInt(parts[0]));
+        return;
+      }
+      else if ((parts.length == 1) && (parts[0].length() == Globals.BLOCKCHAIN_HASH_LEN * 2) && WebUtil.isHex(parts[0]))
+      {
+        blk = shackleton.getCache().getBlock(new ChainHash(parts[0].toLowerCase()));
+        if (blk == null)
+        {
+          // maybe it is a transaction hash
+          Transaction tx = shackleton.getCache().getTransaction(new ChainHash(parts[0].toLowerCase()));
+          if (tx != null) throw new RedirectException("/tx/" + parts[0].toLowerCase());
+          throw new NotFoundException("No block with hash " + parts[0] + " is known to this node.");
+        }
+      }
+      else
+      {
+        throw new NotFoundException("Invalid block reference.");
+      }
+      int page = WebUtil.intParam(q, "page", 1);
+      BlockHeader h = blk.getHeader();
+      html(t, "Block " + h.getBlockHeight() + " (shard " + h.getShardId() + ")", "/blocks", BlockPage.render(shackleton, blk, page));
+      return;
+    }
+    if (path.startsWith("/tx/"))
+    {
+      String hs = path.substring("/tx/".length()).toLowerCase();
+      if ((hs.length() != Globals.BLOCKCHAIN_HASH_LEN * 2) || !WebUtil.isHex(hs)) throw new NotFoundException("Invalid transaction hash.");
+      Transaction tx = shackleton.getCache().getTransaction(new ChainHash(hs));
+      if (tx == null)
+      {
+        Block blk = shackleton.getCache().getBlock(new ChainHash(hs));
+        if (blk != null) throw new RedirectException("/block/" + hs);
+        throw new NotFoundException("Transaction " + hs + " is not known to this node (neither confirmed nor in the mempool).");
+      }
+      html(t, "Transaction " + Html.shortHash(hs), "/blocks", TxPage.render(shackleton, tx));
+      return;
+    }
+    if (path.startsWith("/address/"))
+    {
+      String as = path.substring("/address/".length());
+      AddressSpecHash addr = parseAddress(shackleton.getParams(), as);
+      if (addr == null) throw new NotFoundException("'" + as + "' is not a valid address.");
+      int page = WebUtil.intParam(q, "page", 1);
+      html(t, "Address " + Html.shortAddr(addr.toAddressString(shackleton.getParams())), "", AddressPage.render(shackleton, addr, page));
+      return;
+    }
+    if (path.equals("/shards"))
+    {
+      html(t, "Shards", "/shards", ShardsPage.render(shackleton));
+      return;
+    }
+    if (path.startsWith("/shard/"))
+    {
+      String s = path.substring("/shard/".length());
+      if (!WebUtil.isDigits(s) || (s.length() > 9)) throw new NotFoundException("Invalid shard id.");
+      int shard = Integer.parseInt(s);
+      html(t, "Shard " + shard, "/shards", ShardsPage.renderShard(shackleton, shard, q));
+      return;
+    }
+    if (path.equals("/richlist"))
+    {
+      html(t, "Rich list", "/richlist", RichListPage.render(shackleton, q));
+      return;
+    }
+    if (path.equals("/mining") || path.equals("/votes") || path.equals("/pools"))
+    {
+      html(t, "Mining", "/mining", MiningPage.render(shackleton));
+      return;
+    }
+    if (path.equals("/stats"))
+    {
+      html(t, "Statistics", "/stats", StatsPage.render(shackleton, q));
+      return;
+    }
+    if (path.equals("/mempool"))
+    {
+      html(t, "Mempool", "/mempool", MempoolPage.render(shackleton));
+      return;
+    }
+    if (path.equals("/peers"))
+    {
+      html(t, "Peers", "/peers", PeersPage.render(shackleton));
+      return;
+    }
+    if (path.equals("/favicon.ico"))
+    {
+      throw new RedirectException("/static/favicon.svg");
+    }
+    throw new NotFoundException("There is no page at " + path + ".");
+  }
 
-      NodeStatus node_status = shackleton.getStub().getNodeStatus(QueryUtil.nr());
-      BlockSummary summary = node_status.getHeadSummary();
-      BlockHeader header = summary.getHeader();
-      int height = header.getBlockHeight();
-      long coinsPerBlock = PowUtil.getBlockReward(shackleton.getParams(), height);
+  private void blockByHeight(WebContext t, int height)
+    throws Exception
+  {
+    ChainIndex index = shackleton.getIndex();
+    Map<Integer, ChainIndex.ShardStats> stats = index.getShardStats();
+    if (stats.size() <= 1)
+    {
+      int shard = (stats.size() == 1) ? stats.keySet().iterator().next() : 0;
+      throw new RedirectException("/block/" + shard + "/" + height);
+    }
+    // multiple shards: if the height is only valid in one shard, go there
+    ChainIndex.ShardTree tree = index.getShardTree();
+    TreeSet<Integer> candidates = new TreeSet<>();
+    if (tree != null)
+    {
+      for (ChainIndex.ShardNode n : tree.nodes.values())
+      {
+        if ((n.first_height >= 0) && (n.first_height <= height) && (n.last_height >= height)) candidates.add(n.id);
+      }
+    }
+    if (candidates.size() == 1) throw new RedirectException("/block/" + candidates.first() + "/" + height);
+    html(t, "Block " + height, "/blocks", BlocksPage.renderChooseShard(shackleton, height));
+  }
 
-      out.println("function updateCalc() {var hour = " + (coinsPerBlock / Globals.SNOW_VALUE_D) + " * 3600 * parseFloat($('#hashrate').val()) / Math.pow(2,(window.avgdiff-10));$('#hash1').val(hour.toFixed(3));$('#hash2').val((hour*24).toFixed(3));$('#hash3').val((hour*24*30).toFixed(3));}");
-      out.println("");
-      out.println("</script>");
-      out.println("</head>");
-      out.println("<body>");
-      out.print("<a href='/'>Home</a><br />");
-      out.print("<form name='query' action='/' method='GET'>");
-      out.print("<input type='text' name='search' size='45' value=''>");
-      out.println("<input type='submit' value='Search'></form>");
-      out.println("<br>");
+  /** Old style links: /?search=... */
+  private void legacySearch(String search)
+    throws Exception
+  {
+    search = search.trim();
+    if (search.length() == 0) return;
+    if (search.equals("richlist")) throw new RedirectException("/richlist");
+    if (search.startsWith("load-")) throw new RedirectException("/blocks");
+    throw new RedirectException("/search?q=" + Html.url(search));
+  }
+
+  private void search(WebContext t, String query)
+    throws Exception
+  {
+    NetworkParams params = shackleton.getParams();
+    ChainCache cache = shackleton.getCache();
+    String s = query.trim();
+    if (s.length() == 0) throw new RedirectException("/");
+    if (s.length() > 200) throw new NotFoundException("Search term too long.");
+
+    // block height
+    if (WebUtil.isDigits(s) && (s.length() < 10))
+    {
+      blockByHeight(t, Integer.parseInt(s));
+      return;
+    }
+    // shard:height
+    Matcher m = SHARD_HEIGHT.matcher(s);
+    if (m.matches())
+    {
+      throw new RedirectException("/block/" + Integer.parseInt(m.group(1)) + "/" + Integer.parseInt(m.group(2)));
+    }
+    // hash
+    String hs = s.toLowerCase();
+    if (hs.startsWith("0x")) hs = hs.substring(2);
+    if ((hs.length() == Globals.BLOCKCHAIN_HASH_LEN * 2) && WebUtil.isHex(hs))
+    {
+      ChainHash hash = new ChainHash(hs);
+      if (cache.getBlock(hash) != null) throw new RedirectException("/block/" + hs);
+      if (cache.getTransaction(hash) != null) throw new RedirectException("/tx/" + hs);
+      throw new NotFoundException("No block or transaction with hash " + hs + " is known to this node.");
+    }
+    // address
+    AddressSpecHash addr = parseAddress(params, s);
+    if (addr != null) throw new RedirectException("/address/" + addr.toAddressString(params));
+
+    // shard
+    if (s.toLowerCase().startsWith("shard") && WebUtil.isDigits(s.substring(5).trim()))
+    {
+      throw new RedirectException("/shard/" + Integer.parseInt(s.substring(5).trim()));
+    }
+    if (s.toLowerCase().matches("^s\\d{1,4}$"))
+    {
+      throw new RedirectException("/shard/" + Integer.parseInt(s.substring(1)));
     }
 
-    private void addFooter(PrintStream out)
+    // names
+    String body = nameSearch(s);
+    if (body != null)
     {
-      out.println("</body>");
-      out.println("</html>");
+      html(t, "Search: " + s, "", body);
+      return;
     }
+    throw new NotFoundException("Nothing found for '" + s + "'. You can search for block hashes, block heights (optionally as shard:height, e.g. 1:1234), transaction hashes, addresses, usernames and channel names.");
+  }
 
+  private String nameSearch(String search)
+    throws Exception
+  {
+    TxOutList lst_chan;
+    TxOutList lst_user;
+    try
+    {
+      lst_chan = shackleton.getStub().getIDList(
+        RequestNameID.newBuilder().setNameType(RequestNameID.IdType.CHANNELNAME).setName(ByteString.copyFrom(search.getBytes())).build());
+      lst_user = shackleton.getStub().getIDList(
+        RequestNameID.newBuilder().setNameType(RequestNameID.IdType.USERNAME).setName(ByteString.copyFrom(search.getBytes())).build());
+    }
+    catch (Throwable t)
+    {
+      logger.log(Level.FINE, "name lookup failed: " + t);
+      return null;
+    }
+    if (lst_chan.getOutListCount() + lst_user.getOutListCount() == 0) return null;
 
+    StringBuilder sb = new StringBuilder();
+    sb.append("<div class='panel'><h1>Identifier: ").append(Html.esc(search)).append("</h1>");
+    sb.append("<p class='muted small'>Usernames and channel names are claimed through transaction outputs that carry the name.</p></div>");
+    for (int pass = 0; pass < 2; pass++)
+    {
+      TxOutList lst = (pass == 0) ? lst_chan : lst_user;
+      if (lst.getOutListCount() == 0) continue;
+      sb.append("<div class='panel'><h2>").append(pass == 0 ? "Channels" : "Users").append(" <span class='muted small'>").append(lst.getOutListCount()).append("</span></h2>");
+      HashSet<ChainHash> seen = new HashSet<>();
+      for (TxOutPoint op : lst.getOutListList())
+      {
+        ChainHash txh = new ChainHash(op.getTxHash());
+        if (!seen.add(txh)) continue;
+        Transaction tx = shackleton.getCache().getTransaction(txh);
+        if (tx == null) continue;
+        sb.append(TxPage.txCard(shackleton, TxView.of(tx, shackleton.getCache(), true), null, false));
+      }
+      sb.append("</div>");
+    }
+    return sb.toString();
+  }
+
+  public static AddressSpecHash parseAddress(NetworkParams params, String s)
+  {
+    if (s == null) return null;
+    s = s.trim();
+    try
+    {
+      return AddressUtil.getHashForAddress(params.getAddressPrefix(), s);
+    }
+    catch (Throwable e)
+    {
+    }
+    if ((s.length() == Globals.ADDRESS_SPEC_HASH_LEN * 2) && WebUtil.isHex(s))
+    {
+      try
+      {
+        return new AddressSpecHash(s.toLowerCase());
+      }
+      catch (Throwable e)
+      {
+      }
+    }
+    // maybe the prefix was left out
+    if (!s.contains(":"))
+    {
+      try
+      {
+        return AddressUtil.getHashForAddress(params.getAddressPrefix(), params.getAddressPrefix() + ":" + s);
+      }
+      catch (Throwable e)
+      {
+      }
+    }
+    return null;
+  }
+
+  public void staticHandle(WebContext t, String path)
+    throws Exception
+  {
+    if (path.contains("..") || path.startsWith("/"))
+    {
+      throw new NotFoundException("No such resource.");
+    }
+    InputStream in = Shackleton.class.getResourceAsStream("/shackleton/webstatic/" + path);
+    if (in == null)
+    {
+      throw new NotFoundException("No resource: " + path);
+    }
+    String mime_type = Mimer.guessContentType(path);
+    if (path.endsWith(".svg")) mime_type = "image/svg+xml";
+    if (mime_type != null) t.setContentType(mime_type);
+    t.getExchange().getResponseHeaders().add("Cache-Control", "public, max-age=3600");
+    byte[] buff = new byte[8192];
+    while (true)
+    {
+      int r = in.read(buff);
+      if (r < 0) break;
+      t.out().write(buff, 0, r);
+    }
+    in.close();
+    t.out().flush();
+    t.setHttpCode(200);
+  }
+
+  /** Legacy graph output for the shard visualization */
+  public static JSONObject getNetworkGraph(Shackleton shackleton, int blocks_back)
+  {
+    ChainCache cache = shackleton.getCache();
+    NodeStatus node_status = cache.getNodeStatus();
+    Map<Integer, BlockHeader> head_map = cache.getNetShardHeads(node_status);
+
+    HashSet<ChainHash> included_blocks = new HashSet<>();
+    LinkedList<BlockHeader> block_list = new LinkedList<>();
+
+    for (int shard : new TreeSet<>(head_map.keySet()))
+    {
+      int count_in_shard = 0;
+      BlockHeader head = head_map.get(shard);
+      while ((head != null) && (head.getSnowHash().size() > 0) && (count_in_shard < blocks_back) &&
+        (!included_blocks.contains(new ChainHash(head.getSnowHash()))))
+      {
+        ChainHash hash = new ChainHash(head.getSnowHash());
+        included_blocks.add(hash);
+        block_list.add(head);
+        if (head.getBlockHeight() == 0) head = null;
+        else head = cache.getHeader(new ChainHash(head.getPrevBlockHash()));
+        count_in_shard++;
+      }
+    }
+    return GraphOutput.getGraph(block_list);
+  }
 }

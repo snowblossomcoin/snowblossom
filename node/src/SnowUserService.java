@@ -121,6 +121,7 @@ public class SnowUserService extends UserServiceGrpc.UserServiceImplBase impleme
   public void getPeerList(PeerListRequest req, StreamObserver<PeerList> ob)
   {
     ob.onNext(node.getPeerage().getPeerList(req));
+    ob.onCompleted();
   }
 
   @Override
